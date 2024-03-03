@@ -7,11 +7,11 @@ export function EvaraStack({ stack }: StackContext) {
     defaults: {
       function: {
         timeout: "60 seconds",
-        permissions: ["secretsmanager", "sns", "sqs", "lambda"],
       },
     },
     routes: {
-      "POST /patients/add": "packages/functions/src/addPatient.main",
+      "POST /patients/add": "packages/functions/src/patients/addPatient.main",
+      "GET /patients": "packages/functions/src/patients/getPatients.main",
     },
   });
 
