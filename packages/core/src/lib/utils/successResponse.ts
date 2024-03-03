@@ -1,5 +1,3 @@
-import { IPagination } from "../types/pagination";
-
 type TSuccessResponse = {
   statusCode: number;
   body: string;
