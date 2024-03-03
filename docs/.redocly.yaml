@@ -1,0 +1,15 @@
+extends:
+  - recommended
+
+apis:
+  core@v1:
+    root: ./evara-openapi-1.0.0.yaml
+
+theme: 
+  openapi:
+    schemaExpansionLevel: 2
+    generateCodeSamples: 
+      languages: 
+        - lang: curl
+        - lang: Node.js
+      
