@@ -1,12 +1,9 @@
 import { AxiosError } from "axios";
-import ErrorMessage from "./ErrorMessage";
+import { APIGatewayProxyResult } from "aws-lambda";
 
-type ErrorResponseData = {
-  statusCode: number;
-  body: string;
-};
+import ErrorMessage from "./errorMessage";
 
-function ErrorResponse(error: unknown): ErrorResponseData {
+function ErrorResponse(error: unknown): APIGatewayProxyResult {
   if (error instanceof ErrorMessage) {
     // Type check
     if (error?.code >= 400) {
@@ -16,6 +13,9 @@ function ErrorResponse(error: unknown): ErrorResponseData {
     }
     return {
       statusCode: error.code || 500,
+      headers: {
+        "content-type": "application/json",
+      },
       body: JSON.stringify({
         status: "error",
         message: error.message,
@@ -33,6 +33,9 @@ function ErrorResponse(error: unknown): ErrorResponseData {
 
     return {
       statusCode: error.response?.status || 500,
+      headers: {
+        "content-type": "application/json",
+      },
       body: JSON.stringify({
         message: error.response?.data || "An unkown error occured",
         status: error.response?.status || "error",
@@ -42,6 +45,9 @@ function ErrorResponse(error: unknown): ErrorResponseData {
   console.error("Error", error);
   return {
     statusCode: 500,
+    headers: {
+      "content-type": "application/json",
+    },
     body: JSON.stringify({
       status: "error",
       message: "An unkown error occured",

@@ -5,7 +5,9 @@ import Patient from "@evara-backend/core/models/Patients";
 import errorMessage from "@evara-backend/core/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import mongoose from "mongoose";
 
+// Handler function
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -22,12 +24,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Create a new patient document
     const patient = new Patient(data);
 
+    // Generate custom patientId
+    const customPatientId = `${data.clinicId}-${
+      data.branchId
+    }-${new mongoose.Types.ObjectId().toString()}`;
+
+    patient.patientId = customPatientId;
+
     // Save the patient to the database
     await patient.save();
 
     // Return success response
     const responseData = {
-      patientId: patient.id,
+      patientId: patient.patientId, // Use the custom patientId
     };
     return successResponse("Patient added successfully", responseData);
   } catch (error) {

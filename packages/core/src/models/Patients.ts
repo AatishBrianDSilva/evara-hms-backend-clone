@@ -2,6 +2,9 @@ import mongoose, { PaginateModel } from "mongoose";
 import paginate from "mongoose-paginate-v2";
 
 interface PatientData {
+  clinicId?: string;
+  branchId?: string;
+  patientId?: string;
   title?: string;
   firstName: string;
   lastName: string;
