@@ -1,19 +1,20 @@
-import mongoose, { PaginateModel } from "mongoose";
+import mongoose, { Document, PaginateModel, Types } from "mongoose";
 import paginate from "mongoose-paginate-v2";
+import { autoIncrementId, autoIncrementIdWithFieldPrefix } from "./Counters";
 
-interface PatientData {
-  clinicId?: string;
-  branchId?: string;
-  patientId?: string;
-  title?: string;
+interface PatientData extends Document {
+  clinicId: string;
+  branchId: string;
+  patientId: string;
+  title: string;
   firstName: string;
   lastName: string;
-  gender?: string;
+  gender: string;
   age: number;
-  dob?: Date;
+  dob: Date;
   education?: string;
   maritalStatus?: string;
-  bloodGroup?: string;
+  bloodGroup: string;
   countryBirth?: string;
   nationality?: string;
   motherTounge?: string;
@@ -54,14 +55,18 @@ interface PatientData {
   insuranceAmountEligible?: string;
   image?: mongoose.Schema.Types.Mixed;
   remarks?: string;
+  status: "active" | "inactive";
 }
 
 export const patientSchema = new mongoose.Schema(
   {
+    clinicId: { type: String, required: true, index: true },
+    branchId: { type: String, required: true, index: true },
+    patientId: { type: String, index: true },
     title: { type: String },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
-    gender: { type: String },
+    gender: { type: String, required: true },
     age: { type: Number, required: true, min: 0 },
     dob: { type: Date },
     education: { type: String },
@@ -112,12 +117,28 @@ export const patientSchema = new mongoose.Schema(
     insurancePolicyNumber: { type: String },
     insurancePolicyHolderName: { type: String },
     insuranceAmountEligible: { type: String },
-    image: { type: mongoose.Schema.Types.Mixed },
+    image: { type: String },
     remarks: { type: String },
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
   },
   {
     timestamps: true,
   }
+);
+
+patientSchema.index(
+  { clinicId: 1, branchId: 1, patientId: 1 },
+  { unique: true }
+);
+
+patientSchema.pre(
+  "save",
+  autoIncrementIdWithFieldPrefix(
+    "patients",
+    "patientId",
+    "clinicId",
+    "branchId"
+  )
 );
 
 patientSchema.plugin(paginate);
@@ -125,9 +146,8 @@ patientSchema.plugin(paginate);
 interface PatientDocument extends mongoose.Document, PatientData {}
 
 const Patient = mongoose.model<PatientDocument, PaginateModel<PatientDocument>>(
-  "Patient",
-  patientSchema,
-  "patients"
+  "patients",
+  patientSchema
 );
 
 export default Patient;
