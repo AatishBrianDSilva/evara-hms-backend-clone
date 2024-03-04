@@ -43,15 +43,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       lean: true,
     };
 
-    console.log("Query", query);
-    console.log("Options", options);
-
     // Fetching the patients with pagination
     const result = await Patient.paginate(query, options);
 
     const { records, pagination } = formatPaginationResult(result);
-
-    console.log("Records", records.length);
 
     // Return success response with pagination info
     return successResponse("Patients fetched successfully", {
