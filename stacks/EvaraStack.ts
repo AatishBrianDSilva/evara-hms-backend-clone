@@ -10,8 +10,13 @@ export function EvaraStack({ stack }: StackContext) {
       },
     },
     routes: {
+      "POST /patients/{id}/partner/add":
+        "packages/functions/src/patients/addPartner.main",
       "POST /patients/add": "packages/functions/src/patients/addPatient.main",
       "GET /patients": "packages/functions/src/patients/getPatients.main",
+      "GET /patients/{id}":
+        "packages/functions/src/patients/getPatientById.main",
+      "PUT /patients/{id}": "packages/functions/src/patients/editPatient.main",
     },
   });
 
