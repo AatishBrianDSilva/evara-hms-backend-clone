@@ -2,7 +2,7 @@ import { APIGatewayProxyResult } from "aws-lambda";
 
 const SuccessResponse = (
   message: string,
-  data: unknown
+  data?: unknown
 ): APIGatewayProxyResult => {
   return {
     statusCode: 200,

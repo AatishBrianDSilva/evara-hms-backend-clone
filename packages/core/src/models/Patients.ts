@@ -6,6 +6,7 @@ interface PatientData extends Document {
   clinicId: string;
   branchId: string;
   patientId: string;
+  partnerId?: string;
   title: string;
   firstName: string;
   lastName: string;
@@ -62,7 +63,8 @@ export const patientSchema = new mongoose.Schema(
   {
     clinicId: { type: String, required: true, index: true },
     branchId: { type: String, required: true, index: true },
-    patientId: { type: String, index: true },
+    patientId: { type: String, index: true, unique: true },
+    partnerId: { type: String, index: true },
     title: { type: String },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },

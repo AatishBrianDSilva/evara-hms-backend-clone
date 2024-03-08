@@ -29,9 +29,9 @@ casesSchema.plugin(paginate);
 
 interface CaseDocument extends mongoose.Document, CasesData {}
 
-const Patient = mongoose.model<CaseDocument, PaginateModel<CaseDocument>>(
+const Cases = mongoose.model<CaseDocument, PaginateModel<CaseDocument>>(
   "cases",
   casesSchema
 );
 
-export default Patient;
+export default Cases;
