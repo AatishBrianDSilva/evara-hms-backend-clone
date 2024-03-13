@@ -35,7 +35,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     data.clinicId = "EV";
     data.branchId = "KL";
 
-    data.age = new Date().getFullYear() - new Date(data.dob).getFullYear();
     data.partnerId = id;
 
     console.log(data.age, data.partnerId);
