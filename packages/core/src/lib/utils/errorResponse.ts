@@ -3,56 +3,35 @@ import { APIGatewayProxyResult } from "aws-lambda";
 
 import ErrorMessage from "./errorMessage";
 
-function ErrorResponse(error: unknown): APIGatewayProxyResult {
+function errorResponse(error: unknown): APIGatewayProxyResult {
+  let statusCode = 500;
+  let message = "An unknown error occurred";
+
   if (error instanceof ErrorMessage) {
-    // Type check
-    if (error?.code >= 400) {
-      console.error("Error", error);
-    } else {
-      console.log("Error", error);
-    }
-    return {
-      statusCode: error.code || 500,
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        status: "error",
-        message: error.message,
-      }),
-    };
+    console[error.code >= 400 ? "error" : "log"]("ErrorMessage", error);
+    statusCode = error.code || 500;
+    message = error.message;
+  } else if (error instanceof AxiosError) {
+    console[error.response?.status! >= 400 ? "error" : "log"](
+      "AxiosError",
+      error.response?.data || error.toJSON()
+    );
+    statusCode = error.response?.status || 500;
+    message = error.response?.data.message || message; // Assuming `data` has a `message` property.
+  } else {
+    console.error("Unexpected Error", error);
   }
 
-  if (error instanceof AxiosError) {
-    // Type check
-    if (error.response?.status! >= 400) {
-      console.error("AxiosError", error.response?.data);
-    } else {
-      console.log("AxiosError", error.toJSON());
-    }
-
-    return {
-      statusCode: error.response?.status || 500,
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        message: error.response?.data || "An unkown error occured",
-        status: error.response?.status || "error",
-      }),
-    };
-  }
-  console.error("Error", error);
   return {
-    statusCode: 500,
+    statusCode,
     headers: {
       "content-type": "application/json",
     },
     body: JSON.stringify({
       status: "error",
-      message: "An unkown error occured",
+      message,
     }),
   };
 }
 
-export default ErrorResponse;
+export default errorResponse;

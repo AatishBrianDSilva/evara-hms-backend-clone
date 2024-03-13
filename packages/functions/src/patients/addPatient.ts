@@ -8,7 +8,6 @@ import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
 
 // Handler function
-// Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   const mongoose = await connectMongoDb();
   const session = await mongoose.startSession();
@@ -27,8 +26,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // TODO: Remove clinicId and branchId after adding authentication
     data.clinicId = "EV";
     data.branchId = "KL";
-
-    data.age = new Date().getFullYear() - new Date(data.dob).getFullYear();
 
     // TODO: Upload profile image to S3 and get the URL
 

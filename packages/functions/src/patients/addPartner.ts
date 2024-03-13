@@ -35,10 +35,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     data.clinicId = "EV";
     data.branchId = "KL";
 
-    data.age = new Date().getFullYear() - new Date(data.dob).getFullYear();
     data.partnerId = id;
 
-    console.log(data.age, data.partnerId);
+    console.log(data.partnerId);
     // TODO: Upload profile image to S3 and get the URL
 
     // Create a new patient document

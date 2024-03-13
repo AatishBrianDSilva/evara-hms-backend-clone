@@ -11,7 +11,6 @@ interface PatientData extends Document {
   firstName: string;
   lastName: string;
   gender: string;
-  age: number;
   dob: Date;
   education?: string;
   maritalStatus?: string;
@@ -69,7 +68,6 @@ export const patientSchema = new mongoose.Schema(
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     gender: { type: String, required: true },
-    age: { type: Number, required: true, min: 0 },
     dob: { type: Date },
     education: { type: String },
     maritalStatus: { type: String },
