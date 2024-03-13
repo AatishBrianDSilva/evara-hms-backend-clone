@@ -1,6 +1,6 @@
 import { APIGatewayProxyResult } from "aws-lambda";
 
-const SuccessResponse = (
+const successResponse = (
   message: string,
   data?: unknown
 ): APIGatewayProxyResult => {
@@ -17,4 +17,4 @@ const SuccessResponse = (
   };
 };
 
-export default SuccessResponse;
+export default successResponse;

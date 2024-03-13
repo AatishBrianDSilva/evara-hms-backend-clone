@@ -3,7 +3,7 @@ import { APIGatewayProxyResult } from "aws-lambda";
 
 import ErrorMessage from "./errorMessage";
 
-function ErrorResponse(error: unknown): APIGatewayProxyResult {
+function errorResponse(error: unknown): APIGatewayProxyResult {
   let statusCode = 500;
   let message = "An unknown error occurred";
 
@@ -34,4 +34,4 @@ function ErrorResponse(error: unknown): APIGatewayProxyResult {
   };
 }
 
-export default ErrorResponse;
+export default errorResponse;

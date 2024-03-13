@@ -29,7 +29,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     session.startTransaction();
 
-    // Parse the body from the event
     const body = JSON.parse(event.body);
 
     const patientId = body.patientId;
