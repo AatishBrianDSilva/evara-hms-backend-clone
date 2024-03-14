@@ -17,4 +17,9 @@ export interface IPaginateOptions {
   select?: string;
   lean?: boolean;
   leanWithId?: boolean;
+  populate?: {
+    path: string;
+    select?: string;
+    model?: string;
+  };
 }
