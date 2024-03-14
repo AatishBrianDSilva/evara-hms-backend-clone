@@ -32,6 +32,8 @@ export function EvaraStack({ stack }: StackContext) {
         "packages/functions/src/appointments/addAppointment.main",
       "GET /appointments":
         "packages/functions/src/appointments/getAppointments.main",
+      "GET /appointments/upcoming":
+        "packages/functions/src/appointments/getUpcomingAppointments.main",
       "GET /appointments/{id}":
         "packages/functions/src/appointments/getAppointmentById.main",
       "PUT /appointments/{id}":
