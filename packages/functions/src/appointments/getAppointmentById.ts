@@ -11,7 +11,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
     const data = JSON.parse(event.body);
     // Parse the body from the event
-    console.log(data);
+    // console.log(data);
     return successResponse("Success", data);
   } catch (error) {
     return errorResponse(error);
