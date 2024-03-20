@@ -40,6 +40,32 @@ export function EvaraStack({ stack }: StackContext) {
         "packages/functions/src/appointments/editAppointment.main",
       "DELETE /appointments/{id}":
         "packages/functions/src/appointments/deleteAppointment.main",
+
+      //Patient Investigations
+      "POST /investigations/add":
+        "packages/functions/src/investigations/addInvestigation.main",
+      "GET /investigations":
+        "packages/functions/src/investigations/getInvestigations.main",
+      "GET /investigations/{id}":
+        "packages/functions/src/investigations/getInvestigationById.main",
+      "PUT /investigations/{id}":
+        "packages/functions/src/investigations/editInvestigation.main",
+      "DELETE /investigations/{id}":
+        "packages/functions/src/investigations/deleteInvestigation.main",
+
+      // Master Investigations
+      "POST /master/investigations/add":
+        "packages/functions/src/master/investigations/addInvestigation.main",
+      "GET /master/investigations":
+        "packages/functions/src/master/investigations/getInvestigations.main",
+
+      // Medical Tests
+      "POST /master/medical-tests/add":
+        "packages/functions/src/master/MedicalTests/addTest.main",
+
+      // Admin Dev
+      "GET /admin_dev/automate-medical-investigation":
+        "packages/functions/src/admin_dev/automateMedicalInvestigation.main",
     },
   });
 

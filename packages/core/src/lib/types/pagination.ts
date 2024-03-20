@@ -10,16 +10,21 @@ export interface IPagination {
   nextPage: number | null | undefined;
 }
 
+export interface IPopulateOptions {
+  path: string;
+  select?: string;
+  model?: string;
+  match?: { [key: string]: any };
+  options?: { [key: string]: any };
+  populate?: IPopulateOptions | IPopulateOptions[]; // Support for nested and multiple populations
+}
+
 export interface IPaginateOptions {
   page?: number;
   limit?: number;
   sort?: { [key: string]: any };
-  select?: string;
+  select?: string | object;
   lean?: boolean;
   leanWithId?: boolean;
-  populate?: {
-    path: string;
-    select?: string;
-    model?: string;
-  };
+  populate?: IPopulateOptions | IPopulateOptions[]; // Can be a single object or an array of objects
 }
