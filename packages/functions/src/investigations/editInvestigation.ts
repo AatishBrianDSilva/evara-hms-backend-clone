@@ -7,6 +7,8 @@ import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
 import PatientInvestigation from "../../../core/src/models/PatientInvestigation";
 import mongoose from "mongoose";
+import { ETestType } from "../../../core/src/models/MedicalTests";
+import { log } from "console";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -26,6 +28,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     const body = JSON.parse(event.body);
+    log("body", body);
     const updateData: any = {};
 
     if (body.date) {
@@ -34,16 +37,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (body.doctor) {
       updateData.doctor = new mongoose.Types.ObjectId(body.doctor);
     }
-    // Check if the results object is not empty
-    if (body.result && Object.keys(body.result).length > 0) {
-      updateData.result = body.result;
-    }
 
     if (body.status) {
       updateData.status = body.status;
     }
 
-    console.log("updateData", updateData);
+    if (body.testType === ETestType.BloodTest) {
+      if (body.result && Object.keys(body.result).length > 0) {
+        updateData.result = body.result;
+      }
+    } else if (body.testType === ETestType.UltrasoundScan) {
+      updateData.result = body.result;
+      updateData.status = "Completed";
+    }
 
     const investigation = await PatientInvestigation.findByIdAndUpdate(
       id,

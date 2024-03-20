@@ -139,7 +139,7 @@ interface IUltraSoundScanDetails extends Document {
     adnexa?: string;
   };
   impression: string;
-  doctorName: string;
+  doctor: any;
   doctorRemarks: string;
   description: string;
 }
@@ -185,7 +185,7 @@ export const UltraSoundScanDetailsSchema = new Schema<IUltraSoundScanDetails>({
     adnexa: { type: String },
   },
   impression: { type: String, required: true },
-  doctorName: { type: String, required: true },
+  doctor: { type: Schema.Types.Mixed, required: true },
   doctorRemarks: { type: String, required: true },
   description: { type: String, required: true },
 });
