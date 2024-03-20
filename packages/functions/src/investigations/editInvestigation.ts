@@ -35,8 +35,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       updateData.doctor = new mongoose.Types.ObjectId(body.doctor);
     }
     // Check if the results object is not empty
-    if (body.results && Object.keys(body.results).length > 0) {
-      updateData.results = body.results;
+    if (body.result && Object.keys(body.result).length > 0) {
+      updateData.result = body.result;
     }
 
     if (body.status) {

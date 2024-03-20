@@ -17,8 +17,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const investigations = await Promise.all(
       medicalTests.map(async (test) => {
         const investigation = new MasterInvestigation({
-          test: test._id, // Assuming the _id field of the MedicalTest is what's needed here
+          test: test._id,
           name: test.testName,
+          testType: test.testType,
+          gender: test.gender,
           description: test.description, // Assuming you want to copy the description from the MedicalTest
           cost: Math.floor(Math.random() * (2000 - 200) + 200), // Random cost between 200 and 2000
           active: true,

@@ -1,7 +1,7 @@
 import mongoose, { Document, Mixed, Schema } from "mongoose";
 import { autoIncrementId } from "./Counters";
 
-export enum TestType {
+export enum ETestType {
   BloodTest = "BloodTest",
   UltrasoundScan = "UltrasoundScan",
   BaseLineFollicularMonitoring = "BaseLineFollicularMonitoring",
@@ -11,30 +11,31 @@ export enum TestType {
   SpermDFI = "SpermDFI",
 }
 
-enum Gender {
+export enum EGender {
   Male = "male",
   Female = "female",
   Both = "both",
 }
 
-enum BloodTestComponentType {
+enum EBloodTestComponentType {
   Text = "text",
   Select = "select",
 }
 
 interface BloodTestComponent {
   componentName: string;
-  componentType: BloodTestComponentType;
+  componentType: EBloodTestComponentType;
   options?: string[]; // For select components
   unit?: string;
   referenceRange?: string;
 }
 
-interface IBloodTests extends Document {
+interface IMedicalTest extends Document {
   testId: string;
   testName: string;
+  testType: ETestType;
   description: string;
-  gender: Gender;
+  gender: EGender;
   components?: [BloodTestComponent];
 }
 
@@ -43,7 +44,7 @@ export const BloodTestSchema: Schema = new Schema({
   componentType: {
     type: String,
     required: true,
-    enum: Object.values(BloodTestComponentType),
+    enum: Object.values(EBloodTestComponentType),
   },
   options: [{ type: String }],
   unit: { type: String },
@@ -54,9 +55,9 @@ const MedicalTestSchema: Schema = new Schema(
   {
     testId: { type: String, unique: true },
     testName: { type: String, required: true },
-    testType: { type: String, enum: Object.values(TestType), required: true },
+    testType: { type: String, enum: Object.values(ETestType), required: true },
     description: { type: String, required: true },
-    gender: { type: String, required: true, enum: Object.values(Gender) },
+    gender: { type: String, required: true, enum: Object.values(EGender) },
     components: [BloodTestSchema],
   },
   {
@@ -67,7 +68,7 @@ const MedicalTestSchema: Schema = new Schema(
 // Assume autoIncrementId is a function/middleware you've defined to auto-increment the testId
 MedicalTestSchema.pre("save", autoIncrementId("MedicalTests", "testId", "T-"));
 
-const MedicalTest = mongoose.model<IBloodTests>(
+const MedicalTest = mongoose.model<IMedicalTest>(
   "MedicalTests",
   MedicalTestSchema
 );

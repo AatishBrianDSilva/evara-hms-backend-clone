@@ -10,6 +10,7 @@ import mongoose from "mongoose";
 import PatientInvestigation from "../../../core/src/models/PatientInvestigation";
 import MasterInvestigation from "../../../core/src/models/MasterInvestigations";
 import MedicalTest from "../../../core/src/models/MedicalTests";
+import Patient from "../../../core/src/models/Patients";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -77,6 +78,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     if (filters.patientCode) {
       query.patientCode = filters.patientCode;
+    }
+
+    const patient = await Patient.findOne({
+      patientId: filters.patientCode,
+    }).lean();
+    if (!patient) {
+      throw new ErrorMessage(404, "Patient not found");
     }
 
     if (filters.date) {

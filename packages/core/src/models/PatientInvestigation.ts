@@ -1,6 +1,5 @@
 import mongoose, { Document, PaginateModel, Schema } from "mongoose";
 import paginate from "mongoose-paginate-v2";
-import { TestType } from "./MedicalTests";
 
 interface IInvestigationResult extends Document {
   testName: string;
@@ -30,7 +29,7 @@ interface IPatientInvestigation extends Document {
   doctor?: mongoose.Schema.Types.ObjectId;
   patientCode: string;
   investigation: mongoose.Schema.Types.ObjectId; // Reference to MasterInvestigation
-  results: IInvestigationResult;
+  result: IInvestigationResult;
   dateAssigned: Date;
   status: string;
   caseId?: string;
@@ -57,8 +56,7 @@ const PatientInvestigationSchema: Schema = new Schema(
       ref: "MasterInvestigations",
       required: true,
     },
-    testType: { type: String, required: true, enum: Object.values(TestType) },
-    results: InvestigationResultSchema,
+    result: InvestigationResultSchema,
     date: { type: Date, default: Date.now },
     status: { type: String, required: true, default: "Scheduled" },
   },
