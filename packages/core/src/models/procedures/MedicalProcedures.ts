@@ -1,6 +1,6 @@
 import mongoose, { Document, Mixed, Schema } from "mongoose";
-import { autoIncrementId } from "./Counters";
-import { EGender } from "./MedicalTests";
+import { autoIncrementId } from "../Counters";
+import { EGender } from "../investigation/MedicalTests";
 
 export enum EProcedureType {}
 

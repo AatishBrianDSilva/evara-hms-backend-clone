@@ -4,7 +4,7 @@ import ErrorMessage from "../../../../core/src/lib/utils/errorMessage";
 import successResponse from "../../../../core/src/lib/utils/successResponse";
 import MedicalTest, {
   ETestType,
-} from "../../../../core/src/models/MedicalTests";
+} from "../../../../core/src/models/investigation/MedicalTests";
 import { connectMongoDb } from "../../../../core/src/lib/db/mongodb";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {

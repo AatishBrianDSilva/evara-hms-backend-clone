@@ -1,5 +1,5 @@
 import mongoose, { Document, Mixed, Schema } from "mongoose";
-import { autoIncrementId } from "./Counters";
+import { autoIncrementId } from "../Counters";
 
 export enum ETestType {
   BloodTest = "BloodTest",

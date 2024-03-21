@@ -5,9 +5,9 @@ import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import PatientInvestigation from "../../../core/src/models/PatientInvestigation";
+import PatientInvestigation from "../../../core/src/models/investigation/PatientInvestigation";
 import mongoose from "mongoose";
-import { ETestType } from "../../../core/src/models/MedicalTests";
+import { ETestType } from "../../../core/src/models/investigation/MedicalTests";
 import { log } from "console";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -47,6 +47,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         updateData.result = body.result;
       }
     } else if (body.testType === ETestType.UltrasoundScan) {
+      updateData.result = body.result;
+      updateData.status = "Completed";
+    } else if (body.testType === ETestType.SemenAnalysis) {
       updateData.result = body.result;
       updateData.status = "Completed";
     }

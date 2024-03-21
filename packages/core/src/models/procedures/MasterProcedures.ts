@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { EGender, ETestType } from "./MedicalTests";
+import { EGender, ETestType } from "../investigation/MedicalTests";
 import { EProcedureType } from "./MedicalProcedures";
 
 interface IMasterProcedures extends Document {

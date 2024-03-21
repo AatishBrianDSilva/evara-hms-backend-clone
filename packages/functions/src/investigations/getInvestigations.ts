@@ -7,9 +7,9 @@ import { connectMongoDb } from "../../../core/src/lib/db/mongodb";
 import Doctors from "../../../core/src/models/Doctors";
 import formatPaginationResult from "../../../core/src/lib/utils/formatPaginationResult";
 import mongoose from "mongoose";
-import PatientInvestigation from "../../../core/src/models/PatientInvestigation";
-import MasterInvestigation from "../../../core/src/models/MasterInvestigations";
-import MedicalTest from "../../../core/src/models/MedicalTests";
+import PatientInvestigation from "../../../core/src/models/investigation/PatientInvestigation";
+import MasterInvestigation from "../../../core/src/models/investigation/MasterInvestigations";
+import MedicalTest from "../../../core/src/models/investigation/MedicalTests";
 import Patient from "../../../core/src/models/Patients";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
