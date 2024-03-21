@@ -2,9 +2,16 @@ import mongoose, { Document, Mixed, Schema } from "mongoose";
 import { autoIncrementId } from "../Counters";
 import { EGender } from "../investigation/MedicalTests";
 
-export enum EProcedureType {}
+export enum EProcedureType {
+  Hysteroscopy = "Hysteroscopy",
+  Laparoscopy = "Laparoscopy",
+  TESA = "TESA",
+  TESE = "TESE",
+  PGT = "PGT",
+  ERA = "ERA",
+}
 
-interface IMedicalPrecedure extends Document {
+interface IMedicalProcedure extends Document {
   procedureId: string;
   procedureName: string;
   procedureType: EProcedureType;
@@ -35,7 +42,7 @@ MedicalProcedureSchema.pre(
   autoIncrementId("MedicalProcedures", "procedureId", "P-")
 );
 
-const MedicalProcedure = mongoose.model<IMedicalPrecedure>(
+const MedicalProcedure = mongoose.model<IMedicalProcedure>(
   "MedicalProcedures",
   MedicalProcedureSchema
 );
