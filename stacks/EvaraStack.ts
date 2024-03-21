@@ -41,6 +41,7 @@ export function EvaraStack({ stack }: StackContext) {
       "DELETE /appointments/{id}":
         "packages/functions/src/appointments/deleteAppointment.main",
 
+      // INVESTIGATIONS
       //Patient Investigations
       "POST /investigations/add":
         "packages/functions/src/investigations/addInvestigation.main",
@@ -52,20 +53,40 @@ export function EvaraStack({ stack }: StackContext) {
         "packages/functions/src/investigations/editInvestigation.main",
       "DELETE /investigations/{id}":
         "packages/functions/src/investigations/deleteInvestigation.main",
-
       // Master Investigations
       "POST /master/investigations/add":
         "packages/functions/src/master/investigations/addInvestigation.main",
       "GET /master/investigations":
         "packages/functions/src/master/investigations/getInvestigations.main",
-
       // Medical Tests
-      "POST /master/medical-tests/add":
-        "packages/functions/src/master/MedicalTests/addTest.main",
+      "POST /master/investigations/default/add":
+        "packages/functions/src/master/investigations/addDefaultTest.main",
+
+      //PROCEDURES
+      //Patient Procedures
+      "POST /procedures/add":
+        "packages/functions/src/procedures/addProcedure.main",
+      "GET /procedures": "packages/functions/src/procedures/getProcedures.main",
+      "GET /procedures/{id}":
+        "packages/functions/src/procedures/getProcedureById.main",
+      "PUT /procedures/{id}":
+        "packages/functions/src/procedures/editProcedure.main",
+      "DELETE /procedures/{id}":
+        "packages/functions/src/procedures/deleteProcedure.main",
+      // Master Procedures
+      "POST /master/procedures/add":
+        "packages/functions/src/master/procedures/addProcedure.main",
+      "GET /master/procedures":
+        "packages/functions/src/master/procedures/getProcedures.main",
+      // Medical Procedures
+      "POST /master/procedures/default/add":
+        "packages/functions/src/master/procedures/addDefaultProcedure.main",
 
       // Admin Dev
       "GET /admin_dev/automate-medical-investigation":
         "packages/functions/src/admin_dev/automateMedicalInvestigation.main",
+      "GET /admin_dev/automate-medical-procedure":
+        "packages/functions/src/admin_dev/automateMedicalProcedure.main",
     },
   });
 

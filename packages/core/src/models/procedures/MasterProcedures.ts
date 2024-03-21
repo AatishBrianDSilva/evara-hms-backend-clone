@@ -16,7 +16,7 @@ const MasterProcedureSchema: Schema = new Schema({
   procedureType: {
     type: String,
     required: true,
-    enum: Object.values(ETestType),
+    enum: Object.values(EProcedureType),
   },
   procedure: {
     type: mongoose.Schema.Types.ObjectId,

@@ -1,9 +1,9 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 import errorResponse from "../../../core/src/lib/utils/errorResponse";
 import successResponse from "../../../core/src/lib/utils/successResponse";
-import MasterInvestigation from "../../../core/src/models/MasterInvestigations";
-import MedicalTest from "../../../core/src/models/MedicalTests"; // Ensure this import path matches your project structure
 import { connectMongoDb } from "../../../core/src/lib/db/mongodb";
+import MasterInvestigation from "../../../core/src/models/investigation/MasterInvestigations";
+import MedicalTest from "../../../core/src/models/investigation/MedicalTests";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
