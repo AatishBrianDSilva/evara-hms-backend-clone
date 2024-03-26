@@ -1,6 +1,9 @@
 import { Api, StackContext } from "sst/constructs";
 
 export function EvaraStack({ stack }: StackContext) {
+  /**
+   * Represents the API configuration for the EvaraStack.
+   */
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
@@ -82,11 +85,34 @@ export function EvaraStack({ stack }: StackContext) {
       "POST /master/procedures/default/add":
         "packages/functions/src/master/procedures/addDefaultProcedure.main",
 
+      //CRYO-PRESERVATIONS
+      //Patient Cryo-Preservations
+      "POST /cryo-preservations/add":
+        "packages/functions/src/cryoPreservations/addCryoPreservation.main",
+      "GET /cryo-preservations":
+        "packages/functions/src/cryoPreservations/getCryoPreservations.main",
+      "GET /cryo-preservations/{id}":
+        "packages/functions/src/cryoPreservations/getCryoPreservationById.main",
+      "PUT /cryo-preservations/{id}":
+        "packages/functions/src/cryoPreservations/editCryoPreservation.main",
+      "DELETE /cryo-preservations/{id}":
+        "packages/functions/src/cryoPreservations/deleteCryoPreservation.main",
+      // Master Cryo-Preservations
+      "POST /master/cryo-preservations/add":
+        "packages/functions/src/master/cryoPreservations/addCryoPreservation.main",
+      "GET /master/cryo-preservations":
+        "packages/functions/src/master/cryoPreservations/getCryoPreservations.main",
+      // Default Cryo-Preservations
+      "POST /master/cryo-preservations/default/add":
+        "packages/functions/src/master/cryoPreservations/addDefaultCryoPreservation.main",
+
       // Admin Dev
       "GET /admin_dev/automate-medical-investigation":
         "packages/functions/src/admin_dev/automateMedicalInvestigation.main",
       "GET /admin_dev/automate-medical-procedure":
         "packages/functions/src/admin_dev/automateMedicalProcedure.main",
+      "GET /admin_dev/automate-cryo-preservation":
+        "packages/functions/src/admin_dev/automateMasterCryoPreservations.main",
     },
   });
 
