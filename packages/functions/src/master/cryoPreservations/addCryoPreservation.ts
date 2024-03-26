@@ -28,7 +28,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Return success response
     return successResponse(
-      "Cryo Preservation created successfully",
+      "Cryo-Preservation created successfully",
       newProcedure
     );
   } catch (error) {

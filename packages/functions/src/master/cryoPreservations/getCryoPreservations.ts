@@ -38,7 +38,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     //Get all procedures
     const procedures = await MasterCryoPreservation.find(query)
       .populate({
-        path: "cryo",
+        path: "cryoPreservation",
         model: CryoPreservations.modelName,
       })
       .sort({ procedureType: 1 })

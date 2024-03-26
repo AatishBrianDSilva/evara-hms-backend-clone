@@ -63,10 +63,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         model: Doctors.modelName,
       },
       {
-        path: "cruo",
+        path: "cryo",
         model: MasterCryoPreservations.modelName,
         populate: {
-          path: "cryo",
+          path: "cryoPreservation",
           model: CryoPreservations.modelName,
         },
       },
