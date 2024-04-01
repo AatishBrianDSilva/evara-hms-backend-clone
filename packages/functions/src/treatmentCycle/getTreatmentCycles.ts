@@ -23,27 +23,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Construct the query object
     let query: any = {};
 
-    // Pagination options
-    const options: IPaginateOptions = {
-      lean: true,
-    };
-
-    //Add populate fields
-    options.populate = [
-      {
-        path: "doctor",
-        model: Doctors.modelName,
-      },
-      {
-        path: "cycle",
-        model: MasterTreatmentCycle.modelName,
-        populate: {
-          path: "treatmentCycle",
-          model: DefaultTreatmentCycle.modelName,
-        },
-      },
-    ];
-
     if (filters.doctor) {
       query.doctor = new mongoose.Types.ObjectId(filters.doctor);
     }
@@ -60,11 +39,24 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     // Fetching the appointments without pagination
-    const records = await PatientTreatmentCycle.find(query).lean();
+    const records = await PatientTreatmentCycle.find(query)
+      .populate([
+        {
+          path: "doctor",
+          model: Doctors.modelName,
+        },
+        {
+          path: "cycle",
+          model: MasterTreatmentCycle.modelName,
+          populate: {
+            path: "treatmentCycle",
+            model: DefaultTreatmentCycle.modelName,
+          },
+        },
+      ])
+      .lean();
 
-    return successResponse("Success", {
-      records,
-    });
+    return successResponse("Success", records);
   } catch (error) {
     return errorResponse(error);
   }
