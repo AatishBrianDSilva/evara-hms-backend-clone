@@ -2,8 +2,8 @@ import { APIGatewayProxyHandler } from "aws-lambda";
 import errorResponse from "../../../core/src/lib/utils/errorResponse";
 import ErrorMessage from "../../../core/src/lib/utils/errorMessage";
 import successResponse from "../../../core/src/lib/utils/successResponse";
-import PatientProcedures from "../../../core/src/models/procedure/PatientProcedures";
 import { connectMongoDb } from "../../../core/src/lib/db/mongodb";
+import PatientTreatmentCycle from "../../../core/src/models/treatmentCycle/PatientTreatmentCycle";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -25,12 +25,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     for (let i = 0; i < data.length; i++) {
       data[i].clinicId = "EV";
-      const procedure = new PatientProcedures(data[i]);
-      await procedure.save();
+      const treatmentCycle = new PatientTreatmentCycle(data[i]);
+      await treatmentCycle.save();
     }
 
     // Return success response
-    return successResponse("Procedure created successfully");
+    return successResponse("Treatment Cycle created successfully");
   } catch (error) {
     return errorResponse(error);
   }

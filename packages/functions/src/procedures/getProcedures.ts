@@ -8,9 +8,9 @@ import Doctors from "../../../core/src/models/Doctors";
 import formatPaginationResult from "../../../core/src/lib/utils/formatPaginationResult";
 import mongoose from "mongoose";
 import Patient from "../../../core/src/models/Patients";
-import MasterProcedure from "../../../core/src/models/procedures/MasterProcedures";
-import MedicalProcedure from "../../../core/src/models/procedures/MedicalProcedures";
-import PatientProcedures from "../../../core/src/models/procedures/PatientProcedures";
+import MasterProcedure from "../../../core/src/models/procedure/MasterProcedures";
+import MedicalProcedure from "../../../core/src/models/procedure/MedicalProcedures";
+import PatientProcedures from "../../../core/src/models/procedure/PatientProcedures";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {

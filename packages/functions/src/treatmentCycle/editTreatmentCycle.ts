@@ -5,8 +5,8 @@ import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
 import mongoose from "mongoose";
 import { log } from "console";
-import { EProcedureType } from "../../../core/src/models/procedure/MedicalProcedures";
-import PatientProcedures from "../../../core/src/models/procedure/PatientProcedures";
+import PatientTreatmentCycle from "../../../core/src/models/treatmentCycle/PatientTreatmentCycle";
+import { ETreatmentCycleType } from "../../../core/src/models/treatmentCycle/DefaultTreatmentCycle";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -39,25 +39,26 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (body.status) {
       updateData.status = body.status;
     }
+    updateData.status = "Completed";
 
-    if (body.testType === EProcedureType.Hysteroscopy) {
+    if (body.testType === ETreatmentCycleType.IUI) {
       updateData.result = body.result;
-      updateData.status = "Completed";
-    } else if (body.testType === EProcedureType.PGT) {
+    } else if (body.testType === ETreatmentCycleType.OITI) {
       updateData.result = body.result;
-      updateData.status = "Completed";
-    } else if (body.testType === EProcedureType.TESA) {
+    } else if (body.testType === ETreatmentCycleType.ICSIPlusDonorEgg) {
       updateData.result = body.result;
-      updateData.status = "Completed";
     }
 
-    const procedure = await PatientProcedures.findByIdAndUpdate(
+    const treatmentCycle = await PatientTreatmentCycle.findByIdAndUpdate(
       id,
       updateData,
       { new: true }
     );
 
-    return successResponse("Procedure Updated successfully", procedure);
+    return successResponse(
+      "TreatmentCycle Updated successfully",
+      treatmentCycle
+    );
   } catch (error) {
     return errorResponse(error);
   }

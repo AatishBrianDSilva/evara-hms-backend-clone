@@ -2,8 +2,8 @@ import { APIGatewayProxyHandler } from "aws-lambda";
 import errorResponse from "../../../../core/src/lib/utils/errorResponse";
 import ErrorMessage from "../../../../core/src/lib/utils/errorMessage";
 import successResponse from "../../../../core/src/lib/utils/successResponse";
-import MasterProcedures from "../../../../core/src/models/procedure/MasterProcedures";
 import { connectMongoDb } from "../../../../core/src/lib/db/mongodb";
+import DefaultTreatmentCycle from "../../../../core/src/models/treatmentCycle/DefaultTreatmentCycle";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -17,16 +17,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Parse the body from the event
     const data = JSON.parse(event.body);
 
-    // TODO: Remove clinicId and branchId after adding authentication
-    data.clinicId = "EV";
-    data.branchId = "KL";
-
-    // Create a new Master Investigation
-    const procedure = new MasterProcedures(data);
-    const newProcedure = await procedure.save();
+    // Loop through the data and create a new Master Investigation
+    for (let i = 0; i < data.length; i++) {
+      const res = data[i];
+      const test = new DefaultTreatmentCycle(res);
+      await test.save();
+    }
 
     // Return success response
-    return successResponse("Procedure created successfully", newProcedure);
+    return successResponse("TreatmentCycles(s) Added successfully");
   } catch (error) {
     return errorResponse(error);
   }

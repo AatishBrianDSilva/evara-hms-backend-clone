@@ -7,7 +7,7 @@ export function EvaraStack({ stack }: StackContext) {
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
-        timeout: "25 seconds",
+        timeout: "29 seconds",
       },
     },
     routes: {
@@ -106,6 +106,27 @@ export function EvaraStack({ stack }: StackContext) {
       "POST /master/cryo-preservations/default/add":
         "packages/functions/src/master/cryoPreservations/addDefaultCryoPreservation.main",
 
+      //TREATMENT CYCLES
+      //Patient Treatment Cycles
+      "POST /treatment-cycles/add":
+        "packages/functions/src/treatmentCycle/addTreatmentCycle.main",
+      "GET /treatment-cycles":
+        "packages/functions/src/treatmentCycle/getTreatmentCycles.main",
+      "GET /treatment-cycles/{id}":
+        "packages/functions/src/treatmentCycle/getTreatmentCycleById.main",
+      "PUT /treatment-cycles/{id}":
+        "packages/functions/src/treatmentCycle/editTreatmentCycle.main",
+      "DELETE /treatment-cycles/{id}":
+        "packages/functions/src/treatmentCycle/deleteTreatmentCycle.main",
+      // Master Treatment Cycles
+      "POST /master/treatment-cycles/add":
+        "packages/functions/src/master/treatmentCycle/addTreatmentCycle.main",
+      "GET /master/treatment-cycles":
+        "packages/functions/src/master/treatmentCycle/getTreatmentCycles.main",
+      // Default Treatment Cycles
+      "POST /master/treatment-cycles/default/add":
+        "packages/functions/src/master/treatmentCycle/addDefaultTreatmentCycle.main",
+
       // Admin Dev
       "GET /admin_dev/automate-medical-investigation":
         "packages/functions/src/admin_dev/automateMedicalInvestigation.main",
@@ -113,6 +134,8 @@ export function EvaraStack({ stack }: StackContext) {
         "packages/functions/src/admin_dev/automateMedicalProcedure.main",
       "GET /admin_dev/automate-cryo-preservation":
         "packages/functions/src/admin_dev/automateMasterCryoPreservations.main",
+      "GET /admin_dev/automate-treatment-cycle":
+        "packages/functions/src/admin_dev/automateMasterTreatmentCycle.main",
     },
   });
 

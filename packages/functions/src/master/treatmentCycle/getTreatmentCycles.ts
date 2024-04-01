@@ -2,10 +2,10 @@ import { APIGatewayProxyHandler } from "aws-lambda";
 import errorResponse from "../../../../core/src/lib/utils/errorResponse";
 import ErrorMessage from "../../../../core/src/lib/utils/errorMessage";
 import successResponse from "../../../../core/src/lib/utils/successResponse";
-import MasterProcedure from "../../../../core/src/models/procedure/MasterProcedures";
 import { connectMongoDb } from "../../../../core/src/lib/db/mongodb";
 import Patient from "../../../../core/src/models/Patients";
-import MedicalProcedure from "../../../../core/src/models/procedure/MedicalProcedures";
+import DefaultTreatmentCycle from "../../../../core/src/models/treatmentCycle/DefaultTreatmentCycle";
+import MasterTreatmentCycle from "../../../../core/src/models/treatmentCycle/MasterTreatmentCycle";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -31,21 +31,28 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
     }
 
+    // console.log("🚀 ~ constmain:APIGatewayProxyHandler= ~ query:", query);
+
     // TODO: Remove clinicId and branchId after adding authentication
     // data.clinicId = "EV";
     // data.branchId = "KL";
 
-    //Get all procedures
-    const procedures = await MasterProcedure.find(query)
+    //Get all treatmentCycles
+    const treatmentCycles = await MasterTreatmentCycle.find(query)
       .populate({
-        path: "procedure",
-        model: MedicalProcedure.modelName,
+        path: "treatmentCycle",
+        model: DefaultTreatmentCycle.modelName,
       })
-      .sort({ procedureType: 1 })
+      .sort({ treatmentCycleType: 1 })
       .lean();
 
+    // console.log(
+    // "🚀 ~ constmain:APIGatewayProxyHandler= ~ treatmentCycles:",
+    // treatmentCycles
+    // );
+
     // Return success response
-    return successResponse("Success", procedures);
+    return successResponse("Success", treatmentCycles);
   } catch (error) {
     return errorResponse(error);
   }
