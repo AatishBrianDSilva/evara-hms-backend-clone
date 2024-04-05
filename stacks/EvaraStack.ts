@@ -44,88 +44,91 @@ export function EvaraStack({ stack }: StackContext) {
       "DELETE /appointments/{id}":
         "packages/functions/src/appointments/deleteAppointment.main",
 
+      // Patient Dashboard Start
       // INVESTIGATIONS
       //Patient Investigations
       "POST /investigations/add":
-        "packages/functions/src/investigations/addInvestigation.main",
+        "packages/functions/src/patientDashboard/investigations/addInvestigation.main",
       "GET /investigations":
-        "packages/functions/src/investigations/getInvestigations.main",
+        "packages/functions/src/patientDashboard/investigations/getInvestigations.main",
       "GET /investigations/{id}":
-        "packages/functions/src/investigations/getInvestigationById.main",
+        "packages/functions/src/patientDashboard/investigations/getInvestigationById.main",
       "PUT /investigations/{id}":
-        "packages/functions/src/investigations/editInvestigation.main",
+        "packages/functions/src/patientDashboard/investigations/editInvestigation.main",
       "DELETE /investigations/{id}":
-        "packages/functions/src/investigations/deleteInvestigation.main",
+        "packages/functions/src/patientDashboard/investigations/deleteInvestigation.main",
       // Master Investigations
       "POST /master/investigations/add":
-        "packages/functions/src/master/investigations/addInvestigation.main",
+        "packages/functions/src/patientDashboard/master/investigations/addInvestigation.main",
       "GET /master/investigations":
-        "packages/functions/src/master/investigations/getInvestigations.main",
+        "packages/functions/src/patientDashboard/master/investigations/getInvestigations.main",
       // Medical Tests
       "POST /master/investigations/default/add":
-        "packages/functions/src/master/investigations/addDefaultTest.main",
+        "packages/functions/src/patientDashboard/master/investigations/addDefaultTest.main",
 
       //PROCEDURES
       //Patient Procedures
       "POST /procedures/add":
-        "packages/functions/src/procedures/addProcedure.main",
-      "GET /procedures": "packages/functions/src/procedures/getProcedures.main",
+        "packages/functions/src/patientDashboard/procedures/addProcedure.main",
+      "GET /procedures":
+        "packages/functions/src/patientDashboard/procedures/getProcedures.main",
       "GET /procedures/{id}":
-        "packages/functions/src/procedures/getProcedureById.main",
+        "packages/functions/src/patientDashboard/procedures/getProcedureById.main",
       "PUT /procedures/{id}":
-        "packages/functions/src/procedures/editProcedure.main",
+        "packages/functions/src/patientDashboard/procedures/editProcedure.main",
       "DELETE /procedures/{id}":
-        "packages/functions/src/procedures/deleteProcedure.main",
+        "packages/functions/src/patientDashboard/procedures/deleteProcedure.main",
       // Master Procedures
       "POST /master/procedures/add":
-        "packages/functions/src/master/procedures/addProcedure.main",
+        "packages/functions/src/patientDashboard/master/procedures/addProcedure.main",
       "GET /master/procedures":
-        "packages/functions/src/master/procedures/getProcedures.main",
+        "packages/functions/src/patientDashboard/master/procedures/getProcedures.main",
       // Medical Procedures
       "POST /master/procedures/default/add":
-        "packages/functions/src/master/procedures/addDefaultProcedure.main",
+        "packages/functions/src/patientDashboard/master/procedures/addDefaultProcedure.main",
 
       //CRYO-PRESERVATIONS
       //Patient Cryo-Preservations
       "POST /cryo-preservations/add":
-        "packages/functions/src/cryoPreservations/addCryoPreservation.main",
+        "packages/functions/src/patientDashboard/cryoPreservations/addCryoPreservation.main",
       "GET /cryo-preservations":
-        "packages/functions/src/cryoPreservations/getCryoPreservations.main",
+        "packages/functions/src/patientDashboard/cryoPreservations/getCryoPreservations.main",
       "GET /cryo-preservations/{id}":
-        "packages/functions/src/cryoPreservations/getCryoPreservationById.main",
+        "packages/functions/src/patientDashboard/cryoPreservations/getCryoPreservationById.main",
       "PUT /cryo-preservations/{id}":
-        "packages/functions/src/cryoPreservations/editCryoPreservation.main",
+        "packages/functions/src/patientDashboard/cryoPreservations/editCryoPreservation.main",
       "DELETE /cryo-preservations/{id}":
-        "packages/functions/src/cryoPreservations/deleteCryoPreservation.main",
+        "packages/functions/src/patientDashboard/cryoPreservations/deleteCryoPreservation.main",
       // Master Cryo-Preservations
       "POST /master/cryo-preservations/add":
-        "packages/functions/src/master/cryoPreservations/addCryoPreservation.main",
+        "packages/functions/src/patientDashboard/master/cryoPreservations/addCryoPreservation.main",
       "GET /master/cryo-preservations":
-        "packages/functions/src/master/cryoPreservations/getCryoPreservations.main",
+        "packages/functions/src/patientDashboard/master/cryoPreservations/getCryoPreservations.main",
       // Default Cryo-Preservations
       "POST /master/cryo-preservations/default/add":
-        "packages/functions/src/master/cryoPreservations/addDefaultCryoPreservation.main",
+        "packages/functions/src/patientDashboard/master/cryoPreservations/addDefaultCryoPreservation.main",
 
       //TREATMENT CYCLES
       //Patient Treatment Cycles
       "POST /treatment-cycles/add":
-        "packages/functions/src/treatmentCycle/addTreatmentCycle.main",
+        "packages/functions/src/patientDashboard/treatmentCycle/addTreatmentCycle.main",
       "GET /treatment-cycles":
-        "packages/functions/src/treatmentCycle/getTreatmentCycles.main",
+        "packages/functions/src/patientDashboard/treatmentCycle/getTreatmentCycles.main",
       "GET /treatment-cycles/{id}":
-        "packages/functions/src/treatmentCycle/getTreatmentCycleById.main",
+        "packages/functions/src/patientDashboard/treatmentCycle/getTreatmentCycleById.main",
       "PATCH /treatment-cycles/{id}":
-        "packages/functions/src/treatmentCycle/editTreatmentCycle.main",
+        "packages/functions/src/patientDashboard/treatmentCycle/editTreatmentCycle.main",
       "DELETE /treatment-cycles/{id}":
-        "packages/functions/src/treatmentCycle/deleteTreatmentCycle.main",
+        "packages/functions/src/patientDashboard/treatmentCycle/deleteTreatmentCycle.main",
       // Master Treatment Cycles
       "POST /master/treatment-cycles/add":
-        "packages/functions/src/master/treatmentCycle/addTreatmentCycle.main",
+        "packages/functions/src/patientDashboard/master/treatmentCycle/addTreatmentCycle.main",
       "GET /master/treatment-cycles":
-        "packages/functions/src/master/treatmentCycle/getTreatmentCycles.main",
+        "packages/functions/src/patientDashboard/master/treatmentCycle/getTreatmentCycles.main",
       // Default Treatment Cycles
       "POST /master/treatment-cycles/default/add":
-        "packages/functions/src/master/treatmentCycle/addDefaultTreatmentCycle.main",
+        "packages/functions/src/patientDashboard/master/treatmentCycle/addDefaultTreatmentCycle.main",
+      // Patient Dashboard End
 
       // Admin Dev
       "GET /admin_dev/automate-medical-investigation":

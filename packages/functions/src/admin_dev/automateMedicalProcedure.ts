@@ -1,8 +1,8 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import MasterProcedure from "@evara-backend/core/models/procedure/MasterProcedure";
-import MedicalProcedure from "@evara-backend/core/models/procedure/MedicalProcedure"; // Ensure this import path matches your project structure
+import MasterProcedure from "@evara-backend/core/models/patientDashboard/procedure/MasterProcedure";
+import MedicalProcedure from "@evara-backend/core/models/patientDashboard/procedure/MedicalProcedure"; // Ensure this import path matches your project structure
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
