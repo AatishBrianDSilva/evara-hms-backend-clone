@@ -5,7 +5,7 @@ import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import PatientProcedures from "../../../core/src/models/procedure/PatientProcedures";
+import PatientTreatmentCycle from "../../../core/src/models/treatmentCycle/PatientTreatmentCycle";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -21,10 +21,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Id is not provided");
     }
 
-    const procedure = await PatientProcedures.findByIdAndDelete(id);
-    console.log("Procedure", procedure);
+    const treatmentCycle = await PatientTreatmentCycle.findByIdAndDelete(id);
+    console.log("TreatmentCycle", treatmentCycle);
 
-    return successResponse("Procedure Updated successfully", procedure);
+    return successResponse(
+      "TreatmentCycle Updated successfully",
+      treatmentCycle
+    );
   } catch (error) {
     return errorResponse(error);
   }

@@ -2,7 +2,7 @@ import { APIGatewayProxyHandler } from "aws-lambda";
 import errorResponse from "../../../core/src/lib/utils/errorResponse";
 import ErrorMessage from "../../../core/src/lib/utils/errorMessage";
 import successResponse from "../../../core/src/lib/utils/successResponse";
-import PatientProcedures from "../../../core/src/models/procedures/PatientProcedures";
+import PatientProcedures from "../../../core/src/models/procedure/PatientProcedures";
 import { connectMongoDb } from "../../../core/src/lib/db/mongodb";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {

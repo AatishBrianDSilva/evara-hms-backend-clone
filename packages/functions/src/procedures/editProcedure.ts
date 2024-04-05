@@ -5,8 +5,8 @@ import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
 import mongoose from "mongoose";
 import { log } from "console";
-import { EProcedureType } from "../../../core/src/models/procedures/MedicalProcedures";
-import PatientProcedures from "../../../core/src/models/procedures/PatientProcedures";
+import { EProcedureType } from "../../../core/src/models/procedure/MedicalProcedures";
+import PatientProcedures from "../../../core/src/models/procedure/PatientProcedures";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {

@@ -6,9 +6,9 @@ import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
 import Doctors from "../../../core/src/models/Doctors";
-import PatientProcedures from "../../../core/src/models/procedure/PatientProcedures";
-import MasterProcedure from "../../../core/src/models/procedure/MasterProcedures";
-import MedicalProcedure from "../../../core/src/models/procedure/MedicalProcedures";
+import PatientTreatmentCycle from "../../../core/src/models/treatmentCycle/PatientTreatmentCycle";
+import MasterTreatmentCycle from "../../../core/src/models/treatmentCycle/MasterTreatmentCycle";
+import DefaultTreatmentCycle from "../../../core/src/models/treatmentCycle/DefaultTreatmentCycle";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -24,29 +24,31 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Id is not provided");
     }
 
-    const procedure = await PatientProcedures.findById(id)
+    const treatmentCycle = await PatientTreatmentCycle.findById(id)
       .populate([
         {
           path: "doctor",
-          select: "firstName lastName desgination",
           model: Doctors.modelName,
         },
         {
-          path: "procedure",
-          model: MasterProcedure.modelName,
+          path: "cycle",
+          model: MasterTreatmentCycle.modelName,
           populate: {
-            path: "procedure",
-            model: MedicalProcedure.modelName,
+            path: "treatmentCycle",
+            model: DefaultTreatmentCycle.modelName,
           },
         },
       ])
       .lean();
 
-    if (!procedure) {
-      throw new ErrorMessage(404, "Procedure not found");
+    if (!treatmentCycle) {
+      throw new ErrorMessage(404, "TreatmentCycle not found");
     }
 
-    return successResponse("Procedure fetched successfully", procedure);
+    return successResponse(
+      "TreatmentCycle fetched successfully",
+      treatmentCycle
+    );
   } catch (error) {
     return errorResponse(error);
   }
