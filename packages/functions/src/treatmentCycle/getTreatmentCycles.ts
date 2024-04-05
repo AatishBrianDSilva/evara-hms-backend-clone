@@ -10,6 +10,7 @@ import Patient from "../../../core/src/models/Patients";
 import PatientTreatmentCycle from "../../../core/src/models/treatmentCycle/PatientTreatmentCycle";
 import DefaultTreatmentCycle from "../../../core/src/models/treatmentCycle/DefaultTreatmentCycle";
 import MasterTreatmentCycle from "../../../core/src/models/treatmentCycle/MasterTreatmentCycle";
+import { log } from "console";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -18,21 +19,27 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Extract query string parameters
     const params = event.queryStringParameters || {};
-    const { ...filters } = params;
+    log("Params: ", params);
 
     // Construct the query object
     let query: any = {};
-
-    if (filters.doctor) {
-      query.doctor = new mongoose.Types.ObjectId(filters.doctor);
+    if (params.doctor) {
+      query.doctor = new mongoose.Types.ObjectId(params.doctor);
+    }
+    if (params.patientCode) {
+      query.patientCode = params.patientCode;
     }
 
-    if (filters.patientCode) {
-      query.patientCode = filters.patientCode;
+    // Construct the sort object
+    let sort: any = {};
+    if (params.sort) {
+      sort = JSON.parse(params.sort);
     }
+
+    log("Sort: ", sort);
 
     const patient = await Patient.findOne({
-      patientId: filters.patientCode,
+      patientId: params.patientCode,
     }).lean();
     if (!patient) {
       throw new ErrorMessage(404, "Patient not found");
@@ -40,6 +47,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Fetching the appointments without pagination
     const records = await PatientTreatmentCycle.find(query)
+      .sort(sort)
       .populate([
         {
           path: "doctor",

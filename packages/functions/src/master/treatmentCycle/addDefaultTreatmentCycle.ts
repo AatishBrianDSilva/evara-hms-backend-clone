@@ -4,6 +4,7 @@ import ErrorMessage from "../../../../core/src/lib/utils/errorMessage";
 import successResponse from "../../../../core/src/lib/utils/successResponse";
 import { connectMongoDb } from "../../../../core/src/lib/db/mongodb";
 import DefaultTreatmentCycle from "../../../../core/src/models/treatmentCycle/DefaultTreatmentCycle";
+import { log } from "console";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -16,10 +17,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Parse the body from the event
     const data = JSON.parse(event.body);
+    log("Data", data);
 
     // Loop through the data and create a new Master Investigation
     for (let i = 0; i < data.length; i++) {
       const res = data[i];
+      log("Res", res);
       const test = new DefaultTreatmentCycle(res);
       await test.save();
     }

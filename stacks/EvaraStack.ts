@@ -114,7 +114,7 @@ export function EvaraStack({ stack }: StackContext) {
         "packages/functions/src/treatmentCycle/getTreatmentCycles.main",
       "GET /treatment-cycles/{id}":
         "packages/functions/src/treatmentCycle/getTreatmentCycleById.main",
-      "PUT /treatment-cycles/{id}":
+      "PATCH /treatment-cycles/{id}":
         "packages/functions/src/treatmentCycle/editTreatmentCycle.main",
       "DELETE /treatment-cycles/{id}":
         "packages/functions/src/treatmentCycle/deleteTreatmentCycle.main",

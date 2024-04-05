@@ -1,10 +1,13 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { ETreatmentCycleType } from "./DefaultTreatmentCycle";
+import {
+  ETreatmentCycleType,
+  IDefaultTreatmentCycle,
+} from "./DefaultTreatmentCycle";
 import { EGender } from "../investigation/MedicalTests";
 
 interface IMasterTreatmentCycle extends Document {
   cycleType: ETreatmentCycleType;
-  treatmentCycle: mongoose.Schema.Types.ObjectId;
+  treatmentCycle: IDefaultTreatmentCycle;
   gender: EGender;
   name: string;
   description?: string;
@@ -12,7 +15,7 @@ interface IMasterTreatmentCycle extends Document {
   active: boolean;
 }
 
-const MasterTreatmentCycleSchema: Schema = new Schema<IMasterTreatmentCycle>({
+const MasterTreatmentCycleSchema: Schema = new Schema({
   cycleType: {
     type: String,
     required: true,
