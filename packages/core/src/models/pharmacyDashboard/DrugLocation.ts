@@ -1,18 +1,8 @@
 import mongoose, { Schema } from "mongoose";
 
-export enum EDrugLocation {
-  OPDPharmacy = "OPD Pharmacy",
-  OTPharmacy = "OT Pharmacy",
-  IVFPharmacy = "IVF Pharmacy",
-  CentralPharmacy = "Central Pharmacy",
-  EmergencyPharmacy = "Emergency Pharmacy",
-  InternalStock = "Internal Stock",
-  RecoveryPharmacy = "Recovery Pharmacy",
-}
-
 export interface IDrugLocation {
   branchId: string;
-  location: EDrugLocation;
+  location: string;
   notes: string;
 }
 
@@ -25,7 +15,7 @@ const drugLocationSchema = new Schema<IDrugLocation>(
     },
     location: {
       type: String,
-      enum: Object.values(EDrugLocation),
+      lowercase: true,
       required: true,
     },
     notes: { type: String, required: false },

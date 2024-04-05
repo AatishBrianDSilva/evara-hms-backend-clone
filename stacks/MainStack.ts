@@ -1,13 +1,28 @@
-import { Api, StackContext } from "sst/constructs";
+import { Api, StackContext, attachPermissionsToRole } from "sst/constructs";
+import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 
-export function EvaraStack({ stack }: StackContext) {
+export function MainStack({ stack }: StackContext) {
+  // Create a default role for the API
+  const role = new Role(stack, "ApiRole", {
+    assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
+    managedPolicies: [
+      {
+        managedPolicyArn:
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+      },
+    ],
+  });
+
+  attachPermissionsToRole(role, ["ssm"]);
+
   /**
-   * Represents the API configuration for the EvaraStack.
+   * Represents the API configuration for the MainStack.
    */
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
         timeout: "29 seconds",
+        role: role,
       },
     },
     routes: {
@@ -130,80 +145,6 @@ export function EvaraStack({ stack }: StackContext) {
         "packages/functions/src/patientDashboard/master/treatmentCycle/addDefaultTreatmentCycle.main",
       // Patient Dashboard End
 
-      // Pharmacy Dashboard Start
-      // MASTER
-      // Drug Items
-      "POST /pharmacy-dashboard/master/drug-items/add":
-        "packages/functions/src/pharmacyDashboard/master/drugItem/addDrugItem.main",
-      "GET /pharmacy-dashboard/master/drug-items":
-        "packages/functions/src/pharmacyDashboard/master/drugItem/getDrugItems.main",
-      "PUT /pharmacy-dashboard/master/drug-items/{id}":
-        "packages/functions/src/pharmacyDashboard/master/drugItem/updateDrugItem.main",
-      "DELETE /pharmacy-dashboard/master/drug-items/{id}":
-        "packages/functions/src/pharmacyDashboard/master/drugItem/deleteDrugItem.main",
-
-      // Drug Categories
-      "POST /pharmacy-dashboard/master/drug-categories/add":
-        "packages/functions/src/pharmacyDashboard/master/drugCategory/addDrugCategory.main",
-      "GET /pharmacy-dashboard/master/drug-categories":
-        "packages/functions/src/pharmacyDashboard/master/drugCategory/getDrugCategories.main",
-      "PUT /pharmacy-dashboard/master/drug-categories/{id}":
-        "packages/functions/src/pharmacyDashboard/master/drugCategory/updateDrugCategory.main",
-      "DELETE /pharmacy-dashboard/master/drug-categories/{id}":
-        "packages/functions/src/pharmacyDashboard/master/drugCategory/deleteDrugCategory.main",
-
-      // Drug Locations
-      "POST /pharmacy-dashboard/master/drug-locations/add":
-        "packages/functions/src/pharmacyDashboard/master/drugLocation/addDrugLocation.main",
-      "GET /pharmacy-dashboard/master/drug-locations":
-        "packages/functions/src/pharmacyDashboard/master/drugLocation/getDrugLocations.main",
-      "PUT /pharmacy-dashboard/master/drug-locations/{id}":
-        "packages/functions/src/pharmacyDashboard/master/drugLocation/updateDrugLocation.main",
-      "DELETE /pharmacy-dashboard/master/drug-locations/{id}":
-        "packages/functions/src/pharmacyDashboard/master/drugLocation/deleteDrugLocation.main",
-
-      // Drug manufacturers
-      "POST /pharmacy-dashboard/master/drug-manufacturers/add":
-        "packages/functions/src/pharmacyDashboard/master/drugManufacturer/addDrugManufacturer.main",
-      "GET /pharmacy-dashboard/master/drug-manufacturers":
-        "packages/functions/src/pharmacyDashboard/master/drugManufacturer/getDrugManufacturers.main",
-      "PUT /pharmacy-dashboard/master/drug-manufacturers/{id}":
-        "packages/functions/src/pharmacyDashboard/master/drugManufacturer/updateDrugManufacturer.main",
-      "DELETE /pharmacy-dashboard/master/drug-manufacturers/{id}":
-        "packages/functions/src/pharmacyDashboard/master/drugManufacturer/deleteDrugManufacturer.main",
-
-      // Drug vendors
-      "POST /pharmacy-dashboard/master/drug-vendors/add":
-        "packages/functions/src/pharmacyDashboard/master/drugVendor/addDrugVendor.main",
-      "GET /pharmacy-dashboard/master/drug-vendors":
-        "packages/functions/src/pharmacyDashboard/master/drugVendor/getDrugVendors.main",
-      "PUT /pharmacy-dashboard/master/drug-vendors/{id}":
-        "packages/functions/src/pharmacyDashboard/master/drugVendor/updateDrugVendor.main",
-      "DELETE /pharmacy-dashboard/master/drug-vendors/{id}":
-        "packages/functions/src/pharmacyDashboard/master/drugVendor/deleteDrugVendor.main",
-
-      // Tax Rates
-      "POST /pharmacy-dashboard/master/tax-rates/add":
-        "packages/functions/src/pharmacyDashboard/master/taxRate/addTaxRate.main",
-      "GET /pharmacy-dashboard/master/tax-rates":
-        "packages/functions/src/pharmacyDashboard/master/taxRate/getTaxRates.main",
-      "PUT /pharmacy-dashboard/master/tax-rates/{id}":
-        "packages/functions/src/pharmacyDashboard/master/taxRate/updateTaxRate.main",
-      "DELETE /pharmacy-dashboard/master/tax-rates/{id}":
-        "packages/functions/src/pharmacyDashboard/master/taxRate/deleteTaxRate.main",
-
-      // Pharmacy Stock
-      "POST /pharmacy-dashboard/master/stock/add":
-        "packages/functions/src/pharmacyDashboard/master/pharmacyStock/addPharmacyStock.main",
-      "GET /pharmacy-dashboard/master/stock":
-        "packages/functions/src/pharmacyDashboard/master/pharmacyStock/getPharmacyStocks.main",
-      "GET /pharmacy-dashboard/master/stock/{id}":
-        "packages/functions/src/pharmacyDashboard/master/pharmacyStock/getPharmacyStockById.main",
-      "PUT /pharmacy-dashboard/master/stock/{id}":
-        "packages/functions/src/pharmacyDashboard/master/pharmacyStock/updatePharmacyStock.main",
-      "DELETE /pharmacy-dashboard/master/stock/{id}":
-        "packages/functions/src/pharmacyDashboard/master/pharmacyStock/deletePharmacyStock.main",
-
       // Admin Dev
       "GET /admin_dev/automate-medical-investigation":
         "packages/functions/src/admin_dev/automateMedicalInvestigation.main",
@@ -220,4 +161,8 @@ export function EvaraStack({ stack }: StackContext) {
   stack.addOutputs({
     ApiEndpoint: api.url,
   });
+
+  return {
+    api,
+  };
 }

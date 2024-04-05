@@ -6,6 +6,7 @@ export interface IDrugItem {
   code: string;
   hsnCode: string;
   category: Schema.Types.ObjectId;
+  type?: Schema.Types.ObjectId;
   packSize: number;
   taxRate: Schema.Types.ObjectId;
   manufacturer: Schema.Types.ObjectId;
@@ -17,6 +18,8 @@ const drugItemSchema = new Schema<IDrugItem>(
     name: {
       type: String,
       required: true,
+      lowercase: true,
+      unique: true,
     },
     code: {
       type: String,
@@ -30,6 +33,10 @@ const drugItemSchema = new Schema<IDrugItem>(
       type: Schema.Types.ObjectId,
       ref: "DrugCategory",
       required: true,
+    },
+    type: {
+      type: Schema.Types.ObjectId,
+      ref: "DrugType",
     },
     packSize: {
       type: Number,
