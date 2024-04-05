@@ -1,16 +1,16 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "../../../core/src/lib/utils/errorResponse";
-import ErrorMessage from "../../../core/src/lib/utils/errorMessage";
-import successResponse from "../../../core/src/lib/utils/successResponse";
-import { IPaginateOptions } from "../../../core/src/lib/types/pagination";
-import { connectMongoDb } from "../../../core/src/lib/db/mongodb";
-import Doctors from "../../../core/src/models/Doctors";
-import formatPaginationResult from "../../../core/src/lib/utils/formatPaginationResult";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import Doctors from "@evara-backend/core/src/models/Doctors";
+import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
 import mongoose from "mongoose";
-import Patient from "../../../core/src/models/Patients";
-import MasterProcedure from "../../../core/src/models/procedure/MasterProcedures";
-import MedicalProcedure from "../../../core/src/models/procedure/MedicalProcedures";
-import PatientProcedures from "../../../core/src/models/procedure/PatientProcedures";
+import Patient from "@evara-backend/core/src/models/Patients";
+import MasterProcedure from "@evara-backend/core/src/models/procedure/MasterProcedure";
+import MedicalProcedure from "@evara-backend/core/src/models/procedure/MedicalProcedure";
+import PatientProcedures from "@evara-backend/core/src/models/procedure/PatientProcedure";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {

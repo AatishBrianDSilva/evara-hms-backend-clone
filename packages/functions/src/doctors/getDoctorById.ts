@@ -1,7 +1,7 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "../../../core/src/lib/utils/errorResponse";
-import ErrorMessage from "../../../core/src/lib/utils/errorMessage";
-import successResponse from "../../../core/src/lib/utils/successResponse";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {

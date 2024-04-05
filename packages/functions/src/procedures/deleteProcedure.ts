@@ -5,7 +5,7 @@ import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import PatientProcedures from "../../../core/src/models/procedure/PatientProcedures";
+import PatientProcedures from "@evara-backend/core/src/models/procedure/PatientProcedure";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {

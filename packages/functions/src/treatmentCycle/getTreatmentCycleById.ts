@@ -5,10 +5,10 @@ import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import Doctors from "../../../core/src/models/Doctors";
-import PatientTreatmentCycle from "../../../core/src/models/treatmentCycle/PatientTreatmentCycle";
-import MasterTreatmentCycle from "../../../core/src/models/treatmentCycle/MasterTreatmentCycle";
-import DefaultTreatmentCycle from "../../../core/src/models/treatmentCycle/DefaultTreatmentCycle";
+import Doctors from "@evara-backend/core/src/models/Doctors";
+import PatientTreatmentCycle from "@evara-backend/core/src/models/treatmentCycle/PatientTreatmentCycle";
+import MasterTreatmentCycle from "@evara-backend/core/src/models/treatmentCycle/MasterTreatmentCycle";
+import DefaultTreatmentCycle from "@evara-backend/core/src/models/treatmentCycle/DefaultTreatmentCycle";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {

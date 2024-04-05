@@ -4,8 +4,8 @@ import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
 import { log } from "console";
-import PatientTreatmentCycle from "../../../core/src/models/treatmentCycle/PatientTreatmentCycle";
-import { ETreatmentCycleCategoryKey } from "../../../core/src/models/treatmentCycle/DefaultTreatmentCycle";
+import PatientTreatmentCycle from "@evara-backend/core/src/models/treatmentCycle/PatientTreatmentCycle";
+import { ETreatmentCycleCategoryKey } from "@evara-backend/core/src/models/treatmentCycle/DefaultTreatmentCycle";
 import { Document } from "mongoose";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {

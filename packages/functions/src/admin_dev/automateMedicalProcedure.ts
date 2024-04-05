@@ -1,9 +1,9 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "../../../core/src/lib/utils/errorResponse";
-import successResponse from "../../../core/src/lib/utils/successResponse";
-import MasterProcedures from "../../../core/src/models/procedures/MasterProcedures";
-import MedicalProcedures from "../../../core/src/models/procedures/MedicalProcedures"; // Ensure this import path matches your project structure
-import { connectMongoDb } from "../../../core/src/lib/db/mongodb";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import MasterProcedure from "@evara-backend/core/models/procedure/MasterProcedure";
+import MedicalProcedure from "@evara-backend/core/models/procedure/MedicalProcedure"; // Ensure this import path matches your project structure
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -11,12 +11,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     // Fetch all medical procedures
-    const MedicalProceduress = await MedicalProcedures.find();
+    const MedicalProceduress = await MedicalProcedure.find();
 
     // Create a Master Procedures for each medical test
     const procedures = await Promise.all(
       MedicalProceduress.map(async (procedure) => {
-        const investigation = new MasterProcedures({
+        const investigation = new MasterProcedure({
           procedure: procedure._id,
           name: procedure.procedureName,
           procedureType: procedure.procedureType,

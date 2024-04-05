@@ -1,10 +1,10 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "../../../core/src/lib/utils/errorResponse";
-import ErrorMessage from "../../../core/src/lib/utils/errorMessage";
-import successResponse from "../../../core/src/lib/utils/successResponse";
-import { connectMongoDb } from "../../../core/src/lib/db/mongodb";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import mongoose from "mongoose";
-import Appointments from "../../../core/src/models/Appointments";
+import Appointments from "@evara-backend/core/src/models/Appointments";
 
 interface IFilter {
   status: string;

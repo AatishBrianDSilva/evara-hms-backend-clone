@@ -5,9 +5,9 @@ import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import PatientInvestigation from "../../../core/src/models/investigation/PatientInvestigation";
+import PatientInvestigation from "@evara-backend/core/src/models/investigation/PatientInvestigation";
 import mongoose from "mongoose";
-import { ETestType } from "../../../core/src/models/investigation/MedicalTests";
+import { ETestType } from "@evara-backend/core/src/models/investigation/MedicalTests";
 import { log } from "console";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {

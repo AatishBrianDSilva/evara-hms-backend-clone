@@ -1,11 +1,11 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "../../../../core/src/lib/utils/errorResponse";
-import ErrorMessage from "../../../../core/src/lib/utils/errorMessage";
-import successResponse from "../../../../core/src/lib/utils/successResponse";
-import MasterInvestigation from "../../../../core/src/models/investigation/MasterInvestigations";
-import { connectMongoDb } from "../../../../core/src/lib/db/mongodb";
-import MedicalTest from "../../../../core/src/models/investigation/MedicalTests";
-import Patient from "../../../../core/src/models/Patients";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import MasterInvestigation from "@evara-backend/core/src/models/investigation/MasterInvestigations";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import MedicalTest from "@evara-backend/core/src/models/investigation/MedicalTests";
+import Patient from "@evara-backend/core/src/models/Patients";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
