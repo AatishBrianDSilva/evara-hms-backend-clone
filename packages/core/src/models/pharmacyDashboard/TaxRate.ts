@@ -1,6 +1,7 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, PaginateModel, Document } from "mongoose";
+import paginate from "mongoose-paginate-v2";
 
-export interface ITaxRate {
+export interface ITaxRate extends Document {
   taxRate: number;
   notes: string;
 }
@@ -15,4 +16,11 @@ const taxRateSchema = new Schema<ITaxRate>(
   }
 );
 
-export const TaxRate = mongoose.model<ITaxRate>("TaxRate", taxRateSchema);
+taxRateSchema.plugin(paginate);
+
+interface ITaxRateDocument extends Document, ITaxRate {}
+
+export const TaxRate = mongoose.model<
+  ITaxRateDocument,
+  PaginateModel<ITaxRateDocument>
+>("TaxRate", taxRateSchema);

@@ -34,7 +34,6 @@ export interface IPharmacyStock {
   sellPrice: number;
   locations: ILocationQuantity[];
   totalQuantity: number;
-  // status: "Active" | "Inactive";
 }
 
 const pharmacyStockSchema = new Schema({

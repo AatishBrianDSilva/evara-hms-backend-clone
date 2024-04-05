@@ -5,13 +5,40 @@ import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import { TaxRate } from "@evara-backend/core/models/pharmacyDashboard/TaxRate";
+import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
+import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     await connectMongoDb();
-    const taxRates = await TaxRate.find().lean();
-    return successResponse("Tax bracket added successfully", taxRates);
+
+    const params = event.queryStringParameters || {};
+    const { page = "1", limit = "10", paginate } = params;
+
+    const options: IPaginateOptions = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      lean: true,
+    };
+
+    const query: any = {};
+
+    if (paginate) {
+      // Fetching the appointments with pagination
+      const result = await TaxRate.paginate(query, options);
+      const { records, pagination } = formatPaginationResult(result);
+
+      return successResponse("Success", {
+        records,
+        pagination,
+      });
+    } else {
+      // Fetching the appointments without pagination
+      const taxRates = await TaxRate.find().lean();
+
+      return successResponse("Success", taxRates);
+    }
   } catch (error) {
     return errorResponse(error);
   }
