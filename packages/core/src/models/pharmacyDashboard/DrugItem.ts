@@ -1,7 +1,8 @@
-import mongoose, { Schema } from "mongoose";
-import { autoIncrementId, autoIncrementIdWithFieldPrefix } from "../Counters";
+import mongoose, { Document, PaginateModel, Schema } from "mongoose";
+import { autoIncrementId } from "../Counters";
+import paginate from "mongoose-paginate-v2";
 
-export interface IDrugItem {
+export interface IDrugItem extends Document {
   name: string;
   code: string;
   hsnCode: string;
@@ -18,7 +19,6 @@ const drugItemSchema = new Schema<IDrugItem>(
     name: {
       type: String,
       required: true,
-      lowercase: true,
       unique: true,
     },
     code: {
@@ -65,4 +65,11 @@ const drugItemSchema = new Schema<IDrugItem>(
 
 drugItemSchema.pre("save", autoIncrementId("drugItems", "code", "DI-"));
 
-export const DrugItem = mongoose.model<IDrugItem>("DrugItem", drugItemSchema);
+drugItemSchema.plugin(paginate);
+
+interface IDrugItemDocument extends Document, IDrugItem {}
+
+export const DrugItem = mongoose.model<
+  IDrugItemDocument,
+  PaginateModel<IDrugItemDocument>
+>("DrugItem", drugItemSchema);

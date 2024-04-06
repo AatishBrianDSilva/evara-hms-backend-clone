@@ -5,7 +5,7 @@ import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
+import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -21,9 +21,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Id is not provided");
     }
 
-    const taxRate = await DrugCategory.findByIdAndDelete(id);
+    const data = await DrugType.findById(id).lean();
 
-    return successResponse("Deleted Successfully", taxRate);
+    if (!data) {
+      throw new ErrorMessage(404, "Not found");
+    }
+
+    return successResponse("Fetched successfully", data);
   } catch (error) {
     return errorResponse(error);
   }

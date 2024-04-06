@@ -1,7 +1,8 @@
-import mongoose, { Schema } from "mongoose";
-import { autoIncrementId, autoIncrementIdWithFieldPrefix } from "../Counters";
+import mongoose, { Document, PaginateModel, Schema } from "mongoose";
+import { autoIncrementId } from "../Counters";
+import paginate from "mongoose-paginate-v2";
 
-export interface IDrugVendor {
+export interface IDrugVendor extends Document {
   branchId: string;
   name: string;
   code: string;
@@ -114,7 +115,11 @@ const drugVendorSchema = new Schema<IDrugVendor>(
 
 drugVendorSchema.pre("save", autoIncrementId("drugVendors", "code", "DV-"));
 
-export const DrugVendor = mongoose.model<IDrugVendor>(
-  "DrugVendor",
-  drugVendorSchema
-);
+drugVendorSchema.plugin(paginate);
+
+interface IDrugVendorDocument extends Document, IDrugVendor {}
+
+export const DrugVendor = mongoose.model<
+  IDrugVendorDocument,
+  PaginateModel<IDrugVendorDocument>
+>("DrugVendor", drugVendorSchema);

@@ -1,6 +1,7 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Document, PaginateModel, Schema } from "mongoose";
+import pagination from "mongoose-paginate-v2";
 
-export interface IDrugManufacturer {
+export interface IDrugManufacturer extends Document {
   name: string;
   category: [Schema.Types.ObjectId];
   taxRate: Schema.Types.ObjectId;
@@ -42,6 +43,10 @@ const drugManufacturerSchema = new Schema<IDrugManufacturer>(
       ref: "TaxRate",
     },
     cst: {
+      type: String,
+      required: true,
+    },
+    apgst: {
       type: String,
       required: true,
     },
@@ -106,7 +111,11 @@ const drugManufacturerSchema = new Schema<IDrugManufacturer>(
   }
 );
 
-export const DrugManufacturer = mongoose.model<IDrugManufacturer>(
-  "DrugManufacturer",
-  drugManufacturerSchema
-);
+drugManufacturerSchema.plugin(pagination);
+
+interface IDrugManufacturerDocument extends Document, IDrugManufacturer {}
+
+export const DrugManufacturer = mongoose.model<
+  IDrugManufacturerDocument,
+  PaginateModel<IDrugManufacturerDocument>
+>("DrugManufacturer", drugManufacturerSchema);

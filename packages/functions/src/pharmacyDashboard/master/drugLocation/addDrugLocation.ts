@@ -18,12 +18,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new errorMessage(400, "Data is required");
     }
 
-    const data: IDrugLocation[] = JSON.parse(event.body);
+    const data: IDrugLocation = JSON.parse(event.body);
 
-    for (const item of data) {
-      item.branchId = "KL";
-      await DrugLocation.create(item);
-    }
+    data.branchId = "KL";
+    await DrugLocation.create(data);
 
     return successResponse("Drug Locations added successfully");
   } catch (error) {

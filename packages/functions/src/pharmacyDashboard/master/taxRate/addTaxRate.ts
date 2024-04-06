@@ -20,7 +20,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     // Parse the body from the event
-    const data: ITaxRate[] = JSON.parse(event.body);
+    const data: ITaxRate = JSON.parse(event.body);
     const createdTaxRate = await TaxRate.create(data);
 
     return successResponse("Tax rate added successfully", createdTaxRate);

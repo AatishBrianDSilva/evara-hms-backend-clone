@@ -1,6 +1,7 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Document, PaginateModel, Schema } from "mongoose";
+import pagination from "mongoose-paginate-v2";
 
-export interface IDrugType {
+export interface IDrugType extends Document {
   name: string;
   shortcode: string;
   notes?: string;
@@ -12,7 +13,6 @@ const drugTypeSchema = new Schema<IDrugType>(
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
     },
     shortcode: {
       type: String,
@@ -32,4 +32,11 @@ const drugTypeSchema = new Schema<IDrugType>(
   }
 );
 
-export const DrugType = mongoose.model<IDrugType>("DrugType", drugTypeSchema);
+drugTypeSchema.plugin(pagination);
+
+interface IDrugTypeDocument extends Document, IDrugType {}
+
+export const DrugType = mongoose.model<
+  IDrugTypeDocument,
+  PaginateModel<IDrugTypeDocument>
+>("DrugType", drugTypeSchema);

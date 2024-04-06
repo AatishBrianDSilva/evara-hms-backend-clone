@@ -4,32 +4,71 @@ import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
 import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
-import { DrugItem } from "@evara-backend/core/models/pharmacyDashboard/DrugItem";
+import { DrugManufacturer } from "@evara-backend/core/models/pharmacyDashboard/DrugManufacturer";
 import { DrugCategory } from "@evara-backend/core/models/pharmacyDashboard/DrugCategory";
 import { TaxRate } from "@evara-backend/core/src/models/pharmacyDashboard/TaxRate";
-import { DrugManufacturer } from "@evara-backend/core/src/models/pharmacyDashboard/DrugManufacturer";
+import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
+import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
+import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
+import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     await connectMongoDb();
-    const drugItems = await DrugItem.find()
-      .populate([
-        {
-          path: "category",
-          model: DrugCategory.modelName,
-        },
-        {
-          path: "taxRate",
-          model: TaxRate.modelName,
-        },
-        {
-          path: "manufacturer",
-          model: DrugManufacturer.modelName,
-        },
-      ])
-      .lean();
-    return successResponse("success", drugItems);
+
+    const params = event.queryStringParameters || {};
+    const { page = "1", limit = "10", paginate, sort: sortRaw } = params;
+
+    const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
+
+    const populate = [
+      {
+        path: "category",
+        model: DrugCategory.modelName,
+      },
+      {
+        path: "type",
+        model: DrugType.modelName,
+      },
+      {
+        path: "manufacturer",
+        model: DrugManufacturer.modelName,
+      },
+      {
+        path: "taxRate",
+        model: TaxRate.modelName,
+      },
+    ];
+
+    if (paginate) {
+      const options: IPaginateOptions = {
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
+        lean: true,
+      };
+
+      const query: any = {};
+
+      if (sort) {
+        options.sort = sort;
+      }
+
+      options.populate = populate;
+
+      // Fetching the appointments with pagination
+      const result = await DrugItem.paginate(query, options);
+      const { records, pagination } = formatPaginationResult(result);
+
+      return successResponse("Success", {
+        records,
+        pagination,
+      });
+    } else {
+      const data = await DrugItem.find().populate(populate).sort(sort).lean();
+
+      return successResponse("Success", data);
+    }
   } catch (error) {
     return errorResponse(error);
   }

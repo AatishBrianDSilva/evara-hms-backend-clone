@@ -12,6 +12,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/drugItem/addDrugItem.main",
     "GET /pharmacy-dashboard/master/drug-items":
       "packages/functions/src/pharmacyDashboard/master/drugItem/getDrugItems.main",
+    "GET /pharmacy-dashboard/master/drug-items/{id}":
+      "packages/functions/src/pharmacyDashboard/master/drugItem/getDrugItemById.main",
     "PUT /pharmacy-dashboard/master/drug-items/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugItem/updateDrugItem.main",
     "DELETE /pharmacy-dashboard/master/drug-items/{id}":
@@ -22,6 +24,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/drugCategory/addDrugCategory.main",
     "GET /pharmacy-dashboard/master/drug-categories":
       "packages/functions/src/pharmacyDashboard/master/drugCategory/getDrugCategories.main",
+    "GET /pharmacy-dashboard/master/drug-categories/{id}":
+      "packages/functions/src/pharmacyDashboard/master/drugCategory/getDrugCategoryById.main",
     "PUT /pharmacy-dashboard/master/drug-categories/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugCategory/updateDrugCategory.main",
     "DELETE /pharmacy-dashboard/master/drug-categories/{id}":
@@ -32,6 +36,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/drugType/addDrugType.main",
     "GET /pharmacy-dashboard/master/drug-types":
       "packages/functions/src/pharmacyDashboard/master/drugType/getDrugTypes.main",
+    "GET /pharmacy-dashboard/master/drug-types/{id}":
+      "packages/functions/src/pharmacyDashboard/master/drugType/getDrugTypeById.main",
     "PUT /pharmacy-dashboard/master/drug-types/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugType/updateDrugType.main",
     "DELETE /pharmacy-dashboard/master/drug-types/{id}":
@@ -42,6 +48,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/drugLocation/addDrugLocation.main",
     "GET /pharmacy-dashboard/master/drug-locations":
       "packages/functions/src/pharmacyDashboard/master/drugLocation/getDrugLocations.main",
+    "GET /pharmacy-dashboard/master/drug-locations/{id}":
+      "packages/functions/src/pharmacyDashboard/master/drugLocation/getDrugLocationById.main",
     "PUT /pharmacy-dashboard/master/drug-locations/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugLocation/updateDrugLocation.main",
     "DELETE /pharmacy-dashboard/master/drug-locations/{id}":
@@ -52,6 +60,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/drugManufacturer/addDrugManufacturer.main",
     "GET /pharmacy-dashboard/master/drug-manufacturers":
       "packages/functions/src/pharmacyDashboard/master/drugManufacturer/getDrugManufacturers.main",
+    "GET /pharmacy-dashboard/master/drug-manufacturers/{id}":
+      "packages/functions/src/pharmacyDashboard/master/drugManufacturer/getDrugManufacturerById.main",
     "PUT /pharmacy-dashboard/master/drug-manufacturers/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugManufacturer/updateDrugManufacturer.main",
     "DELETE /pharmacy-dashboard/master/drug-manufacturers/{id}":
@@ -62,6 +72,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/drugVendor/addDrugVendor.main",
     "GET /pharmacy-dashboard/master/drug-vendors":
       "packages/functions/src/pharmacyDashboard/master/drugVendor/getDrugVendors.main",
+    "GET /pharmacy-dashboard/master/drug-vendors/{id}":
+      "packages/functions/src/pharmacyDashboard/master/drugVendor/getDrugVendorById.main",
     "PUT /pharmacy-dashboard/master/drug-vendors/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugVendor/updateDrugVendor.main",
     "DELETE /pharmacy-dashboard/master/drug-vendors/{id}":
