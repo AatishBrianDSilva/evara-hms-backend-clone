@@ -1,7 +1,6 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
 import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import { TaxRate } from "@evara-backend/core/models/pharmacyDashboard/TaxRate";
@@ -14,17 +13,23 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "10", paginate } = params;
+    const { page = "1", limit = "10", paginate, sort: sortRaw } = params;
 
-    const options: IPaginateOptions = {
-      page: parseInt(page, 10),
-      limit: parseInt(limit, 10),
-      lean: true,
-    };
-
-    const query: any = {};
+    const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
     if (paginate) {
+      const options: IPaginateOptions = {
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
+        lean: true,
+      };
+
+      const query: any = {};
+
+      if (sort) {
+        options.sort = sort;
+      }
+
       // Fetching the appointments with pagination
       const result = await TaxRate.paginate(query, options);
       const { records, pagination } = formatPaginationResult(result);
@@ -34,8 +39,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      // Fetching the appointments without pagination
-      const taxRates = await TaxRate.find().lean();
+      const taxRates = await TaxRate.find().sort(sort).lean();
 
       return successResponse("Success", taxRates);
     }

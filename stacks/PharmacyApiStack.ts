@@ -72,6 +72,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/taxRate/addTaxRate.main",
     "GET /pharmacy-dashboard/master/tax-rates":
       "packages/functions/src/pharmacyDashboard/master/taxRate/getTaxRates.main",
+    "GET /pharmacy-dashboard/master/tax-rates/{id}":
+      "packages/functions/src/pharmacyDashboard/master/taxRate/getTaxRateById.main",
     "PUT /pharmacy-dashboard/master/tax-rates/{id}":
       "packages/functions/src/pharmacyDashboard/master/taxRate/updateTaxRate.main",
     "DELETE /pharmacy-dashboard/master/tax-rates/{id}":
