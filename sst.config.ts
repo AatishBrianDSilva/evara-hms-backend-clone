@@ -1,5 +1,6 @@
 import { SSTConfig } from "sst";
-import { EvaraStack } from "./stacks/EvaraStack";
+import { MainStack } from "./stacks/MainStack";
+import { PharmacyApiStack } from "./stacks/PharmacyApiStack";
 
 export default {
   config(_input) {
@@ -12,6 +13,6 @@ export default {
     if (app.stage !== "prod") {
       app.setDefaultRemovalPolicy("destroy");
     }
-    app.stack(EvaraStack);
+    app.stack(MainStack).stack(PharmacyApiStack);
   },
 } satisfies SSTConfig;

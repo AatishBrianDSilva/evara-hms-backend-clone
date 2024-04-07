@@ -1,13 +1,28 @@
-import { Api, StackContext } from "sst/constructs";
+import { Api, StackContext, attachPermissionsToRole } from "sst/constructs";
+import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 
-export function EvaraStack({ stack }: StackContext) {
+export function MainStack({ stack }: StackContext) {
+  // Create a default role for the API
+  const role = new Role(stack, "ApiRole", {
+    assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
+    managedPolicies: [
+      {
+        managedPolicyArn:
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+      },
+    ],
+  });
+
+  attachPermissionsToRole(role, ["ssm"]);
+
   /**
-   * Represents the API configuration for the EvaraStack.
+   * Represents the API configuration for the MainStack.
    */
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
         timeout: "29 seconds",
+        role: role,
       },
     },
     routes: {
@@ -65,6 +80,23 @@ export function EvaraStack({ stack }: StackContext) {
       // Medical Tests
       "POST /master/investigations/default/add":
         "packages/functions/src/patientDashboard/master/investigations/addDefaultTest.main",
+
+      //Services
+      //Patient Services
+      "POST /services/add":
+        "packages/functions/src/patientDashboard/services/addService.main",
+      "GET /services":
+        "packages/functions/src/patientDashboard/services/getServices.main",
+      "DELETE /services/{id}":
+        "packages/functions/src/patientDashboard/services/deleteService.main",
+      // Master Services
+      "POST /master/services/add":
+        "packages/functions/src/patientDashboard/master/services/addService.main",
+      "GET /master/services":
+        "packages/functions/src/patientDashboard/master/services/getServices.main",
+      // Default Services
+      "POST /master/services/default/add":
+        "packages/functions/src/patientDashboard/master/services/addDefaultService.main",
 
       //PROCEDURES
       //Patient Procedures
@@ -139,6 +171,8 @@ export function EvaraStack({ stack }: StackContext) {
         "packages/functions/src/admin_dev/automateMasterCryoPreservations.main",
       "GET /admin_dev/automate-treatment-cycle":
         "packages/functions/src/admin_dev/automateMasterTreatmentCycle.main",
+      "GET /admin_dev/automate-master-services":
+        "packages/functions/src/admin_dev/automateMasterServices.main",
     },
   });
 
@@ -146,4 +180,8 @@ export function EvaraStack({ stack }: StackContext) {
   stack.addOutputs({
     ApiEndpoint: api.url,
   });
+
+  return {
+    api,
+  };
 }
