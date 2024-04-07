@@ -81,6 +81,23 @@ export function MainStack({ stack }: StackContext) {
       "POST /master/investigations/default/add":
         "packages/functions/src/patientDashboard/master/investigations/addDefaultTest.main",
 
+      //Services
+      //Patient Services
+      "POST /services/add":
+        "packages/functions/src/patientDashboard/services/addService.main",
+      "GET /services":
+        "packages/functions/src/patientDashboard/services/getServices.main",
+      "DELETE /services/{id}":
+        "packages/functions/src/patientDashboard/services/deleteService.main",
+      // Master Services
+      "POST /master/services/add":
+        "packages/functions/src/patientDashboard/master/services/addService.main",
+      "GET /master/services":
+        "packages/functions/src/patientDashboard/master/services/getServices.main",
+      // Default Services
+      "POST /master/services/default/add":
+        "packages/functions/src/patientDashboard/master/services/addDefaultService.main",
+
       //PROCEDURES
       //Patient Procedures
       "POST /procedures/add":
@@ -154,6 +171,8 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/admin_dev/automateMasterCryoPreservations.main",
       "GET /admin_dev/automate-treatment-cycle":
         "packages/functions/src/admin_dev/automateMasterTreatmentCycle.main",
+      "GET /admin_dev/automate-master-services":
+        "packages/functions/src/admin_dev/automateMasterServices.main",
     },
   });
 

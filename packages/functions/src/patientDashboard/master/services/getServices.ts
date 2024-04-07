@@ -1,0 +1,46 @@
+import { APIGatewayProxyHandler } from "aws-lambda";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import Patient from "@evara-backend/core/src/models/Patients";
+import MasterService from "@evara-backend/core/src/models/patientDashboard/services/MasterService";
+import DefaultService from "@evara-backend/core/src/models/patientDashboard/services/DefaultService";
+
+export const main: APIGatewayProxyHandler = async (event, _context) => {
+  try {
+    // Connect to MongoDB
+    await connectMongoDb();
+
+    const query = {
+      active: true,
+    };
+
+    const patientId = event.queryStringParameters?.patientId;
+
+    if (patientId) {
+      const patient = await Patient.findOne({ patientId }).lean();
+      if (!patient) {
+        throw new ErrorMessage(404, "Patient not found");
+      }
+    }
+
+    // TODO: Remove clinicId and branchId after adding authentication
+    // data.clinicId = "EV";
+    // data.branchId = "KL";
+
+    //Get all investigations
+    const investigations = await MasterService.find(query)
+      .populate({
+        path: "service",
+        model: DefaultService.modelName,
+      })
+      .sort({ serviceType: 1 })
+      .lean();
+
+    // Return success response
+    return successResponse("Success", investigations);
+  } catch (error) {
+    return errorResponse(error);
+  }
+};
