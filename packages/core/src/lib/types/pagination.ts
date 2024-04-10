@@ -16,7 +16,7 @@ export interface IPopulateOptions {
   model?: string;
   match?: { [key: string]: any };
   options?: { [key: string]: any };
-  populate?: IPopulateOptions | IPopulateOptions[]; // Support for nested and multiple populations
+  populate?: IPopulateOptions | IPopulateOptions[];
 }
 
 export interface IPaginateOptions {
