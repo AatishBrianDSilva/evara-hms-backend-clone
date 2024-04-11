@@ -44,61 +44,61 @@ const drugManufacturerSchema = new Schema<IDrugManufacturer>(
     },
     cst: {
       type: String,
-      required: true,
+      // required: true,
     },
     apgst: {
       type: String,
-      required: true,
+      // required: true,
     },
     contact: {
       person: {
         type: String,
-        required: true,
+        // required: true,
       },
       phone: {
         type: String,
-        required: true,
+        // required: true,
       },
       email: {
         type: String,
-        required: true,
+        // required: true,
       },
       website: {
-        type: String,
+        // type: String,
       },
     },
     address: {
       addressLine1: {
         type: String,
-        required: true,
+        // required: true,
       },
       addressLine2: {
         type: String,
       },
       pincode: {
         type: String,
-        required: true,
+        // required: true,
       },
       city: {
         type: String,
-        required: true,
+        // required: true,
       },
       state: {
         type: String,
-        required: true,
+        // required: true,
       },
       country: {
         type: String,
-        required: true,
+        // required: true,
       },
     },
     pan: {
       type: String,
-      required: true,
+      // required: true,
     },
     tin: {
       type: String,
-      required: true,
+      // required: true,
     },
     status: {
       type: String,

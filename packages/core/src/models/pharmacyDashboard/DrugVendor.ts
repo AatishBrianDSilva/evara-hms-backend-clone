@@ -45,12 +45,12 @@ const drugVendorSchema = new Schema<IDrugVendor>(
     },
     gst: {
       type: String,
-      required: true,
+      // required: true,
     },
     contact: {
       person: {
         type: String,
-        required: true,
+        // required: true,
       },
       phone: {
         type: String,
@@ -58,44 +58,44 @@ const drugVendorSchema = new Schema<IDrugVendor>(
       },
       email: {
         type: String,
-        required: true,
+        // required: true,
       },
     },
     pan: {
       type: String,
-      required: true,
+      // required: true,
     },
     tin: {
       type: String,
-      required: true,
+      // required: true,
     },
     dl: {
       type: String,
-      required: true,
+      // required: true,
     },
     address: {
       addressLine1: {
         type: String,
-        required: true,
+        // required: true,
       },
       addressLine2: {
         type: String,
       },
       pincode: {
         type: String,
-        required: true,
+        // required: true,
       },
       city: {
         type: String,
-        required: true,
+        // required: true,
       },
       state: {
         type: String,
-        required: true,
+        // required: true,
       },
       country: {
         type: String,
-        required: true,
+        // required: true,
       },
     },
     remarks: {
