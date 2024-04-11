@@ -40,7 +40,7 @@ const drugItemSchema = new Schema<IDrugItem>(
     },
     packSize: {
       type: Number,
-      required: true,
+      // required: true,
     },
     taxRate: {
       type: Schema.Types.ObjectId,
@@ -50,7 +50,7 @@ const drugItemSchema = new Schema<IDrugItem>(
     manufacturer: {
       type: Schema.Types.ObjectId,
       ref: "DrugManufacturer",
-      required: true,
+      // required: true,
     },
     status: {
       type: String,
