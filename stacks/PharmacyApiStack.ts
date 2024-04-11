@@ -5,8 +5,9 @@ export function PharmacyApiStack({ stack }: StackContext) {
   const { api } = use(MainStack);
 
   api.addRoutes(stack, {
-    // Pharmacy Dashboard Start
-    // MASTER
+    // Pharmacy Dashboard
+
+    // MASTER Start
     // Drug Items
     "POST /pharmacy-dashboard/master/drug-items/add":
       "packages/functions/src/pharmacyDashboard/master/drugItem/addDrugItem.main",
@@ -102,5 +103,20 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/pharmacyStock/updatePharmacyStock.main",
     "DELETE /pharmacy-dashboard/master/stock/{id}":
       "packages/functions/src/pharmacyDashboard/master/pharmacyStock/deletePharmacyStock.main",
+    // Pharmacy Masters End
+
+    // Purchase Orders
+    "POST /pharmacy-dashboard/purchase-order/add":
+      "packages/functions/src/pharmacyDashboard/purchaseOrder/addPurchaseOrder.main",
+    "GET /pharmacy-dashboard/purchase-order":
+      "packages/functions/src/pharmacyDashboard/purchaseOrder/getPurchaseOrders.main",
+    "GET /pharmacy-dashboard/purchase-order/{id}":
+      "packages/functions/src/pharmacyDashboard/purchaseOrder/getPurchaseOrderById.main",
+    "PUT /pharmacy-dashboard/purchase-order/{id}":
+      "packages/functions/src/pharmacyDashboard/purchaseOrder/updatePurchaseOrder.main",
+    "DELETE /pharmacy-dashboard/purchase-order/{id}":
+      "packages/functions/src/pharmacyDashboard/purchaseOrder/deletePurchaseOrder.main",
+    "PATCH /pharmacy-dashboard/purchase-order/{id}/status":
+      "packages/functions/src/pharmacyDashboard/purchaseOrder/updateStatusPurchaseOrder.main",
   });
 }
