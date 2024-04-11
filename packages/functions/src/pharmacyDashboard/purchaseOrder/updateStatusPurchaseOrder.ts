@@ -36,11 +36,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const updateData = {
       status,
-      authorizedBy:
-        status === EPurchaseOrderStatus.Approved ||
-        status === EPurchaseOrderStatus.Rejected
-          ? owner
-          : undefined,
+      authorizedBy: owner,
     };
 
     // Find by ID and update the tax rate
