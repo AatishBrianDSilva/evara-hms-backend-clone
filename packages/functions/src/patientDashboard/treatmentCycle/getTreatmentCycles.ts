@@ -19,7 +19,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Extract query string parameters
     const params = event.queryStringParameters || {};
-    log("Params: ", params);
 
     // Construct the query object
     let query: any = {};
@@ -35,8 +34,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (params.sort) {
       sort = JSON.parse(params.sort);
     }
-
-    log("Sort: ", sort);
 
     const patient = await Patient.findOne({
       patientId: params.patientCode,
