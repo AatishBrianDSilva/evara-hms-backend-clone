@@ -15,6 +15,7 @@ export enum EPurchaseOrderStatus {
 export interface IPurchaseOrderRequest {
   items: {
     item: Schema.Types.ObjectId;
+    packSize: number;
     mrp: number;
     mrpPerUnit: number;
     buyPrice: number;
@@ -32,6 +33,7 @@ export interface IPurchaseOrderRequest {
 export interface IPurchaseOrderResponse {
   items: {
     item: Schema.Types.ObjectId;
+    packSize: number;
     batchNo: string;
     expiryDate: Date;
     mrp: number;
@@ -64,6 +66,7 @@ export interface IPurchaseOrder extends Document {
 
 const itemSchema = new Schema({
   item: { type: Schema.Types.ObjectId, ref: "DrugItem", required: true },
+  packSize: { type: Number, required: true, min: 0 },
   batchNo: { type: String, required: false },
   expiryDate: { type: Date, required: false },
   mrp: { type: Number, required: true, min: 0 },
@@ -76,6 +79,7 @@ const itemSchema = new Schema({
 
 const responseSchema = new Schema({
   items: [itemSchema],
+  packSize: { type: Number, required: true, min: 0 },
   netAmount: { type: Number, required: false, min: 0 },
   discount: { type: Number, required: false, min: 0 },
   otherCharges: { type: Number, required: false, min: 0 },

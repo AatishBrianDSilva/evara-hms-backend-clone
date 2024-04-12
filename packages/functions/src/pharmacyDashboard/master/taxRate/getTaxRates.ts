@@ -13,9 +13,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "10", paginate, sort: sortRaw } = params;
+    const { page = "1", limit = "10", sort: sortRaw } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
+
+    const paginate = JSON.parse(params.paginate || "false");
 
     if (paginate) {
       const options: IPaginateOptions = {
@@ -41,7 +43,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     } else {
       const taxRates = await TaxRate.find().sort(sort).lean();
 
-      return successResponse("Success", taxRates);
+      return successResponse("Success", { records: taxRates, pagination: {} });
     }
   } catch (error) {
     return errorResponse(error);
