@@ -3,8 +3,7 @@ import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
 import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
-import { TaxRate } from "@evara-backend/core/models/pharmacyDashboard/TaxRate";
-import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
+import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
 
 // Handler function for updating a single tax rate
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -19,28 +18,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const { id, ...updateData } = JSON.parse(event.body);
 
     if (!id) {
-      throw new errorMessage(400, "Drug Location ID is required for update");
+      throw new errorMessage(400, "ID is required for update");
     }
-
-    updateData.branchId = "KL"; // Assuming the branch ID is always "KL"
 
     // Find by ID and update the tax rate
-    const updatedDrugLocation = await DrugLocation.findByIdAndUpdate(
-      id,
-      updateData,
-      {
-        new: true, // Return the updated document
-      }
-    );
+    const updatedData = await PurchaseOrder.findByIdAndUpdate(id, updateData, {
+      new: true, // Return the updated document
+    });
 
-    if (!updatedDrugLocation) {
-      throw new errorMessage(404, "Drug Location not found");
+    if (!updatedData) {
+      throw new errorMessage(404, "Data not found");
     }
 
-    return successResponse(
-      "Drug Location updated successfully",
-      updatedDrugLocation
-    );
+    return successResponse("Data updated successfully", updatedData);
   } catch (error) {
     return errorResponse(error);
   }
