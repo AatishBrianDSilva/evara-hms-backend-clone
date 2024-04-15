@@ -39,7 +39,6 @@ export interface IPurchaseOrderResponse {
     mrp: number;
     mrpPerUnit: number;
     buyPrice: number;
-    total: number;
     tax: number;
     quantity: number;
   }[];
@@ -72,7 +71,6 @@ const itemSchema = new Schema({
   mrp: { type: Number, required: true, min: 0 },
   mrpPerUnit: { type: Number, required: true, min: 0 },
   buyPrice: { type: Number, required: true, min: 0 },
-  total: { type: Number, required: true, min: 0 },
   tax: { type: Number, required: true, min: 0 },
   quantity: { type: Number, required: true, min: 0 },
 });

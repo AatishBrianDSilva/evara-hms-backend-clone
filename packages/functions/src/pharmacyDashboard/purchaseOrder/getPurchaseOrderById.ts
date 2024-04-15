@@ -36,10 +36,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       {
         path: "request.items.item",
         model: DrugItem.modelName,
+        populate: [
+          {
+            path: "taxRate",
+            model: TaxRate.modelName,
+          },
+        ],
       },
       {
         path: "response.items.item",
         model: DrugItem.modelName,
+        populate: [
+          {
+            path: "taxRate",
+            model: TaxRate.modelName,
+          },
+        ],
       },
       {
         path: "branch",
@@ -47,7 +59,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     ];
 
+    console.log("Populate: ", populate);
+
     const data = await PurchaseOrder.findById(id).populate(populate).lean();
+
+    console.log("Data: ", JSON.stringify(data, null, 2));
 
     if (!data) {
       throw new ErrorMessage(404, "Not found");
