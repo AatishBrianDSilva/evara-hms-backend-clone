@@ -125,7 +125,8 @@ const purchaseOrderSchema = new Schema(
 
 purchaseOrderSchema.index({ vendor: 1, date: -1 });
 purchaseOrderSchema.index({ status: 1 });
-purchaseOrderSchema.index({ createdBy: 1, approvedBy: 1 });
+purchaseOrderSchema.index({ createdBy: 1, authorizedBy: 1 });
+purchaseOrderSchema.index({ branchId: 1, date: -1 });
 
 purchaseOrderSchema.pre("validate", function (next) {
   if (this.status === EPurchaseOrderStatus.Approved && !this.authorizedBy) {

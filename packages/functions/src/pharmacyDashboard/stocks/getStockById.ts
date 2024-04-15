@@ -9,6 +9,8 @@ import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugI
 import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
 import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
 import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
+import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
+import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -28,6 +30,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       {
         path: "item",
         model: DrugItem.modelName,
+        populate: [
+          {
+            path: "category",
+            model: DrugCategory.modelName,
+          },
+          {
+            path: "type",
+            model: DrugType.modelName,
+          },
+        ],
+      },
+      {
+        path: "batches.locations.location",
+        model: DrugLocation.modelName,
       },
       {
         path: "batches.vendor",

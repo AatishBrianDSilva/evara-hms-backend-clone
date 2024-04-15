@@ -28,9 +28,7 @@ interface IBatchDetails {
   batchNo: string;
   expiryDate: Date;
   vendor: Schema.Types.ObjectId;
-  pricePerPack: number;
   packSize: number;
-  sellPrice: number;
   locations: ILocationQuantity[];
 }
 
@@ -49,15 +47,7 @@ const batchDetailsSchema = new Schema<IBatchDetails>(
       ref: "Vendor",
       required: true,
     },
-    pricePerPack: {
-      type: Number,
-      required: true,
-    },
     packSize: {
-      type: Number,
-      required: true,
-    },
-    sellPrice: {
       type: Number,
       required: true,
     },
@@ -71,6 +61,7 @@ const batchDetailsSchema = new Schema<IBatchDetails>(
 export interface IPharmacyStock extends Document {
   branchId: string;
   item: Schema.Types.ObjectId;
+  sellPrice: number;
   batches: IBatchDetails[];
 }
 
@@ -85,6 +76,11 @@ const pharmacyStockSchema = new Schema<IPharmacyStock>(
       ref: "DrugItem",
       required: true,
     },
+    sellPrice: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
     batches: [batchDetailsSchema],
   },
   {
@@ -93,6 +89,11 @@ const pharmacyStockSchema = new Schema<IPharmacyStock>(
     toObject: { virtuals: true },
   }
 );
+
+pharmacyStockSchema.index({ branchId: 1, item: 1 });
+pharmacyStockSchema.index({ "batches.batchNo": 1 });
+pharmacyStockSchema.index({ "batches.expiryDate": 1 });
+pharmacyStockSchema.index({ "batches.vendor": 1 });
 
 // Virtual for calculating total quantity
 pharmacyStockSchema.virtual("totalQuantity").get(function () {

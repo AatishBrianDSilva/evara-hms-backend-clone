@@ -118,10 +118,10 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/purchaseOrder/deletePurchaseOrder.main",
     "PATCH /pharmacy-dashboard/purchase-order/{id}/status":
       "packages/functions/src/pharmacyDashboard/purchaseOrder/updateStatusPurchaseOrder.main",
+    "PATCH /pharmacy-dashboard/purchase-order/{purchaseOrderId}/update-stock":
+      "packages/functions/src/pharmacyDashboard/stocks/updateStockFromPurchaseOrder.main",
 
     // Stocks
-    "POST /pharmacy-dashboard/stocks/add":
-      "packages/functions/src/pharmacyDashboard/stocks/addStock.main",
     "GET /pharmacy-dashboard/stocks":
       "packages/functions/src/pharmacyDashboard/stocks/getStocks.main",
     "GET /pharmacy-dashboard/stocks/{id}":

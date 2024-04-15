@@ -9,7 +9,12 @@ import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/Dru
 import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
 import { log } from "console";
 import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
-import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
+import {
+  IPharmacyStock,
+  PharmacyStock,
+} from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
+import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
+import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -17,12 +22,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
+    console.log("Params", params);
     const {
       page = "1",
       limit = "10",
       paginate,
       sort: sortRaw,
       status,
+      searchQuery = "",
     } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
@@ -31,6 +38,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       {
         path: "item",
         model: DrugItem.modelName,
+        populate: [
+          {
+            path: "category",
+            model: DrugCategory.modelName,
+          },
+          {
+            path: "type",
+            model: DrugType.modelName,
+          },
+        ],
+      },
+      {
+        path: "batches.locations.location",
+        model: DrugLocation.modelName,
       },
       {
         path: "batches.vendor",
@@ -42,19 +63,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     ];
 
+    const query: any = {};
+    query.branchId = "KL";
+
+    if (status) {
+      query.status = status;
+    }
+
     if (paginate) {
       const options: IPaginateOptions = {
         page: parseInt(page, 10),
         limit: parseInt(limit, 10),
-        lean: true,
       };
-
-      const query: any = {};
-      query.branchId = "KL";
-
-      if (status) {
-        query.status = status;
-      }
 
       if (sort) {
         options.sort = sort;
@@ -62,25 +82,80 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       options.populate = populate;
 
-      log("Query", query);
+      if (searchQuery) {
+        const itemIds = await DrugItem.find({
+          name: { $regex: searchQuery, $options: "i" },
+        })
+          .select("_id")
+          .exec();
 
-      // Fetching the appointments with pagination
-      const result = await PharmacyStock.paginate(query, options);
-      const { records, pagination } = formatPaginationResult(result);
+        // Map to extract only the _id values
+        const ids = itemIds.map((item) => item._id);
 
-      return successResponse("Success", {
-        records,
-        pagination,
-      });
+        // Use these IDs to adjust the PharmacyStock query
+        query.item = { $in: ids };
+
+        log("Search Query", query);
+
+        // Fetch the PharmacyStock records with pagination using the modified query
+        const result = await PharmacyStock.paginate(query, options);
+        const { records, pagination } = formatPaginationResult(result);
+
+        const formattedRecords = formatRecords(records);
+
+        return successResponse("Success", {
+          records: formattedRecords,
+          pagination,
+        });
+      } else {
+        console.log("No Search Query", query);
+
+        const result = await PharmacyStock.paginate(query, options);
+
+        const { records, pagination } = formatPaginationResult(result);
+
+        const formattedRecords = formatRecords(records);
+
+        return successResponse("Success", {
+          records: formattedRecords,
+          pagination,
+        });
+      }
     } else {
-      const data = await PharmacyStock.find()
-        .populate(populate)
-        .sort(sort)
-        .lean();
+      const data = await PharmacyStock.find().populate(populate).sort(sort);
 
-      return successResponse("Success", data);
+      return successResponse(
+        "Success",
+        data.map((record) => record.toJSON())
+      );
     }
   } catch (error) {
     return errorResponse(error);
   }
 };
+
+const formatRecords = (records: IPharmacyStock[]) =>
+  records.map((record) => {
+    // Calculate the latest expiry date
+    const latestExpiryDate = record.batches.reduce((latest, batch) => {
+      const batchDate = new Date(batch.expiryDate);
+      return latest > batchDate ? latest : batchDate;
+    }, new Date(0)); // Assumes batches is not empty
+
+    // Aggregate all locations into a single string
+    const locationNames = record.batches.flatMap((batch) =>
+      batch.locations.map((loc) => loc.location.location)
+    ); // Flatten all location names into one array
+
+    const uniqueLocations = new Set(locationNames); // Use a Set to keep only unique values
+
+    const uniqueLocationCount = uniqueLocations.size; // Count of unique locations
+
+    // Return the new record with additional fields
+    return {
+      ...record,
+      latestExpiryDate: latestExpiryDate, // Convert to ISO string or use another format
+      locations: uniqueLocationCount,
+      batchesCount: record.batches.length,
+    };
+  });
