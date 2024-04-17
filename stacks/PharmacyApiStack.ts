@@ -142,8 +142,6 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/internalOrder/getInternalOrders.main",
     "GET /pharmacy-dashboard/internal-order/{id}":
       "packages/functions/src/pharmacyDashboard/internalOrder/getInternalOrderById.main",
-    "PUT /pharmacy-dashboard/internal-order/{id}":
-      "packages/functions/src/pharmacyDashboard/internalOrder/updateInternalOrder.main",
     "DELETE /pharmacy-dashboard/internal-order/{id}":
       "packages/functions/src/pharmacyDashboard/internalOrder/deleteInternalOrder.main",
   });
