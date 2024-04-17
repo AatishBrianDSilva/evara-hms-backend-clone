@@ -6,13 +6,11 @@ import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
 import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
-import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
-import { TaxRate } from "@evara-backend/core/src/models/pharmacyDashboard/TaxRate";
-import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
-import { DrugManufacturer } from "@evara-backend/core/src/models/pharmacyDashboard/DrugManufacturer";
 import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
-import Branch from "@evara-backend/core/src/models/ClinicBranches";
-import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
+import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
+import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
+import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
+import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -30,40 +28,34 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const populate = [
       {
-        path: "vendor",
+        path: "item",
+        model: DrugItem.modelName,
+        populate: [
+          {
+            path: "category",
+            model: DrugCategory.modelName,
+          },
+          {
+            path: "type",
+            model: DrugType.modelName,
+          },
+        ],
+      },
+      {
+        path: "batches.locations.location",
+        model: DrugLocation.modelName,
+      },
+      {
+        path: "batches.vendor",
         model: DrugVendor.modelName,
       },
       {
-        path: "request.items.item",
-        model: DrugItem.modelName,
-        populate: [
-          {
-            path: "taxRate",
-            model: TaxRate.modelName,
-          },
-        ],
-      },
-      {
-        path: "response.items.item",
-        model: DrugItem.modelName,
-        populate: [
-          {
-            path: "taxRate",
-            model: TaxRate.modelName,
-          },
-        ],
-      },
-      {
-        path: "branch",
-        model: Branch.modelName,
+        path: "batches.vendor.location",
+        model: DrugLocation.modelName,
       },
     ];
 
-    console.log("Populate: ", populate);
-
-    const data = await PurchaseOrder.findById(id).populate(populate).lean();
-
-    console.log("Data: ", JSON.stringify(data, null, 2));
+    const data = await PharmacyStock.findById(id).populate(populate).lean();
 
     if (!data) {
       throw new ErrorMessage(404, "Not found");

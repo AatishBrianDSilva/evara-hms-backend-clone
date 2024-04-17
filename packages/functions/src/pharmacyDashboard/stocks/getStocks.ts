@@ -1,0 +1,114 @@
+import { APIGatewayProxyHandler } from "aws-lambda";
+
+import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
+import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/lib/utils/successResponse";
+
+import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
+import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
+import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
+import {
+  IBatchDetails,
+  IPharmacyStock,
+  PharmacyStock,
+} from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
+import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
+import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
+
+// Handler function
+export const main: APIGatewayProxyHandler = async (event, _context) => {
+  try {
+    await connectMongoDb();
+
+    const params = event.queryStringParameters || {};
+    console.log("Params", params);
+    const { sort: sortRaw, status } = params;
+
+    const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
+
+    const populate = [
+      {
+        path: "item",
+        model: DrugItem.modelName,
+        populate: [
+          {
+            path: "category",
+            model: DrugCategory.modelName,
+          },
+          {
+            path: "type",
+            model: DrugType.modelName,
+          },
+        ],
+      },
+      {
+        path: "batches.locations.location",
+        model: DrugLocation.modelName,
+      },
+      {
+        path: "batches.vendor",
+        model: DrugVendor.modelName,
+      },
+      {
+        path: "batches.vendor.location",
+        model: DrugLocation.modelName,
+      },
+    ];
+
+    const query: any = {};
+    query.branchId = "KL";
+
+    if (status) {
+      query.status = status;
+    }
+
+    const data = await PharmacyStock.find().populate(populate).sort(sort);
+
+    const sortedData = data.sort((a, b) => {
+      return a.item.name.localeCompare(b.item.name);
+    });
+
+    const formattedRecords = formatRecords(sortedData);
+    // console.log(
+    //   "Formatted Records",
+    //   JSON.stringify(formattedRecords, null, 2)
+    // );
+    return successResponse("Success", formattedRecords);
+  } catch (error) {
+    return errorResponse(error);
+  }
+};
+
+const formatRecords = (records: IPharmacyStock[]) => {
+  return records.map((record) => {
+    const recordJSON = record.toJSON();
+
+    const locationQuantities: any = {};
+
+    recordJSON.batches.forEach((batch: IBatchDetails) => {
+      batch.locations.forEach((loc) => {
+        let locationId = loc.location._id.toString();
+        if (!locationQuantities[locationId]) {
+          locationQuantities[locationId] = {
+            location: loc.location,
+            quantity: 0,
+          };
+        }
+        locationQuantities[locationId].quantity += loc.quantity;
+      });
+    });
+
+    return {
+      _id: recordJSON._id,
+      item: {
+        _id: recordJSON.item._id,
+        name: recordJSON.item.name,
+        category: recordJSON.item.category.name,
+        type: recordJSON.item.type?.name,
+      },
+      sellPrice: recordJSON.sellPrice,
+      totalQuantity: recordJSON.totalQuantity,
+      locations: Object.values(locationQuantities),
+    };
+  });
+};

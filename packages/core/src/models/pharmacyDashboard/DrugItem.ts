@@ -63,6 +63,8 @@ const drugItemSchema = new Schema<IDrugItem>(
   }
 );
 
+drugItemSchema.index({ name: 1 });
+
 drugItemSchema.pre("save", autoIncrementId("drugItems", "code", "DI-"));
 
 drugItemSchema.plugin(paginate);

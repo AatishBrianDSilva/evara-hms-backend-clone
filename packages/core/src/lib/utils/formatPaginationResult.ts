@@ -19,7 +19,9 @@ function formatPaginationResult<T>(result: PaginateResult<T>): {
 
   // Return the formatted records and pagination details
   return {
-    records: result.docs,
+    records: result.docs.map((record) =>
+      record.toJSON ? record.toJSON() : record
+    ),
     pagination,
   };
 }
