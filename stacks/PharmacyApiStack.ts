@@ -105,6 +105,14 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/pharmacyStock/deletePharmacyStock.main",
     // Pharmacy Masters End
 
+    // Stocks
+    "GET /pharmacy-dashboard/stocks":
+      "packages/functions/src/pharmacyDashboard/stocks/getStocks.main",
+    "GET /pharmacy-dashboard/stocks/paginate":
+      "packages/functions/src/pharmacyDashboard/stocks/getPaginatedStocks.main",
+    "GET /pharmacy-dashboard/stocks/{id}":
+      "packages/functions/src/pharmacyDashboard/stocks/getStockById.main",
+
     // Purchase Orders
     "POST /pharmacy-dashboard/purchase-order/add":
       "packages/functions/src/pharmacyDashboard/purchaseOrder/addPurchaseOrder.main",
@@ -121,10 +129,22 @@ export function PharmacyApiStack({ stack }: StackContext) {
     "PATCH /pharmacy-dashboard/purchase-order/{purchaseOrderId}/update-stock":
       "packages/functions/src/pharmacyDashboard/stocks/updateStockFromPurchaseOrder.main",
 
-    // Stocks
-    "GET /pharmacy-dashboard/stocks":
-      "packages/functions/src/pharmacyDashboard/stocks/getStocks.main",
-    "GET /pharmacy-dashboard/stocks/{id}":
-      "packages/functions/src/pharmacyDashboard/stocks/getStockById.main",
+    //Internal Orders
+    "POST /pharmacy-dashboard/internal-order/create-draft":
+      "packages/functions/src/pharmacyDashboard/internalOrder/createInternalOrderDraft.main",
+    "PATCH /pharmacy-dashboard/internal-order/{id}/approve":
+      "packages/functions/src/pharmacyDashboard/internalOrder/approveInternalOrderDraft.main",
+    "PATCH /pharmacy-dashboard/internal-order/{id}/reject":
+      "packages/functions/src/pharmacyDashboard/internalOrder/rejectInternalOrderDraft.main",
+    "PATCH /pharmacy-dashboard/internal-order/{id}/process":
+      "packages/functions/src/pharmacyDashboard/internalOrder/processInternalOrderDraft.main",
+    "GET /pharmacy-dashboard/internal-order":
+      "packages/functions/src/pharmacyDashboard/internalOrder/getInternalOrders.main",
+    "GET /pharmacy-dashboard/internal-order/{id}":
+      "packages/functions/src/pharmacyDashboard/internalOrder/getInternalOrderById.main",
+    "PUT /pharmacy-dashboard/internal-order/{id}":
+      "packages/functions/src/pharmacyDashboard/internalOrder/updateInternalOrder.main",
+    "DELETE /pharmacy-dashboard/internal-order/{id}":
+      "packages/functions/src/pharmacyDashboard/internalOrder/deleteInternalOrder.main",
   });
 }

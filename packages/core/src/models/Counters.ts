@@ -18,6 +18,10 @@ export const autoIncrementId = (
   prefix: string = ""
 ) => {
   return async function (this: any, next: (error?: any) => void) {
+    if (!this.isNew && this[idField]) {
+      return next(); // Skip this hook if the document is not new or the ID is already set
+    }
+
     try {
       const doc = await Counters.findOneAndUpdate(
         { _id: modelName },
@@ -46,6 +50,10 @@ export const autoIncrementIdWithFieldPrefix = (
   ...fields: string[]
 ) => {
   return async function (this: any, next: (error?: any) => void) {
+    if (!this.isNew && this[idField]) {
+      return next(); // Skip this hook if the document is not new or the ID is already set
+    }
+
     try {
       const doc = await Counters.findOneAndUpdate(
         { _id: modelName },

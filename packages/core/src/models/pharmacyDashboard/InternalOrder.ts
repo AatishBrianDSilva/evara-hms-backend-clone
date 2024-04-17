@@ -3,36 +3,37 @@ import { autoIncrementId } from "../Counters";
 import paginate from "mongoose-paginate-v2";
 
 export enum EInternalOrderStatus {
-  Pending = "Pending",
+  Draft = "Draft",
   Approved = "Approved",
   Rejected = "Rejected",
   Processed = "Processed",
 }
 
-export interface IInternalOrderRequest {
-  items: {
-    item: Schema.Types.ObjectId;
-    quantity: number;
-    notes: string;
-  }[];
+export interface IInternalOrderBatchDetail extends Document {
+  batchId: string;
+  deductedQuantity: number;
 }
 
-export interface IInternalOrderResponse {
-  items: {
-    item: Schema.Types.ObjectId;
-    quantity: number;
-    notes: string;
-  }[];
-}
+const internalOrderBatchDetailSchema = new mongoose.Schema({
+  batchId: { type: String, required: true }, // Batch ID as a string, could be derived from batchNo or a specific identifier
+  deductedQuantity: { type: Number, required: true }, // Quantity deducted from this batch
+});
 
 export interface IInternalOrder extends Document {
   branchId: string;
   ioNumber: string;
   date: Date;
-  transferFrom: Schema.Types.ObjectId;
-  transferTo: Schema.Types.ObjectId;
-  request: IInternalOrderRequest;
-  response: IInternalOrderResponse;
+  items: {
+    item: Schema.Types.ObjectId;
+    transferFrom: {
+      location: Schema.Types.ObjectId;
+      quantity: number;
+    };
+    transferTo: Schema.Types.ObjectId;
+    batches: [IInternalOrderBatchDetail]; // Details about which batches quantities were deducted from
+    quantity: number;
+    notes: string;
+  }[];
   createdBy: string;
   authorizedBy: string;
   status: EInternalOrderStatus;
@@ -40,12 +41,22 @@ export interface IInternalOrder extends Document {
 
 const itemSchema = new Schema({
   item: { type: Schema.Types.ObjectId, ref: "PharmacyStock", required: true },
-  quantity: { type: Number, required: true, min: 0 },
+  quantity: { type: Number, required: true, min: 1 },
+  batches: [internalOrderBatchDetailSchema],
+  transferFrom: {
+    location: {
+      type: Schema.Types.ObjectId,
+      ref: "DrugLocation",
+      required: true,
+    },
+    quantity: { type: Number, required: true },
+  },
+  transferTo: {
+    type: Schema.Types.ObjectId,
+    ref: "DrugLocation",
+    required: true,
+  },
   notes: { type: String, required: false },
-});
-
-const responseSchema = new Schema({
-  items: [itemSchema],
 });
 
 const internalOrderSchema = new Schema(
@@ -53,30 +64,14 @@ const internalOrderSchema = new Schema(
     branchId: { type: String, required: true, index: true },
     ioNumber: { type: String, unique: true, index: true },
     date: { type: Date, required: true },
-    transferFrom: {
-      type: Schema.Types.ObjectId,
-      ref: "DrugLocation",
-      required: true,
-    },
-    transferTo: {
-      type: Schema.Types.ObjectId,
-      ref: "DrugLocation",
-      required: true,
-    },
-    request: {
-      items: [itemSchema],
-    },
-    response: {
-      type: responseSchema,
-      default: null,
-    },
+    items: [itemSchema],
     createdBy: { type: String, required: true },
     authorizedBy: { type: String, required: false },
     status: {
       type: String,
       enum: Object.values(EInternalOrderStatus),
       required: true,
-      default: EInternalOrderStatus.Pending,
+      default: EInternalOrderStatus.Draft,
     },
   },
   { timestamps: true }
@@ -89,7 +84,7 @@ internalOrderSchema.pre("validate", function (next) {
   if (this.status === EInternalOrderStatus.Approved && !this.authorizedBy) {
     this.invalidate(
       "authorizedBy",
-      "approvedBy is required when the status is Approved"
+      "authorizedBy is required when the status is Approved"
     );
   } else if (
     this.status === EInternalOrderStatus.Rejected &&

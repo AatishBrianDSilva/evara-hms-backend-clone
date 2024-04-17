@@ -5,11 +5,11 @@ import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
-import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
-import Branch from "@evara-backend/core/src/models/ClinicBranches";
 import { log } from "console";
-import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
+import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
+import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
+import { InternalOrder } from "@evara-backend/core/src/models/pharmacyDashboard/InternalOrder";
+import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -29,20 +29,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const populate = [
       {
-        path: "vendor",
-        model: DrugVendor.modelName,
+        path: "items.item",
+        model: PharmacyStock.modelName,
+        populate: [
+          {
+            path: "item",
+            model: DrugItem.modelName,
+          },
+        ],
       },
       {
-        path: "request.items.item",
-        model: DrugItem.modelName,
+        path: "items.transferFrom.location",
+        model: DrugLocation.modelName,
       },
       {
-        path: "response.items.item",
-        model: DrugItem.modelName,
-      },
-      {
-        path: "branch",
-        model: Branch.modelName,
+        path: "items.transferTo",
+        model: DrugLocation.modelName,
       },
     ];
 
@@ -69,7 +71,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       log("Query", query);
 
       // Fetching the appointments with pagination
-      const result = await PurchaseOrder.paginate(query, options);
+      const result = await InternalOrder.paginate(query, options);
       const { records, pagination } = formatPaginationResult(result);
 
       return successResponse("Success", {
@@ -77,7 +79,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const data = await PurchaseOrder.find()
+      const data = await InternalOrder.find()
         .populate(populate)
         .sort(sort)
         .lean();

@@ -24,7 +24,7 @@ const locationQuantitySchema = new Schema<ILocationQuantity>(
   }
 );
 
-interface IBatchDetails {
+export interface IBatchDetails {
   batchNo: string;
   expiryDate: Date;
   vendor: Schema.Types.ObjectId;
@@ -63,6 +63,7 @@ export interface IPharmacyStock extends Document {
   item: Schema.Types.ObjectId;
   sellPrice: number;
   batches: IBatchDetails[];
+  quantityOnHold: number;
 }
 
 const pharmacyStockSchema = new Schema<IPharmacyStock>(
@@ -82,6 +83,11 @@ const pharmacyStockSchema = new Schema<IPharmacyStock>(
       default: 0,
     },
     batches: [batchDetailsSchema],
+    quantityOnHold: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   },
   {
     timestamps: true,
