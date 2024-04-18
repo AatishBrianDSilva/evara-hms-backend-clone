@@ -160,6 +160,15 @@ export function MainStack({ stack }: StackContext) {
       // Default Treatment Cycles
       "POST /master/treatment-cycles/default/add":
         "packages/functions/src/patientDashboard/master/treatmentCycle/addDefaultTreatmentCycle.main",
+
+      // Patient History
+      "GET /history/{id}":
+        "packages/functions/src/patientDashboard/history/getPatientHistory.main",
+      "PUT /history/{id}":
+        "packages/functions/src/patientDashboard/history/editPatientHistory.main",
+      "POST /history/add":
+        "packages/functions/src/patientDashboard/history/addPatientHistory.main",
+
       // Patient Dashboard End
 
       // Admin Dev
