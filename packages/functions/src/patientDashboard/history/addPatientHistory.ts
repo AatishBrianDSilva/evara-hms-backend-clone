@@ -18,7 +18,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Parse the body from the event
     const data = JSON.parse(event.body);
 
-    if (!data.patientCode || !data.clinicId || !data.branchId) {
+    data.clinicId = "EV";
+    data.branchId = "KL";
+
+    if (!data.patientCode) {
       throw new ErrorMessage(400, "Missing required patient history fields");
     }
 
