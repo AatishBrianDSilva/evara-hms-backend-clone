@@ -1,7 +1,10 @@
 import { SQSEvent, SQSHandler } from "aws-lambda";
 import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
 import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import { PatientBillingEstimation } from "@evara-backend/core/models/patientDashboard/Billings/PatientBillingEstimation";
+import {
+  EPatientBillingEstimationStatus,
+  PatientBillingEstimation,
+} from "@evara-backend/core/models/patientDashboard/Billings/PatientBillingEstimation";
 import { findServiceByIdAndType } from "./addEstimation";
 
 // Handler function for SQS
@@ -11,42 +14,79 @@ export const main: SQSHandler = async (event: SQSEvent) => {
   try {
     // Iterate over each SQS message
     for (const message of event.Records) {
-      const data = JSON.parse(message.body);
+      const payload = JSON.parse(message.body);
 
-      console.log("Processing message", data.Message);
+      console.log("Processing message", payload.Message);
 
-      // Add clinic and branch IDs (these should ideally come from the message or an authenticated context)
-      data.clinicId = "EV";
-      data.branchId = "KL";
+      const { action, data } = JSON.parse(payload.Message);
 
-      // const service = await findServiceByIdAndType(
-      //   data.serviceId,
-      //   data.serviceType
-      // );
-      // if (!service) {
-      //   throw new errorMessage(404, "Service not found");
-      // }
+      switch (action) {
+        case "Add":
+          await addEstimation(data);
+          break;
+        case "Delete":
+          await deleteEstimation(data.serviceId);
+          break;
+        default:
+          break;
+      }
 
-      // const total = data.quantity * service.cost;
-
-      // const newEstimation = new PatientBillingEstimation({
-      //   ...data,
-      //   estimatedPrice: service.cost,
-      //   total: total,
-      //   status: "Active",
-      // });
-
-      // await newEstimation.save();
-
-      // // Normally, you'd not return HTTP responses here; instead, log success or handle internally
-      // console.log("Estimation added successfully", {
-      //   estimationId: newEstimation._id,
-      // });
-      console.log("Estimation added successfully");
+      // Success processing message
+      console.log("Message processed successfully");
     }
   } catch (error) {
     console.error("Error processing SQS message", error);
-    // Depending on your setup, you might want to throw the error to retry or handle it quietly
     throw error; // Throwing error will cause the message to be re-queued and retried
   }
+};
+
+// Add estimation function
+const addEstimation = async (data: any) => {
+  // Add clinic and branch IDs (these should ideally come from the message or an authenticated context)
+  data.clinicId = "EV";
+  data.branchId = "KL";
+
+  const service = await findServiceByIdAndType(
+    data.masterServiceId,
+    data.serviceType
+  );
+
+  if (!service) {
+    throw new errorMessage(404, "Service not found");
+  }
+
+  const total = data.quantity * service.cost;
+
+  const newEstimation = new PatientBillingEstimation({
+    ...data,
+    estimatedPrice: service.cost,
+    total: total,
+    status: "Active",
+  });
+
+  await newEstimation.save();
+
+  // Success processing message
+  console.log("Estimation added successfully", {
+    estimationId: newEstimation._id,
+  });
+};
+
+// Delete estimation function
+const deleteEstimation = async (serviceId: string) => {
+  // Add clinic and branch IDs (these should ideally come from the message or an authenticated context)
+
+  // Find and delete the estimation
+  const estimation = await PatientBillingEstimation.findOneAndDelete({
+    serviceId: serviceId,
+  });
+
+  if (!estimation) {
+    throw new errorMessage(404, "Estimation not found");
+  }
+
+  // Success processing message
+  console.log("Estimation deleted successfully", {
+    estimationId: estimation._id,
+  });
 };

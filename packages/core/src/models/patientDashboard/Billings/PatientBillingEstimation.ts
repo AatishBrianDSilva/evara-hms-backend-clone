@@ -1,11 +1,17 @@
 import mongoose, { Document, Schema } from "mongoose";
 import { EPatientBillingServiceType } from "./PatientBilling"; // Ensure this path is correct
 
+export enum EPatientBillingEstimationStatus {
+  Active = "Active",
+  Inactive = "Inactive",
+}
+
 interface IPatientBillingEstimation extends Document {
   clinicId: string;
   branchId: string;
-  patientID: mongoose.Types.ObjectId;
   patientCode: string;
+  doctorId: mongoose.Types.ObjectId;
+  masterServiceId: mongoose.Types.ObjectId;
   serviceId: mongoose.Types.ObjectId;
   serviceName: string;
   serviceType: EPatientBillingServiceType;
@@ -17,21 +23,27 @@ interface IPatientBillingEstimation extends Document {
 
 const patientBillingEstimationSchema = new Schema<IPatientBillingEstimation>(
   {
-    clinicId: { type: String, required: true },
-    branchId: { type: String, required: true },
-    patientID: {
+    clinicId: { type: String, required: true, index: true },
+    branchId: { type: String, required: true, index: true },
+    patientCode: { type: String, required: true, index: true },
+    doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "doctors" },
+    masterServiceId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       index: true,
-      ref: "Patient",
     },
-    patientCode: { type: String, required: true, index: true, unique: true },
-    serviceId: { type: mongoose.Schema.Types.ObjectId, required: true },
-    serviceName: { type: String, required: true },
+    serviceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      unique: true,
+      index: true,
+    },
+    serviceName: { type: String, required: true, index: true },
     serviceType: {
       type: String,
       enum: Object.values(EPatientBillingServiceType),
       required: true,
+      index: true,
     },
     quantity: {
       type: Number,
@@ -40,7 +52,12 @@ const patientBillingEstimationSchema = new Schema<IPatientBillingEstimation>(
     },
     estimatedPrice: { type: Number, required: true, min: 0 },
     total: { type: Number, required: true, min: 0 },
-    status: { type: String, required: true, default: "Active" },
+    status: {
+      type: String,
+      enum: Object.values(EPatientBillingEstimationStatus),
+      required: true,
+      default: EPatientBillingEstimationStatus.Active,
+    },
   },
   {
     timestamps: true,

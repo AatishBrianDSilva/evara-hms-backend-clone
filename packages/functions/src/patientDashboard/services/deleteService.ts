@@ -6,6 +6,7 @@ import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
 import PatientService from "@evara-backend/core/src/models/patientDashboard/services/PatientService";
+import SNSService from "@evara-backend/core/src/lib/aws/sns";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -22,6 +23,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     const service = await PatientService.findByIdAndDelete(id);
+
+    if (service) {
+      const messagePayload = {
+        action: "Delete",
+        data: {
+          serviceId: service._id,
+        },
+      };
+
+      await SNSService.publishMessage({
+        Message: JSON.stringify(messagePayload),
+        TopicArn: process.env.BILLING_ESTIMATION_TOPIC_ARN,
+      });
+    } else {
+      console.error("Service not found");
+    }
 
     return successResponse("Service deleted successfully", service);
   } catch (error) {

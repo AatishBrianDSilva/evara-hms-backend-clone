@@ -25,13 +25,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Parse the body from the event
     const data = JSON.parse(event.body);
 
+    // Add clinic and branch IDs (these should ideally come from the message or an authenticated context)
     data.clinicId = "EV";
     data.branchId = "KL";
 
     const service = await findServiceByIdAndType(
-      data.serviceId,
+      data.masterServiceId,
       data.serviceType
     );
+
     if (!service) {
       throw new errorMessage(404, "Service not found");
     }
@@ -55,7 +57,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
 export async function findServiceByIdAndType(
   serviceId: string,
-  serviceType: string
+  serviceType: EPatientBillingServiceType
 ) {
   switch (serviceType) {
     case EPatientBillingServiceType.CryoPreservation:

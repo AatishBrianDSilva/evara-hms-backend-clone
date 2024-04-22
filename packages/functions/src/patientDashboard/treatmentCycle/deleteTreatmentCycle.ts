@@ -6,6 +6,7 @@ import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
 import PatientTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/PatientTreatmentCycle";
+import SNSService from "@evara-backend/core/src/lib/aws/sns";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -23,6 +24,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const treatmentCycle = await PatientTreatmentCycle.findByIdAndDelete(id);
     console.log("TreatmentCycle", treatmentCycle);
+
+    if (treatmentCycle) {
+      const messagePayload = {
+        action: "Delete",
+        data: {
+          serviceId: treatmentCycle._id,
+        },
+      };
+
+      await SNSService.publishMessage({
+        Message: JSON.stringify(messagePayload),
+        TopicArn: process.env.BILLING_ESTIMATION_TOPIC_ARN,
+      });
+    } else {
+      console.error("Treatment Cycle not found");
+    }
 
     return successResponse(
       "TreatmentCycle Updated successfully",

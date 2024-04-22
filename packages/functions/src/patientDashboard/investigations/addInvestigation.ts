@@ -4,9 +4,10 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import PatientInvestigation from "@evara-backend/core/src/models/patientDashboard/investigation/PatientInvestigation";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import SNSService from "@evara-backend/core/src/lib/aws/sns";
 import MasterInvestigation from "@evara-backend/core/src/models/patientDashboard/investigation/MasterInvestigations";
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
+import { ETestType } from "@evara-backend/core/src/models/patientDashboard/investigation/MedicalTests";
+import { publishServiceToSNS } from "@evara-backend/core/src/lib/utils/publishServiceToSNS";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -29,33 +30,36 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     for (let i = 0; i < data.length; i++) {
       data[i].clinicId = "EV";
       const investigation = new PatientInvestigation(data[i]);
-      await investigation.save();
+      const newinvestigation = await investigation.save();
 
-      // Publish to SNS
       const masterInvestigation = await MasterInvestigation.findById(
         investigation.investigation
       ).lean();
+
       if (masterInvestigation) {
-        const messagePayload = {
-          serviceId: masterInvestigation._id,
-          serviceType: EPatientBillingServiceType.Investigation,
-          serviceName: masterInvestigation.name,
-          // serviceCode: masterInvestigation
-          // quantity: 1,
-        };
+        const serviceName =
+          masterInvestigation.testType === ETestType.BloodTest
+            ? `Blood Test - ${masterInvestigation.name}`
+            : masterInvestigation.name;
+
+        // Publish to SNS
+        await publishServiceToSNS(
+          newinvestigation.patientCode,
+          newinvestigation.doctor,
+          newinvestigation.investigation,
+          newinvestigation._id,
+          EPatientBillingServiceType.Investigation,
+          serviceName,
+          masterInvestigation.cost,
+          1
+        );
+      } else {
+        console.error("Master investigation not found");
       }
     }
-
     // Return success response
     return successResponse("Investigation created successfully");
   } catch (error) {
     return errorResponse(error);
   }
-};
-
-const publishMessage = async (message: string) => {
-  await SNSService.publishMessage({
-    Message: message,
-    TopicArn: process.env.BILLING_ESTIMATION_TOPIC_ARN,
-  });
 };
