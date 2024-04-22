@@ -19,10 +19,12 @@ export enum EPatientBillingServiceType {
 }
 
 interface Item {
+  estimationId: mongoose.Types.ObjectId;
+  masterServiceId: mongoose.Types.ObjectId;
   serviceId: mongoose.Types.ObjectId;
   serviceName: string;
-  serviceCode: string;
   serviceType: EPatientBillingServiceType;
+  doctorId: mongoose.Types.ObjectId;
   quantity: number;
   price: number;
   discount: number;
@@ -30,12 +32,11 @@ interface Item {
   total: number;
 }
 
-interface IPatientBilling extends Document {
+export interface IPatientBilling extends Document {
   billingId: string;
   clinicId: string;
   branchId?: string;
   patientCode: string;
-  patientID: mongoose.Types.ObjectId;
   items: Item[];
   total: number;
   discount: number;
@@ -50,14 +51,16 @@ interface IPatientBilling extends Document {
 }
 
 const itemSchema = new Schema<Item>({
+  estimationId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  masterServiceId: { type: mongoose.Schema.Types.ObjectId, required: true },
   serviceId: { type: mongoose.Schema.Types.ObjectId, required: true },
   serviceName: { type: String, required: true },
-  serviceCode: { type: String, required: true },
   serviceType: {
     type: String,
     enum: Object.values(EPatientBillingServiceType),
     required: true,
   },
+  doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "doctors" },
   quantity: { type: Number, required: true, min: 0 },
   price: { type: Number, required: true, min: 0 },
   discount: { type: Number, required: true, min: 0 },
@@ -67,16 +70,10 @@ const itemSchema = new Schema<Item>({
 
 const patientBillingSchema = new Schema<IPatientBilling>(
   {
-    billingId: { type: String, unique: true },
+    billingId: { type: String, unique: true, index: true },
     clinicId: { type: String, required: true, index: true },
     branchId: { type: String, index: true },
     patientCode: { type: String, required: true },
-    patientID: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Patient",
-      required: true,
-      index: true,
-    },
     items: [itemSchema],
     total: { type: Number, required: true },
     discount: { type: Number, default: 0 },
@@ -105,7 +102,7 @@ const patientBillingSchema = new Schema<IPatientBilling>(
 
 patientBillingSchema.pre(
   "save",
-  autoIncrementId("PatientBilling", "billingId", "B-")
+  autoIncrementId("PatientBilling", "billingId", "BL-")
 );
 
 export const PatientBilling = mongoose.model<IPatientBilling>(
