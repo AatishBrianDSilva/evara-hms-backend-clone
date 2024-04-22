@@ -23,7 +23,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     // Find the patient by patientCode
-    const patient = await Patient.findOne({ patientCode: id }).lean();
+    const patient = await Patient.findOne({ patientId: id }).lean();
     if (!patient) {
       throw new ErrorMessage(404, "Patient not found");
     }
