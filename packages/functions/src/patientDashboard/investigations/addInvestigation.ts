@@ -4,6 +4,9 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import PatientInvestigation from "@evara-backend/core/src/models/patientDashboard/investigation/PatientInvestigation";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import SNSService from "@evara-backend/core/src/lib/aws/sns";
+import MasterInvestigation from "@evara-backend/core/src/models/patientDashboard/investigation/MasterInvestigations";
+import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -27,6 +30,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       data[i].clinicId = "EV";
       const investigation = new PatientInvestigation(data[i]);
       await investigation.save();
+
+      // Publish to SNS
+      const masterInvestigation = await MasterInvestigation.findById(
+        investigation.investigation
+      ).lean();
+      if (masterInvestigation) {
+        const messagePayload = {
+          serviceId: masterInvestigation._id,
+          serviceType: EPatientBillingServiceType.Investigation,
+          serviceName: masterInvestigation.name,
+          // serviceCode: masterInvestigation
+          // quantity: 1,
+        };
+      }
     }
 
     // Return success response
@@ -34,4 +51,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   } catch (error) {
     return errorResponse(error);
   }
+};
+
+const publishMessage = async (message: string) => {
+  await SNSService.publishMessage({
+    Message: message,
+    TopicArn: process.env.BILLING_ESTIMATION_TOPIC_ARN,
+  });
 };

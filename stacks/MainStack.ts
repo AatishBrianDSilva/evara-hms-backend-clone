@@ -1,5 +1,12 @@
-import { Api, StackContext, attachPermissionsToRole } from "sst/constructs";
+import {
+  Api,
+  Queue,
+  StackContext,
+  Topic,
+  attachPermissionsToRole,
+} from "sst/constructs";
 import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import { Duration } from "aws-cdk-lib/core";
 
 export function MainStack({ stack }: StackContext) {
   // Create a default role for the API
@@ -15,6 +22,52 @@ export function MainStack({ stack }: StackContext) {
 
   attachPermissionsToRole(role, ["ssm"]);
 
+  const billingEstimationDLQ = new Queue(stack, "BillingEstimationDLQ", {
+    cdk: {
+      queue: {
+        queueName: `BillingEstimationDLQ-${stack.stage}`,
+        visibilityTimeout: Duration.seconds(300),
+      },
+    },
+  });
+
+  //Create a queue to handle SNS messages from topic "PatientBillingEstimation"
+  const billingEstimationQueue = new Queue(stack, "BillingEstimationQueue", {
+    consumer: {
+      function: {
+        handler:
+          "packages/functions/src/patientDashboard/billings/estimation/automateEstimation.main",
+        timeout: 300,
+        role: role,
+      },
+    },
+    cdk: {
+      queue: {
+        queueName: `BillingEstimationQueue-${stack.stage}`,
+        visibilityTimeout: Duration.seconds(300),
+        deadLetterQueue: {
+          maxReceiveCount: 3,
+          queue: billingEstimationDLQ.cdk.queue,
+        },
+      },
+    },
+  });
+
+  // Create a topic to add billing estimations for patients
+  const billingEstimationTopic = new Topic(stack, "BillingEstimationTopic", {
+    subscribers: {
+      subscriber: {
+        type: "queue",
+        queue: billingEstimationQueue,
+      },
+    },
+    cdk: {
+      topic: {
+        topicName: "BillingEstimationTopic-" + stack.stage,
+      },
+    },
+  });
+
   /**
    * Represents the API configuration for the MainStack.
    */
@@ -23,6 +76,10 @@ export function MainStack({ stack }: StackContext) {
       function: {
         timeout: "29 seconds",
         role: role,
+        environment: {
+          BILLING_ESTIMATION_TOPIC_ARN: billingEstimationTopic.topicArn,
+        },
+        permissions: ["sns", "sqs"],
       },
     },
     routes: {
