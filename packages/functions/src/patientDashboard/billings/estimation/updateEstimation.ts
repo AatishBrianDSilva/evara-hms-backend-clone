@@ -1,8 +1,8 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 
 import { findServiceByIdAndType } from "./addEstimation";
 import { PatientBillingEstimation } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBillingEstimation";
@@ -13,16 +13,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     if (!event.pathParameters) {
-      throw new errorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, "Path parameters are null");
     }
 
     const id = event.pathParameters["id"];
     if (!id) {
-      throw new errorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, "Id is not provided");
     }
 
     if (!event.body) {
-      throw new errorMessage(400, "Data is required");
+      throw new ErrorMessage(400, "Data is required");
     }
 
     const data = JSON.parse(event.body);
@@ -30,7 +30,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Find existing estimation
     const existingEstimation = await PatientBillingEstimation.findById(id);
     if (!existingEstimation) {
-      throw new errorMessage(404, "Estimation not found");
+      throw new ErrorMessage(404, "Estimation not found");
     }
 
     // Optionally, find and validate new service if masterServiceId or serviceType is updated
@@ -40,7 +40,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         data.serviceType
       );
       if (!service) {
-        throw new errorMessage(404, "Service not found");
+        throw new ErrorMessage(404, "Service not found");
       }
 
       // Update price and tax calculations if service details are changed

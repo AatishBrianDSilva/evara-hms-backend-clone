@@ -1,9 +1,9 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import {
   EPatientBillingEstimationStatus,
   PatientBillingEstimation,
@@ -23,7 +23,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Connect to MongoDB
 
     if (event.body == null) {
-      throw new errorMessage(400, "Data is required");
+      throw new ErrorMessage(400, "Data is required");
     }
 
     const { estimations, clinicId, branchId } = JSON.parse(event.body);
@@ -43,7 +43,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       ).lean();
 
       if (!estimation) {
-        throw new errorMessage(404, "Estimation not found");
+        throw new ErrorMessage(404, "Estimation not found");
       }
 
       // Accumulate totals

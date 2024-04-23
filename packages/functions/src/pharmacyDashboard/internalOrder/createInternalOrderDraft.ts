@@ -2,12 +2,12 @@ import { APIGatewayProxyHandler } from "aws-lambda";
 import mongoose from "mongoose";
 type ObjectId = mongoose.Types.ObjectId; // Using type alias for clarity
 
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import { InternalOrder } from "@evara-backend/core/models/pharmacyDashboard/InternalOrder";
 import { PharmacyStock } from "@evara-backend/core/models/pharmacyDashboard/PharmacyStock";
-import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   const conn = await connectMongoDb();
@@ -16,7 +16,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
   try {
     if (!event.body) {
-      throw new errorMessage(400, "Data is required");
+      throw new ErrorMessage(400, "Data is required");
     }
 
     const { items, date } = JSON.parse(event.body);
@@ -25,7 +25,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const branchId = "KL";
 
     if (!items || !items.length) {
-      throw new errorMessage(400, "Items are required in the order");
+      throw new ErrorMessage(400, "Items are required in the order");
     }
 
     // Process each item in the order
@@ -46,7 +46,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       // console.log("Stock:", JSON.stringify(stock, null, 2));
 
       if (!stock) {
-        throw new errorMessage(404, "Item not found in stock");
+        throw new ErrorMessage(404, "Item not found in stock");
       }
 
       // Find the batch and location to decrement the quantity from
@@ -90,7 +90,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
 
       if (remainingQuantity > 0) {
-        throw new errorMessage(
+        throw new ErrorMessage(
           400,
           "Insufficient stock across all batches at the specified location."
         );

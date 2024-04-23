@@ -1,10 +1,10 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 import mongoose from "mongoose";
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { PharmacyStock } from "@evara-backend/core/models/pharmacyDashboard/PharmacyStock";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {

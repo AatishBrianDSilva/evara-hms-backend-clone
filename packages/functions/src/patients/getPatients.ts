@@ -1,12 +1,12 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import Patient from "@evara-backend/core/models/Patients";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import formatPaginationResult from "@evara-backend/core/lib/utils/formatPaginationResult";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
 
-import { IPaginateOptions } from "@evara-backend/core/lib/types/pagination";
+import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {

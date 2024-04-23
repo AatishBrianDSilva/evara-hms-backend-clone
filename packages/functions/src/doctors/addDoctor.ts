@@ -1,10 +1,10 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import Doctors from "@evara-backend/core/models/Doctors";
-import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -13,7 +13,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Connect to MongoDB
 
     if (event.body == null) {
-      throw new errorMessage(400, "Doctor's data is required");
+      throw new ErrorMessage(400, "Doctor's data is required");
     }
 
     // Parse the body from the event

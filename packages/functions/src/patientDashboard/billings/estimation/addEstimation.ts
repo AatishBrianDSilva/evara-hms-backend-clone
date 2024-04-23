@@ -1,9 +1,9 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import MasterCryoPreservations from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/MasterCryoPreservations";
 import MasterInvestigation from "@evara-backend/core/src/models/patientDashboard/investigation/MasterInvestigations";
 import MasterProcedure from "@evara-backend/core/src/models/patientDashboard/procedure/MasterProcedure";
@@ -19,7 +19,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Connect to MongoDB
 
     if (event.body == null) {
-      throw new errorMessage(400, "Data is required");
+      throw new ErrorMessage(400, "Data is required");
     }
 
     // Parse the body from the event
@@ -35,7 +35,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     );
 
     if (!service) {
-      throw new errorMessage(404, "Service not found");
+      throw new ErrorMessage(404, "Service not found");
     }
 
     const estimatedPrice = service.cost * data.quantity;
@@ -77,6 +77,6 @@ export async function findServiceByIdAndType(
     case EPatientBillingServiceType.TreatmentCycle:
       return MasterTreatmentCycle.findById(serviceId);
     default:
-      throw new errorMessage(400, "Invalid service type: " + serviceType);
+      throw new ErrorMessage(400, "Invalid service type: " + serviceType);
   }
 }

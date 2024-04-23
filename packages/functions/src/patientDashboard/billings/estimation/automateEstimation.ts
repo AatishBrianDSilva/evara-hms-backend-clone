@@ -1,6 +1,6 @@
 import { SQSEvent, SQSHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import {
   EPatientBillingEstimationStatus,
   PatientBillingEstimation,
@@ -52,7 +52,7 @@ const addEstimation = async (data: any) => {
   );
 
   if (!service) {
-    throw new errorMessage(404, "Service not found");
+    throw new ErrorMessage(404, "Service not found");
   }
 
   const estimatedPrice = service.cost * data.quantity;
@@ -88,7 +88,7 @@ const deleteEstimation = async (serviceId: string) => {
   });
 
   if (!estimation) {
-    throw new errorMessage(404, "Estimation not found");
+    throw new ErrorMessage(404, "Estimation not found");
   }
 
   // Success processing message

@@ -1,8 +1,8 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import {
   PatientBilling,
   IPatientBilling,
@@ -14,16 +14,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     if (!event.pathParameters) {
-      throw new errorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, "Path parameters are null");
     }
 
     const id = event.pathParameters["id"];
     if (!id) {
-      throw new errorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, "Id is not provided");
     }
 
     if (!event.body) {
-      throw new errorMessage(400, "Data is required");
+      throw new ErrorMessage(400, "Data is required");
     }
 
     const {
@@ -40,7 +40,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     );
 
     if (!isValidUpdate) {
-      throw new errorMessage(
+      throw new ErrorMessage(
         400,
         "Invalid update fields. Only 'discount' and 'total' can be updated."
       );
@@ -49,7 +49,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Retrieve the existing billing document
     const billing = await PatientBilling.findById(id);
     if (!billing) {
-      throw new errorMessage(404, "Billing document not found");
+      throw new ErrorMessage(404, "Billing document not found");
     }
 
     // Using findByIdAndUpdate to update the document directly
@@ -60,7 +60,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     );
 
     if (!updatedBilling) {
-      throw new errorMessage(404, "Failed to update billing document");
+      throw new ErrorMessage(404, "Failed to update billing document");
     }
 
     return successResponse("Billing updated successfully", {

@@ -1,9 +1,9 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { DrugManufacturer } from "@evara-backend/core/models/pharmacyDashboard/DrugManufacturer";
 import { DrugCategory } from "@evara-backend/core/models/pharmacyDashboard/DrugCategory";
 import { TaxRate } from "@evara-backend/core/src/models/pharmacyDashboard/TaxRate";

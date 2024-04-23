@@ -1,15 +1,15 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 import mongoose from "mongoose";
 type ObjectId = mongoose.Types.ObjectId; // Using type alias for clarity
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import {
   EInternalOrderStatus,
   InternalOrder,
 } from "@evara-backend/core/models/pharmacyDashboard/InternalOrder";
 import { PharmacyStock } from "@evara-backend/core/models/pharmacyDashboard/PharmacyStock";
-import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   const conn = await connectMongoDb();
@@ -18,22 +18,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
   try {
     if (event.pathParameters === null) {
-      throw new errorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, "Path parameters are null");
     }
 
     const orderId = event.pathParameters["id"];
     if (!orderId) {
-      throw new errorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, "Id is not provided");
     }
 
     const order = await InternalOrder.findById(orderId).session(session);
     if (!order) {
-      throw new errorMessage(404, "Order not found");
+      throw new ErrorMessage(404, "Order not found");
     }
 
     // Ensure the order is in a state that can be rejected
     if (![EInternalOrderStatus.Approved].includes(order.status)) {
-      throw new errorMessage(
+      throw new ErrorMessage(
         400,
         "Order cannot be process in its current state"
       );

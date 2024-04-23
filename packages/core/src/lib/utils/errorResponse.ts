@@ -1,7 +1,7 @@
 import { AxiosError } from "axios";
 import { APIGatewayProxyResult } from "aws-lambda";
 
-import ErrorMessage from "./errorMessage";
+import ErrorMessage from "./ErrorMessage";
 
 function errorResponse(error: unknown): APIGatewayProxyResult {
   let statusCode = 500;
