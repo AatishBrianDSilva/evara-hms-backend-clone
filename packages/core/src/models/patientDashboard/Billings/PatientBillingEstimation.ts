@@ -13,7 +13,7 @@ interface IPatientBillingEstimation extends Document {
   patientCode: string;
   doctorId: mongoose.Types.ObjectId;
   masterServiceId: mongoose.Types.ObjectId;
-  serviceId: mongoose.Types.ObjectId;
+  serviceId?: mongoose.Types.ObjectId;
   serviceName: string;
   serviceType: EPatientBillingServiceType;
   quantity: number;
@@ -38,8 +38,6 @@ const patientBillingEstimationSchema = new Schema<IPatientBillingEstimation>(
     },
     serviceId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      unique: true,
       index: true,
     },
     serviceName: { type: String, required: true, index: true },

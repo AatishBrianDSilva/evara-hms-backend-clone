@@ -22,7 +22,7 @@ export enum EPatientBillingServiceType {
 interface Item {
   estimationId: mongoose.Types.ObjectId;
   masterServiceId: mongoose.Types.ObjectId;
-  serviceId: mongoose.Types.ObjectId;
+  serviceId?: mongoose.Types.ObjectId;
   serviceName: string;
   serviceType: EPatientBillingServiceType;
   doctorId: mongoose.Types.ObjectId;
@@ -54,7 +54,7 @@ export interface IPatientBilling extends Document {
 const itemSchema = new Schema<Item>({
   estimationId: { type: mongoose.Schema.Types.ObjectId, required: true },
   masterServiceId: { type: mongoose.Schema.Types.ObjectId, required: true },
-  serviceId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  serviceId: { type: mongoose.Schema.Types.ObjectId },
   serviceName: { type: String, required: true },
   serviceType: {
     type: String,
