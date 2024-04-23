@@ -1,4 +1,5 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, PaginateModel, Schema } from "mongoose";
+import paginate from "mongoose-paginate-v2";
 import { autoIncrementId } from "../../Counters";
 
 export enum EPatientBillingStatus {
@@ -105,7 +106,11 @@ patientBillingSchema.pre(
   autoIncrementId("PatientBilling", "billingId", "BL-")
 );
 
-export const PatientBilling = mongoose.model<IPatientBilling>(
-  "PatientBilling",
-  patientBillingSchema
-);
+patientBillingSchema.plugin(paginate);
+
+interface PatientBillingDocument extends Document, IPatientBilling {}
+
+export const PatientBilling = mongoose.model<
+  PatientBillingDocument,
+  PaginateModel<PatientBillingDocument>
+>("PatientBilling", patientBillingSchema);

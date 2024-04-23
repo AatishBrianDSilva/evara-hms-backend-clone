@@ -7,6 +7,8 @@ interface IMasterService extends Document {
   name: string;
   description?: string;
   cost: number;
+  tax: number;
+  total: number;
   active: boolean;
 }
 
@@ -24,6 +26,8 @@ const MasterServiceSchema: Schema = new Schema({
   name: { type: String, required: true },
   description: { type: String },
   cost: { type: Number, required: true },
+  tax: { type: Number, required: true },
+  total: { type: Number, required: true },
   active: { type: Boolean, required: true, default: true },
 });
 

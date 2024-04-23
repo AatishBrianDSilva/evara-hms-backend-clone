@@ -1,7 +1,7 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
 import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
+import errorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
 import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/lib/utils/successResponse";
 import {
@@ -47,8 +47,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
 
       // Accumulate totals
-      total += estimation.total;
-      // tax += (estimation.total * (estimation.taxRate || 0)) / 100; // Assuming taxRate is a percentage of the total
+      total += estimation.estimatedTotal;
+      tax += estimation.estimatedTax;
 
       patientCode = estimation.patientCode;
 
@@ -60,10 +60,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         serviceName: estimation.serviceName,
         serviceType: estimation.serviceType,
         quantity: estimation.quantity,
-        price: estimation.estimatedPrice,
+        price: estimation.cost,
         discount: 0,
-        tax: 0,
-        total: estimation.total,
+        tax: estimation.estimatedTax,
+        total: estimation.estimatedTotal,
       });
     }
 

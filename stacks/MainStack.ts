@@ -226,6 +226,30 @@ export function MainStack({ stack }: StackContext) {
       "POST /history/add":
         "packages/functions/src/patientDashboard/history/addPatientHistory.main",
 
+      // Patient Billing
+      // Estimations
+      "POST /billings/estimations/add":
+        "packages/functions/src/patientDashboard/billings/estimation/addEstimation.main",
+      "GET /billings/estimations":
+        "packages/functions/src/patientDashboard/billings/estimation/getEstimations.main",
+      "GET /billings/estimations/{id}":
+        "packages/functions/src/patientDashboard/billings/estimation/getEstimationById.main",
+      "PUT /billings/estimations/{id}":
+        "packages/functions/src/patientDashboard/billings/estimation/editEstimation.main",
+      "DELETE /billings/estimations/{id}":
+        "packages/functions/src/patientDashboard/billings/estimation/deleteEstimation.main",
+      // Billing
+      "POST /billings/add":
+        "packages/functions/src/patientDashboard/billings/addBilling.main",
+      "GET /billings":
+        "packages/functions/src/patientDashboard/billings/getBillings.main",
+      "GET /billings/{id}":
+        "packages/functions/src/patientDashboard/billings/getBillingById.main",
+      "PUT /billings/{id}":
+        "packages/functions/src/patientDashboard/billings/editBilling.main",
+      "DELETE /billings/{id}":
+        "packages/functions/src/patientDashboard/billings/deleteBilling.main",
+
       // Patient Dashboard End
 
       // Admin Dev

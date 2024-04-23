@@ -1,5 +1,6 @@
-import mongoose, { Document, Schema } from "mongoose";
-import { EPatientBillingServiceType } from "./PatientBilling"; // Ensure this path is correct
+import mongoose, { Document, PaginateModel, Schema } from "mongoose";
+import { EPatientBillingServiceType } from "./PatientBilling";
+import paginate from "mongoose-paginate-v2";
 
 export enum EPatientBillingEstimationStatus {
   Active = "Active",
@@ -16,8 +17,11 @@ interface IPatientBillingEstimation extends Document {
   serviceName: string;
   serviceType: EPatientBillingServiceType;
   quantity: number;
+  estimatedTax: number;
+  taxRate: number;
+  cost: number;
   estimatedPrice: number;
-  total: number;
+  estimatedTotal: number;
   status: "Active" | "Inactive";
 }
 
@@ -50,8 +54,11 @@ const patientBillingEstimationSchema = new Schema<IPatientBillingEstimation>(
       required: true,
       min: [1, "Quantity must be at least 1"],
     },
+    taxRate: { type: Number, required: true, min: 0 },
+    cost: { type: Number, required: true, min: 0 },
+    estimatedTax: { type: Number, required: true, min: 0 },
     estimatedPrice: { type: Number, required: true, min: 0 },
-    total: { type: Number, required: true, min: 0 },
+    estimatedTotal: { type: Number, required: true, min: 0 },
     status: {
       type: String,
       enum: Object.values(EPatientBillingEstimationStatus),
@@ -64,8 +71,13 @@ const patientBillingEstimationSchema = new Schema<IPatientBillingEstimation>(
   }
 );
 
-export const PatientBillingEstimation =
-  mongoose.model<IPatientBillingEstimation>(
-    "PatientBillingEstimation",
-    patientBillingEstimationSchema
-  );
+patientBillingEstimationSchema.plugin(paginate);
+
+interface PatientBillingEstimationDocument
+  extends Document,
+    IPatientBillingEstimation {}
+
+export const PatientBillingEstimation = mongoose.model<
+  PatientBillingEstimationDocument,
+  PaginateModel<PatientBillingEstimationDocument>
+>("PatientBillingEstimation", patientBillingEstimationSchema);

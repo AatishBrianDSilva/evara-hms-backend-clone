@@ -1,6 +1,6 @@
 import { SQSEvent, SQSHandler } from "aws-lambda";
 import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
+import errorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
 import {
   EPatientBillingEstimationStatus,
   PatientBillingEstimation,
@@ -55,12 +55,18 @@ const addEstimation = async (data: any) => {
     throw new errorMessage(404, "Service not found");
   }
 
-  const total = data.quantity * service.cost;
+  const estimatedPrice = service.cost * data.quantity;
+  const estimatedTax = (service.tax * estimatedPrice) / 100;
+
+  const total = estimatedPrice + estimatedTax;
 
   const newEstimation = new PatientBillingEstimation({
     ...data,
-    estimatedPrice: service.cost,
-    total: total,
+    estimatedTax: estimatedTax,
+    taxRate: service.tax,
+    cost: service.cost,
+    estimatedPrice: estimatedPrice,
+    estimatedTotal: total,
     status: "Active",
   });
 
