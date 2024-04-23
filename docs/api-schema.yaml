@@ -1,0 +1,696 @@
+openapi: "3.1.0"
+info:
+  title: "Evara HMS API"
+  description: "Comprehensive APIs for the HMS (Health Management System) focused on fertility treatments and IVF procedures.\nThis API requires JWT authentication for all endpoints.\nAccess to specific operations is based on user roles, including Admin, Doctor, and Patient roles."
+  contact:
+    name: "Ratandeep Arunkumar"
+    email: "ratandeep@growthverse.in"
+    url: "https://www.growthverse.in"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+  version: "1.0.0"
+servers:
+  - url: "https://c41711b7m7.execute-api.ap-south-1.amazonaws.com"
+    description: "Dev"
+  - url: "https://7ih541d8qk.execute-api.ap-south-1.amazonaws.com"
+security:
+  - BearerAuth: []
+tags:
+  - name: "Appointment"
+    description: "APIs for scheduling, updating, and canceling appointments."
+  - name: "Patients"
+    description: "Operations related to patient registration, management, and information retrieval."
+  - name: "Patient's Dashboard"
+    description: "Operations related to patient details, management, and information retrieval."
+  - name: "Patient's Dashboard - Journey"
+    description: "Operations related to patient journey"
+  - name: "Patient's Dashboard - Journey - History"
+    description: "Operations related to patient history"
+  - name: "Patient's Dashboard - Estimate"
+    description: "APIs related to estimation and billing processes within the patient's treatment journey."
+  - name: "Patient's Dashboard - Billing"
+    description: "APIs related to billing processes within the patient's treatment journey."
+  - name: "Pharmacy Dashboard"
+    description: "APIs for scheduling, updating, and canceling appointments."
+paths:
+  /ivf-registration:
+    post:
+      tags:
+        - "Patients"
+      summary: "Register a Patient for IVF Treatment"
+      description: "Registers a new patient in the Evara Health Management System and creates a new IVF treatment case.\n\n**Required Role:** Admin, Front-Desk"
+      operationId: "registerIVFPatient"
+      requestBody:
+        description: "Details of the patient to be registered for IVF treatment."
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                patientName:
+                  type: "string"
+                patientDOB:
+                  type: "string"
+                  format: "date"
+                contactInfo:
+                  type: "object"
+                  properties:
+                    email:
+                      type: "string"
+                      format: "email"
+                    phone:
+                      type: "string"
+      responses:
+        "201":
+          description: "Patient registration and IVF case creation successful"
+        "400":
+          description: "Invalid input provided. Please review the request body and retry"
+        "409":
+          description: "A patient case with similar details already exists. Duplicate registration not allowed"
+  /history/add:
+    post:
+      summary: "Add patient history"
+      tags:
+        - "Patient's Dashboard - Journey - History"
+      description: "Creates a new patient history record."
+      operationId: "addPatientHistory"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientHistoryData"
+      responses:
+        "201":
+          description: "Patient history created successfully."
+        "400":
+          description: "Bad request, data required."
+        "409":
+          description: "Patient history already exists."
+  /history/{id}:
+    get:
+      summary: "Get patient history"
+      tags:
+        - "Patient's Dashboard - Journey - History"
+      description: "Retrieves a patient history record by patient ID."
+      operationId: "getPatientHistory"
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          schema:
+            type: "string"
+          description: "The unique identifier for the patient to retrieve history for."
+      responses:
+        "200":
+          description: "Patient history retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientHistoryData"
+        "404":
+          description: "Patient history not found."
+    put:
+      summary: "Edit patient history"
+      tags:
+        - "Patient's Dashboard - Journey - History"
+      description: "Updates an existing patient history record."
+      operationId: "editPatientHistory"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientHistoryData"
+      responses:
+        "200":
+          description: "Patient history updated successfully."
+        "400":
+          description: "Bad request, incorrect data."
+        "404":
+          description: "Patient history not found."
+  /billings/estimations:
+    get:
+      tags:
+        - "Patient's Dashboard - Estimate"
+      summary: "Get list of estimations"
+      description: "Retrieves a list of estimations, optionally applying pagination and sorting filters."
+      operationId: "getEstimations"
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: "Page number for pagination"
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: "Number of records per page for pagination"
+        - in: query
+          name: sort
+          schema:
+            type: string
+          description: "Sorting criteria in the format of field:(asc|desc). Multiple sorting criteria can be provided."
+        - in: query
+          name: status
+          schema:
+            type: string
+          description: "Filter by status of the estimation."
+      responses:
+        "200":
+          description: "List of estimations fetched successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  records:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PatientEstimationData"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+        "400":
+          description: "Invalid request parameters."
+  /billings/estimations/add:
+    post:
+      tags:
+        - "Patient's Dashboard - Estimate"
+      summary: "Add an estimation for a patient"
+      description: "Adds a new estimation entry for patient services including detailed breakdowns of costs and taxes."
+      operationId: "addPatientEstimation"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientEstimationData"
+      responses:
+        "200":
+          description: "Estimation added successfully."
+        "400":
+          description: "Invalid data supplied."
+        "404":
+          description: "Service not found."
+  /billings/estimation/{id}:
+    get:
+      tags:
+        - "Patient's Dashboard - Estimate"
+      summary: "Get estimation by ID"
+      description: "Retrieves detailed information about a specific estimation by its ID."
+      operationId: "getEstimationById"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "Unique identifier of the estimation to retrieve."
+      responses:
+        "200":
+          description: "Estimation details retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientEstimationData"
+        "404":
+          description: "Estimation not found."
+        "400":
+          description: "Invalid ID supplied."
+    delete:
+      tags:
+        - "Patient's Dashboard - Estimate"
+      summary: "Delete an estimation"
+      description: "Deletes a specific estimation by its ID."
+      operationId: "deleteEstimation"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "Unique identifier of the estimation to delete."
+      responses:
+        "200":
+          description: "Estimation deleted successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: "Invalid request or ID not provided."
+        "404":
+          description: "Estimation not found."
+    put:
+      tags:
+        - "Patient's Dashboard - Estimate"
+      summary: "Update an estimation"
+      description: "Updates an existing estimation with new details, recalculates costs if necessary."
+      operationId: "updateEstimation"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "Unique identifier of the estimation to update."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EstimationUpdateData"
+      responses:
+        "200":
+          description: "Estimation updated successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: "Invalid data supplied or required fields missing."
+        "404":
+          description: "Estimation not found."
+        "500":
+          description: "Internal Server Error"
+  /billings/add:
+    post:
+      tags:
+        - "Patient's Dashboard - Billing"
+      summary: "Create a new billing record"
+      description: "Generates a new billing record from provided estimations, setting those estimations to inactive once billed."
+      operationId: "addBilling"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - estimations
+              properties:
+                estimations:
+                  type: array
+                  description: "Array of estimation IDs to be billed."
+                  items:
+                    type: string
+                clinicId:
+                  type: string
+                  description: "Identifier for the clinic."
+                branchId:
+                  type: string
+                  description: "Identifier for the specific branch of the clinic."
+      responses:
+        "200":
+          description: "Billing generated successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: "Invalid input or required data missing."
+        "404":
+          description: "One or more estimations not found."
+        "500":
+          description: "Internal server error during the processing of the billing."
+  /billings:
+    get:
+      tags:
+        - "Patient's Dashboard - Billing"
+      summary: "Retrieve billings list"
+      description: "Fetches a list of billing records, with support for pagination, sorting, and filtering by status."
+      operationId: "getBillings"
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: "Page number for pagination"
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: "Number of records per page for pagination"
+        - in: query
+          name: sort
+          schema:
+            type: string
+          description: "Sorting criteria in the format of field:(asc|desc). Multiple sorting criteria can be provided."
+        - in: query
+          name: status
+          schema:
+            type: string
+          description: "Filter by status of the billing."
+      responses:
+        "200":
+          description: "List of billing records retrieved successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  records:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BillingRecord"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+        "400":
+          description: "Invalid input or required data missing."
+
+  /billings/{id}:
+    get:
+      tags:
+        - "Patient's Dashboard - Billing"
+      summary: "Retrieve a specific billing record"
+      description: "Fetches detailed information about a specific billing record by its ID."
+      operationId: "getBillingById"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "Unique identifier of the billing record to retrieve."
+      responses:
+        "200":
+          description: "Billing record retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingRecord"
+        "404":
+          description: "Billing record not found."
+        "400":
+          description: "Invalid ID supplied."
+    put:
+      tags:
+        - "Patient's Dashboard - Billing"
+      summary: "Update a billing record"
+      description: "Updates specific fields of a billing record. Currently, only 'discount' and 'total' are allowed to be updated."
+      operationId: "updateBilling"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "Unique identifier of the billing record to update."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                updates:
+                  type: object
+                  properties:
+                    discount:
+                      type: number
+                      format: double
+                      description: "New discount amount to apply."
+                    total:
+                      type: number
+                      format: double
+                      description: "New total amount after applying the discount."
+              required:
+                - updates
+      responses:
+        "200":
+          description: "Billing updated successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedBilling:
+                    $ref: "#/components/schemas/BillingRecord"
+        "400":
+          description: "Invalid request parameters or update fields."
+        "404":
+          description: "Billing record not found."
+        "500":
+          description: "Internal server error."
+    delete:
+      tags:
+        - "Patient's Dashboard - Billing"
+      summary: "Delete a billing record"
+      description: "Deletes a billing record and reverts the status of all associated estimations to 'Active'."
+      operationId: "deleteBilling"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "Unique identifier of the billing record to delete."
+      responses:
+        "200":
+          description: "Billing deleted successfully and estimations reverted."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: "Invalid ID or other request error."
+        "404":
+          description: "Billing record not found."
+        "500":
+          description: "Internal server error during the deletion process."
+components:
+  securitySchemes:
+    BearerAuth:
+      type: "http"
+      description: 'JWT authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}". All endpoints require authentication and are subject to role-based access control.'
+      scheme: "bearer"
+      bearerFormat: "JWT"
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        totalDocs:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+        page:
+          type: integer
+        pagingCounter:
+          type: integer
+        hasPrevPage:
+          type: boolean
+        hasNextPage:
+          type: boolean
+        prevPage:
+          type: integer
+        nextPage:
+          type: integer
+    PatientHistoryData:
+      type: "object"
+      required:
+        - "patientCode"
+      properties:
+        patientId:
+          type: "string"
+          description: "The unique identifier for the patient."
+        patientCode:
+          type: "string"
+          description: "A unique code for the patient."
+        clinicId:
+          type: "string"
+          description: "The clinic's identifier where the patient is registered."
+        branchId:
+          type: "string"
+          description: "The specific branch's identifier of the clinic."
+        medicalHistory:
+          type: "object"
+          description: "Detailed medical history of the patient."
+        menstrualAndOvulationHistory:
+          type: "object"
+          description: "Menstrual and ovulation details."
+        coitalHistory:
+          type: "object"
+          description: "Coital frequency and other related data."
+        diseaseAdverseEffect:
+          type: "object"
+        otherFactorsAdverseEffect:
+          type: "object"
+        generalPhysicalExamination:
+          type: "object"
+        investigations:
+          type: "object"
+        summary:
+          type: "object"
+        files:
+          type: "array"
+          items:
+            type: "string"
+    PatientEstimationData:
+      type: "object"
+      required:
+        - "patientCode"
+        - "doctorId"
+        - "masterServiceId"
+        - "serviceType"
+        - "quantity"
+      properties:
+        clinicId:
+          type: "string"
+        branchId:
+          type: "string"
+        patientCode:
+          type: "string"
+        doctorId:
+          type: "string"
+        masterServiceId:
+          type: "string"
+        serviceId:
+          type: "string"
+        serviceName:
+          type: "string"
+        serviceType:
+          type: "string"
+        quantity:
+          type: "integer"
+        estimatedTax:
+          type: "number"
+        taxRate:
+          type: "number"
+        cost:
+          type: "number"
+        estimatedPrice:
+          type: "number"
+        estimatedTotal:
+          type: "number"
+        status:
+          type: "string"
+          enum:
+            - "Active"
+            - "Inactive"
+    EstimationUpdateData:
+      type: object
+      properties:
+        masterServiceId:
+          type: string
+          description: "ID of the master service if changing the service type."
+        serviceId:
+          type: string
+          description: "ID of the specific service associated with the estimation."
+        serviceName:
+          type: string
+          description: "Name of the service for the estimation."
+        serviceType:
+          type: string
+          description: "Type of service for billing purposes."
+        quantity:
+          type: integer
+          description: "Quantity of the service being estimated."
+        taxRate:
+          type: number
+          format: double
+          description: "Tax rate applicable to the service."
+        cost:
+          type: number
+          format: double
+          description: "Cost per unit of the service."
+        estimatedTax:
+          type: number
+          format: double
+          description: "Total estimated tax for the service."
+        estimatedPrice:
+          type: number
+          format: double
+          description: "Estimated price before tax."
+        estimatedTotal:
+          type: number
+          format: double
+          description: "Total estimated cost including taxes."
+    BillingItem:
+      type: object
+      properties:
+        estimationId:
+          type: string
+          description: "The ID of the estimation."
+        masterServiceId:
+          type: string
+          description: "ID of the master service."
+        doctorId:
+          type: string
+          description: "ID of the doctor who provided the service."
+        serviceId:
+          type: string
+          description: "ID of the specific service."
+        serviceName:
+          type: string
+          description: "Name of the service."
+        serviceType:
+          type: string
+          description: "Type of service provided."
+        quantity:
+          type: integer
+          description: "Quantity of the service provided."
+        price:
+          type: number
+          format: double
+          description: "Cost per unit of the service."
+        discount:
+          type: number
+          format: double
+          description: "Discount applied to the service."
+        tax:
+          type: number
+          format: double
+          description: "Tax applied to the service."
+        total:
+          type: number
+          format: double
+          description: "Total amount for the service after discounts and taxes."
+    BillingRecord:
+      type: object
+      properties:
+        clinicId:
+          type: string
+        branchId:
+          type: string
+        patientCode:
+          type: string
+        createdBy:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BillingItem"
+        total:
+          type: number
+          format: double
+        discount:
+          type: number
+          format: double
+        tax:
+          type: number
+          format: double
+        grandTotal:
+          type: number
+          format: double
+        status:
+          type: string
