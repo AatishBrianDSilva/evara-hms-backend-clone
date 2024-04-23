@@ -56,7 +56,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         estimationId: estimation._id,
         masterServiceId: estimation.masterServiceId,
         doctorId: estimation.doctorId,
-        serviceId: estimation.serviceId || "",
+        serviceId: estimation.serviceId || undefined,
         serviceName: estimation.serviceName,
         serviceType: estimation.serviceType,
         quantity: estimation.quantity,
