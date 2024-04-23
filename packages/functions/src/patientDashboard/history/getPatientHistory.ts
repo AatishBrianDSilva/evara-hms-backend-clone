@@ -32,9 +32,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const patientHistory = await PatientHistory.findOne({
       patientId: patient._id,
     }).lean();
-    if (!patientHistory) {
-      throw new ErrorMessage(404, "Patient history not found");
-    }
 
     // Return the patient history data
     return successResponse(
