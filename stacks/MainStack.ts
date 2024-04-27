@@ -256,6 +256,13 @@ export function MainStack({ stack }: StackContext) {
 
       "GET /master/services/all":
         "packages/functions/src/patientDashboard/billings/getAllServices.main",
+      // Patient Pharmacy
+      "POST /pharmacy/add":
+        "packages/functions/src/patientDashboard/pharmacy/addPharmacy.main",
+      "GET /pharmacy":
+        "packages/functions/src/patientDashboard/pharmacy/getPharmacy.main",
+      "GET /pharmacy/{id}":
+        "packages/functions/src/patientDashboard/pharmacy/getPharmacyById.main",
 
       // Patient Dashboard End
 

@@ -14,6 +14,7 @@ import {
 } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
 import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
 import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
+import { FlattenMaps } from "mongoose";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -81,11 +82,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
 const formatRecords = (records: IPharmacyStock[]) => {
   return records.map((record) => {
-    const recordJSON = record.toJSON();
+    const recordJSON: FlattenMaps<IPharmacyStock> = record.toJSON();
 
     const locationQuantities: any = {};
 
-    recordJSON.batches.forEach((batch: IBatchDetails) => {
+    recordJSON.batches.forEach((batch) => {
       batch.locations.forEach((loc) => {
         let locationId = loc.location._id.toString();
         if (!locationQuantities[locationId]) {
@@ -107,7 +108,7 @@ const formatRecords = (records: IPharmacyStock[]) => {
         type: recordJSON.item.type?.name,
       },
       sellPrice: recordJSON.sellPrice,
-      totalQuantity: recordJSON.totalQuantity,
+      totalQuantity: recordJSON.totalQuantity!,
       locations: Object.values(locationQuantities),
     };
   });

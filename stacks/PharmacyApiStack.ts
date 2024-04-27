@@ -92,7 +92,7 @@ export function PharmacyApiStack({ stack }: StackContext) {
     "DELETE /pharmacy-dashboard/master/tax-rates/{id}":
       "packages/functions/src/pharmacyDashboard/master/taxRate/deleteTaxRate.main",
 
-    // Pharmacy Stock
+    // Master Pharmacy Stock
     "POST /pharmacy-dashboard/master/stock/add":
       "packages/functions/src/pharmacyDashboard/master/pharmacyStock/addPharmacyStock.main",
     "GET /pharmacy-dashboard/master/stock":
@@ -112,6 +112,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/stocks/getPaginatedStocks.main",
     "GET /pharmacy-dashboard/stocks/{id}":
       "packages/functions/src/pharmacyDashboard/stocks/getStockById.main",
+    "GET /pharmacy-dashboard/stocks/location/{id}":
+      "packages/functions/src/pharmacyDashboard/stocks/getStocksByLocation.main",
 
     // Purchase Orders
     "POST /pharmacy-dashboard/purchase-order/add":
