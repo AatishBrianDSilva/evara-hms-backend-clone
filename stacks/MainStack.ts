@@ -250,6 +250,14 @@ export function MainStack({ stack }: StackContext) {
       "DELETE /billings/{id}":
         "packages/functions/src/patientDashboard/billings/deleteBilling.main",
 
+      // Patient Pharmacy
+      "POST /pharmacy/add":
+        "packages/functions/src/patientDashboard/pharmacy/addPharmacy.main",
+      "GET /pharmacy":
+        "packages/functions/src/patientDashboard/pharmacy/getPharmacy.main",
+      "GET /pharmacy/{id}":
+        "packages/functions/src/patientDashboard/pharmacy/getPharmacyById.main",
+
       // Patient Dashboard End
 
       // Admin Dev
