@@ -25,33 +25,29 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const data: IPatientPharmacyModel = JSON.parse(event.body);
 
-    // Validate and deduct stock
-    const stock = await PharmacyStock.findById(data.pharmacyStock).session(
-      session
-    );
-    if (!stock) {
-      throw new ErrorMessage(404, "Pharmacy Stock not found");
-    }
+    for (const item of data.items) {
+      // Validate and deduct stock
+      const stock = await PharmacyStock.findById(item.stock).session(session);
+      if (!stock) {
+        throw new ErrorMessage(404, "Pharmacy Stock not found");
+      }
 
-    let totalRequested = 0;
-    data.locations.forEach((location) => {
-      location.details.forEach((detail) => {
+      let totalRequested = 0;
+      item.details.forEach((detail) => {
         totalRequested += detail.quantity;
       });
-    });
 
-    if (stock.totalQuantity < totalRequested) {
-      throw new ErrorMessage(400, "Insufficient stock available");
-    }
+      if (stock.totalQuantity < totalRequested) {
+        throw new ErrorMessage(400, "Insufficient stock available");
+      }
 
-    // Deduct quantities from the relevant locations in the stock
-    data.locations.forEach((locationReq) => {
-      locationReq.details.forEach((detailReq) => {
+      // Deduct quantities from the relevant locations in the stock
+      item.details.forEach((detailReq) => {
         const location = stock.batches
           .flatMap((batch) => batch.locations)
           .find((loc) =>
             (loc.location as unknown as ObjectId).equals(
-              locationReq.location as unknown as ObjectId
+              detailReq.location as unknown as ObjectId
             )
           );
 
@@ -64,9 +60,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           );
         }
       });
-    });
 
-    await stock.save({ session });
+      await stock.save({ session });
+    }
+
+    data.allocatedBy = "User 1";
 
     // Create and save PatientPharmacy entry
     const newPatientPharmacy = new PatientPharmacy(data);

@@ -28,9 +28,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Id is not provided");
     }
 
+    const patientId = event.pathParameters["patientId"];
+    if (!patientId) {
+      throw new ErrorMessage(400, "Patient Id is not provided");
+    }
+
     const populate = [
       {
-        path: "pharmacyStock",
+        path: "items.stock",
         model: PharmacyStock.modelName,
         populate: [
           {
@@ -66,7 +71,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         model: Doctors.modelName,
       },
       {
-        path: "locations.location",
+        path: "items.details.location",
         model: DrugLocation.modelName,
       },
     ];

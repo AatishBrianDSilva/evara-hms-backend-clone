@@ -259,9 +259,9 @@ export function MainStack({ stack }: StackContext) {
       // Patient Pharmacy
       "POST /pharmacy/add":
         "packages/functions/src/patientDashboard/pharmacy/addPharmacy.main",
-      "GET /pharmacy":
+      "GET /pharmacy/{patientId}":
         "packages/functions/src/patientDashboard/pharmacy/getPharmacy.main",
-      "GET /pharmacy/{id}":
+      "GET /pharmacy/patient/{id}":
         "packages/functions/src/patientDashboard/pharmacy/getPharmacyById.main",
 
       // Patient Dashboard End

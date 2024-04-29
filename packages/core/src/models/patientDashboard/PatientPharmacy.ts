@@ -3,47 +3,46 @@ import pagination from "mongoose-paginate-v2";
 
 interface IPatientPharmacy extends Document {
   patient: string;
-  pharmacyStock: Schema.Types.ObjectId;
-  locations: {
-    location: Schema.Types.ObjectId;
+  items: {
+    stock: Schema.Types.ObjectId;
     details: {
+      location: Schema.Types.ObjectId;
       quantity: number;
       batchNumber: string;
     }[];
   }[];
   doctor: Schema.Types.ObjectId;
   date: Date;
-  status: string;
   allocatedBy: string;
   totalQuantity: number;
 }
 
 const detailsSchema = new Schema({
-  quantity: { type: Number, required: true, min: 1 },
-  batchNumber: { type: String, required: true },
-});
-
-const locationSchema = new Schema({
   location: {
     type: Schema.Types.ObjectId,
     ref: "DrugLocation",
     required: true,
   },
+  quantity: { type: Number, required: true, min: 1 },
+  batchNumber: { type: String, required: true },
+});
+
+const itemSchema = new Schema({
+  stock: {
+    type: Schema.Types.ObjectId,
+    ref: "PharmacyStock",
+    required: true,
+  },
+
   details: [detailsSchema],
 });
 
 const patientPharmacySchema = new Schema(
   {
     patient: { type: String, required: true, index: true },
-    pharmacyStock: {
-      type: Schema.Types.ObjectId,
-      ref: "PharmacyStock",
-      required: true,
-    },
-    locations: [locationSchema],
+    items: [itemSchema],
     doctor: { type: Schema.Types.ObjectId, ref: "Doctor", required: true },
     date: { type: Date, required: true },
-    status: { type: String, required: true },
     allocatedBy: { type: String, required: true },
   },
   {
@@ -55,7 +54,7 @@ const patientPharmacySchema = new Schema(
 
 patientPharmacySchema.virtual("totalQuantity").get(function () {
   // This function calculates the sum of all quantities in each location detail
-  return this.locations.reduce((total, location) => {
+  return this.items.reduce((total, location) => {
     return (
       total +
       location.details.reduce((subTotal, detail) => {
@@ -68,7 +67,7 @@ patientPharmacySchema.virtual("totalQuantity").get(function () {
 patientPharmacySchema.plugin(pagination);
 
 patientPharmacySchema.index({ pharmacyStock: 1 });
-patientPharmacySchema.index({ "locations.location": 1 });
+patientPharmacySchema.index({ "items.location": 1 });
 patientPharmacySchema.index({ doctor: 1 });
 patientPharmacySchema.index({ patient: 1 });
 
