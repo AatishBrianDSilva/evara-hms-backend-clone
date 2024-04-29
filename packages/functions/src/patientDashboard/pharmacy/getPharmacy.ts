@@ -14,11 +14,23 @@ import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/D
 import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
 import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
 import { PatientPharmacy } from "@evara-backend/core/src/models/patientDashboard/PatientPharmacy";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     await connectMongoDb();
+
+    // Extract patientCode from the query parameters
+    if (event.pathParameters === null) {
+      throw new ErrorMessage(400, "Path parameters are null");
+    }
+
+    // Safely access the id property
+    const id = event.pathParameters["patientId"];
+    if (!id) {
+      throw new ErrorMessage(400, "Id is not provided");
+    }
 
     const params = event.queryStringParameters || {};
     const { page = "1", limit = "10", sort: sortRaw, status } = params;
@@ -27,7 +39,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const populate = [
       {
-        path: "pharmacyStock",
+        path: "items.stock",
         model: PharmacyStock.modelName,
         populate: [
           {
@@ -63,7 +75,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         model: Doctors.modelName,
       },
       {
-        path: "locations.location",
+        path: "items.details.location",
         model: DrugLocation.modelName,
       },
     ];
@@ -89,6 +101,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
 
       options.populate = populate;
+
+      query.patientId = id;
 
       log("Query", query);
 
