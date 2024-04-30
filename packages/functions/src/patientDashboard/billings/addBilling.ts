@@ -46,6 +46,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         throw new ErrorMessage(404, "Estimation not found");
       }
 
+      console.log("Estimation", estimation);
+
       // Accumulate totals
       total += estimation.estimatedTotal;
       tax += estimation.estimatedTax;
@@ -65,6 +67,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         tax: estimation.estimatedTax,
         total: estimation.estimatedTotal,
       });
+
+      console.log("Items", items);
     }
 
     grandTotal = total - discount + tax;

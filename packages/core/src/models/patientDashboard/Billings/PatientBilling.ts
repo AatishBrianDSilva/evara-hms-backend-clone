@@ -19,6 +19,19 @@ export enum EPatientBillingServiceType {
   TreatmentCycle = "TreatmentCycle",
 }
 
+export enum EPaymentMethod {
+  Cash = "Cash",
+  CreditCard = "CreditCard",
+  BankTransfer = "BankTransfer",
+  Online = "Online",
+}
+
+interface PaymentDetail {
+  amount: number;
+  method: EPaymentMethod;
+  paymentDate?: Date;
+}
+
 interface Item {
   estimationId: mongoose.Types.ObjectId;
   masterServiceId: mongoose.Types.ObjectId;
@@ -43,6 +56,7 @@ export interface IPatientBilling extends Document {
   discount: number;
   tax: number;
   grandTotal: number;
+  payments: PaymentDetail[];
   status: EPatientBillingStatus;
   // createdBy: mongoose.Types.ObjectId;
   // modifiedBy?: mongoose.Types.ObjectId;
@@ -50,6 +64,16 @@ export interface IPatientBilling extends Document {
   modifiedBy?: string;
   modifiedAt?: Date;
 }
+
+const paymentDetailSchema = new Schema<PaymentDetail>({
+  amount: { type: Number, required: true, min: 0 },
+  method: {
+    type: String,
+    enum: Object.values(EPaymentMethod),
+    required: true,
+  },
+  paymentDate: { type: Date },
+});
 
 const itemSchema = new Schema<Item>({
   estimationId: { type: mongoose.Schema.Types.ObjectId, required: true },
@@ -80,6 +104,7 @@ const patientBillingSchema = new Schema<IPatientBilling>(
     discount: { type: Number, default: 0 },
     tax: { type: Number, default: 0 },
     grandTotal: { type: Number, required: true },
+    payments: [paymentDetailSchema],
     status: {
       type: String,
       enum: Object.values(EPatientBillingStatus),
