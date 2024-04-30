@@ -89,12 +89,22 @@ const formatRecords = (records: IPharmacyStock[]) => {
     recordJSON.batches.forEach((batch) => {
       batch.locations.forEach((loc) => {
         let locationId = loc.location._id.toString();
+
         if (!locationQuantities[locationId]) {
           locationQuantities[locationId] = {
             location: loc.location,
             quantity: 0,
+            batches: [],
           };
         }
+
+        if (loc.quantity > 0) {
+          locationQuantities[locationId].batches.push({
+            batchNo: batch.batchNo,
+            quantity: loc.quantity,
+          });
+        }
+
         locationQuantities[locationId].quantity += loc.quantity;
       });
     });
