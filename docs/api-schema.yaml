@@ -476,6 +476,89 @@ paths:
           description: "Billing record not found."
         "500":
           description: "Internal server error during the deletion process."
+  /billings/{id}/process:
+    post:
+      tags:
+        - "Patient's Dashboard - Billing"
+      summary: "Process a billing record"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payments:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/PaymentDetail"
+      description: "Marks a billing record as processed, updating the status of all associated estimations to 'Billed'."
+      operationId: "processBilling"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "Unique identifier of the billing record to process."
+
+      responses:
+        "200":
+          description: "Billing processed successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: "Invalid ID or other request error."
+        "404":
+          description: "Billing record not found."
+        "500":
+          description: "Internal server error during the processing."
+  /billings/{id}/refund:
+    post:
+      tags:
+        - "Patient's Dashboard - Billing"
+      summary: "Refund a billing record"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payments:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/PaymentDetail"
+      description: "Refunds a billing record, updating the status of all associated estimations to 'Active'."
+      operationId: "refundBilling"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "Unique identifier of the billing record to refund."
+      responses:
+        "200":
+          description: "Billing refunded successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: "Invalid ID or other request error."
+        "404":
+          description: "Billing record not found."
+        "500":
+          description: "Internal server error during the refund process."
 components:
   securitySchemes:
     BearerAuth:
@@ -694,3 +777,22 @@ components:
           format: double
         status:
           type: string
+        payments:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentDetail"
+    PaymentDetail:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+          description: "Amount of the payment."
+        method:
+          type: string
+          enum: [Cash, CreditCard, BankTransfer, Online, UPI]
+          description: "Method of payment."
+        paymentDate:
+          type: string
+          format: date-time
+          description: "Date when the payment was made."

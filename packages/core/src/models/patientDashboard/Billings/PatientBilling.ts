@@ -5,7 +5,8 @@ import { autoIncrementId } from "../../Counters";
 export enum EPatientBillingStatus {
   Pending = "Pending",
   Advance = "Advance",
-  Refund = "Refund",
+  Refunded = "Refunded",
+  PartiallyRefunded = "PartiallyRefunded",
   Paid = "Paid",
   Archived = "Archived",
 }
@@ -24,6 +25,7 @@ export enum EPaymentMethod {
   CreditCard = "CreditCard",
   BankTransfer = "BankTransfer",
   Online = "Online",
+  UPI = "UPI",
 }
 
 interface PaymentDetail {
