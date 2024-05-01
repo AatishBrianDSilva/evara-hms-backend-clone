@@ -47,22 +47,22 @@ const patientPharmacySchema = new Schema(
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    // toJSON: { virtuals: true },
+    // toObject: { virtuals: true },
   }
 );
 
-patientPharmacySchema.virtual("totalQuantity").get(function () {
-  // This function calculates the sum of all quantities in each location detail
-  return this.items.reduce((total, location) => {
-    return (
-      total +
-      location.details.reduce((subTotal, detail) => {
-        return subTotal + detail.quantity;
-      }, 0)
-    );
-  }, 0);
-});
+// patientPharmacySchema.virtual("totalQuantity").get(function () {
+//   // This function calculates the sum of all quantities in each location detail
+//   return this.items.reduce((total, item) => {
+//     return (
+//       total +
+//       item.details.reduce((subTotal, detail) => {
+//         return subTotal + detail.quantity;
+//       }, 0)
+//     );
+//   }, 0);
+// });
 
 patientPharmacySchema.plugin(pagination);
 

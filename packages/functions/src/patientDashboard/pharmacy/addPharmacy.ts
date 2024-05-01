@@ -32,33 +32,38 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         throw new ErrorMessage(404, "Pharmacy Stock not found");
       }
 
+      console.log("Stock:", JSON.stringify(stock, null, 2));
+
       let totalRequested = 0;
       item.details.forEach((detail) => {
         totalRequested += detail.quantity;
       });
+
+      console.log("Total requested:", totalRequested);
 
       if (stock.totalQuantity < totalRequested) {
         throw new ErrorMessage(400, "Insufficient stock available");
       }
 
       // Deduct quantities from the relevant locations in the stock
-      item.details.forEach((detailReq) => {
-        const location = stock.batches
-          .flatMap((batch) => batch.locations)
-          .find((loc) =>
-            (loc.location as unknown as ObjectId).equals(
-              detailReq.location as unknown as ObjectId
-            )
-          );
-
-        if (location && location.quantity >= detailReq.quantity) {
-          location.quantity -= detailReq.quantity;
-        } else {
-          throw new ErrorMessage(
-            400,
-            "Insufficient quantity in specified location"
-          );
+      item.details.forEach(async (detail) => {
+        const batch = stock.batches.find(
+          (b) => b.batchNo === detail.batchNumber
+        );
+        if (!batch) {
+          throw new Error("Batch number not found");
         }
+        const locationQuantity = batch.locations.find(
+          (l) => l.location.toString() === detail.location.toString()
+        );
+        if (!locationQuantity) {
+          throw new Error("Location not found");
+        }
+        console.log("Location quantity:", locationQuantity);
+        if (locationQuantity.quantity < detail.quantity) {
+          throw new Error("Insufficient stock at location");
+        }
+        locationQuantity.quantity -= detail.quantity;
       });
 
       await stock.save({ session });
