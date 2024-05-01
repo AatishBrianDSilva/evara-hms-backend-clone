@@ -90,7 +90,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
 
       const query: any = {};
-      query.branchId = "KL";
+      // query.branchId = "KL";
 
       if (status) {
         query.status = status;
@@ -102,9 +102,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       options.populate = populate;
 
-      query.patientId = id;
+      query.patient = id;
 
-      log("Query", query);
+      log("Patient Pharmacy Query", query);
 
       // Fetching the appointments with pagination
       const result = await PatientPharmacy.paginate(query, options);
