@@ -1,8 +1,8 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import {
   EPurchaseOrderStatus,
   PurchaseOrder,
@@ -14,7 +14,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb(); // Connect to MongoDB
 
     if (!event.body) {
-      throw new errorMessage(400, "Data is required");
+      throw new ErrorMessage(400, "Data is required");
     }
 
     const owner = "Admin"; // This should be the user ID of the user making the request
@@ -23,15 +23,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const { id, status } = JSON.parse(event.body);
 
     if (!status) {
-      throw new errorMessage(400, "Status is required for update");
+      throw new ErrorMessage(400, "Status is required for update");
     }
 
     if (!Object.values(EPurchaseOrderStatus).includes(status)) {
-      throw new errorMessage(400, "Invalid status");
+      throw new ErrorMessage(400, "Invalid status");
     }
 
     if (!id) {
-      throw new errorMessage(400, "ID is required for update");
+      throw new ErrorMessage(400, "ID is required for update");
     }
 
     const updateData = {
@@ -51,7 +51,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     );
 
     if (!updatedData) {
-      throw new errorMessage(404, "Data not found");
+      throw new ErrorMessage(404, "Data not found");
     }
 
     return successResponse("Status updated successfully", updatedData);

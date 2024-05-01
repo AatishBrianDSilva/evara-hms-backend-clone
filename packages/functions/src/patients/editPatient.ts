@@ -1,10 +1,10 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import Patients from "@evara-backend/core/models/Patients";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
-import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import Cases from "@evara-backend/core/models/Cases";
 
 // Handler function

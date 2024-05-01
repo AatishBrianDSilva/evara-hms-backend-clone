@@ -1,6 +1,6 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
@@ -79,7 +79,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const doctors = await Doctors.find(query).lean();
 
       // Return success response without pagination info
-      return successResponse("Doctors fetched successfully", doctors);
+      return successResponse("Doctors fetched successfully", {
+        records: doctors,
+      });
     }
   } catch (error) {
     return errorResponse(error);

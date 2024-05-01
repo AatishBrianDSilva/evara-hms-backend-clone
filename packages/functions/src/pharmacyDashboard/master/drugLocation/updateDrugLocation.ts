@@ -1,8 +1,8 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { TaxRate } from "@evara-backend/core/models/pharmacyDashboard/TaxRate";
 import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
 
@@ -12,14 +12,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb(); // Connect to MongoDB
 
     if (!event.body) {
-      throw new errorMessage(400, "Data is required");
+      throw new ErrorMessage(400, "Data is required");
     }
 
     // Assuming the event body will contain the ID of the tax rate to be updated and the new values
     const { id, ...updateData } = JSON.parse(event.body);
 
     if (!id) {
-      throw new errorMessage(400, "Drug Location ID is required for update");
+      throw new ErrorMessage(400, "Drug Location ID is required for update");
     }
 
     updateData.branchId = "KL"; // Assuming the branch ID is always "KL"
@@ -34,7 +34,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     );
 
     if (!updatedDrugLocation) {
-      throw new errorMessage(404, "Drug Location not found");
+      throw new ErrorMessage(404, "Drug Location not found");
     }
 
     return successResponse(

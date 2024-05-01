@@ -1,9 +1,9 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { PurchaseOrder } from "@evara-backend/core/models/pharmacyDashboard/PurchaseOrder";
 import Branch from "@evara-backend/core/models/ClinicBranches";
 import mongoose from "mongoose";
@@ -15,7 +15,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     if (event.body == null) {
-      throw new errorMessage(400, "Data is required");
+      throw new ErrorMessage(400, "Data is required");
     }
 
     const data = JSON.parse(event.body);
@@ -24,7 +24,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const branch = await Branch.findOne({ code: data.branchId }).lean();
     log("Branch", branch);
     // if (!branch) {
-    //   throw new errorMessage(404, "Branch not found");
+    //   throw new ErrorMessage(404, "Branch not found");
     // }
 
     data.branch = new mongoose.Types.ObjectId(branch?._id);

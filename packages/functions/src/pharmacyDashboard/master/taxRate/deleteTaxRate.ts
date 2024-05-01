@@ -1,10 +1,10 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import { TaxRate } from "@evara-backend/core/src/models/pharmacyDashboard/TaxRate";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {

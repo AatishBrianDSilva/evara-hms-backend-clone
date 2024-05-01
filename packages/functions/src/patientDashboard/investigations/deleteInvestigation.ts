@@ -1,11 +1,12 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/lib/utils/errorMessage";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import PatientInvestigation from "@evara-backend/core/src/models/patientDashboard/investigation/PatientInvestigation";
+import SNSService from "@evara-backend/core/src/lib/aws/sns";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -23,6 +24,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const investigation = await PatientInvestigation.findByIdAndDelete(id);
     console.log("Investigation", investigation);
+
+    if (investigation) {
+      const messagePayload = {
+        action: "Delete",
+        data: {
+          serviceId: investigation._id,
+        },
+      };
+
+      await SNSService.publishMessage({
+        Message: JSON.stringify(messagePayload),
+        TopicArn: process.env.BILLING_ESTIMATION_TOPIC_ARN,
+      });
+    } else {
+      console.error("Investigation not found");
+    }
 
     return successResponse("Investigation Updated successfully", investigation);
   } catch (error) {

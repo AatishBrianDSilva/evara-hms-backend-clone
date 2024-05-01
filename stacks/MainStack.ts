@@ -1,5 +1,12 @@
-import { Api, StackContext, attachPermissionsToRole } from "sst/constructs";
+import {
+  Api,
+  Queue,
+  StackContext,
+  Topic,
+  attachPermissionsToRole,
+} from "sst/constructs";
 import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import { Duration } from "aws-cdk-lib/core";
 
 export function MainStack({ stack }: StackContext) {
   // Create a default role for the API
@@ -15,6 +22,52 @@ export function MainStack({ stack }: StackContext) {
 
   attachPermissionsToRole(role, ["ssm"]);
 
+  const billingEstimationDLQ = new Queue(stack, "BillingEstimationDLQ", {
+    cdk: {
+      queue: {
+        queueName: `BillingEstimationDLQ-${stack.stage}`,
+        visibilityTimeout: Duration.seconds(300),
+      },
+    },
+  });
+
+  //Create a queue to handle SNS messages from topic "PatientBillingEstimation"
+  const billingEstimationQueue = new Queue(stack, "BillingEstimationQueue", {
+    consumer: {
+      function: {
+        handler:
+          "packages/functions/src/patientDashboard/billings/estimation/automateEstimation.main",
+        timeout: 300,
+        role: role,
+      },
+    },
+    cdk: {
+      queue: {
+        queueName: `BillingEstimationQueue-${stack.stage}`,
+        visibilityTimeout: Duration.seconds(300),
+        deadLetterQueue: {
+          maxReceiveCount: 3,
+          queue: billingEstimationDLQ.cdk.queue,
+        },
+      },
+    },
+  });
+
+  // Create a topic to add billing estimations for patients
+  const billingEstimationTopic = new Topic(stack, "BillingEstimationTopic", {
+    subscribers: {
+      subscriber: {
+        type: "queue",
+        queue: billingEstimationQueue,
+      },
+    },
+    cdk: {
+      topic: {
+        topicName: "BillingEstimationTopic-" + stack.stage,
+      },
+    },
+  });
+
   /**
    * Represents the API configuration for the MainStack.
    */
@@ -23,6 +76,10 @@ export function MainStack({ stack }: StackContext) {
       function: {
         timeout: "29 seconds",
         role: role,
+        environment: {
+          BILLING_ESTIMATION_TOPIC_ARN: billingEstimationTopic.topicArn,
+        },
+        permissions: ["sns", "sqs"],
       },
     },
     routes: {
@@ -168,6 +225,38 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/patientDashboard/history/editPatientHistory.main",
       "POST /history/add":
         "packages/functions/src/patientDashboard/history/addPatientHistory.main",
+
+      // Patient Billing
+      // Estimations
+      "POST /billings/estimations/add":
+        "packages/functions/src/patientDashboard/billings/estimation/addEstimation.main",
+      "GET /billings/estimations":
+        "packages/functions/src/patientDashboard/billings/estimation/getEstimations.main",
+      "GET /billings/estimations/{id}":
+        "packages/functions/src/patientDashboard/billings/estimation/getEstimationById.main",
+      "PUT /billings/estimations/{id}":
+        "packages/functions/src/patientDashboard/billings/estimation/editEstimation.main",
+      "DELETE /billings/estimations/{id}":
+        "packages/functions/src/patientDashboard/billings/estimation/deleteEstimation.main",
+      // Billing
+      "POST /billings/add":
+        "packages/functions/src/patientDashboard/billings/addBilling.main",
+      "GET /billings":
+        "packages/functions/src/patientDashboard/billings/getBillings.main",
+      "GET /billings/{id}":
+        "packages/functions/src/patientDashboard/billings/getBillingById.main",
+      "PUT /billings/{id}":
+        "packages/functions/src/patientDashboard/billings/editBilling.main",
+      "DELETE /billings/{id}":
+        "packages/functions/src/patientDashboard/billings/deleteBilling.main",
+
+      // Patient Pharmacy
+      "POST /pharmacy/add":
+        "packages/functions/src/patientDashboard/pharmacy/addPharmacy.main",
+      "GET /pharmacy/{patientId}":
+        "packages/functions/src/patientDashboard/pharmacy/getPharmacy.main",
+      "GET /pharmacy/patient/{id}":
+        "packages/functions/src/patientDashboard/pharmacy/getPharmacyById.main",
 
       // Patient Dashboard End
 

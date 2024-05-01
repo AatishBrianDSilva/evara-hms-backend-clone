@@ -1,11 +1,13 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/errorMessage";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import PatientTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/PatientTreatmentCycle";
 import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle";
 import { log } from "console";
+import { publishServiceToSNS } from "@evara-backend/core/src/lib/utils/publishServiceToSNS";
+import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -78,7 +80,25 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
 
       const treatmentCycle = new PatientTreatmentCycle(newTreatmentCycle);
-      await treatmentCycle.save();
+      const savedTreatmentCycle = await treatmentCycle.save();
+
+      if (masterTreatmentCycle) {
+        const serviceName = masterTreatmentCycle.name;
+
+        // Publish to SNS
+        await publishServiceToSNS(
+          savedTreatmentCycle.patientCode,
+          savedTreatmentCycle.doctor,
+          savedTreatmentCycle.cycle,
+          savedTreatmentCycle._id,
+          EPatientBillingServiceType.TreatmentCycle,
+          serviceName,
+          masterTreatmentCycle.cost,
+          1
+        );
+      } else {
+        console.error("Master Treatment Cycle not found");
+      }
     }
 
     // Return success response

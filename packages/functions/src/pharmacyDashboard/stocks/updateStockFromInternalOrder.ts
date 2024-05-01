@@ -2,10 +2,10 @@ import { APIGatewayProxyHandler } from "aws-lambda";
 import mongoose from "mongoose";
 type ObjectId = mongoose.Types.ObjectId; // Using type alias for clarity
 
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorMessage from "@evara-backend/core/lib/utils/errorMessage";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { PharmacyStock } from "@evara-backend/core/models/pharmacyDashboard/PharmacyStock";
 import {
   EPurchaseOrderStatus,
@@ -22,7 +22,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     log("Updating stock from purchase order");
     if (!event.pathParameters || !event.pathParameters.purchaseOrderId) {
-      throw new errorMessage(
+      throw new ErrorMessage(
         400,
         "Purchase order ID is required in the URL path"
       );
@@ -45,7 +45,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       !purchaseOrder ||
       purchaseOrder.status !== EPurchaseOrderStatus.Ordered
     ) {
-      throw new errorMessage(
+      throw new ErrorMessage(
         404,
         "Purchase order not found or is not ordered yet."
       );
@@ -56,7 +56,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       main: true,
     }).session(session);
     if (!mainLocation) {
-      throw new errorMessage(404, "Main location not found for the branch");
+      throw new ErrorMessage(404, "Main location not found for the branch");
     }
 
     for (const item of purchaseOrder.response.items) {

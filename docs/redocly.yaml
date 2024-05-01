@@ -1,0 +1,23 @@
+extends:
+  - recommended
+
+apis:
+  core@v1:
+    root: ./api-schema.yaml
+
+theme:
+  openapi:
+    schemaExpansionLevel: 2
+    generateCodeSamples:
+      languages:
+        - lang: curl
+        - lang: Node.js
+  theme:
+    sidebar:
+      backgroundColor: "ivory"
+    rightPanel:
+      textColor: "ivory"
+      backgroundColor: "#00106"
+    typography:
+      links:
+        color: "#0090cc"

@@ -12,6 +12,7 @@ const locationQuantitySchema = new Schema<ILocationQuantity>(
       type: Schema.Types.ObjectId,
       ref: "DrugLocation",
       required: true,
+      index: true,
     },
     quantity: {
       type: Number,
@@ -64,6 +65,7 @@ export interface IPharmacyStock extends Document {
   sellPrice: number;
   batches: IBatchDetails[];
   quantityOnHold: number;
+  totalQuantity: number;
 }
 
 const pharmacyStockSchema = new Schema<IPharmacyStock>(

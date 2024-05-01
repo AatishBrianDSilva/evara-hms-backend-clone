@@ -6,6 +6,7 @@ interface DoctorData extends Document {
   branchId: string;
   firstName: string;
   lastName: string;
+  speciality: string;
   gender: string;
   dob: Date;
   education: string;
@@ -32,6 +33,7 @@ export const doctorSchema = new mongoose.Schema(
     dob: { type: Date },
     education: { type: String },
     mobile: { type: String, required: true },
+    speciality: { type: String, required: true },
     email: {
       type: String,
       required: true,

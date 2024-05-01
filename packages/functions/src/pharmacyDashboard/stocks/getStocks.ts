@@ -1,8 +1,8 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
-import { connectMongoDb } from "@evara-backend/core/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/lib/utils/successResponse";
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
+import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 
 import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
 import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
@@ -14,6 +14,7 @@ import {
 } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
 import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
 import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
+import { FlattenMaps } from "mongoose";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -81,19 +82,29 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
 const formatRecords = (records: IPharmacyStock[]) => {
   return records.map((record) => {
-    const recordJSON = record.toJSON();
+    const recordJSON: FlattenMaps<IPharmacyStock> = record.toJSON();
 
     const locationQuantities: any = {};
 
-    recordJSON.batches.forEach((batch: IBatchDetails) => {
+    recordJSON.batches.forEach((batch) => {
       batch.locations.forEach((loc) => {
         let locationId = loc.location._id.toString();
+
         if (!locationQuantities[locationId]) {
           locationQuantities[locationId] = {
             location: loc.location,
             quantity: 0,
+            batches: [],
           };
         }
+
+        if (loc.quantity > 0) {
+          locationQuantities[locationId].batches.push({
+            batchNo: batch.batchNo,
+            quantity: loc.quantity,
+          });
+        }
+
         locationQuantities[locationId].quantity += loc.quantity;
       });
     });
@@ -107,7 +118,7 @@ const formatRecords = (records: IPharmacyStock[]) => {
         type: recordJSON.item.type?.name,
       },
       sellPrice: recordJSON.sellPrice,
-      totalQuantity: recordJSON.totalQuantity,
+      totalQuantity: recordJSON.totalQuantity!,
       locations: Object.values(locationQuantities),
     };
   });
