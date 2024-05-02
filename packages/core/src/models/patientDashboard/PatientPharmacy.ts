@@ -3,14 +3,14 @@ import pagination from "mongoose-paginate-v2";
 
 interface IPatientPharmacy extends Document {
   patient: string;
-  items: {
+  item: {
     stock: Schema.Types.ObjectId;
     details: {
       location: Schema.Types.ObjectId;
       quantity: number;
       batchNumber: string;
     }[];
-  }[];
+  };
   doctor: Schema.Types.ObjectId;
   date: Date;
   allocatedBy: string;
@@ -40,34 +40,27 @@ const itemSchema = new Schema({
 const patientPharmacySchema = new Schema(
   {
     patient: { type: String, required: true, index: true },
-    items: [itemSchema],
+    item: itemSchema,
     doctor: { type: Schema.Types.ObjectId, ref: "Doctor", required: true },
     date: { type: Date, required: true },
     allocatedBy: { type: String, required: true },
   },
   {
     timestamps: true,
-    // toJSON: { virtuals: true },
-    // toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-// patientPharmacySchema.virtual("totalQuantity").get(function () {
-//   // This function calculates the sum of all quantities in each location detail
-//   return this.items.reduce((total, item) => {
-//     return (
-//       total +
-//       item.details.reduce((subTotal, detail) => {
-//         return subTotal + detail.quantity;
-//       }, 0)
-//     );
-//   }, 0);
-// });
+patientPharmacySchema.virtual("totalQuantity").get(function () {
+  // This function calculates the sum of all quantities in each location detail
+  return this.item?.details.reduce((acc, curr) => acc + curr.quantity, 0);
+});
 
 patientPharmacySchema.plugin(pagination);
 
-patientPharmacySchema.index({ pharmacyStock: 1 });
-patientPharmacySchema.index({ "items.location": 1 });
+patientPharmacySchema.index({ "item.stock": 1 });
+patientPharmacySchema.index({ "item.location": 1 });
 patientPharmacySchema.index({ doctor: 1 });
 patientPharmacySchema.index({ patient: 1 });
 

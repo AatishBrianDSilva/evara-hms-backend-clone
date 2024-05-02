@@ -23,7 +23,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Data is required");
     }
 
-    const data: IPatientPharmacyModel = JSON.parse(event.body);
+    const data = JSON.parse(event.body);
 
     for (const item of data.items) {
       // Validate and deduct stock
@@ -35,7 +35,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       console.log("Stock:", JSON.stringify(stock, null, 2));
 
       let totalRequested = 0;
-      item.details.forEach((detail) => {
+      item.details.forEach((detail: any) => {
         totalRequested += detail.quantity;
       });
 
@@ -46,7 +46,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
 
       // Deduct quantities from the relevant locations in the stock
-      item.details.forEach(async (detail) => {
+      item.details.forEach(async (detail: any) => {
         const batch = stock.batches.find(
           (b) => b.batchNo === detail.batchNumber
         );
@@ -67,21 +67,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       });
 
       await stock.save({ session });
+
+      // Create and save PatientPharmacy entry
+      const newPatientPharmacy = new PatientPharmacy({
+        patient: data.patient,
+        item,
+        doctor: data.doctor,
+        date: data.date,
+        allocatedBy: "User 1",
+      });
+      await newPatientPharmacy.save({ session });
     }
-
-    data.allocatedBy = "User 1";
-
-    // Create and save PatientPharmacy entry
-    const newPatientPharmacy = new PatientPharmacy(data);
-    await newPatientPharmacy.save();
 
     await session.commitTransaction();
     session.endSession();
 
-    return successResponse(
-      "Patient pharmacy data successfully added.",
-      newPatientPharmacy
-    );
+    return successResponse("Patient pharmacy data successfully added.");
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
