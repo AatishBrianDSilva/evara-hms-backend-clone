@@ -39,7 +39,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const populate = [
       {
-        path: "items.stock",
+        path: "item.stock",
         model: PharmacyStock.modelName,
         populate: [
           {
@@ -75,7 +75,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         model: Doctors.modelName,
       },
       {
-        path: "items.details.location",
+        path: "item.details.location",
         model: DrugLocation.modelName,
       },
     ];
@@ -86,7 +86,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const options: IPaginateOptions = {
         page: parseInt(page, 10),
         limit: parseInt(limit, 10),
-        lean: true,
       };
 
       const query: any = {};
@@ -108,6 +107,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       // Fetching the appointments with pagination
       const result = await PatientPharmacy.paginate(query, options);
+      console.log("Results", JSON.stringify(result, null, 2));
       const { records, pagination } = formatPaginationResult(result);
 
       return successResponse("Success", {
@@ -115,10 +115,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const data = await PatientPharmacy.find()
-        .populate(populate)
-        .sort(sort)
-        .lean();
+      const data = await PatientPharmacy.find().populate(populate).sort(sort);
 
       return successResponse("Success", {
         records: data,

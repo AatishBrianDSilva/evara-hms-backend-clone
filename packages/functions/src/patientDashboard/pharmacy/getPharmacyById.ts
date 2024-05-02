@@ -30,7 +30,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const populate = [
       {
-        path: "items.stock",
+        path: "item.stock",
         model: PharmacyStock.modelName,
         populate: [
           {
@@ -66,7 +66,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         model: Doctors.modelName,
       },
       {
-        path: "items.details.location",
+        path: "item.details.location",
         model: DrugLocation.modelName,
       },
     ];
