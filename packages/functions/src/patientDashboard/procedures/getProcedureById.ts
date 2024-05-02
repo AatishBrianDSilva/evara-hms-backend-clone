@@ -5,7 +5,7 @@ import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import Doctors from "@evara-backend/core/src/models/Doctors";
+import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 import PatientProcedures from "@evara-backend/core/src/models/patientDashboard/procedure/PatientProcedure";
 import MasterProcedure from "@evara-backend/core/src/models/patientDashboard/procedure/MasterProcedure";
 import MedicalProcedure from "@evara-backend/core/src/models/patientDashboard/procedure/MedicalProcedure";

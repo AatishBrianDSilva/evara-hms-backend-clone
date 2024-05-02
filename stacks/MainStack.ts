@@ -94,14 +94,6 @@ export function MainStack({ stack }: StackContext) {
       "DELETE /patients/{id}":
         "packages/functions/src/patients/deletePatient.main",
 
-      // Doctors
-      "POST /doctors/add": "packages/functions/src/doctors/addDoctor.main",
-      "GET /doctors": "packages/functions/src/doctors/getDoctors.main",
-      "GET /doctors/{id}": "packages/functions/src/doctors/getDoctorById.main",
-      "PUT /doctors/{id}": "packages/functions/src/doctors/editDoctor.main",
-      "DELETE /doctors/{id}":
-        "packages/functions/src/doctors/deleteDoctor.main",
-
       // Appointments
       "POST /appointments/add":
         "packages/functions/src/appointments/addAppointment.main",
@@ -129,14 +121,6 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/patientDashboard/investigations/editInvestigation.main",
       "DELETE /investigations/{id}":
         "packages/functions/src/patientDashboard/investigations/deleteInvestigation.main",
-      // Master Investigations
-      "POST /master/investigations/add":
-        "packages/functions/src/patientDashboard/master/investigations/addInvestigation.main",
-      "GET /master/investigations":
-        "packages/functions/src/patientDashboard/master/investigations/getInvestigations.main",
-      // Medical Tests
-      "POST /master/investigations/default/add":
-        "packages/functions/src/patientDashboard/master/investigations/addDefaultTest.main",
 
       //Services
       //Patient Services
@@ -146,14 +130,6 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/patientDashboard/services/getServices.main",
       "DELETE /services/{id}":
         "packages/functions/src/patientDashboard/services/deleteService.main",
-      // Master Services
-      "POST /master/services/add":
-        "packages/functions/src/patientDashboard/master/services/addService.main",
-      "GET /master/services":
-        "packages/functions/src/patientDashboard/master/services/getServices.main",
-      // Default Services
-      "POST /master/services/default/add":
-        "packages/functions/src/patientDashboard/master/services/addDefaultService.main",
 
       //PROCEDURES
       //Patient Procedures
@@ -167,14 +143,6 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/patientDashboard/procedures/editProcedure.main",
       "DELETE /procedures/{id}":
         "packages/functions/src/patientDashboard/procedures/deleteProcedure.main",
-      // Master Procedures
-      "POST /master/procedures/add":
-        "packages/functions/src/patientDashboard/master/procedures/addProcedure.main",
-      "GET /master/procedures":
-        "packages/functions/src/patientDashboard/master/procedures/getProcedures.main",
-      // Medical Procedures
-      "POST /master/procedures/default/add":
-        "packages/functions/src/patientDashboard/master/procedures/addDefaultProcedure.main",
 
       //CRYO-PRESERVATIONS
       //Patient Cryo-Preservations
@@ -188,14 +156,6 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/patientDashboard/cryoPreservations/editCryoPreservation.main",
       "DELETE /cryo-preservations/{id}":
         "packages/functions/src/patientDashboard/cryoPreservations/deleteCryoPreservation.main",
-      // Master Cryo-Preservations
-      "POST /master/cryo-preservations/add":
-        "packages/functions/src/patientDashboard/master/cryoPreservations/addCryoPreservation.main",
-      "GET /master/cryo-preservations":
-        "packages/functions/src/patientDashboard/master/cryoPreservations/getCryoPreservations.main",
-      // Default Cryo-Preservations
-      "POST /master/cryo-preservations/default/add":
-        "packages/functions/src/patientDashboard/master/cryoPreservations/addDefaultCryoPreservation.main",
 
       //TREATMENT CYCLES
       //Patient Treatment Cycles
@@ -209,14 +169,6 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/patientDashboard/treatmentCycle/editTreatmentCycle.main",
       "DELETE /treatment-cycles/{id}":
         "packages/functions/src/patientDashboard/treatmentCycle/deleteTreatmentCycle.main",
-      // Master Treatment Cycles
-      "POST /master/treatment-cycles/add":
-        "packages/functions/src/patientDashboard/master/treatmentCycle/addTreatmentCycle.main",
-      "GET /master/treatment-cycles":
-        "packages/functions/src/patientDashboard/master/treatmentCycle/getTreatmentCycles.main",
-      // Default Treatment Cycles
-      "POST /master/treatment-cycles/default/add":
-        "packages/functions/src/patientDashboard/master/treatmentCycle/addDefaultTreatmentCycle.main",
 
       // Patient History
       "GET /history/{id}":
