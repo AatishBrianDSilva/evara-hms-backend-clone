@@ -10,6 +10,7 @@ interface IMasterService extends Document {
   tax: number;
   total: number;
   active: boolean;
+  validTill: Date;
 }
 
 const MasterServiceSchema: Schema = new Schema({
@@ -29,6 +30,7 @@ const MasterServiceSchema: Schema = new Schema({
   tax: { type: Number, required: true },
   total: { type: Number, required: true },
   active: { type: Boolean, required: true, default: true },
+  validTill: { type: Date, required: true },
 });
 
 const MasterService = mongoose.model<IMasterService>(

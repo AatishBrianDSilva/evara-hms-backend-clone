@@ -12,6 +12,7 @@ interface IMasterProcedures extends Document {
   tax: number;
   total: number;
   active: boolean;
+  validTill: Date;
 }
 
 const MasterProcedureSchema: Schema = new Schema({
@@ -32,6 +33,7 @@ const MasterProcedureSchema: Schema = new Schema({
   tax: { type: Number, required: true },
   total: { type: Number, required: true },
   active: { type: Boolean, required: true, default: true },
+  validTill: { type: Date, required: true },
 });
 
 const MasterProcedure = mongoose.model<IMasterProcedures>(
