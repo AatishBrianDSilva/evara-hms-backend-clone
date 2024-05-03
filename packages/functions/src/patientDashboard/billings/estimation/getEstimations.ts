@@ -8,6 +8,7 @@ import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 import { log } from "console";
 import Doctors from "@evara-backend/core/src/models/Doctors";
 import { PatientBillingEstimation } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBillingEstimation";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -15,7 +16,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "10", sort: sortRaw, status } = params;
+    console.log("params", params);
+    const {
+      page = "1",
+      limit = "10",
+      sort: sortRaw,
+      status,
+      patientCode,
+    } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
@@ -28,15 +36,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const paginate = JSON.parse(params.paginate || "false");
 
+    const query: any = {};
+    query.branchId = "KL";
+    query.patientCode = patientCode;
+    if (status) {
+      query.status = status;
+    }
+
     if (paginate) {
       const options: IPaginateOptions = {
         page: parseInt(page, 10),
         limit: parseInt(limit, 10),
         lean: true,
       };
-
-      const query: any = {};
-      query.branchId = "KL";
 
       if (status) {
         query.status = status;

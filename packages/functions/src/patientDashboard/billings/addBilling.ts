@@ -26,7 +26,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Data is required");
     }
 
-    const { estimations, clinicId, branchId } = JSON.parse(event.body);
+    const { estimations } = JSON.parse(event.body);
+
+    const clinicId = "EV";
+    const branchId = "KL";
 
     const createdBy = "user 1";
 
