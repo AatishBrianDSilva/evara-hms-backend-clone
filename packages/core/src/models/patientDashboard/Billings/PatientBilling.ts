@@ -6,7 +6,6 @@ export enum EPatientBillingStatus {
   Pending = "Pending",
   Advance = "Advance",
   Refunded = "Refunded",
-  PartiallyRefunded = "PartiallyRefunded",
   Paid = "Paid",
   Archived = "Archived",
 }
@@ -16,8 +15,8 @@ export enum EPatientBillingServiceType {
   Procedure = "Procedure",
   Medicine = "Medicine",
   Service = "Service",
-  CryoPreservation = "CryoPreservation",
-  TreatmentCycle = "TreatmentCycle",
+  CryoPreservation = "Cryo Preservation",
+  TreatmentCycle = "Treatment Cycle",
 }
 
 export enum EPaymentMethod {

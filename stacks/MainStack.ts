@@ -254,6 +254,9 @@ export function MainStack({ stack }: StackContext) {
       "DELETE /billings/{id}":
         "packages/functions/src/patientDashboard/billings/deleteBilling.main",
 
+      "GET /master/services/all":
+        "packages/functions/src/patientDashboard/billings/getAllServices.main",
+
       // Patient Dashboard End
 
       // Admin Dev

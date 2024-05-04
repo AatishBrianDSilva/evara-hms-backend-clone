@@ -29,6 +29,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     data.clinicId = "EV";
     data.branchId = "KL";
 
+    data.quantity = data.quantity || 1;
+
     const service = await findServiceByIdAndType(
       data.masterServiceId,
       data.serviceType
