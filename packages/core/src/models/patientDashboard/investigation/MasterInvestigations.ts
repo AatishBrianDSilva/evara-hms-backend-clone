@@ -25,7 +25,7 @@ const MasterInvestigationSchema: Schema = new Schema({
     required: true,
     ref: "MedicalTests",
   },
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   gender: { type: String, required: true, enum: Object.values(EGender) },
   description: { type: String },
   cost: { type: Number, required: true },

@@ -24,7 +24,7 @@ const MasterServiceSchema: Schema = new Schema({
     required: true,
     ref: "DefaultService",
   },
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   description: { type: String },
   cost: { type: Number, required: true },
   tax: { type: Number, required: true },
