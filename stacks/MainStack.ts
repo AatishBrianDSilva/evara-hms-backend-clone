@@ -263,6 +263,8 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/patientDashboard/pharmacy/getPharmacy.main",
       "GET /pharmacy/patient/{id}":
         "packages/functions/src/patientDashboard/pharmacy/getPharmacyById.main",
+      "GET /master/services/all":
+        "packages/functions/src/patientDashboard/billings/getAllServices.main",
 
       // Patient Dashboard End
 
