@@ -79,7 +79,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const doctors = await Doctors.find(query).lean();
 
       // Return success response without pagination info
-      return successResponse("Doctors fetched successfully", doctors);
+      return successResponse("Doctors fetched successfully", {
+        records: doctors,
+      });
     }
   } catch (error) {
     return errorResponse(error);
