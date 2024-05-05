@@ -19,7 +19,7 @@ export enum EPatientBillingStatus {
 export enum EPatientBillingServiceType {
   Investigation = "Investigation",
   Procedure = "Procedure",
-  Medicine = "Medicine",
+  Pharmacy = "Pharmacy",
   Service = "Service",
   CryoPreservation = "Cryo Preservation",
   TreatmentCycle = "Treatment Cycle",

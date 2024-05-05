@@ -11,6 +11,12 @@ import MasterService from "@evara-backend/core/src/models/patientDashboard/servi
 import { PatientBillingEstimation } from "@evara-backend/core/models/patientDashboard/Billings/PatientBillingEstimation";
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle";
+import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
+import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
+import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
+import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
+import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
+import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {

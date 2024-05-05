@@ -13,6 +13,7 @@ import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/D
 import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
 import Doctors from "@evara-backend/core/src/models/Doctors";
 import { PatientPharmacy } from "@evara-backend/core/src/models/patientDashboard/PatientPharmacy";
+import { TaxRate } from "@evara-backend/core/src/models/pharmacyDashboard/TaxRate";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -44,6 +45,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               {
                 path: "type",
                 model: DrugType.modelName,
+              },
+              {
+                path: "taxRate",
+                model: TaxRate.modelName,
               },
             ],
           },

@@ -41,51 +41,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
     }
 
-    //Get all investigations
-    const investigations = await MasterInvestigation.find(query)
-      .populate({
-        path: "test",
-        model: MedicalTest.modelName,
-      })
-      .sort({ testType: 1 })
-      .lean();
-
-    //Get all cryoPreservations
-    const cryoPreservations = await MasterCryoPreservations.find(query)
-      .populate({
-        path: "cryoPreservation",
-        model: CryoPreservations.modelName,
-      })
-      .sort({ procedureType: 1 })
-      .lean();
-
-    //Get all procedures
-    const procedures = await MasterProcedure.find(query)
-      .populate({
-        path: "procedure",
-        model: MedicalProcedure.modelName,
-      })
-      .sort({ procedureType: 1 })
-      .lean();
-
-    //Get all investigations
-    const services = await MasterService.find(query)
-      .populate({
-        path: "service",
-        model: DefaultService.modelName,
-      })
-      .sort({ serviceType: 1 })
-      .lean();
-
-    //Get all treatment cycles
-    const treatmentCycles = await MasterTreatmentCycle.find(query)
-      .populate({
-        path: "treatmentCycle",
-        model: DefaultTreatmentCycle.modelName,
-      })
-      .sort({ treatmentCycleType: 1 })
-      .lean();
-
     const collections = [
       { model: MasterInvestigation, path: "test", sort: "testType" },
       {

@@ -107,7 +107,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       // Fetching the appointments with pagination
       const result = await PatientPharmacy.paginate(query, options);
-      console.log("Results", JSON.stringify(result, null, 2));
       const { records, pagination } = formatPaginationResult(result);
 
       return successResponse("Success", {

@@ -11,6 +11,13 @@ import {
   IPatientPharmacyModel,
 } from "@evara-backend/core/src/models/patientDashboard/PatientPharmacy";
 import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
+import { publishServiceToSNS } from "@evara-backend/core/src/lib/utils/publishServiceToSNS";
+import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
+import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
+import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
+import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
+import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
+import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 
 // AWS Lambda handler function to add data to PatientPharmacy model
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -31,8 +38,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       if (!stock) {
         throw new ErrorMessage(404, "Pharmacy Stock not found");
       }
-
-      console.log("Stock:", JSON.stringify(stock, null, 2));
 
       let totalRequested = 0;
       item.details.forEach((detail: any) => {
@@ -76,7 +81,57 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         date: data.date,
         allocatedBy: "User 1",
       });
-      await newPatientPharmacy.save({ session });
+      const newPharmacy = await newPatientPharmacy.save({ session });
+
+      const pharmacyStock: any = await PharmacyStock.findById(
+        newPharmacy.item.stock
+      ).populate([
+        {
+          path: "item",
+          model: DrugItem.modelName,
+          populate: [
+            {
+              path: "category",
+              model: DrugCategory.modelName,
+            },
+            {
+              path: "type",
+              model: DrugType.modelName,
+            },
+          ],
+        },
+        {
+          path: "batches.locations.location",
+          model: DrugLocation.modelName,
+        },
+        {
+          path: "batches.vendor",
+          model: DrugVendor.modelName,
+        },
+        {
+          path: "batches.vendor.location",
+          model: DrugLocation.modelName,
+        },
+      ]);
+
+      if (pharmacyStock) {
+        const serviceName = pharmacyStock.item?.name;
+
+        // Publish to SNS
+        await publishServiceToSNS(
+          newPharmacy.patient,
+          newPharmacy.doctor,
+          pharmacyStock._id,
+          newPharmacy._id,
+          EPatientBillingServiceType.Pharmacy,
+          serviceName,
+          // ToDO: Change to sell price once it's added to the model
+          pharmacyStock.sellPrice || 10,
+          newPharmacy.totalQuantity
+        );
+      } else {
+        console.error("Master Pharmacy not found");
+      }
     }
 
     await session.commitTransaction();
