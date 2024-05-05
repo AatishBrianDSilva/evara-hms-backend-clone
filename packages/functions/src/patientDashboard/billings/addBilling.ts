@@ -34,10 +34,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const createdBy = "user 1";
 
     const items = [];
-    let total = 0;
+    let amount = 0;
     let discount = 0;
     let tax = 0;
-    let grandTotal = 0;
     let patientCode = "";
 
     for (const estimationId of estimations) {
@@ -52,7 +51,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       console.log("Estimation", estimation);
 
       // Accumulate totals
-      total += estimation.estimatedTotal;
+
+      amount += Math.round(estimation.estimatedPrice);
       tax += estimation.estimatedTax;
 
       patientCode = estimation.patientCode;
@@ -74,8 +74,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       console.log("Items", items);
     }
 
-    grandTotal = total - discount + tax;
-
     // Create a new billing document
     const newBilling = new PatientBilling({
       clinicId,
@@ -83,10 +81,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       patientCode,
       createdBy,
       items,
-      total,
+      amount: amount,
       discount,
       tax,
-      grandTotal,
       status: EPatientBillingStatus.Pending,
     });
 

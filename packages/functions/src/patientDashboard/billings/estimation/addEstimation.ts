@@ -29,33 +29,42 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     data.clinicId = "EV";
     data.branchId = "KL";
 
-    data.quantity = data.quantity || 1;
+    for (let item of data.items) {
+      item.quantity = item.quantity || 1;
 
-    const service = await findServiceByIdAndType(
-      data.masterServiceId,
-      data.serviceType
-    );
+      const service = await findServiceByIdAndType(
+        item.masterServiceId,
+        data.serviceType
+      );
 
-    if (!service) {
-      throw new ErrorMessage(404, "Service not found");
+      if (!service) {
+        throw new ErrorMessage(404, "Service not found");
+      }
+
+      const estimatedPrice = service.cost * item.quantity;
+      const estimatedTax = Math.round((service.tax * estimatedPrice) / 100);
+
+      const total = Math.round(estimatedPrice + estimatedTax);
+
+      const newEstimation = new PatientBillingEstimation({
+        clinicId: data.clinicId,
+        branchId: data.branchId,
+        patientCode: data.patientCode,
+        doctorId: item.doctorId,
+        masterServiceId: item.masterServiceId,
+        serviceName: service.name,
+        serviceType: data.serviceType,
+        quantity: item.quantity,
+        estimatedTax: estimatedTax,
+        taxRate: service.tax,
+        cost: service.cost,
+        estimatedPrice: estimatedPrice,
+        estimatedTotal: total,
+        status: "Active",
+      });
+
+      await newEstimation.save();
     }
-
-    const estimatedPrice = service.cost * data.quantity;
-    const estimatedTax = (service.tax * estimatedPrice) / 100;
-
-    const total = estimatedPrice + estimatedTax;
-
-    const newEstimation = new PatientBillingEstimation({
-      ...data,
-      estimatedTax: estimatedTax,
-      taxRate: service.tax,
-      cost: service.cost,
-      estimatedPrice: estimatedPrice,
-      estimatedTotal: total,
-      status: "Active",
-    });
-
-    await newEstimation.save();
 
     return successResponse("Estimation added successfully");
   } catch (error) {

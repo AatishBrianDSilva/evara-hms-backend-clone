@@ -7,7 +7,17 @@ import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPagi
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 import { log } from "console";
 import Doctors from "@evara-backend/core/src/models/Doctors";
-import { PatientBilling } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
+import {
+  IPatientBilling,
+  PatientBilling,
+} from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
+
+interface BillingSummary {
+  amount: number;
+  payment: number;
+  discount: number;
+  due: number;
+}
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -45,7 +55,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const options: IPaginateOptions = {
         page: parseInt(page, 10),
         limit: parseInt(limit, 10),
-        lean: true,
       };
 
       if (sort) {
@@ -61,21 +70,44 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       const { records, pagination } = formatPaginationResult(result);
 
+      const summary = calculateSummary(records);
+
       return successResponse("Success", {
         records,
         pagination,
+        summary: summary,
       });
     } else {
-      const data = await PatientBilling.find()
-        .populate(populate)
-        .sort(sort)
-        .lean();
+      const data = await PatientBilling.find().populate(populate).sort(sort);
+
+      const records = data.map((doc) => (doc.toJSON ? doc.toJSON() : doc));
+      const summary = calculateSummary(data);
 
       return successResponse("Success", {
-        records: data,
+        records: records,
+        summary: summary,
       });
     }
   } catch (error) {
     return errorResponse(error);
   }
 };
+
+function calculateSummary(billings: IPatientBilling[]): BillingSummary {
+  return billings.reduce<BillingSummary>(
+    (acc, billing) => {
+      const total = billing.subTotal;
+      const totalPaid = billing.payments
+        .filter((payment) => payment.type === "Payment")
+        .reduce((sum, payment) => sum + payment.amount, 0);
+
+      acc.amount += total;
+      acc.payment += totalPaid;
+      acc.discount += billing.discount;
+      acc.due += total - totalPaid - billing.discount;
+
+      return acc;
+    },
+    { amount: 0, payment: 0, discount: 0, due: 0 }
+  );
+}

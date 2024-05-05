@@ -56,9 +56,9 @@ const addEstimation = async (data: any) => {
   }
 
   const estimatedPrice = service.cost * data.quantity;
-  const estimatedTax = (service.tax * estimatedPrice) / 100;
+  const estimatedTax = Math.round((service.tax * estimatedPrice) / 100);
 
-  const total = estimatedPrice + estimatedTax;
+  const total = Math.round(estimatedPrice + estimatedTax);
 
   const newEstimation = new PatientBillingEstimation({
     ...data,

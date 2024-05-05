@@ -2,6 +2,12 @@ import mongoose, { Document, PaginateModel, Schema } from "mongoose";
 import paginate from "mongoose-paginate-v2";
 import { autoIncrementId } from "../../Counters";
 
+export enum EPaitentBillingPaymentType {
+  Payment = "Payment",
+  Refund = "Refund",
+  Advance = "Advance",
+}
+
 export enum EPatientBillingStatus {
   Pending = "Pending",
   Advance = "Advance",
@@ -31,6 +37,8 @@ interface PaymentDetail {
   amount: number;
   method: EPaymentMethod;
   paymentDate?: Date;
+  details?: string;
+  type: EPaitentBillingPaymentType;
 }
 
 interface Item {
@@ -53,17 +61,22 @@ export interface IPatientBilling extends Document {
   branchId?: string;
   patientCode: string;
   items: Item[];
-  total: number;
+  amount: number;
   discount: number;
   tax: number;
-  grandTotal: number;
   payments: PaymentDetail[];
   status: EPatientBillingStatus;
   // createdBy: mongoose.Types.ObjectId;
   // modifiedBy?: mongoose.Types.ObjectId;
   createdBy: string;
   modifiedBy?: string;
-  modifiedAt?: Date;
+  subTotal: number;
+  grandTotal: number;
+  totalPaid: number;
+  totalPaymentAttempt: number;
+  totalDues: number;
+  totalRefunded: number;
+  totalAdvance: number;
 }
 
 const paymentDetailSchema = new Schema<PaymentDetail>({
@@ -74,6 +87,12 @@ const paymentDetailSchema = new Schema<PaymentDetail>({
     required: true,
   },
   paymentDate: { type: Date },
+  details: { type: String },
+  type: {
+    type: String,
+    enum: Object.values(EPaitentBillingPaymentType),
+    required: true,
+  },
 });
 
 const itemSchema = new Schema<Item>({
@@ -101,10 +120,9 @@ const patientBillingSchema = new Schema<IPatientBilling>(
     branchId: { type: String, index: true },
     patientCode: { type: String, required: true },
     items: [itemSchema],
-    total: { type: Number, required: true },
+    amount: { type: Number, required: true },
     discount: { type: Number, default: 0 },
     tax: { type: Number, default: 0 },
-    grandTotal: { type: Number, required: true },
     payments: [paymentDetailSchema],
     status: {
       type: String,
@@ -120,12 +138,43 @@ const patientBillingSchema = new Schema<IPatientBilling>(
     // modifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     createdBy: { type: String, required: true },
     modifiedBy: { type: String },
-    modifiedAt: { type: Date },
+    totalAdvance: { type: Number, default: 0 },
+    totalRefunded: { type: Number, default: 0 },
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+patientBillingSchema.virtual("subTotal").get(function (this: IPatientBilling) {
+  return this.amount + this.tax;
+});
+
+patientBillingSchema
+  .virtual("grandTotal")
+  .get(function (this: IPatientBilling) {
+    return this.subTotal - this.discount;
+  });
+
+patientBillingSchema.virtual("totalPaid").get(function (this: IPatientBilling) {
+  return this.payments
+    .filter((payment) => payment.type === EPaitentBillingPaymentType.Payment)
+    .reduce((acc, payment) => acc + payment.amount, 0);
+});
+
+patientBillingSchema
+  .virtual("totalPaymentAttempts")
+  .get(function (this: IPatientBilling) {
+    return this.payments.filter(
+      (payment) => payment.type === EPaitentBillingPaymentType.Payment
+    ).length;
+  });
+
+patientBillingSchema.virtual("totalDues").get(function (this: IPatientBilling) {
+  return this.grandTotal - this.totalPaid;
+});
 
 patientBillingSchema.pre(
   "save",

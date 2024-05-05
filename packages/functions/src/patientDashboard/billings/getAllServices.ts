@@ -15,6 +15,7 @@ import DefaultService from "@evara-backend/core/src/models/patientDashboard/serv
 import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle";
 import DefaultTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/DefaultTreatmentCycle";
 import { Document, FilterQuery, Model } from "mongoose";
+import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -106,11 +107,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     );
 
     const response = {
-      Investigation: results[0],
-      "Cryo Preservation": results[1],
-      Procedure: results[2],
-      Service: results[3],
-      "Treatment Cycle": results[4],
+      [EPatientBillingServiceType.Investigation]: results[0],
+      [EPatientBillingServiceType.CryoPreservation]: results[1],
+      [EPatientBillingServiceType.Procedure]: results[2],
+      [EPatientBillingServiceType.Service]: results[3],
+      [EPatientBillingServiceType.TreatmentCycle]: results[4],
     };
 
     // Return success response

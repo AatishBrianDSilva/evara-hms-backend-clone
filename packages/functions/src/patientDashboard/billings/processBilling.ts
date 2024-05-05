@@ -7,22 +7,26 @@ import {
   PatientBilling,
   EPatientBillingStatus,
   EPaymentMethod,
+  EPaitentBillingPaymentType,
 } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 
 interface BillingsData {
   billings: {
-    billingId: string; // ID of the billing
+    billingId: string;
     payments: {
       amount: number;
       method: EPaymentMethod;
       paymentDate?: string;
+      details?: string;
     }[];
-  }[]; // Array of billing items
+  }[];
 }
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
-  await connectMongoDb();
+  const conn = await connectMongoDb();
 
+  const session = await conn.startSession();
+  session.startTransaction();
   try {
     if (!event.body) {
       throw new ErrorMessage(400, "Data is required");
@@ -31,6 +35,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const data: BillingsData = JSON.parse(event.body);
 
     const results = [];
+
     for (const { billingId, payments } of data.billings) {
       if (!billingId || !payments) {
         throw new ErrorMessage(
@@ -39,7 +44,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         );
       }
 
-      const billing = await PatientBilling.findById(billingId);
+      const billing = await PatientBilling.findById(billingId).session(session);
       if (!billing) {
         throw new ErrorMessage(404, `Billing not found for ID: ${billingId}`);
       }
@@ -52,34 +57,43 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         (acc, payment) => acc + payment.amount,
         0
       );
+      let newTotalPaid = totalPaid + totalPaymentAttempt;
 
-      if (totalPaymentAttempt + totalPaid < billing.grandTotal) {
+      if (newTotalPaid < billing.grandTotal) {
         throw new ErrorMessage(
           400,
           `Payment insufficient to clear dues for billing ID: ${billingId}`
         );
       }
 
-      for (const payment of payments) {
+      payments.forEach((payment) => {
         billing.payments.push({
           amount: payment.amount,
           method: payment.method,
           paymentDate: payment.paymentDate
             ? new Date(payment.paymentDate)
             : new Date(),
+          details: payment.details,
+          type: EPaitentBillingPaymentType.Payment,
         });
-      }
+      });
 
-      if (totalPaymentAttempt + totalPaid >= billing.grandTotal) {
-        billing.status = EPatientBillingStatus.Paid;
-      }
+      billing.status =
+        newTotalPaid >= billing.grandTotal
+          ? EPatientBillingStatus.Paid
+          : EPatientBillingStatus.Pending;
 
-      await billing.save();
+      await billing.save({ session });
       results.push({ billingId: billingId, status: "Processed" });
     }
 
+    await session.commitTransaction();
+    session.endSession();
+
     return successResponse("All billings processed successfully", results);
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     return errorResponse(error);
   }
 };

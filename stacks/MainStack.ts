@@ -247,9 +247,9 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/patientDashboard/billings/getBillingById.main",
       "PUT /billings/{id}":
         "packages/functions/src/patientDashboard/billings/editBilling.main",
-      "POST /billings/{id}/process":
+      "POST /billings/process":
         "packages/functions/src/patientDashboard/billings/processBilling.main",
-      "POST /billings/{id}/refund":
+      "POST /billings/refund":
         "packages/functions/src/patientDashboard/billings/refundBilling.main",
       "DELETE /billings/{id}":
         "packages/functions/src/patientDashboard/billings/deleteBilling.main",
