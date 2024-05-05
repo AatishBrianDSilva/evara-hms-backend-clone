@@ -247,9 +247,15 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/patientDashboard/billings/getBillingById.main",
       "PUT /billings/{id}":
         "packages/functions/src/patientDashboard/billings/editBilling.main",
+      "POST /billings/process":
+        "packages/functions/src/patientDashboard/billings/processBilling.main",
+      "POST /billings/refund":
+        "packages/functions/src/patientDashboard/billings/refundBilling.main",
       "DELETE /billings/{id}":
         "packages/functions/src/patientDashboard/billings/deleteBilling.main",
 
+      "GET /master/services/all":
+        "packages/functions/src/patientDashboard/billings/getAllServices.main",
       // Patient Pharmacy
       "POST /pharmacy/add":
         "packages/functions/src/patientDashboard/pharmacy/addPharmacy.main",

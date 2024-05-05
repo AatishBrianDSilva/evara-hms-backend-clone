@@ -5,7 +5,7 @@ import SNSService from "../aws/sns";
 export const publishServiceToSNS = async (
   patientCode: string,
   doctorId: Schema.Types.ObjectId | undefined,
-  masterInvestigationId: Schema.Types.ObjectId,
+  masterServiceId: Schema.Types.ObjectId,
   serviceId: Schema.Types.ObjectId,
   serviceType: EPatientBillingServiceType,
   serviceName: string,
@@ -16,7 +16,7 @@ export const publishServiceToSNS = async (
     action: "Add",
     data: {
       doctorId: doctorId,
-      masterServiceId: masterInvestigationId,
+      masterServiceId: masterServiceId,
       serviceId: serviceId,
       serviceType: serviceType,
       serviceName: serviceName,

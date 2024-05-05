@@ -6,6 +6,14 @@ import {
   PatientBillingEstimation,
 } from "@evara-backend/core/models/patientDashboard/Billings/PatientBillingEstimation";
 import { findServiceByIdAndType } from "./addEstimation";
+import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
+import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
+import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
+import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
+import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
+import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
+import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
+import { TaxRate } from "@evara-backend/core/src/models/pharmacyDashboard/TaxRate";
 
 // Handler function for SQS
 export const main: SQSHandler = async (event: SQSEvent) => {
@@ -46,25 +54,92 @@ const addEstimation = async (data: any) => {
   data.clinicId = "EV";
   data.branchId = "KL";
 
-  const service = await findServiceByIdAndType(
-    data.masterServiceId,
-    data.serviceType
-  );
+  let estimatedPrice: number = 0;
+  let estimatedTax: number = 0;
+  let total: number = 0;
+  let taxRate: number = 0;
+  let cost: number = 0;
 
-  if (!service) {
-    throw new ErrorMessage(404, "Service not found");
+  if (data.serviceType === EPatientBillingServiceType.Pharmacy) {
+    const service: any = await PharmacyStock.findById(
+      data.masterServiceId
+    ).populate([
+      {
+        path: "item",
+        model: DrugItem.modelName,
+        populate: [
+          {
+            path: "category",
+            model: DrugCategory.modelName,
+          },
+          {
+            path: "type",
+            model: DrugType.modelName,
+          },
+          {
+            path: "taxRate",
+            model: TaxRate.modelName,
+          },
+        ],
+      },
+      {
+        path: "batches.locations.location",
+        model: DrugLocation.modelName,
+      },
+      {
+        path: "batches.vendor",
+        model: DrugVendor.modelName,
+      },
+      {
+        path: "batches.vendor.location",
+        model: DrugLocation.modelName,
+      },
+    ]);
+
+    if (!service) {
+      throw new ErrorMessage(404, "Service not found");
+    }
+
+    console.log("Service found", service);
+    console.log("Service Item", service.item.taxRate);
+
+    const sellPrice = service.sellPrice || 10;
+    const tax = service.item?.taxRate?.taxRate || 0;
+
+    estimatedPrice = Math.round(sellPrice * data.quantity);
+    estimatedTax = Math.round((tax * estimatedPrice) / 100);
+    total = Math.round(estimatedPrice + estimatedTax);
+
+    taxRate = tax;
+    cost = sellPrice;
+
+    console.log("Success", {
+      estimatedPrice,
+      estimatedTax,
+      total,
+    });
+  } else {
+    const service = await findServiceByIdAndType(
+      data.masterServiceId,
+      data.serviceType
+    );
+
+    if (!service) {
+      throw new ErrorMessage(404, "Service not found");
+    }
+
+    taxRate = service.tax;
+    cost = service.cost;
+    estimatedPrice = service.cost * data.quantity;
+    estimatedTax = Math.round((service.tax * estimatedPrice) / 100);
+    total = Math.round(estimatedPrice + estimatedTax);
   }
-
-  const estimatedPrice = service.cost * data.quantity;
-  const estimatedTax = (service.tax * estimatedPrice) / 100;
-
-  const total = estimatedPrice + estimatedTax;
 
   const newEstimation = new PatientBillingEstimation({
     ...data,
     estimatedTax: estimatedTax,
-    taxRate: service.tax,
-    cost: service.cost,
+    taxRate: taxRate,
+    cost: cost,
     estimatedPrice: estimatedPrice,
     estimatedTotal: total,
     status: "Active",

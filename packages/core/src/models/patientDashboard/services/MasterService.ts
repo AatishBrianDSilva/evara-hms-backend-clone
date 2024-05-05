@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 import { EServiceTypes } from "./DefaultService";
+import { EGender } from "../investigation/MedicalTests";
 
 interface IMasterService extends Document {
   serviceType: EServiceTypes;
@@ -10,6 +11,7 @@ interface IMasterService extends Document {
   tax: number;
   total: number;
   active: boolean;
+  gender: EGender;
 }
 
 const MasterServiceSchema: Schema = new Schema({
@@ -25,6 +27,7 @@ const MasterServiceSchema: Schema = new Schema({
   },
   name: { type: String, required: true },
   description: { type: String },
+  gender: { type: String, required: true, enum: Object.values(EGender) },
   cost: { type: Number, required: true },
   tax: { type: Number, required: true },
   total: { type: Number, required: true },

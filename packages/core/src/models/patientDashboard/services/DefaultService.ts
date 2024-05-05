@@ -1,5 +1,6 @@
 import mongoose, { Document, Mixed, Schema } from "mongoose";
 import { autoIncrementId } from "../../Counters";
+import { EGender } from "../investigation/MedicalTests";
 
 export enum EServiceTypes {
   Appointment = "Appointment",
@@ -13,6 +14,7 @@ interface IDefaultService extends Document {
   name: string;
   serviceType: EServiceTypes;
   description: string;
+  gender: EGender;
 }
 
 const DefaultServiceSchema: Schema = new Schema(
@@ -31,6 +33,7 @@ const DefaultServiceSchema: Schema = new Schema(
       required: true,
       enum: Object.values(EServiceTypes),
     },
+    gender: { type: String, required: true, enum: Object.values(EGender) },
     description: {
       type: String,
     },
