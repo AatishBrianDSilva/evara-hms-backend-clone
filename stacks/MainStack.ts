@@ -3,6 +3,7 @@ import {
   Queue,
   StackContext,
   Topic,
+  Function,
   attachPermissionsToRole,
 } from "sst/constructs";
 import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
@@ -72,6 +73,16 @@ export function MainStack({ stack }: StackContext) {
    * Represents the API configuration for the MainStack.
    */
   const api = new Api(stack, "Api", {
+    authorizers: {
+      myAuthorizer: {
+        type: "lambda",
+        function: new Function(stack, "AuthorizerFunction", {
+          handler: "packages/functions/src/authentication/authorizer.main",
+          permissions: ["secretsmanager"],
+        }),
+        resultsCacheTtl: "30 seconds",
+      },
+    },
     defaults: {
       function: {
         timeout: "29 seconds",
@@ -79,8 +90,9 @@ export function MainStack({ stack }: StackContext) {
         environment: {
           BILLING_ESTIMATION_TOPIC_ARN: billingEstimationTopic.topicArn,
         },
-        permissions: ["sns", "sqs"],
+        permissions: ["sns", "sqs", "secretsmanager"],
       },
+      authorizer: "myAuthorizer",
     },
     routes: {
       // Patients
@@ -265,6 +277,29 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/patientDashboard/pharmacy/getPharmacyById.main",
 
       // Patient Dashboard End
+
+      // User
+      "POST /users/add": {
+        function: "packages/functions/src/user/addUser.main",
+        authorizationScopes: ["admin"],
+        // authorizer: "none",
+      },
+      "GET /users": "packages/functions/src/user/getUsers.main",
+      "GET /users/{id}": "packages/functions/src/user/getUserById.main",
+      "PUT /users/{id}": "packages/functions/src/user/updateUser.main",
+      "PATCH /users/change-password":
+        "packages/functions/src/user/updatePassword.main",
+      "DELETE /users/{id}": "packages/functions/src/user/deleteUser.main",
+
+      // Authenication
+      "POST /auth/login": {
+        function: "packages/functions/src/authentication/login.main",
+        authorizer: "none",
+      },
+      "POST /auth/refresh-token": {
+        function: "packages/functions/src/authentication/refreshToken.main",
+        authorizer: "none",
+      },
 
       // Admin Dev
       "GET /admin_dev/automate-medical-investigation":
