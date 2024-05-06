@@ -113,6 +113,8 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/appointments/getAppointmentById.main",
       "PUT /appointments/{id}":
         "packages/functions/src/appointments/editAppointment.main",
+      "PATCH /appointments/{id}/status":
+        "packages/functions/src/appointments/editAppointmentStatus.main",
       "DELETE /appointments/{id}":
         "packages/functions/src/appointments/deleteAppointment.main",
 
