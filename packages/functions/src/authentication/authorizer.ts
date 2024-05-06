@@ -14,6 +14,8 @@ export const main = async (
 ): Promise<APIGatewayAuthorizerResult> => {
   const token = event.authorizationToken.replace("Bearer ", "");
 
+  console.log("Method ARN", event.methodArn);
+
   try {
     const verified = await verifyToken(token);
     if (!verified) {
@@ -26,10 +28,11 @@ export const main = async (
     }
 
     const principalId = decoded.sub;
-    const role = decoded.role || "public";
+    const role = decoded.role;
 
     // Use the role to determine the effect
     const effect = getPolicyEffect(role, event.methodArn);
+    console.log("Authorization effect:", effect);
     return generatePolicy(principalId, effect, event.methodArn, {
       branchId: decoded.branchId,
       clinicId: decoded.clinicId,
@@ -77,13 +80,36 @@ function getPolicyEffect(role: UserRole, resource: string): string {
   return "Deny";
 }
 
-function extractRolePermissions(role: UserRole, resource: string): string[] {
-  const permissions: Record<UserRole, string[]> = {
-    admin: ["allow"],
-    user: resource.includes("read") ? ["allow"] : ["deny"],
-    guest: ["deny"],
-    public: ["allow"],
-  };
+function extractRolePermissions(role: UserRole, methodArn: string): string[] {
+  // const { httpMethod, resourcePath } = parseMethodArn(methodArn);
 
-  return permissions[role]; // Now TypeScript knows this indexing is safe
+  // console.log({
+  //   resourcePath,
+  //   httpMethod,
+  //   role,
+  // });
+
+  // const permissions: Record<string, Record<string, string[]>> = {
+  //   patients: {
+  //     GET: ["admin", "user"],
+  //     POST: ["admin"],
+  //   },
+  // };
+
+  // const allowedRoles = permissions[resourcePath]?.[httpMethod] || ["admin"];
+  // console.log("Allowed roles", allowedRoles);
+
+  // return allowedRoles.includes(role) ? ["allow"] : ["deny"];
+  return ["allow"];
+}
+
+function parseMethodArn(methodArn: string) {
+  const parts = methodArn.split(":");
+  const apiGatewayArnPart = parts[5];
+  const apiDetails = apiGatewayArnPart.split("/");
+
+  return {
+    httpMethod: apiDetails[2],
+    resourcePath: apiDetails.slice(3).join("/"), // Joins all remaining parts which could be multi-level paths
+  };
 }

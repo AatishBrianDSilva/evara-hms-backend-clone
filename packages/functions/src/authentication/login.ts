@@ -40,9 +40,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Invalid credentials");
     }
 
-    const token = await generateUserJwtToken(user);
+    const tokens = await generateUserJwtToken(user);
 
-    return successResponse("Login successful", token);
+    return successResponse("Login successful", {
+      tokens,
+    });
   } catch (error) {
     return errorResponse(error);
   }

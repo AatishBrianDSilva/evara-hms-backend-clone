@@ -79,8 +79,8 @@ export function MainStack({ stack }: StackContext) {
         function: new Function(stack, "AuthorizerFunction", {
           handler: "packages/functions/src/authentication/authorizer.main",
           permissions: ["secretsmanager"],
+          timeout: "10 seconds",
         }),
-        resultsCacheTtl: "30 seconds",
       },
     },
     defaults: {
@@ -281,7 +281,6 @@ export function MainStack({ stack }: StackContext) {
       // User
       "POST /users/add": {
         function: "packages/functions/src/user/addUser.main",
-        authorizationScopes: ["admin"],
         // authorizer: "none",
       },
       "GET /users": "packages/functions/src/user/getUsers.main",
