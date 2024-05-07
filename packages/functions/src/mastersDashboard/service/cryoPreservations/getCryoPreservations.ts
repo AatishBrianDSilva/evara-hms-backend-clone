@@ -12,29 +12,27 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Connect to MongoDB
     await connectMongoDb();
 
-    const query = {
-      active: true,
-      gender: {
-        $in: ["both"],
-      },
-    };
+    let query: any = {};
 
-    const patientId = event.queryStringParameters?.patientId;
+    // Check if the user is an admin
+    const isAdmin = event.queryStringParameters?.isAdmin === "true";
 
-    if (patientId) {
-      const patient = await Patient.findOne({ patientId }).lean();
-      if (!patient) {
-        throw new ErrorMessage(404, "Patient not found");
+    if (!isAdmin) {
+      // Standard user, apply gender filter
+      query.active = true;
+      query.gender = { $in: ["both"] };
+
+      const patientId = event.queryStringParameters?.patientId;
+      if (patientId) {
+        const patient = await Patient.findOne({ patientId }).lean();
+        if (!patient) {
+          throw new ErrorMessage(404, "Patient not found");
+        }
+        query.gender = {
+          $in: [patient.gender.toLowerCase(), "both"],
+        };
       }
-      query.gender = {
-        $in: [patient.gender.toLowerCase(), "both"],
-      };
     }
-
-    // TODO: Remove clinicId and branchId after adding authentication
-    // data.clinicId = "EV";
-    // data.branchId = "KL";
-
     //Get all procedures
     const procedures = await MasterCryoPreservation.find(query)
       .populate({
