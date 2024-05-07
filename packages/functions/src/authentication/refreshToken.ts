@@ -10,7 +10,7 @@ import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 
-export const refreshToken: APIGatewayProxyHandler = async (event, _context) => {
+export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     await connectMongoDb();
 

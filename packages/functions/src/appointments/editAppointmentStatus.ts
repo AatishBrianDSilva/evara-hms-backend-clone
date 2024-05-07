@@ -23,7 +23,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     const { id } = event.pathParameters || {};
-    const { status } = JSON.parse(event.body);
+    const { status, reportedTime } = JSON.parse(event.body);
 
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       throw new ErrorMessage(400, "Invalid appointment ID provided");
@@ -39,10 +39,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Invalid status provided");
     }
 
+    if (status === "Reported" && !reportedTime) {
+      throw new ErrorMessage(400, "Reported time is required");
+    }
+
+    const update: any = {};
+    if (status === "Reported") {
+      update.reportedTime = reportedTime;
+      update.status = status;
+    } else {
+      update.status = status;
+    }
+
     // Update the appointment status in the database
     const updatedAppointment = await Appointments.findByIdAndUpdate(
       id,
-      { $set: { status } },
+      { $set: update },
       { new: true }
     );
 

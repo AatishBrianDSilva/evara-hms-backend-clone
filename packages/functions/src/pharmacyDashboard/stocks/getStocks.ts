@@ -66,7 +66,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const data = await PharmacyStock.find().populate(populate).sort(sort);
 
     const sortedData = data.sort((a, b) => {
-      return a.item.name.localeCompare(b.item.name);
+      return a.item?.name.localeCompare(b.item?.name);
     });
 
     const formattedRecords = formatRecords(sortedData);
@@ -88,7 +88,7 @@ const formatRecords = (records: IPharmacyStock[]) => {
 
     recordJSON.batches.forEach((batch) => {
       batch.locations.forEach((loc) => {
-        let locationId = loc.location._id.toString();
+        let locationId = loc.location?._id.toString();
 
         if (!locationQuantities[locationId]) {
           locationQuantities[locationId] = {
@@ -112,10 +112,10 @@ const formatRecords = (records: IPharmacyStock[]) => {
     return {
       _id: recordJSON._id,
       item: {
-        _id: recordJSON.item._id,
-        name: recordJSON.item.name,
-        category: recordJSON.item.category.name,
-        type: recordJSON.item.type?.name,
+        _id: recordJSON.item?._id,
+        name: recordJSON.item?.name,
+        category: recordJSON.item?.category.name,
+        type: recordJSON.item?.type?.name,
       },
       sellPrice: recordJSON.sellPrice,
       totalQuantity: recordJSON.totalQuantity!,
