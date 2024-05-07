@@ -17,7 +17,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Extract query string parameters
     const params = event.queryStringParameters || {};
     console.log("Params", params);
-    const { startDate, endDate, page = "1", limit = "10", ...filters } = params;
+    const {
+      startDate,
+      endDate,
+      page = "1",
+      limit = "10",
+      searchQuery = "",
+      ...filters
+    } = params;
 
     // Construct the query object
     let query: any = {};
