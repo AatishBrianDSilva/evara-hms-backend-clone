@@ -7,15 +7,15 @@ export const MastersApiStack = ({ stack }: StackContext) => {
   api.addRoutes(stack, {
     //Global Masters
     //Doctors
-    "POST /masters/doctors/add":
+    "POST /master/doctors/add":
       "packages/functions/src/mastersDashboard/doctors/addDoctor.main",
-    "GET /masters/doctors":
+    "GET /master/doctors":
       "packages/functions/src/mastersDashboard/doctors/getDoctors.main",
-    "GET /masters/doctors/{id}":
+    "GET /master/doctors/{id}":
       "packages/functions/src/mastersDashboard/doctors/getDoctorById.main",
-    "PUT /masters/doctors/{id}":
+    "PUT /master/doctors/{id}":
       "packages/functions/src/mastersDashboard/doctors/editDoctor.main",
-    "DELETE /masters/doctors/{id}":
+    "DELETE /master/doctors/{id}":
       "packages/functions/src/mastersDashboard/doctors/deleteDoctor.main",
 
     //End Global Masters
