@@ -11,6 +11,12 @@ import MasterService from "@evara-backend/core/src/models/patientDashboard/servi
 import { PatientBillingEstimation } from "@evara-backend/core/models/patientDashboard/Billings/PatientBillingEstimation";
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle";
+import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
+import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
+import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
+import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
+import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
+import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -29,31 +35,42 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     data.clinicId = "EV";
     data.branchId = "KL";
 
-    const service = await findServiceByIdAndType(
-      data.masterServiceId,
-      data.serviceType
-    );
+    for (let item of data.items) {
+      item.quantity = item.quantity || 1;
 
-    if (!service) {
-      throw new ErrorMessage(404, "Service not found");
+      const service = await findServiceByIdAndType(
+        item.masterServiceId,
+        data.serviceType
+      );
+
+      if (!service) {
+        throw new ErrorMessage(404, "Service not found");
+      }
+
+      const estimatedPrice = service.cost * item.quantity;
+      const estimatedTax = Math.round((service.tax * estimatedPrice) / 100);
+
+      const total = Math.round(estimatedPrice + estimatedTax);
+
+      const newEstimation = new PatientBillingEstimation({
+        clinicId: data.clinicId,
+        branchId: data.branchId,
+        patientCode: data.patientCode,
+        doctorId: item.doctorId,
+        masterServiceId: item.masterServiceId,
+        serviceName: service.name,
+        serviceType: data.serviceType,
+        quantity: item.quantity,
+        estimatedTax: estimatedTax,
+        taxRate: service.tax,
+        cost: service.cost,
+        estimatedPrice: estimatedPrice,
+        estimatedTotal: total,
+        status: "Active",
+      });
+
+      await newEstimation.save();
     }
-
-    const estimatedPrice = service.cost * data.quantity;
-    const estimatedTax = (service.tax * estimatedPrice) / 100;
-
-    const total = estimatedPrice + estimatedTax;
-
-    const newEstimation = new PatientBillingEstimation({
-      ...data,
-      estimatedTax: estimatedTax,
-      taxRate: service.tax,
-      cost: service.cost,
-      estimatedPrice: estimatedPrice,
-      estimatedTotal: total,
-      status: "Active",
-    });
-
-    await newEstimation.save();
 
     return successResponse("Estimation added successfully");
   } catch (error) {
