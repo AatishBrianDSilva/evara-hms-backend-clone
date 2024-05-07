@@ -11,7 +11,7 @@ import { TaxRate } from "@evara-backend/core/src/models/pharmacyDashboard/TaxRat
 import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
 import { DrugManufacturer } from "@evara-backend/core/src/models/pharmacyDashboard/DrugManufacturer";
 import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
-import Branch from "@evara-backend/core/src/models/ClinicBranches";
+import Branch from "@evara-backend/core/src/models/mastersDashboard/global/ClinicBranches";
 import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {

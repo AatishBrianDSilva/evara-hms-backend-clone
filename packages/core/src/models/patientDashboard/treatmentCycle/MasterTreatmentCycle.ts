@@ -15,6 +15,7 @@ interface IMasterTreatmentCycle extends Document {
   active: boolean;
   tax: number;
   total: number;
+  validTill: Date;
 }
 
 const MasterTreatmentCycleSchema: Schema = new Schema({
@@ -28,13 +29,14 @@ const MasterTreatmentCycleSchema: Schema = new Schema({
     required: true,
     ref: "DefaultTreatmentCycle",
   },
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   gender: { type: String, required: true, enum: Object.values(EGender) },
   description: { type: String },
   cost: { type: Number, required: true },
   tax: { type: Number, required: true },
   active: { type: Boolean, required: true, default: true },
   total: { type: Number, required: true },
+  validTill: { type: Date, required: true },
 });
 
 const MasterTreatmentCycle = mongoose.model<IMasterTreatmentCycle>(

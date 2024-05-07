@@ -11,7 +11,7 @@ import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/
 import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
 import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
 import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
-import Doctors from "@evara-backend/core/src/models/Doctors";
+import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 import { PatientPharmacy } from "@evara-backend/core/src/models/patientDashboard/PatientPharmacy";
 import { TaxRate } from "@evara-backend/core/src/models/pharmacyDashboard/TaxRate";
 

@@ -4,7 +4,7 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Doctors from "@evara-backend/core/src/models/Doctors";
+import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 import Appointments from "@evara-backend/core/src/models/Appointments";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
 import mongoose from "mongoose";

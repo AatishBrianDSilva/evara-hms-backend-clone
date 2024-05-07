@@ -1,7 +1,7 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Doctors from "@evara-backend/core/models/Doctors";
+import Doctors from "@evara-backend/core/models/mastersDashboard/Doctors";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";

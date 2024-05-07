@@ -6,7 +6,7 @@ import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import PatientInvestigation from "@evara-backend/core/src/models/patientDashboard/investigation/PatientInvestigation";
-import Doctors from "@evara-backend/core/src/models/Doctors";
+import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 import MasterInvestigation from "@evara-backend/core/src/models/patientDashboard/investigation/MasterInvestigations";
 import MedicalTest from "@evara-backend/core/src/models/patientDashboard/investigation/MedicalTests";
 

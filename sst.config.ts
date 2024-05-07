@@ -1,6 +1,7 @@
 import { SSTConfig } from "sst";
 import { MainStack } from "./stacks/MainStack";
 import { PharmacyApiStack } from "./stacks/PharmacyApiStack";
+import { MastersApiStack } from "./stacks/MastersApiStack";
 
 export default {
   config(_input) {
@@ -13,6 +14,6 @@ export default {
     if (app.stage !== "prod") {
       app.setDefaultRemovalPolicy("destroy");
     }
-    app.stack(MainStack).stack(PharmacyApiStack);
+    app.stack(MainStack).stack(PharmacyApiStack).stack(MastersApiStack);
   },
 } satisfies SSTConfig;

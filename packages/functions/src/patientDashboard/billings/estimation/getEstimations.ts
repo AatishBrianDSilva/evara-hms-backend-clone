@@ -6,7 +6,7 @@ import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 import { log } from "console";
-import Doctors from "@evara-backend/core/src/models/Doctors";
+import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 import { PatientBillingEstimation } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBillingEstimation";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 

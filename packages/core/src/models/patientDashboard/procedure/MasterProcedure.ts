@@ -12,6 +12,7 @@ interface IMasterProcedures extends Document {
   tax: number;
   total: number;
   active: boolean;
+  validTill: Date;
 }
 
 const MasterProcedureSchema: Schema = new Schema({
@@ -25,13 +26,14 @@ const MasterProcedureSchema: Schema = new Schema({
     required: true,
     ref: "MedicalProcedures",
   },
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   gender: { type: String, required: true, enum: Object.values(EGender) },
   description: { type: String },
   cost: { type: Number, required: true },
   tax: { type: Number, required: true },
   total: { type: Number, required: true },
   active: { type: Boolean, required: true, default: true },
+  validTill: { type: Date, required: true },
 });
 
 const MasterProcedure = mongoose.model<IMasterProcedures>(

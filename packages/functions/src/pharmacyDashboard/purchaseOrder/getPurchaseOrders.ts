@@ -7,7 +7,7 @@ import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPagi
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
 import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
-import Branch from "@evara-backend/core/src/models/ClinicBranches";
+import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
 import { log } from "console";
 import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
 

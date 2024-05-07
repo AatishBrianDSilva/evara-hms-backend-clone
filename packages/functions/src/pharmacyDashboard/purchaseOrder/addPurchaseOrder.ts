@@ -5,7 +5,7 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { PurchaseOrder } from "@evara-backend/core/models/pharmacyDashboard/PurchaseOrder";
-import Branch from "@evara-backend/core/models/ClinicBranches";
+import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
 import mongoose from "mongoose";
 import { log } from "console";
 

@@ -5,7 +5,7 @@ import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import Doctors from "@evara-backend/core/src/models/Doctors";
+import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {

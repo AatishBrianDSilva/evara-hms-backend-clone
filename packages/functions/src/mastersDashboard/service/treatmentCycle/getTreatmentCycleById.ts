@@ -12,44 +12,23 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Connect to MongoDB
     await connectMongoDb();
 
-    const query = {
-      active: true,
-      gender: {
-        $in: ["both"],
-      },
-    };
-
-    const patientId = event.queryStringParameters?.patientId;
-
-    if (patientId) {
-      const patient = await Patient.findOne({ patientId }).lean();
-      if (!patient) {
-        throw new ErrorMessage(404, "Patient not found");
-      }
-      query.gender = {
-        $in: [patient.gender.toLowerCase(), "both"],
-      };
+    if (event.pathParameters === null) {
+      throw new ErrorMessage(400, "Path parameters are null");
     }
 
-    // console.log("🚀 ~ constmain:APIGatewayProxyHandler= ~ query:", query);
-
-    // TODO: Remove clinicId and branchId after adding authentication
-    // data.clinicId = "EV";
-    // data.branchId = "KL";
+    // Safely access the id property
+    const id = event.pathParameters["id"];
+    if (!id) {
+      throw new ErrorMessage(400, "Id is not provided");
+    }
 
     //Get all treatmentCycles
-    const treatmentCycles = await MasterTreatmentCycle.find(query)
+    const treatmentCycles = await MasterTreatmentCycle.findById(id)
       .populate({
         path: "treatmentCycle",
         model: DefaultTreatmentCycle.modelName,
       })
-      .sort({ treatmentCycleType: 1 })
-      .lean();
-
-    // console.log(
-    // "🚀 ~ constmain:APIGatewayProxyHandler= ~ treatmentCycles:",
-    // treatmentCycles
-    // );
+      .sort({ treatmentCycleType: 1 });
 
     // Return success response
     return successResponse("Success", treatmentCycles);

@@ -12,36 +12,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Connect to MongoDB
     await connectMongoDb();
 
-    const query = {
-      active: true,
-      gender: {
-        $in: ["both"],
-      },
-    };
-
-    const patientId = event.queryStringParameters?.patientId;
-
-    if (patientId) {
-      const patient = await Patient.findOne({ patientId }).lean();
-      if (!patient) {
-        throw new ErrorMessage(404, "Patient not found");
-      }
-      query.gender = {
-        $in: [patient.gender.toLowerCase(), "both"],
-      };
+    if (event.pathParameters === null) {
+      throw new ErrorMessage(400, "Path parameters are null");
     }
 
-    // TODO: Remove clinicId and branchId after adding authentication
-    // data.clinicId = "EV";
-    // data.branchId = "KL";
+    // Safely access the id property
+    const id = event.pathParameters["id"];
+    if (!id) {
+      throw new ErrorMessage(400, "Id is not provided");
+    }
 
-    //Get all investigations
-    const investigations = await MasterInvestigation.find(query)
+    //Get investigations
+    const investigations = await MasterInvestigation.findById(id)
       .populate({
         path: "test",
         model: MedicalTest.modelName,
       })
-      .sort({ testType: 1 })
       .lean();
 
     // Return success response

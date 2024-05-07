@@ -11,6 +11,7 @@ interface IMasterInvestigation extends Document {
   tax: number;
   total: number;
   active: boolean;
+  validTill: Date;
 }
 
 const MasterInvestigationSchema: Schema = new Schema({
@@ -24,13 +25,14 @@ const MasterInvestigationSchema: Schema = new Schema({
     required: true,
     ref: "MedicalTests",
   },
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   gender: { type: String, required: true, enum: Object.values(EGender) },
   description: { type: String },
   cost: { type: Number, required: true },
   tax: { type: Number, required: true },
   total: { type: Number, required: true },
   active: { type: Boolean, required: true, default: true },
+  validTill: { type: Date, required: true },
 });
 
 const MasterInvestigation = mongoose.model<IMasterInvestigation>(

@@ -11,6 +11,7 @@ interface IMasterService extends Document {
   tax: number;
   total: number;
   active: boolean;
+  validTill: Date;
   gender: EGender;
 }
 
@@ -25,13 +26,14 @@ const MasterServiceSchema: Schema = new Schema({
     required: true,
     ref: "DefaultService",
   },
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   description: { type: String },
   gender: { type: String, required: true, enum: Object.values(EGender) },
   cost: { type: Number, required: true },
   tax: { type: Number, required: true },
   total: { type: Number, required: true },
   active: { type: Boolean, required: true, default: true },
+  validTill: { type: Date, required: true },
 });
 
 const MasterService = mongoose.model<IMasterService>(
