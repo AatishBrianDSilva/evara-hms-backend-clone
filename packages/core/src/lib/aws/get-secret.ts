@@ -1,54 +1,68 @@
-import { SecretsManager }  from 'aws-sdk';
-const region = 'ap-south-1'
-let secret: string | undefined;
-let decodedBinarySecret: string | undefined;
+import { SecretsManager, AWSError } from "aws-sdk";
+
+// Define the AWS region
+const region = "ap-south-1";
 
 // Create a Secrets Manager client
-var client = new SecretsManager({
-    region: region,
-});
+const client = new SecretsManager({ region });
 
+/**
+ * Fetches a secret from AWS Secrets Manager.
+ * @param secretName The name of the secret to retrieve.
+ * @returns The secret as a string.
+ * @throws Error if there is any issue in fetching the secret.
+ */
 const getSecret = async (secretName: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        client.getSecretValue({ SecretId: secretName }, function (err, data) {
-            if (err) {
-                if (err.code === 'DecryptionFailureException')
-                    // Secrets Manager can't decrypt the protected secret text using the provided KMS key.
-                    // Deal with the exception here, and/or rethrow at your discretion.
-                    reject(err);
-                else if (err.code === 'InternalServiceErrorException')
-                    // An error occurred on the server side.
-                    // Deal with the exception here, and/or rethrow at your discretion.
-                    reject(err);
-                else if (err.code === 'InvalidParameterException')
-                    // You provided an invalid value for a parameter.
-                    // Deal with the exception here, and/or rethrow at your discretion.
-                    reject(err);
-                else if (err.code === 'InvalidRequestException')
-                    // You provided a parameter value that is not valid for the current state of the resource.
-                    // Deal with the exception here, and/or rethrow at your discretion.
-                    reject(err);
-                else if (err.code === 'ResourceNotFoundException')
-                    // We can't find the resource that you asked for.
-                    // Deal with the exception here, and/or rethrow at your discretion.
-                    reject(err);
-                else if (err.code === 'AccessDeniedException')
-                    // Dont have access to secret manager
-                    reject(err)
-            } else {
-                // Decrypts secret using the associated KMS CMK.
-                // Depending on whether the secret is a string or binary, one of these fields will be populated.
-                if ('SecretString' in data) {
-                    secret = data.SecretString;
-                } else {
-                    let buff = new Buffer(data.SecretBinary as string, 'base64');
-                    decodedBinarySecret = buff.toString('ascii');
-                }
-            }
+  try {
+    const data = await client
+      .getSecretValue({ SecretId: secretName })
+      .promise();
 
-            resolve(secret || '');
-        });
-    });
+    if ("SecretString" in data) {
+      return data.SecretString || ""; // Return the secret string or an empty string if null.
+    } else if ("SecretBinary" in data) {
+      // If the secret is binary, decode it
+      const decodedBinarySecret = Buffer.from(
+        data.SecretBinary as string,
+        "base64"
+      ).toString("ascii");
+      return decodedBinarySecret;
+    } else {
+      throw new Error(
+        "Secret not found or is not accessible in the expected format."
+      );
+    }
+  } catch (error) {
+    const err = error as AWSError;
+    // Customize error handling based on the error code
+    switch (err.code) {
+      case "DecryptionFailureException":
+        // Handle decryption failure
+        throw new Error(
+          "Unable to decrypt the secret with the provided KMS key."
+        );
+      case "InternalServiceErrorException":
+        // Handle server-side errors
+        throw new Error("An internal service error occurred.");
+      case "InvalidParameterException":
+        // Handle invalid parameters
+        throw new Error("Invalid parameters provided to Secrets Manager.");
+      case "InvalidRequestException":
+        // Handle invalid requests
+        throw new Error("Invalid request to Secrets Manager.");
+      case "ResourceNotFoundException":
+        // Handle missing secrets
+        throw new Error("Requested secret not found.");
+      case "AccessDeniedException":
+        // Handle access denial
+        throw new Error(
+          "Access denied when attempting to retrieve the secret."
+        );
+      default:
+        // Generic error handling
+        throw new Error(`An error occurred: ${err.message}`);
+    }
+  }
 };
 
 export default getSecret;
