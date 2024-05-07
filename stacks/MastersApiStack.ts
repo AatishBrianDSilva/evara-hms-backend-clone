@@ -99,6 +99,26 @@ export const MastersApiStack = ({ stack }: StackContext) => {
     "GET /master/treatment-cycles/default":
       "packages/functions/src/mastersDashboard/service/treatmentCycle/getDefaultTreatmentCycles.main",
 
+    // Master Treatment Cycle Consumables
+    "POST /master/treatment-cycles/consumables/add":
+      "packages/functions/src/mastersDashboard/service/treatmentCycle/consumable/addTreatmentCycleConsumable.main",
+    "GET /master/treatment-cycles/consumables":
+      "packages/functions/src/mastersDashboard/service/treatmentCycle/consumable/getTreatmentCycleConsumables.main",
+    "GET /master/treatment-cycles/consumables/{id}":
+      "packages/functions/src/mastersDashboard/service/treatmentCycle/consumable/getTreatmentCycleConsumableById.main",
+    "PUT /master/treatment-cycles/consumables/{id}":
+      "packages/functions/src/mastersDashboard/service/treatmentCycle/consumable/editTreatmentCycleConsumable.main",
+
+    // Master Treatment Cycle Stage
+    "POST /master/treatment-cycles/stage/add":
+      "packages/functions/src/mastersDashboard/service/treatmentCycle/stage/addTreatmentCycleStage.main",
+    "GET /master/treatment-cycles/stage":
+      "packages/functions/src/mastersDashboard/service/treatmentCycle/stage/getTreatmentCycleStages.main",
+    "GET /master/treatment-cycles/stage/{id}":
+      "packages/functions/src/mastersDashboard/service/treatmentCycle/stage/getTreatmentCycleStageById.main",
+    "PUT /master/treatment-cycles/stage/{id}":
+      "packages/functions/src/mastersDashboard/service/treatmentCycle/stage/editTreatmentCycleStage.main",
+
     //End Service Masters
   });
 };
