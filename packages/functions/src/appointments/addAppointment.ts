@@ -21,6 +21,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     data.clinicId = "EV";
     data.branchId = "KL";
 
+    console.log("data", data);
+
     // Check if there is an existing appointment for the date and time
     const existingAppointment = await Appointments.findOne({
       date: data.date,

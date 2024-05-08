@@ -61,6 +61,8 @@ export const appointmentSchema = new mongoose.Schema(
   }
 );
 
+appointmentSchema.index({ date: 1, time: 1, doctorId: 1 }, { unique: true });
+
 appointmentSchema.plugin(paginate);
 
 interface AppointmentDocument extends mongoose.Document, AppointmentData {}
