@@ -3,9 +3,7 @@ import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { TaxRate } from "@evara-backend/core/models/pharmacyDashboard/TaxRate";
-import CryoPreservations from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/CryoPreservations";
-import MasterCryoPreservations from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/MasterCryoPreservations";
+import MasterProcedure from "@evara-backend/core/src/models/patientDashboard/procedure/MasterProcedure";
 
 // Handler function for updating a single tax rate
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -30,19 +28,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const data = JSON.parse(event.body);
 
     // Find by ID and update the tax rate
-    const updatedData = await MasterCryoPreservations.findByIdAndUpdate(
-      id,
-      data,
-      {
-        new: true, // Return the updated document
-      }
-    );
+    const updatedData = await MasterProcedure.findByIdAndUpdate(id, data, {
+      new: true, // Return the updated document
+    });
 
     if (!updatedData) {
-      throw new ErrorMessage(404, "Tax rate not found");
+      throw new ErrorMessage(404, "Procedure could not be updated");
     }
 
-    return successResponse("Tax rate updated successfully", updatedData);
+    return successResponse("Procedure updated successfully", updatedData);
   } catch (error) {
     return errorResponse(error);
   }

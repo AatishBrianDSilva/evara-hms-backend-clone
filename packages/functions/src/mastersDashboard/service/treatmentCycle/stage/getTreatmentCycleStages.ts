@@ -18,58 +18,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Connect to MongoDB
     await connectMongoDb();
 
-    let query: any = {};
-
-    // Check if the user is an admin
-    const isAdmin = event.queryStringParameters?.isAdmin === "true";
-
-    if (!isAdmin) {
-      // Standard user, apply gender filter
-      query.active = true;
-      query.gender = { $in: ["both"] };
-
-      const patientId = event.queryStringParameters?.patientId;
-      if (patientId) {
-        const patient = await Patient.findOne({ patientId }).lean();
-        if (!patient) {
-          throw new ErrorMessage(404, "Patient not found");
-        }
-        query.gender = {
-          $in: [patient.gender.toLowerCase(), "both"],
-        };
-      }
-    }
-
-    const populate = [
-      {
-        path: "treatmentCycle",
-        model: MasterTreatmentCycle.modelName,
-      },
-      {
-        path: "pharmacyStock",
-        model: PharmacyStock.modelName,
-        populate: [
-          {
-            path: "item",
-            model: DrugItem.modelName,
-            populate: [
-              {
-                path: "category",
-                model: DrugCategory.modelName,
-              },
-              {
-                path: "type",
-                model: DrugType.modelName,
-              },
-            ],
-          },
-        ],
-      },
-    ];
-
     // Get all treatmentCycles
-    const treatmentCycles = await TreatmentCycleStage.find(query)
-    .lean();
+    const treatmentCycles = await TreatmentCycleStage.find().lean();
 
     // Return success response
     return successResponse("Success", treatmentCycles);

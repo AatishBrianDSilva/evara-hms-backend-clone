@@ -33,10 +33,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     });
 
     if (!updatedData) {
-      throw new ErrorMessage(404, "Tax rate not found");
+      throw new ErrorMessage(404, "Investigation could not be updated");
     }
 
-    return successResponse("Tax rate updated successfully", updatedData);
+    return successResponse("Investigation updated successfully", updatedData);
   } catch (error) {
     return errorResponse(error);
   }

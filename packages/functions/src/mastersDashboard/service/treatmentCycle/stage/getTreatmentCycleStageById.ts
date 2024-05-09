@@ -28,6 +28,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Id is not provided");
     }
 
+    console.log("id", id);
+
     //Get all treatmentCycles
     const treatmentCycles = await TreatmentCycleStage.findById(id).lean();
 

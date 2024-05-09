@@ -11,6 +11,7 @@ import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugI
 import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
 import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
 import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
+import { TreatmentCycleStage } from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/TreatmentCycleStage";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -28,9 +29,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     const populate = [
+      // {
+      //   path: "treatmentCycle",
+      //   model: MasterTreatmentCycle.modelName,
+      // },
       {
-        path: "treatmentCycle",
-        model: MasterTreatmentCycle.modelName,
+        path: "stage",
+        model: TreatmentCycleStage.modelName,
       },
       {
         path: "pharmacyStock",
@@ -58,6 +63,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const treatmentCycles = await TreatmentCycleConsumable.findById(id)
       .populate(populate)
       .lean();
+
+    console.log("treatmentCycles", treatmentCycles);
 
     // Return success response
     return successResponse("Success", treatmentCycles);

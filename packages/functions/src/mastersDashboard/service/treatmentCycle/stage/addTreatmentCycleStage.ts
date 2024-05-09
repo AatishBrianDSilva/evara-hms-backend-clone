@@ -26,10 +26,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const newTreatmentCycle = await treatmentCycle.save();
 
     // Return success response
-    return successResponse(
-      "TreatmentCycle created successfully",
-      newTreatmentCycle
-    );
+    return successResponse("Stage created successfully", newTreatmentCycle);
   } catch (error) {
     return errorResponse(error);
   }

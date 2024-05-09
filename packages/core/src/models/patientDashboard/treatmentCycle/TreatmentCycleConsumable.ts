@@ -3,7 +3,8 @@ import mongoose, { Document } from "mongoose";
 interface ITreatmentCycleConsumable extends Document {
   pharmacyStock: mongoose.Schema.Types.ObjectId;
   stage: mongoose.Schema.Types.ObjectId;
-  treatmentCycle: mongoose.Schema.Types.ObjectId;
+  // treatmentCycle: mongoose.Schema.Types.ObjectId;
+  treatment: string;
 }
 
 const TreatmentCycleConsumableSchema =
@@ -19,11 +20,16 @@ const TreatmentCycleConsumableSchema =
         ref: "TreatmentCycleStage",
         required: true,
       },
-      treatmentCycle: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "TreatmentCycle",
+      treatment: {
+        type: String,
+
         required: true,
       },
+      // treatmentCycle: {
+      //   type: mongoose.Schema.Types.ObjectId,
+      //   ref: "TreatmentCycle",
+      //   required: true,
+      // },
     },
     {
       timestamps: true,

@@ -31,10 +31,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const body = JSON.parse(event.body);
 
+    console.log("body", body);
+
     const patientId = body.patientId;
     const updateData = body.values;
 
-    updateData;
+    console.log({
+      patientId,
+      updateData,
+    });
 
     const updatedPatient = await Patients.findOneAndUpdate(
       { patientId: patientId },
