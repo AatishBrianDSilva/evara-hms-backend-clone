@@ -27,7 +27,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Return success response
     return successResponse(
-      "Appointment created successfully",
+      "Master Investigation created successfully",
       newInvestigation
     );
   } catch (error) {
