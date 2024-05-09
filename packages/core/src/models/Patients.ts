@@ -66,7 +66,7 @@ export const patientSchema = new mongoose.Schema(
     partnerId: { type: String, index: true },
     title: { type: String },
     firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
+    lastName: { type: String },
     gender: { type: String, required: true },
     dob: { type: Date },
     education: { type: String },
