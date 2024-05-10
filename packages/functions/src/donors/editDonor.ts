@@ -6,7 +6,7 @@ import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import Cases from "@evara-backend/core/models/Cases";
-import Donor from "@evara-backend/core/src/models/Donor";
+import Donor from "@evara-backend/core/models/mastersDashboard/local/Donor";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {

@@ -6,7 +6,7 @@ import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
 
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import Donor from "@evara-backend/core/src/models/Donor";
+import Donor from "@evara-backend/core/models/mastersDashboard/local/Donor";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
