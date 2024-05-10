@@ -33,6 +33,13 @@ tags:
     description: "APIs related to billing processes within the patient's treatment journey."
   - name: "Pharmacy Dashboard"
     description: "APIs for scheduling, updating, and canceling appointments."
+  - name: "Masters Dashboard"
+    description: "APIs for admin."
+  - name: "Masters Dashboard - Global"
+    description: "API's for global masters"
+  - name: "Masters Dashboard - Local"
+    description: "API's for Local masters"
+
 paths:
   /ivf-registration:
     post:
@@ -559,6 +566,55 @@ paths:
           description: "Billing record not found."
         "500":
           description: "Internal server error during the refund process."
+
+  # Masters Dashboard
+  /master/users/add:
+    post:
+      tags:
+        - "Masters Dashboard"
+      summary: "Add a new user"
+      description: "Adds a new user to the system."
+      operationId: "addUser"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                username:
+                  type: "string"
+                  required: true
+                email:
+                  type: "string"
+                  format: "email"
+                  required: true
+                role:
+                  type: "string"
+                  enum:
+                    - "Admin"
+                    - "Doctor"
+                    - "Front-Desk"
+                    - "Pharmacy"
+                    - "Patient"
+                  required: true
+                password:
+                  type: "string"
+                  required: true
+                clinicId:
+                  type: "string"
+                  required: true
+                branchId:
+                  type: "string"
+                  required: true
+      responses:
+        "201":
+          description: "User added successfully."
+        "400":
+          description: "Invalid data supplied."
+        "409":
+          description: "User already exists."
+
 components:
   securitySchemes:
     BearerAuth:

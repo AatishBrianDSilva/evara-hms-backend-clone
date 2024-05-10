@@ -6,14 +6,16 @@ const branchSchema = new Schema(
     code: { type: String, required: true, unique: true }, //Unique code for the branch
     branchName: { type: String, required: true },
     address: {
-      street: { type: String, required: true },
-      city: { type: String, required: true },
-      state: { type: String, required: true },
-      zip: { type: String, required: true },
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      zip: { type: String },
     },
-    phone: { type: String, required: true },
-    email: { type: String, required: true },
+    phone: { type: String },
+    email: { type: String },
     manager: { type: String },
+    isActive: { type: Boolean, default: true },
+    deletedAt: { type: Date },
   },
   { timestamps: true }
 );

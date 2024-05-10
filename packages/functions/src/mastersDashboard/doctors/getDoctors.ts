@@ -6,40 +6,28 @@ import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
 import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
-
-    // const decodedJWT = decodeJWT(event.headers.Authorization); // Assume this function exists
-    // const userRole = decodedJWT.role; // User role extracted from JWT
-    // const ClinicId = decodedJWT.clinicId; // Clinic ID from JWT
-    // let BranchId = decodedJWT.branchId; // Default branch ID from JWT
-
-    const clinicId = "EV";
-    let queryBranchId = "KL";
 
     const params = event.queryStringParameters || {};
     console.log("Params", params);
-    const {
-      startDate,
-      endDate,
-      page = "1",
-      limit = "10",
-      paginate = "false",
-      branchId,
-    } = params;
+    const { startDate, endDate, page = "1", limit = "10" } = params;
 
-    // Override branchId for admins if specified in the query params
-    // if (userRole === 'admin' && branchId) {
-    //     queryBranchId = branchId;
-    // }
+    const isGlobal = JSON.parse(params.isGlobal || "false");
+    const status = params.status || "active";
 
-    let query: any = { clinicId: clinicId };
+    let query: any = { clinicId: auth.clinicId, status: status };
 
-    // Add branchId to query if provided and if paginate is "false"
-    if (queryBranchId && paginate === "false") {
-      query.branchId = queryBranchId;
+    if (!isGlobal) {
+      query.branchId = auth.branchId;
     }
 
     // Date range filter
@@ -53,10 +41,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
     }
 
-    // await new Promise((resolve) => setTimeout(resolve, 10000));
+    const paginate = JSON.parse(params.paginate || "false");
 
     // Fetching the doctors with or without pagination
-    if (paginate === "true") {
+    if (paginate) {
       // Pagination options
       const options: IPaginateOptions = {
         page: parseInt(page, 10),

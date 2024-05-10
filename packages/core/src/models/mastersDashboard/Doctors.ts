@@ -21,6 +21,8 @@ interface DoctorData extends Document {
   image: string;
   designation: string;
   status: "active" | "inactive";
+  global: boolean;
+  deletedAt: Date;
 }
 
 export const doctorSchema = new mongoose.Schema(
@@ -48,6 +50,8 @@ export const doctorSchema = new mongoose.Schema(
     image: { type: String },
     designation: { type: String },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
+    global: { type: Boolean, default: false },
+    deletedAt: { type: Date },
   },
   {
     timestamps: true,

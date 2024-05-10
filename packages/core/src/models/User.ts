@@ -8,6 +8,7 @@ export interface IUser {
   username: string;
   email: string;
   password: string;
+  phone: string;
   role: string;
   isActive: boolean;
   deletedAt?: Date;
@@ -20,6 +21,7 @@ const userSchema = new mongoose.Schema<IUser>(
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    phone: { type: String },
     role: {
       type: String,
       required: true,

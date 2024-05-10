@@ -18,6 +18,32 @@ export const MastersApiStack = ({ stack }: StackContext) => {
     "DELETE /master/doctors/{id}":
       "packages/functions/src/mastersDashboard/doctors/deleteDoctor.main",
 
+    // Users
+    "POST /master/users/add":
+      "packages/functions/src/mastersDashboard/global/users/addUser.main",
+    "GET /master/users":
+      "packages/functions/src/mastersDashboard/global/users/getUsers.main",
+    "GET /master/users/{id}":
+      "packages/functions/src/mastersDashboard/global/users/getUserById.main",
+    "PUT /master/users/{id}":
+      "packages/functions/src/mastersDashboard/global/users/updateUser.main",
+    "PATCH /master/users/change-password":
+      "packages/functions/src/mastersDashboard/global/users/updatePassword.main",
+    "DELETE /master/users/{id}":
+      "packages/functions/src/mastersDashboard/global/users/deleteUser.main",
+
+    // Branches
+    "POST /master/branch/add":
+      "packages/functions/src/mastersDashboard/global/branch/addBranch.main",
+    "GET /master/branch":
+      "packages/functions/src/mastersDashboard/global/branch/getBranches.main",
+    "GET /master/branch/{id}":
+      "packages/functions/src/mastersDashboard/global/branch/getBranchById.main",
+    "PUT /master/branch/{id}":
+      "packages/functions/src/mastersDashboard/global/branch/editBranch.main",
+    "DELETE /master/branch/{id}":
+      "packages/functions/src/mastersDashboard/global/branch/deleteBranch.main",
+
     //End Global Masters
 
     //Local Masters
