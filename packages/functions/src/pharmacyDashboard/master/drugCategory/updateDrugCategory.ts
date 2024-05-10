@@ -28,7 +28,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     });
 
     if (!updatedData) {
-      throw new ErrorMessage(404, "Data not found");
+      throw new ErrorMessage(404, "Could Not Update Data");
     }
 
     return successResponse("Data updated successfully", updatedData);

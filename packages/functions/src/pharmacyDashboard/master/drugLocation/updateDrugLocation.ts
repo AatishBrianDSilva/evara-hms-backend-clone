@@ -34,7 +34,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     );
 
     if (!updatedDrugLocation) {
-      throw new ErrorMessage(404, "Drug Location not found");
+      throw new ErrorMessage(404, "Could Not Update Data");
     }
 
     return successResponse(
