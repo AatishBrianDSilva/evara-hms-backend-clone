@@ -114,7 +114,7 @@ const formatRecords = (records: IPharmacyStock[]) => {
       item: {
         _id: recordJSON.item?._id,
         name: recordJSON.item?.name,
-        category: recordJSON.item?.category.name,
+        category: recordJSON.item?.category?.name,
         type: recordJSON.item?.type?.name,
       },
       sellPrice: recordJSON.sellPrice,
