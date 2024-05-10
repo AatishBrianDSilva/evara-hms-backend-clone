@@ -9,6 +9,8 @@ export interface IDrugItem extends Document {
   category: Schema.Types.ObjectId;
   type?: Schema.Types.ObjectId;
   packSize: number;
+  mrp: number; // MRP is the selling price
+  rate: number; // Rate is the buying price
   taxRate: Schema.Types.ObjectId;
   manufacturer: Schema.Types.ObjectId;
   status: "Active" | "Inactive";
@@ -32,7 +34,7 @@ const drugItemSchema = new Schema<IDrugItem>(
     category: {
       type: Schema.Types.ObjectId,
       ref: "DrugCategory",
-      required: true,
+      // required: true,
     },
     type: {
       type: Schema.Types.ObjectId,
@@ -45,7 +47,15 @@ const drugItemSchema = new Schema<IDrugItem>(
     taxRate: {
       type: Schema.Types.ObjectId,
       ref: "TaxRate",
-      required: true,
+      // required: true,
+    },
+    mrp: {
+      type: Number,
+      // required: true,
+    },
+    rate: {
+      type: Number,
+      // required: true,
     },
     manufacturer: {
       type: Schema.Types.ObjectId,
