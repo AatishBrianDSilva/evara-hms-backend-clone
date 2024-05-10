@@ -65,7 +65,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const data = await PharmacyStock.find().populate(populate).sort(sort);
 
-    const sortedData = data.sort((a, b) => {
+    const sortedData = data.sort((a: any, b: any) => {
       return a.item?.name.localeCompare(b.item?.name);
     });
 
@@ -82,12 +82,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
 const formatRecords = (records: IPharmacyStock[]) => {
   return records.map((record) => {
-    const recordJSON: FlattenMaps<IPharmacyStock> = record.toJSON();
+    const recordJSON: any = record.toJSON();
 
     const locationQuantities: any = {};
 
-    recordJSON.batches.forEach((batch) => {
-      batch.locations.forEach((loc) => {
+    recordJSON.batches.forEach((batch: any) => {
+      batch.locations.forEach((loc: any) => {
         let locationId = loc.location?._id.toString();
 
         if (!locationQuantities[locationId]) {
