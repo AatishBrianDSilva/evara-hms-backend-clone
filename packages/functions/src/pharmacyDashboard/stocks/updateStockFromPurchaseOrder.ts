@@ -125,7 +125,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               vendor: purchaseOrder.vendor,
               packSize: item.packSize,
               locations: [
-                { location: mainLocation._id, quantity: item.quantity },
+                {
+                  location: mainLocation._id,
+                  quantity: item.quantity * item.packSize,
+                },
               ],
             },
           ],
