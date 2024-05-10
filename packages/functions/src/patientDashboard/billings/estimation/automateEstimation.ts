@@ -106,12 +106,14 @@ const addEstimation = async (data: any) => {
     const sellPrice = service.sellPrice || 10;
     const tax = service.item?.taxRate?.taxRate || 0;
 
-    estimatedPrice = Math.round(sellPrice * data.quantity);
+    const mrp = (data.quantity / service.item.packSize) * sellPrice;
+
+    estimatedPrice = Math.round(mrp);
     estimatedTax = Math.round((tax * estimatedPrice) / 100);
     total = Math.round(estimatedPrice + estimatedTax);
 
     taxRate = tax;
-    cost = sellPrice;
+    cost = mrp;
 
     console.log("Success", {
       estimatedPrice,
