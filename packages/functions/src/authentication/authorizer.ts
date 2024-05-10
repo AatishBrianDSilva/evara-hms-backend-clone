@@ -36,6 +36,8 @@ export const main = async (
     return generatePolicy(principalId, effect, event.methodArn, {
       branchId: decoded.branchId,
       clinicId: decoded.clinicId,
+      username: decoded.username,
+      role: decoded.role,
     });
   } catch (error) {
     console.error("Authorization failed:", error);
@@ -65,6 +67,8 @@ function generatePolicy(
       userId: principalId,
       branchId: data?.branchId || "",
       clinicId: data?.clinicId || "",
+      username: data?.username || "",
+      role: data?.role || "",
     },
   };
 }

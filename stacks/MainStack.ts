@@ -239,18 +239,6 @@ export function MainStack({ stack }: StackContext) {
 
       // Patient Dashboard End
 
-      // User
-      "POST /users/add": {
-        function: "packages/functions/src/user/addUser.main",
-        // authorizer: "none",
-      },
-      "GET /users": "packages/functions/src/user/getUsers.main",
-      "GET /users/{id}": "packages/functions/src/user/getUserById.main",
-      "PUT /users/{id}": "packages/functions/src/user/updateUser.main",
-      "PATCH /users/change-password":
-        "packages/functions/src/user/updatePassword.main",
-      "DELETE /users/{id}": "packages/functions/src/user/deleteUser.main",
-
       // Authenication
       "POST /auth/login": {
         function: "packages/functions/src/authentication/login.main",

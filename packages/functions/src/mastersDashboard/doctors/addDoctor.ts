@@ -5,10 +5,16 @@ import Doctors from "@evara-backend/core/models/mastersDashboard/Doctors";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
     // Connect to MongoDB
 
@@ -18,12 +24,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Parse the body from the event
     const data = JSON.parse(event.body);
-
-    // TODO: Remove clinicId and branchId after adding authentication
-    data.clinicId = "EV";
-    data.branchId = "KL";
-
-    // TODO: Upload profile image to S3 and get the URL
 
     // Create a new doctor document
     const newDoctor = new Doctors(data);
