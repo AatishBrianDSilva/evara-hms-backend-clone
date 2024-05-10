@@ -1,3 +1,4 @@
+import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
@@ -13,6 +14,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (!auth) {
       throw new ErrorMessage(401, "Unauthorized");
     }
+
+    await connectMongoDb();
 
     if (event.pathParameters === null) {
       throw new ErrorMessage(400, "Path parameters are null");

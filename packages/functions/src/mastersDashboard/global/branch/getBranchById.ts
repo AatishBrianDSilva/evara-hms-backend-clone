@@ -17,10 +17,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     await connectMongoDb();
 
-    if (!event.pathParameters || !event.pathParameters["id"]) {
-      throw new ErrorMessage(400, "Invalid request");
+    if (event.pathParameters === null) {
+      throw new ErrorMessage(400, "Path parameters are null");
     }
+
+    // Safely access the id property
     const id = event.pathParameters["id"];
+    if (!id) {
+      throw new ErrorMessage(400, "Id is not provided");
+    }
 
     const branch = await Branch.findById(id).lean();
 
