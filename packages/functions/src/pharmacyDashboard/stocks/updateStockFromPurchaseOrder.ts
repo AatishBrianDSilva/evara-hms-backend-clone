@@ -85,12 +85,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
           if (locationIndex > -1) {
             console.log("Updaintg existing location quantity");
-            batch.locations[locationIndex].quantity += item.quantity; // Update existing location quantity
+            batch.locations[locationIndex].quantity +=
+              item.quantity * item.packSize; // Update existing location quantity
           } else {
             console.log("Adding new location");
             batch.locations.push({
               location: mainLocation._id,
-              quantity: item.quantity,
+              quantity: item.quantity * item.packSize,
             });
           }
         } else {
@@ -102,10 +103,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
             vendor: purchaseOrder.vendor,
             packSize: item.packSize,
             locations: [
-              { location: mainLocation._id, quantity: item.quantity },
+              {
+                location: mainLocation._id,
+                quantity: item.quantity * item.packSize,
+              },
             ],
           });
         }
+        existingStock.sellPrice = item.mrp;
         await existingStock.save({ session });
       } else {
         console.log("Creating new stock");
@@ -124,6 +129,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               ],
             },
           ],
+          sellPrice: item.mrp,
         });
 
         await newStock.save({ session });

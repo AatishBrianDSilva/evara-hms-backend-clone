@@ -17,7 +17,7 @@ export interface IPurchaseOrderRequest {
     item: Schema.Types.ObjectId;
     packSize: number;
     mrp: number;
-    mrpPerUnit: number;
+    mrpPerPack: number;
     buyPrice: number;
     total: number;
     tax: number;
@@ -37,7 +37,7 @@ export interface IPurchaseOrderResponse {
     batchNo: string;
     expiryDate: Date;
     mrp: number;
-    mrpPerUnit: number;
+    mrpPerPack: number;
     buyPrice: number;
     tax: number;
     quantity: number;
@@ -69,7 +69,7 @@ const itemSchema = new Schema({
   batchNo: { type: String, required: false },
   expiryDate: { type: Date, required: false },
   mrp: { type: Number, required: true, min: 0 },
-  mrpPerUnit: { type: Number, required: true, min: 0 },
+  mrpPerPack: { type: Number, required: true, min: 0 },
   buyPrice: { type: Number, required: true, min: 0 },
   tax: { type: Number, required: true, min: 0 },
   quantity: { type: Number, required: true, min: 0 },
