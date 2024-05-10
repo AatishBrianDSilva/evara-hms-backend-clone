@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 const branchSchema = new Schema(
   {
-    clinicId: { type: Schema.Types.ObjectId, ref: "Clinic", required: true },
+    clinicId: { type: String, required: true },
     code: { type: String, required: true, unique: true }, //Unique code for the branch
     branchName: { type: String, required: true },
     address: {
