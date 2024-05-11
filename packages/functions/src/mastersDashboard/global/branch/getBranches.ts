@@ -20,7 +20,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     let query: any = { clinicId: authorizer.clinicId };
 
-    if (isAdmin) {
+    if (!isAdmin) {
       query.isActive = isActive;
     }
 
