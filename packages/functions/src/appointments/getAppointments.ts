@@ -10,6 +10,8 @@ import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPagi
 import mongoose from "mongoose";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     // Connect to MongoDB
     await connectMongoDb();

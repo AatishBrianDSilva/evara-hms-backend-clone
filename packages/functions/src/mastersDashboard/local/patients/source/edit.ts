@@ -10,6 +10,8 @@ import PatientSource from "@evara-backend/core/src/models/mastersDashboard/local
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     await connectMongoDb();
     // Connect to MongoDB

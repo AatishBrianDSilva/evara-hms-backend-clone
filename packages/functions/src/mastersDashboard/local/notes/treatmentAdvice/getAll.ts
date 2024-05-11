@@ -9,6 +9,8 @@ import Branch from "@evara-backend/core/src/models/mastersDashboard/global/Clini
 import NotesTreatmentAdvice from "@evara-backend/core/src/models/mastersDashboard/local/notes/NotesTreatmentAdvice";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     const authorizer = extractAuthorizerDetails(event);
     if (!authorizer) {

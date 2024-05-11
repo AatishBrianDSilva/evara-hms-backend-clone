@@ -9,6 +9,8 @@ import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extr
 import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     const authorizer = extractAuthorizerDetails(event);
     if (!authorizer) {

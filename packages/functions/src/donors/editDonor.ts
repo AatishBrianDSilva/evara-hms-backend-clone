@@ -10,6 +10,8 @@ import Donor from "@evara-backend/core/models/mastersDashboard/local/Donor";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   const mongoose = await connectMongoDb();
   const session = await mongoose.startSession();
   try {

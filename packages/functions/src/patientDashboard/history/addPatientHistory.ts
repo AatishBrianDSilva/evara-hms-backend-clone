@@ -7,6 +7,8 @@ import Patient from "@evara-backend/core/src/models/Patients";
 import { PatientHistory } from "@evara-backend/core/models/patientDashboard/PatientHistory";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     // Connect to MongoDB
     await connectMongoDb();

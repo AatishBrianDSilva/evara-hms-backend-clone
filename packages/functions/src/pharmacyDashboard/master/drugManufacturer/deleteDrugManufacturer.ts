@@ -8,6 +8,8 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import { DrugManufacturer } from "@evara-backend/core/src/models/pharmacyDashboard/DrugManufacturer";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     await connectMongoDb();
 

@@ -10,6 +10,8 @@ import {
 } from "@evara-backend/core/models/patientDashboard/Billings/PatientBillingEstimation";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   const conn = await connectMongoDb();
   const session = await conn.startSession();
   session.startTransaction();

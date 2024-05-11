@@ -9,6 +9,8 @@ import Branch from "@evara-backend/core/src/models/mastersDashboard/global/Clini
 import AppointmentSource from "@evara-backend/core/src/models/mastersDashboard/local/appointments/AppointmentSource";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     const authorizer = extractAuthorizerDetails(event);
     if (!authorizer) {

@@ -9,6 +9,8 @@ import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 import { PatientBillingEstimation } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBillingEstimation";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     await connectMongoDb();
 

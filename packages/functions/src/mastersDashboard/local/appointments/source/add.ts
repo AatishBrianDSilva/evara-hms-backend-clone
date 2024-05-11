@@ -7,6 +7,8 @@ import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extr
 import AppointmentSource from "@evara-backend/core/src/models/mastersDashboard/local/appointments/AppointmentSource";
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     await connectMongoDb();
     // Connect to MongoDB

@@ -5,6 +5,8 @@ import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import MedicalTest from "@evara-backend/core/src/models/patientDashboard/investigation/MedicalTests";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     // Connect to MongoDB
     await connectMongoDb();

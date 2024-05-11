@@ -8,6 +8,8 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import Donor from "@evara-backend/core/models/mastersDashboard/local/Donor";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     await connectMongoDb();
 

@@ -7,6 +7,8 @@ import DefaultTreatmentCycle from "@evara-backend/core/src/models/patientDashboa
 import { log } from "console";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     // Connect to MongoDB
     await connectMongoDb();

@@ -21,6 +21,8 @@ import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patie
 
 // AWS Lambda handler function to add data to PatientPharmacy model
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   const conn = await connectMongoDb();
   const session = await conn.startSession();
   session.startTransaction();

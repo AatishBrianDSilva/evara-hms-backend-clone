@@ -7,7 +7,9 @@ import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 // Handler function
-export const main: APIGatewayProxyHandler = async (event, _context) => {
+export const main: APIGatewayProxyHandler = async (event, context) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     await connectMongoDb();
     // Connect to MongoDB

@@ -9,6 +9,8 @@ import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extr
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
