@@ -22,9 +22,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const { startDate, endDate, page = "1", limit = "10" } = params;
 
     const isGlobal = JSON.parse(params.isGlobal || "false");
+    const isAdmin = JSON.parse(params.isAdmin || "false");
     const status = params.status || "active";
 
-    let query: any = { clinicId: auth.clinicId, status: status };
+    let query: any = { clinicId: auth.clinicId };
+
+    if (isAdmin) {
+      query.status = status;
+    }
 
     if (!isGlobal) {
       query.branchId = auth.branchId;

@@ -32,13 +32,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const data = JSON.parse(event.body);
 
+    console.log("Data", data);
+
     const updatedData = await Doctors.findByIdAndUpdate(
       {
         _id: id,
       },
-      {
-        $set: data,
-      },
+      data,
       {
         new: true,
       }
@@ -47,6 +47,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (!updatedData) {
       throw new ErrorMessage(404, "Doctor not updated");
     }
+
+    console.log("Updated Data", updatedData);
 
     return successResponse("Success", data);
   } catch (error) {

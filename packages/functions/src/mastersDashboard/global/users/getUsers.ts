@@ -15,9 +15,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(401, "Unauthorized");
     }
 
+    const params = event.queryStringParameters || {};
+    const isAdmin = JSON.parse(params.isAdmin || "false");
+    const isActive = JSON.parse(params.active || "false");
+
+    let query: any = { clinicId: authorizer.clinicId };
+
+    if (isAdmin) {
+      query.isActive = isActive;
+    }
+
     await connectMongoDb();
 
-    const users = await User.find().select("-password");
+    const users = await User.find(query).select("-password");
 
     return successResponse("Success", users);
   } catch (error) {

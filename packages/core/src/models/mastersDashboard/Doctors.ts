@@ -19,7 +19,6 @@ interface DoctorData extends Document {
   pincode: string;
   licenceNumber: string;
   image: string;
-  designation: string;
   status: "active" | "inactive";
   global: boolean;
   deletedAt: Date;
@@ -48,7 +47,6 @@ export const doctorSchema = new mongoose.Schema(
     pincode: { type: String },
     licenceNumber: { type: String },
     image: { type: String },
-    designation: { type: String },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
     global: { type: Boolean, default: false },
     deletedAt: { type: Date },
