@@ -292,6 +292,17 @@ export function MainStack({ stack }: StackContext) {
       "GET /pharmacy/patient/{id}":
         "packages/functions/src/patientDashboard/pharmacy/getPharmacyById.main",
 
+      // Patient Notes
+      "POST /notes/add":
+        "packages/functions/src/patientDashboard/notes/add.main",
+      "GET /notes": "packages/functions/src/patientDashboard/notes/getAll.main",
+      "GET /notes/{id}":
+        "packages/functions/src/patientDashboard/notes/get.main",
+      "PUT /notes/{id}":
+        "packages/functions/src/patientDashboard/notes/edit.main",
+      "DELETE /notes/{id}":
+        "packages/functions/src/patientDashboard/notes/delete.main",
+
       // Patient Dashboard End
 
       // Authenication

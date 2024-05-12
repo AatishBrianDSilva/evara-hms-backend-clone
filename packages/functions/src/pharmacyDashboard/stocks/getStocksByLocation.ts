@@ -17,6 +17,8 @@ export const fetchStockByLocation: APIGatewayProxyHandler = async (
   event,
   _context
 ) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     await connectMongoDb();
 

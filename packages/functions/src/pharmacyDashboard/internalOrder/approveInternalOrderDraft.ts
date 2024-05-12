@@ -5,12 +5,13 @@ import {
   EInternalOrderStatus,
   InternalOrder,
 } from "@evara-backend/core/models/pharmacyDashboard/InternalOrder";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   await connectMongoDb();
 
   try {

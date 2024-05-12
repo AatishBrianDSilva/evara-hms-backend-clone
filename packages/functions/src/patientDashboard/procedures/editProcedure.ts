@@ -9,6 +9,8 @@ import { EProcedureType } from "@evara-backend/core/src/models/patientDashboard/
 import PatientProcedures from "@evara-backend/core/src/models/patientDashboard/procedure/PatientProcedure";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     await connectMongoDb();
 

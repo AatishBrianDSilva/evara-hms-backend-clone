@@ -7,7 +7,9 @@ import { User } from "@evara-backend/core/src/models/User";
 import { APIGatewayProxyHandler } from "aws-lambda";
 
 // Soft delete user
-export const main: APIGatewayProxyHandler = async (event, _context) => {
+export const main: APIGatewayProxyHandler = async (event, context) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {

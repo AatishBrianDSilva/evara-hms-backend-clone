@@ -32,7 +32,7 @@ const MasterInvestigationSchema: Schema = new Schema({
   tax: { type: Number, required: true },
   total: { type: Number, required: true },
   active: { type: Boolean, required: true, default: true },
-  validTill: { type: Date, required: true },
+  validTill: { type: Date },
 });
 
 const MasterInvestigation = mongoose.model<IMasterInvestigation>(

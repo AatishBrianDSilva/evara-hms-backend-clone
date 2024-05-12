@@ -4,6 +4,8 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     // Connect to MongoDB
     if (event.body == null) {

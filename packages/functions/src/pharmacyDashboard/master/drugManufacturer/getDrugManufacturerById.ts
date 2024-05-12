@@ -10,6 +10,8 @@ import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/D
 import { TaxRate } from "@evara-backend/core/src/models/pharmacyDashboard/TaxRate";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     await connectMongoDb();
 

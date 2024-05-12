@@ -9,6 +9,8 @@ import { APIGatewayProxyHandler } from "aws-lambda";
 
 // Soft delete user
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {

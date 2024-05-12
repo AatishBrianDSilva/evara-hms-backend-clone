@@ -8,6 +8,8 @@ import MasterInvestigation from "@evara-backend/core/src/models/patientDashboard
 
 // Handler function for updating a single tax rate
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     await connectMongoDb(); // Connect to MongoDB
 

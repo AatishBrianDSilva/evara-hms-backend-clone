@@ -9,6 +9,8 @@ import {
 } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   await connectMongoDb();
 
   try {
@@ -56,7 +58,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (totalPaid - refundAmount === 0) {
       billing.status = EPatientBillingStatus.Refunded;
     } else {
-      billing.status = EPatientBillingStatus.PartiallyRefunded;
+      // billing.status = EPatientBillingStatus.PartiallyRefunded;
     }
 
     await billing.save();
