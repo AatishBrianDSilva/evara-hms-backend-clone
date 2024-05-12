@@ -36,7 +36,7 @@ const MasterTreatmentCycleSchema: Schema = new Schema({
   tax: { type: Number, required: true },
   active: { type: Boolean, required: true, default: true },
   total: { type: Number, required: true },
-  validTill: { type: Date, required: true },
+  validTill: { type: Date },
 });
 
 const MasterTreatmentCycle = mongoose.model<IMasterTreatmentCycle>(
