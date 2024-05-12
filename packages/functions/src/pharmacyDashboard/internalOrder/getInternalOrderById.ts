@@ -11,6 +11,8 @@ import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/
 import { InternalOrder } from "@evara-backend/core/src/models/pharmacyDashboard/InternalOrder";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     await connectMongoDb();
 

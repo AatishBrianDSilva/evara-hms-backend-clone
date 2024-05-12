@@ -13,6 +13,8 @@ import MedicalProcedure from "@evara-backend/core/src/models/patientDashboard/pr
 import PatientProcedures from "@evara-backend/core/src/models/patientDashboard/procedure/PatientProcedure";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     // Connect to MongoDB
     await connectMongoDb();

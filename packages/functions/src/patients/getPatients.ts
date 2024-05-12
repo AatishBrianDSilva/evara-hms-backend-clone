@@ -9,6 +9,8 @@ import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPagi
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     // Connect to MongoDB
     await connectMongoDb();

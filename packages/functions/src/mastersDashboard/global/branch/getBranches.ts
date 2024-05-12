@@ -8,6 +8,8 @@ import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import Branch from "@evara-backend/core/src/models/mastersDashboard/global/ClinicBranches";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     const authorizer = extractAuthorizerDetails(event);
     if (!authorizer) {

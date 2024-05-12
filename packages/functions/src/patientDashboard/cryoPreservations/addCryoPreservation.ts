@@ -9,6 +9,8 @@ import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patie
 import { publishServiceToSNS } from "@evara-backend/core/src/lib/utils/publishServiceToSNS";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     // Connect to MongoDB
     await connectMongoDb();

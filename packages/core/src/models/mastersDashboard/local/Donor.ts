@@ -1,6 +1,6 @@
 import mongoose, { Document, PaginateModel, Types } from "mongoose";
 import paginate from "mongoose-paginate-v2";
-import { autoIncrementId } from "./Counters";
+import { autoIncrementId } from "../../Counters";
 
 interface DonorData extends Document {
   clinicId: string;
@@ -66,6 +66,7 @@ export const patientSchema = new mongoose.Schema(
     firstName: { type: String, required: true },
     lastName: { type: String },
     gender: { type: String, required: true },
+    assignedTo: { type: String },
     dob: { type: Date },
     education: { type: String },
     maritalStatus: { type: String },

@@ -9,6 +9,8 @@ import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   const mongoose = await connectMongoDb();
   const session = await mongoose.startSession();
   try {

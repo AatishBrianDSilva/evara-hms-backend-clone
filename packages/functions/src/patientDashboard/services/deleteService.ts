@@ -9,6 +9,8 @@ import PatientService from "@evara-backend/core/src/models/patientDashboard/serv
 import SNSService from "@evara-backend/core/src/lib/aws/sns";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
+  _context.callbackWaitsForEmptyEventLoop = false;
+
   try {
     await connectMongoDb();
 
