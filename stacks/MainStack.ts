@@ -30,7 +30,6 @@ export function MainStack({ stack }: StackContext) {
         handler: "packages/functions/src/files/conditionalDelete.main",
         timeout: 30,
         permissions: ["sqs", "s3"],
-        role: role,
       },
     },
     cdk: {
@@ -48,7 +47,6 @@ export function MainStack({ stack }: StackContext) {
       handler: "packages/functions/src/files/scheduleDelete.main",
       timeout: "30 seconds",
       permissions: ["sqs", "s3"],
-      role: role,
       environment: {
         S3_SCHEDULE_DELETE_QUEUE_URL: s3FileDeletionQueue.queueUrl,
       },
