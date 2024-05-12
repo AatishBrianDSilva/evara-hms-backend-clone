@@ -318,6 +318,7 @@ export function MainStack({ stack }: StackContext) {
       //File Uploads
       "POST /files/get-signed-url":
         "packages/functions/src/files/getPreSignedUrl.main",
+      "DELETE /files/delete": "packages/functions/src/files/deleteFile.main",
 
       // Admin Dev
       "GET /admin_dev/automate-medical-investigation":
