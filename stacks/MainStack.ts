@@ -24,14 +24,55 @@ export function MainStack({ stack }: StackContext) {
 
   attachPermissionsToRole(role, ["ssm"]);
 
+  const s3FileDeletionQueue = new Queue(stack, "S3FileDeletionQueue", {
+    consumer: {
+      function: {
+        handler: "packages/functions/src/files/conditionalDelete.main",
+        timeout: 30,
+        role: role,
+      },
+    },
+    cdk: {
+      queue: {
+        queueName: `S3FileDeletionQueue-${stack.stage}`,
+        visibilityTimeout: Duration.seconds(45),
+      },
+    },
+  });
+
+  const s3ScheduleDeletionFunction = new Function(
+    stack,
+    "S3ScheduleDeletionFunction",
+    {
+      handler: "packages/functions/src/files/scheduleDelete.main",
+      timeout: "30 seconds",
+      role: role,
+      environment: {
+        S3_SCHEDULE_DELETE_QUEUE_URL: s3FileDeletionQueue.queueUrl,
+      },
+    }
+  );
+
   const userProfileBucket = new Bucket(stack, "UserProfilesBucket", {
     name: `user-profiles-${stack.stage}`,
     blockPublicACLs: false,
+    notifications: {
+      ScheduleDeletion: {
+        function: s3ScheduleDeletionFunction,
+        events: ["object_created"],
+      },
+    },
   });
 
   const userReportBucket = new Bucket(stack, "UserReportsBucket", {
     name: `user-reports-${stack.stage}`,
     blockPublicACLs: true,
+    notifications: {
+      ScheduleDeletion: {
+        function: s3ScheduleDeletionFunction,
+        events: ["object_created"],
+      },
+    },
   });
 
   const billingEstimationDLQ = new Queue(stack, "BillingEstimationDLQ", {
@@ -91,6 +132,7 @@ export function MainStack({ stack }: StackContext) {
           handler: "packages/functions/src/authentication/authorizer.main",
           permissions: ["secretsmanager"],
           timeout: "10 seconds",
+          logFormat: "JSON",
         }),
       },
     },
@@ -103,6 +145,7 @@ export function MainStack({ stack }: StackContext) {
           STAGE: stack.stage,
         },
         permissions: ["sns", "sqs", "secretsmanager", "s3"],
+        logFormat: "JSON",
       },
       authorizer: "myAuthorizer",
     },
@@ -262,8 +305,8 @@ export function MainStack({ stack }: StackContext) {
       },
 
       //File Uploads
-      "POST /get-signed-url":
-        "packages/functions/src/fileUploads/getPreSignedUrl.main",
+      "POST /files/get-signed-url":
+        "packages/functions/src/files/getPreSignedUrl.main",
 
       // Admin Dev
       "GET /admin_dev/automate-medical-investigation":
@@ -285,7 +328,6 @@ export function MainStack({ stack }: StackContext) {
     UserProfileBucket: userProfileBucket.bucketName,
     UserReportBucket: userReportBucket.bucketName,
     StackName: stack.stackName,
-    StackId: stack.stackId,
   });
 
   return {
