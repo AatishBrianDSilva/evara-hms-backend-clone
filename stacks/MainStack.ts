@@ -100,6 +100,7 @@ export function MainStack({ stack }: StackContext) {
         role: role,
         environment: {
           BILLING_ESTIMATION_TOPIC_ARN: billingEstimationTopic.topicArn,
+          STAGE: stack.stage,
         },
         permissions: ["sns", "sqs", "secretsmanager", "s3"],
       },
@@ -259,6 +260,10 @@ export function MainStack({ stack }: StackContext) {
         function: "packages/functions/src/authentication/refreshToken.main",
         authorizer: "none",
       },
+
+      //File Uploads
+      "POST /get-signed-url":
+        "packages/functions/src/fileUploads/getPreSignedUrl.main",
 
       // Admin Dev
       "GET /admin_dev/automate-medical-investigation":
