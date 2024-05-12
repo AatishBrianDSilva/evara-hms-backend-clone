@@ -5,6 +5,7 @@ import {
   Topic,
   Function,
   attachPermissionsToRole,
+  Bucket,
 } from "sst/constructs";
 import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Duration } from "aws-cdk-lib/core";
@@ -22,6 +23,16 @@ export function MainStack({ stack }: StackContext) {
   });
 
   attachPermissionsToRole(role, ["ssm"]);
+
+  const userProfileBucket = new Bucket(stack, "UserProfilesBucket", {
+    name: `user-profiles-${stack.stage}`,
+    blockPublicACLs: false,
+  });
+
+  const userReportBucket = new Bucket(stack, "UserReportsBucket", {
+    name: `user-reports-${stack.stage}`,
+    blockPublicACLs: true,
+  });
 
   const billingEstimationDLQ = new Queue(stack, "BillingEstimationDLQ", {
     cdk: {
@@ -90,7 +101,7 @@ export function MainStack({ stack }: StackContext) {
         environment: {
           BILLING_ESTIMATION_TOPIC_ARN: billingEstimationTopic.topicArn,
         },
-        permissions: ["sns", "sqs", "secretsmanager"],
+        permissions: ["sns", "sqs", "secretsmanager", "s3"],
       },
       authorizer: "myAuthorizer",
     },
@@ -266,6 +277,10 @@ export function MainStack({ stack }: StackContext) {
   // Show the URLs in the output
   stack.addOutputs({
     ApiEndpoint: api.url,
+    UserProfileBucket: userProfileBucket.bucketName,
+    UserReportBucket: userReportBucket.bucketName,
+    StackName: stack.stackName,
+    StackId: stack.stackId,
   });
 
   return {
