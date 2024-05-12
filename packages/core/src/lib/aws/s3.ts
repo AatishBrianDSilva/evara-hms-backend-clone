@@ -39,6 +39,57 @@ class S3Service {
   }
 
   /**
+   * Retrieves the tags for an object stored in an S3 bucket.
+   * @param bucket The name of the bucket.
+   * @param objectKey The key of the object within the bucket.
+   * @returns An array of tags associated with the object.
+   * @throws If the tags cannot be retrieved.
+   */
+  static async getTags(bucket: string, objectKey: string): Promise<S3.TagSet> {
+    try {
+      const params: S3.GetObjectTaggingRequest = {
+        Bucket: bucket,
+        Key: objectKey,
+      };
+
+      const data = await s3.getObjectTagging(params).promise();
+      return data.TagSet;
+    } catch (err) {
+      const e = err as AWSError;
+      throw new Error(`Could not retrieve tags from S3 object: ${e.message}`);
+    }
+  }
+
+  /**
+   * Retrieves the tags for an object stored in an S3 bucket.
+   * @param bucket The name of the bucket.
+   * @param objectKey The key of the object within the bucket.
+   * @package tags An array of tags to associate with the object.
+   * @returns An array of tags associated with the object.
+   * @throws If the tags cannot be retrieved.
+   */
+  static async putTag(
+    bucket: string,
+    objectKey: string,
+    tags: S3.TagSet
+  ): Promise<void> {
+    try {
+      const params: S3.PutObjectTaggingRequest = {
+        Bucket: bucket,
+        Key: objectKey,
+        Tagging: {
+          TagSet: tags,
+        },
+      };
+
+      await s3.putObjectTagging(params).promise();
+    } catch (err) {
+      const e = err as AWSError;
+      throw new Error(`Could not update tags from S3 object: ${e.message}`);
+    }
+  }
+
+  /**
    *
    * @param bucket The name of the bucket.
    * @param objectKey The key of the object within the bucket.
