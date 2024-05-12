@@ -150,6 +150,5 @@ export const MastersApiStack = ({ stack }: StackContext) => {
 
   stack.addOutputs({
     StackName: stack.stackName,
-    StackId: stack.stackId,
   });
 };
