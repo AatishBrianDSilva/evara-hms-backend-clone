@@ -27,7 +27,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const newDate = new AppointmentReason({
       ...data,
       clinicId: auth.clinicId,
-      brachId: auth.branchId,
+      branchId: auth.branchId,
     });
 
     const res = await newDate.save();

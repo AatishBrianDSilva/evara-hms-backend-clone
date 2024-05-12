@@ -24,12 +24,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Parse the body from the event
     const data = JSON.parse(event.body);
 
-    const newDate = new PatientSource({
+    console.log(data);
+
+    const newData = {
       ...data,
       clinicId: auth.clinicId,
-      brachId: auth.branchId,
-    });
+      branchId: auth.branchId,
+    };
 
+    console.log(newData);
+
+    const newDate = new PatientSource(newData);
     const res = await newDate.save();
 
     return successResponse("Successfully Added", res);
