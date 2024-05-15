@@ -34,14 +34,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const body = JSON.parse(event.body);
 
-    const patientId = body.donorId;
-    const updateData = body.values;
-
-    updateData;
-
     const updatedDonor = await Donor.findOneAndUpdate(
-      { donorId: patientId },
-      { $set: updateData },
+      { donorId: id },
+      { $set: body },
       { new: true, session, runValidators: true } // Return the updated document and run schema validators
     ).lean();
 
