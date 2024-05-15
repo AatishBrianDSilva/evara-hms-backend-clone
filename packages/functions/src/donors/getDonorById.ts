@@ -26,10 +26,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const donor = await Donor.findOne({ donorId: id });
 
     if (!donor) {
-      throw new ErrorMessage(404, "Patient not found");
+      throw new ErrorMessage(404, "Donor not found");
     }
 
-    return successResponse("Patient fetched successfully", donor);
+    return successResponse("Donor fetched successfully", donor);
   } catch (error) {
     return errorResponse(error);
   }

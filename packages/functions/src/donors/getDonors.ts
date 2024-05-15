@@ -54,7 +54,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const { records, pagination } = formatPaginationResult(result);
 
       // Return success response with pagination info
-      return successResponse("Patients fetched successfully", {
+      return successResponse("Donors fetched successfully", {
         records,
         pagination,
       });
