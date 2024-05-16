@@ -7,14 +7,14 @@ import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import Cases from "@evara-backend/core/models/Cases";
 import Donor from "@evara-backend/core/models/mastersDashboard/local/Donor";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
-  const mongoose = await connectMongoDb();
-  const session = await mongoose.startSession();
   try {
+    const auth = extractAuthorizerDetails(event);
     // Connect to MongoDB
     if (event.pathParameters === null) {
       throw new ErrorMessage(400, "Path parameters are null");
@@ -30,31 +30,27 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Patient Id is not provided");
     }
 
-    session.startTransaction();
+    await connectMongoDb();
 
     const body = JSON.parse(event.body);
+    console.log("body", body);
 
     const updatedDonor = await Donor.findOneAndUpdate(
       { donorId: id },
       { $set: body },
-      { new: true, session, runValidators: true } // Return the updated document and run schema validators
+      { new: true, runValidators: true } // Return the updated document and run schema validators
     ).lean();
 
     if (!updatedDonor) {
-      throw new ErrorMessage(404, "Donor not found");
+      throw new ErrorMessage(404, "Donor could not be updated");
     }
-
-    // Commit the transaction
-    await session.commitTransaction();
 
     // Return success response with updated patient data
     return successResponse("Donor updated successfully", updatedDonor);
   } catch (error) {
     // Rollback the transaction
-    await session.abortTransaction();
     return errorResponse(error);
   } finally {
     // End the session
-    session.endSession();
   }
 };

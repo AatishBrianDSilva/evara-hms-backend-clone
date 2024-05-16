@@ -17,13 +17,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Extract query string parameters
     const params = event.queryStringParameters || {};
+    const isAdmin = JSON.parse(params.isAdmin || "false");
+    const isActive = JSON.parse(params.active || "false");
+
     const { startDate, endDate, page = "1", limit = "10", ...filters } = params;
 
     const paginate = JSON.parse(params.paginate || "false");
 
+    let query: any = {};
+
+    if (!isAdmin) {
+      query.isActive = isActive;
+    }
+
     if (paginate) {
       // Construct the query object
-      let query: any = {};
 
       // Date range filter
       if (startDate || endDate) {
@@ -59,7 +67,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const data = await Donor.find().lean();
+      const data = await Donor.find(query).lean();
 
       return successResponse("Success", { records: data });
     }

@@ -6,6 +6,7 @@ interface CasesData extends Document {
   caseId: string;
   patientId: string;
   partnerId: string;
+  donorId: string;
   status: "active" | "inactive";
 }
 
@@ -14,6 +15,7 @@ export const casesSchema = new mongoose.Schema(
     caseId: { type: String },
     patientId: { type: String, required: true, unique: true },
     partnerId: { type: String },
+    donorId: { type: String },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
   },
   {
