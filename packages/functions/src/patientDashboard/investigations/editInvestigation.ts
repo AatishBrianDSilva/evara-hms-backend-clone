@@ -9,6 +9,7 @@ import PatientInvestigation from "@evara-backend/core/src/models/patientDashboar
 import mongoose from "mongoose";
 import { ETestType } from "@evara-backend/core/src/models/patientDashboard/investigation/MedicalTests";
 import { log } from "console";
+import { S3KeepPermanently, parseS3Url } from "../../files/_KeepPermanently";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -54,6 +55,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     } else if (body.testType === ETestType.SemenAnalysis) {
       updateData.result = body.result;
       updateData.status = "Completed";
+    }
+
+    if (body.result.files && body.result.files.length > 0) {
+      for (let i = 0; i < body.result.files.length; i++) {
+        const s3UrlParts = parseS3Url(body.result.files[i]);
+        if (s3UrlParts) {
+          await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
+        } else {
+          throw new ErrorMessage(400, "Invalid image URL");
+        }
+      }
     }
 
     const investigation = await PatientInvestigation.findByIdAndUpdate(
