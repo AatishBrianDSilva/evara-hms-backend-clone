@@ -161,13 +161,6 @@ export function MainStack({ stack }: StackContext) {
       "DELETE /patients/{id}":
         "packages/functions/src/patients/deletePatient.main",
 
-      // Donors
-      "POST /donors/add": "packages/functions/src/donors/addDonor.main",
-      "GET /donors": "packages/functions/src/donors/getDonors.main",
-      "GET /donors/{id}": "packages/functions/src/donors/getDonorById.main",
-      "PUT /donors/{id}": "packages/functions/src/donors/editDonor.main",
-      "DELETE /donors/{id}": "packages/functions/src/donors/deleteDonor.main",
-
       // Appointments
       "POST /appointments/add":
         "packages/functions/src/appointments/addAppointment.main",

@@ -55,18 +55,19 @@ interface DonorData extends Document {
   image?: mongoose.Schema.Types.Mixed;
   remarks?: string;
   status: "active" | "inactive";
+  caseId?: string;
 }
 
 export const patientSchema = new mongoose.Schema(
   {
     clinicId: { type: String, required: true, index: true },
     branchId: { type: String, required: true, index: true },
+    caseId: { type: String },
     donorId: { type: String, index: true },
     title: { type: String },
     firstName: { type: String, required: true },
     lastName: { type: String },
     gender: { type: String, required: true },
-    assignedTo: { type: String },
     dob: { type: Date },
     education: { type: String },
     maritalStatus: { type: String },
@@ -87,7 +88,6 @@ export const patientSchema = new mongoose.Schema(
     dependentName: { type: String },
     dependentRelation: { type: String },
     dependentMobile: { type: String },
-
     addressLine1: { type: String, required: true },
     addressLine2: { type: String },
     state: { type: String, required: true },
