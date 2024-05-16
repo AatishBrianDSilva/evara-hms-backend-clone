@@ -143,6 +143,7 @@ export function MainStack({ stack }: StackContext) {
         environment: {
           BILLING_ESTIMATION_TOPIC_ARN: billingEstimationTopic.topicArn,
           STAGE: stack.stage,
+          REGION: stack.region,
         },
         permissions: ["sns", "sqs", "secretsmanager", "s3"],
         logFormat: "JSON",
@@ -310,7 +311,7 @@ export function MainStack({ stack }: StackContext) {
 
       //File Uploads
       "POST /files/get-signed-url":
-        "packages/functions/src/files/getPreSignedUrl.main",
+        "packages/functions/src/files/generateSignedUrl.main",
       "DELETE /files/delete": "packages/functions/src/files/deleteFile.main",
 
       // Admin Dev

@@ -122,7 +122,7 @@ class S3Service {
   static async generatePresignedUrl(
     bucket: string,
     objectKey: string,
-    expires: number = 3600,
+    expires: number = 600,
     operation: "putObject" | "getObject" = "getObject"
   ): Promise<string> {
     try {

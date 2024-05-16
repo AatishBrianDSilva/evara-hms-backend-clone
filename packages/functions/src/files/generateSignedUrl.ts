@@ -35,14 +35,27 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       );
     }
 
+    console.log({
+      bucket,
+      userId,
+      documentType,
+      operation,
+      expires,
+    });
+
     const key = generateObjectKey(bucket, userId, documentType);
 
+    const region = process.env.REGION;
     const stage = process.env.STAGE;
     if (!stage) {
       throw new ErrorMessage(500, "Environment variable 'STAGE' is not set.");
     }
 
     const bucketName = `${bucket}-${stage}`;
+
+    console.log(`Bucket: ${bucketName}`);
+    console.log(`Key: ${key}`);
+    console.log(`Expires: ${expires}`);
 
     const url = await S3Service.generatePresignedUrl(
       bucketName,
@@ -51,7 +64,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       operation
     );
 
-    return successResponse("Presigned URL generated successfully", { url });
+    console.log(`Presigned URL generated for ${operation} operation`);
+
+    console.log(`URL: ${url}`);
+
+    return successResponse("Presigned URL generated successfully", {
+      url,
+      bucketName,
+      key,
+      region,
+    });
   } catch (error) {
     return errorResponse(error);
   }
