@@ -144,4 +144,8 @@ export const MastersApiStack = ({ stack }: StackContext) => {
 
     //End Service Masters
   });
+
+  stack.addOutputs({
+    StackName: stack.stackName,
+  });
 };

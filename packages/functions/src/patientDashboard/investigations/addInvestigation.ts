@@ -32,6 +32,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     for (let i = 0; i < data.length; i++) {
       data[i].clinicId = "EV";
       const investigation = new PatientInvestigation(data[i]);
+
       const newinvestigation = await investigation.save();
 
       const masterInvestigation = await MasterInvestigation.findById(

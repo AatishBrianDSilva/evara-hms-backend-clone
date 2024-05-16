@@ -5,6 +5,7 @@ import {
   Topic,
   Function,
   attachPermissionsToRole,
+  Bucket,
 } from "sst/constructs";
 import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Duration } from "aws-cdk-lib/core";
@@ -22,6 +23,57 @@ export function MainStack({ stack }: StackContext) {
   });
 
   attachPermissionsToRole(role, ["ssm"]);
+
+  const s3FileDeletionQueue = new Queue(stack, "S3FileDeletionQueue", {
+    consumer: {
+      function: {
+        handler: "packages/functions/src/files/conditionalDelete.main",
+        timeout: 30,
+        permissions: ["sqs", "s3"],
+      },
+    },
+    cdk: {
+      queue: {
+        queueName: `S3FileDeletionQueue-${stack.stage}`,
+        visibilityTimeout: Duration.seconds(45),
+      },
+    },
+  });
+
+  const s3ScheduleDeletionFunction = new Function(
+    stack,
+    "S3ScheduleDeletionFunction",
+    {
+      handler: "packages/functions/src/files/scheduleDelete.main",
+      timeout: "30 seconds",
+      permissions: ["sqs", "s3"],
+      environment: {
+        S3_SCHEDULE_DELETE_QUEUE_URL: s3FileDeletionQueue.queueUrl,
+      },
+    }
+  );
+
+  const userProfileBucket = new Bucket(stack, "UserProfilesBucket", {
+    name: `user-profiles-${stack.stage}`,
+    blockPublicACLs: false,
+    notifications: {
+      ScheduleDeletion: {
+        function: s3ScheduleDeletionFunction,
+        events: ["object_created"],
+      },
+    },
+  });
+
+  const userReportBucket = new Bucket(stack, "UserReportsBucket", {
+    name: `user-reports-${stack.stage}`,
+    blockPublicACLs: true,
+    notifications: {
+      ScheduleDeletion: {
+        function: s3ScheduleDeletionFunction,
+        events: ["object_created"],
+      },
+    },
+  });
 
   const billingEstimationDLQ = new Queue(stack, "BillingEstimationDLQ", {
     cdk: {
@@ -80,6 +132,7 @@ export function MainStack({ stack }: StackContext) {
           handler: "packages/functions/src/authentication/authorizer.main",
           permissions: ["secretsmanager"],
           timeout: "10 seconds",
+          logFormat: "JSON",
         }),
       },
     },
@@ -89,8 +142,11 @@ export function MainStack({ stack }: StackContext) {
         role: role,
         environment: {
           BILLING_ESTIMATION_TOPIC_ARN: billingEstimationTopic.topicArn,
+          STAGE: stack.stage,
+          REGION: stack.region,
         },
-        permissions: ["sns", "sqs", "secretsmanager"],
+        permissions: ["sns", "sqs", "secretsmanager", "s3"],
+        logFormat: "JSON",
       },
       authorizer: "myAuthorizer",
     },
@@ -253,6 +309,11 @@ export function MainStack({ stack }: StackContext) {
         authorizer: "none",
       },
 
+      //File Uploads
+      "POST /files/get-signed-url":
+        "packages/functions/src/files/generateSignedUrl.main",
+      "DELETE /files/delete": "packages/functions/src/files/deleteFile.main",
+
       // Admin Dev
       "GET /admin_dev/automate-medical-investigation":
         "packages/functions/src/admin_dev/automateMedicalInvestigation.main",
@@ -270,6 +331,9 @@ export function MainStack({ stack }: StackContext) {
   // Show the URLs in the output
   stack.addOutputs({
     ApiEndpoint: api.url,
+    UserProfileBucket: userProfileBucket.bucketName,
+    UserReportBucket: userReportBucket.bucketName,
+    StackName: stack.stackName,
   });
 
   return {

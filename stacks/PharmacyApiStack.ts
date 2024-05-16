@@ -147,4 +147,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
     "DELETE /pharmacy-dashboard/internal-order/{id}":
       "packages/functions/src/pharmacyDashboard/internalOrder/deleteInternalOrder.main",
   });
+
+  stack.addOutputs({
+    StackName: stack.stackName,
+  });
 }
