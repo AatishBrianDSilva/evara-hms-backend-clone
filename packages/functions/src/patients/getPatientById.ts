@@ -30,14 +30,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(404, "Patient not found");
     }
 
-    const cases = await Cases.findOne({
+    const patientCase = await Cases.findOne({
       $or: [{ patientId: id }, { partnerId: id }],
     });
     const partner = await Patient.findOne({ patientId: patient.partnerId });
 
     const result = {
       patient,
-      case: cases,
+      case: patientCase,
       partner,
     };
     return successResponse("Patient fetched successfully", result);

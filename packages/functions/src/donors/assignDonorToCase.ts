@@ -56,6 +56,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Update the case
     ivfCase.donorId = donorId;
+    await ivfCase.save({ session });
 
     // Return success response
     session.commitTransaction();
