@@ -9,6 +9,7 @@ import {
 } from "sst/constructs";
 import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Duration } from "aws-cdk-lib/core";
+import { BlockPublicAccess } from "aws-cdk-lib/aws-s3";
 
 export function MainStack({ stack }: StackContext) {
   // Create a default role for the API
@@ -55,7 +56,17 @@ export function MainStack({ stack }: StackContext) {
 
   const userProfileBucket = new Bucket(stack, "UserProfilesBucket", {
     name: `user-profiles-${stack.stage}`,
-    blockPublicACLs: false,
+    cdk: {
+      bucket: {
+        bucketName: `user-profiles-${stack.stage}`,
+        blockPublicAccess: new BlockPublicAccess({
+          blockPublicPolicy: false,
+          ignorePublicAcls: false,
+          restrictPublicBuckets: false,
+          blockPublicAcls: false,
+        }),
+      },
+    },
     notifications: {
       ScheduleDeletion: {
         function: s3ScheduleDeletionFunction,
@@ -67,6 +78,11 @@ export function MainStack({ stack }: StackContext) {
   const userReportBucket = new Bucket(stack, "UserReportsBucket", {
     name: `user-reports-${stack.stage}`,
     blockPublicACLs: true,
+    cdk: {
+      bucket: {
+        bucketName: `user-profiles-${stack.stage}`,
+      },
+    },
     notifications: {
       ScheduleDeletion: {
         function: s3ScheduleDeletionFunction,
