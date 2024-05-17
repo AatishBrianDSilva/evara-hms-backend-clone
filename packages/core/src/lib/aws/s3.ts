@@ -116,6 +116,7 @@ class S3Service {
    * @param objectKey The key of the object within the bucket.
    * @param expires How long until the pre-signed URL expires, in seconds.
    * @param operation The operation to perform on the object (e.g., getObject, putObject).
+   * @param filePublic Whether the file should be publicly accessible.
    * @returns A pre-signed URL string.
    * @throws If the object cannot be retrieved or if the body is undefined.
    */
@@ -123,14 +124,19 @@ class S3Service {
     bucket: string,
     objectKey: string,
     expires: number = 600,
-    operation: "putObject" | "getObject" = "getObject"
+    operation: "putObject" | "getObject" = "getObject",
+    filePublic = false
   ): Promise<string> {
     try {
-      const params = {
+      const params: any = {
         Bucket: bucket,
         Key: objectKey,
         Expires: expires,
       };
+
+      if (filePublic) {
+        params["ACL"] = "public-read";
+      }
 
       const res = await s3.getSignedUrlPromise(operation, params);
       return res;

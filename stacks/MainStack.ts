@@ -55,10 +55,10 @@ export function MainStack({ stack }: StackContext) {
   );
 
   const userProfileBucket = new Bucket(stack, "UserProfilesBucket", {
-    name: `user-profiles-${stack.stage}`,
+    name: `evara-hms--user-profiles-${stack.stage}`,
     cdk: {
       bucket: {
-        bucketName: `user-profiles-${stack.stage}`,
+        bucketName: `evara-hms-user-profiles-${stack.stage}`,
         blockPublicAccess: new BlockPublicAccess({
           blockPublicPolicy: false,
           ignorePublicAcls: false,
@@ -76,11 +76,11 @@ export function MainStack({ stack }: StackContext) {
   });
 
   const userReportBucket = new Bucket(stack, "UserReportsBucket", {
-    name: `user-reports-${stack.stage}`,
+    name: `evara-hms-user-reports-${stack.stage}`,
     blockPublicACLs: true,
     cdk: {
       bucket: {
-        bucketName: `user-profiles-${stack.stage}`,
+        bucketName: `evara-hms-user-reports-${stack.stage}`,
       },
     },
     notifications: {

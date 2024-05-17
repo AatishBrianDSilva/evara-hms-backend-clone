@@ -53,15 +53,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const bucketName = `${bucket}-${stage}`;
 
+    const filePublic = EBuckets.UserProfiles === bucket;
+
     console.log(`Bucket: ${bucketName}`);
     console.log(`Key: ${key}`);
     console.log(`Expires: ${expires}`);
+    console.log(`Operation: ${operation}`);
+    console.log(`Region: ${region}`);
+    console.log(`File public: ${filePublic}`);
 
     const url = await S3Service.generatePresignedUrl(
       bucketName,
       key,
       expires,
-      operation
+      operation,
+      filePublic
     );
 
     console.log(`Presigned URL generated for ${operation} operation`);
