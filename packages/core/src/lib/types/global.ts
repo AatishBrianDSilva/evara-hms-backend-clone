@@ -1,6 +1,6 @@
 export enum EBuckets {
-  UserProfiles = "evara-hms-user-profiles",
-  UserReports = "evara-hms-user-reports",
+  UserProfiles = "gv-evara-hms-user-profiles",
+  UserReports = "gv-evara-hms-user-reports",
 }
 
 export enum EDocumentTypes {
