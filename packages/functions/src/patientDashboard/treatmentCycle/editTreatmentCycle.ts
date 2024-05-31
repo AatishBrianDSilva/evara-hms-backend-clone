@@ -7,6 +7,7 @@ import { log } from "console";
 import PatientTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/PatientTreatmentCycle";
 import { ETreatmentCycleCategoryKey } from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/DefaultTreatmentCycle";
 import { Document } from "mongoose";
+import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -54,6 +55,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       );
     } else {
       throw new ErrorMessage(400, `Invalid category: ${conditions.category}`);
+    }
+
+    if (body.details.files && body.details.files.length > 0) {
+      for (let i = 0; i < body.details.files.length; i++) {
+        const s3UrlParts = parseS3Url(body.details.files[i]);
+        if (s3UrlParts) {
+          await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
+        } else {
+          throw new ErrorMessage(400, "Invalid image URL");
+        }
+      }
     }
 
     await updateStatus(id);

@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import { log } from "console";
 import { EProcedureType } from "@evara-backend/core/src/models/patientDashboard/procedure/MedicalProcedure";
 import PatientProcedures from "@evara-backend/core/src/models/patientDashboard/procedure/PatientProcedure";
+import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -28,6 +29,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     const body = JSON.parse(event.body);
+
+    // log("body", body);
+    // log("body.files", body.files); // Log body.files
+    // log("body.result.files", body.result?.files); // Log body.result.files
+
     log("body", body);
     const updateData: any = {};
 
@@ -53,11 +59,30 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       updateData.status = "Completed";
     }
 
-    const procedure = await PatientProcedures.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
-    );
+    const existingProcedure = await PatientProcedures.findById(id);
+    if (!existingProcedure) {
+      throw new ErrorMessage(404, "Procedure not found");
+    }
+
+    let allFiles = existingProcedure.result.files || [];
+
+    if (body.result.files && Array.isArray(body.result.files)) {
+      allFiles = [...allFiles, ...body.result.files];
+      for (const fileUrl of body.result.files) {
+        const s3UrlParts = parseS3Url(fileUrl);
+        if (s3UrlParts) {
+          await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
+        } else {
+          throw new ErrorMessage(400, "Invalid image URL");
+        }
+      }
+    } else if (body.result.files) {
+      throw new ErrorMessage(400, "Invalid files array");
+    }
+
+    updateData.result.files = allFiles;
+
+    const procedure = await PatientProcedures.findByIdAndUpdate(id, updateData, { new: true });
 
     return successResponse("Procedure Updated successfully", procedure);
   } catch (error) {
