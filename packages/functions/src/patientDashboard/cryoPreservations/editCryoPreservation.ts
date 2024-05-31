@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import { log } from "console";
 import { ECryoPreservationType } from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/CryoPreservations";
 import PatientCryoPreservation from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/PatientCryoPreservation";
+import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -50,11 +51,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       updateData.status = "Completed";
     }
 
-    const procedure = await PatientCryoPreservation.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
-    );
+    if (body.details.files && body.details.files.length > 0) {
+      for (let i = 0; i < body.details.files.length; i++) {
+        const s3UrlParts = parseS3Url(body.details.files[i]);
+        if (s3UrlParts) {
+          await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
+        } else {
+          throw new ErrorMessage(400, "Invalid image URL");
+        }
+      }
+    }
+
+    const procedure = await PatientCryoPreservation.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
     return successResponse("Cryo Preservation Updated successfully", procedure);
   } catch (error) {

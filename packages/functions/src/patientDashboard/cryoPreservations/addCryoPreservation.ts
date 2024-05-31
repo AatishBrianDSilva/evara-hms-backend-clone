@@ -7,6 +7,7 @@ import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import MasterCryoPreservations from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/MasterCryoPreservations";
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 import { publishServiceToSNS } from "@evara-backend/core/src/lib/utils/publishServiceToSNS";
+import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -27,6 +28,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // data.branchId = "KL";
 
     console.log("Data: ", data);
+
+    if (data.files && Array.isArray(data.files)) {
+      for (const fileUrl of data.files) {
+        const s3UrlParts = parseS3Url(fileUrl);
+        if (s3UrlParts) {
+          await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
+        } else {
+          throw new ErrorMessage(400, "Invalid image URL");
+        }
+      }
+    } else {
+      throw new ErrorMessage(400, "Invalid files array");
+    }
 
     for (let i = 0; i < data.length; i++) {
       data[i].clinicId = "EV";
