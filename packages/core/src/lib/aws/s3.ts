@@ -14,7 +14,7 @@ class S3Service {
    * @returns The content of the object as a string.
    * @throws If the object cannot be retrieved or if the body is undefined.
    */
-  static async getObject(bucket: string, objectKey: string): Promise<S3.Body> {
+  static async getObject(bucket: string, objectKey: string) {
     try {
       // Define the parameters for the getObject request.
       const params: S3.GetObjectRequest = {
@@ -27,9 +27,7 @@ class S3Service {
 
       // Ensure the object body is defined.
       if (data.Body) {
-        return data.Body;
-      } else {
-        throw new Error("S3 object body is undefined");
+        return data.Body.toString("base64");
       }
     } catch (err) {
       const e = err as AWSError;

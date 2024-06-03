@@ -50,6 +50,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         "Content-Disposition": `attachment; filename=${report.source_report_id}-${report.reportName}`,
       },
       body: pdfData,
+      isBase64Encoded: true,
     };
   } catch (error) {
     return errorResponse(error);
