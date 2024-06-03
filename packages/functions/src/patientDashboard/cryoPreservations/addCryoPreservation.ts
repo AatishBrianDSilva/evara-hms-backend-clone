@@ -6,7 +6,7 @@ import PatientCryoPreservation from "@evara-backend/core/src/models/patientDashb
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import MasterCryoPreservations from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/MasterCryoPreservations";
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
-import { publishServiceToSNS } from "@evara-backend/core/src/lib/utils/publishServiceToSNS";
+import { publishBillingServiceToSNS } from "@evara-backend/core/src/lib/utils/publishBillingServiceToSNS";
 import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -55,7 +55,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         const serviceName = masterCryoPreservation.name;
 
         // Publish to SNS
-        await publishServiceToSNS(
+        await publishBillingServiceToSNS(
           newCryoPreservation.patientCode,
           newCryoPreservation.doctor,
           newCryoPreservation.cryo,

@@ -6,7 +6,7 @@ import PatientService from "@evara-backend/core/src/models/patientDashboard/serv
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import MasterService from "@evara-backend/core/src/models/patientDashboard/services/MasterService";
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
-import { publishServiceToSNS } from "@evara-backend/core/src/lib/utils/publishServiceToSNS";
+import { publishBillingServiceToSNS } from "@evara-backend/core/src/lib/utils/publishBillingServiceToSNS";
 import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -47,13 +47,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const service = new PatientService(data[i]);
       const newService = await service.save();
 
-      const masterService = await MasterService.findById(newService.service).lean();
+      const masterService = await MasterService.findById(
+        newService.service
+      ).lean();
 
       if (masterService) {
         const serviceName = masterService.name;
 
         // Publish to SNS
-        await publishServiceToSNS(
+        await publishBillingServiceToSNS(
           newService.patientCode,
           newService.doctor,
           newService.service,

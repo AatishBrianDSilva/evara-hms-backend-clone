@@ -1,0 +1,23 @@
+{
+  "header": {
+    "logo": "https://www.adaptivewfs.com/wp-content/uploads/2020/07/logo-placeholder-image.png",
+    "clinicName": "Evara IVF",
+    "clinicAddress": "123 Fertility Lane, Kanpur, Uttar Pradesh, 208001",
+    "patientName": "John Do",
+    "patientId": "EVKL-1",
+    "doctorName": "Alexa Taylor",
+    "reportName": "Platelets Report"
+  },
+  "sections": [
+    {
+      "title": "Platelets",
+      "content": {
+        "Platelet Count": "25 x10^9/L (Reference Range: 150 to 450 x10^9/L)}"
+      }
+    }
+  ],
+  "styles": {
+    "primaryColor": "#FF5C00",
+    "secondaryColor": "#5981DE"
+  }
+}

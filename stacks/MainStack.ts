@@ -10,6 +10,7 @@ import {
 import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Duration } from "aws-cdk-lib/core";
 import { BlockPublicAccess } from "aws-cdk-lib/aws-s3";
+import { LayerVersion, Code } from "aws-cdk-lib/aws-lambda";
 
 export function MainStack({ stack }: StackContext) {
   // Create a default role for the API
@@ -21,6 +22,12 @@ export function MainStack({ stack }: StackContext) {
           "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
       },
     ],
+  });
+
+  // Create a chromium layer for the pdf generation function
+  const chromiumLayer = new LayerVersion(stack, "ChromiumLayer", {
+    code: Code.fromAsset("layers/chromium"),
+    layerVersionName: `ChromiumLayer-${stack.stage}`,
   });
 
   attachPermissionsToRole(role, ["ssm"]);
@@ -137,6 +144,85 @@ export function MainStack({ stack }: StackContext) {
     },
   });
 
+  // Create a dead letter queue for the report pdf generation queue
+  const reportPdfGenerationDLQ = new Queue(stack, "ReportPdfGenerationDLQ", {
+    cdk: {
+      queue: {
+        queueName: `ReportPdfGenerationDLQ-${stack.stage}`,
+        visibilityTimeout: Duration.seconds(300),
+      },
+    },
+  });
+
+  const reportPdfGenerationQueue = new Queue(
+    stack,
+    "ReportPdfGenerationQueue",
+    {
+      consumer: {
+        function: {
+          handler: "packages/functions/src/reports/pdfGenerator.main",
+          timeout: 15,
+          runtime: "nodejs18.x",
+          layers: [chromiumLayer],
+          role: role,
+          memorySize: "2 GB",
+          nodejs: {
+            esbuild: {
+              external: ["@sparticuz/chromium"],
+            },
+          },
+          permissions: ["sqs", "s3"],
+          environment: {
+            STAGE: stack.stage,
+          },
+        },
+      },
+      cdk: {
+        queue: {
+          queueName: `ReportPdfGenerationQueue-${stack.stage}`,
+          visibilityTimeout: Duration.seconds(300),
+          deadLetterQueue: {
+            maxReceiveCount: 3,
+            queue: reportPdfGenerationDLQ.cdk.queue,
+          },
+        },
+      },
+    }
+  );
+
+  //Create a topic to handle SNS messages for generating reports html
+  const reportHTMLGenerationTopic = new Topic(
+    stack,
+    "ReportHTMLGenerationTopic",
+    {
+      subscribers: {
+        subscriber: {
+          type: "function",
+          function: new Function(stack, "ReportHTMLGenerationFunction", {
+            handler: "packages/functions/src/reports/htmlGenerator.main",
+            timeout: "30 seconds",
+            permissions: ["sqs"],
+            copyFiles: [
+              {
+                from: "packages/core/src/templates",
+              },
+            ],
+            environment: {
+              USER_REPORT_BUCKET: userReportBucket.bucketName,
+              REPORT_PDF_GENERATION_QUEUE_URL:
+                reportPdfGenerationQueue.queueUrl,
+            },
+          }),
+        },
+      },
+      cdk: {
+        topic: {
+          topicName: "ReportHTMLGenerationTopic-" + stack.stage,
+        },
+      },
+    }
+  );
+
   /**
    * Represents the API configuration for the MainStack.
    */
@@ -158,6 +244,7 @@ export function MainStack({ stack }: StackContext) {
         role: role,
         environment: {
           BILLING_ESTIMATION_TOPIC_ARN: billingEstimationTopic.topicArn,
+          REPORT_HTML_GENERATION_TOPIC_ARN: reportHTMLGenerationTopic.topicArn,
           STAGE: stack.stage,
           REGION: stack.region,
         },
@@ -312,6 +399,12 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/patientDashboard/notes/edit.main",
       "DELETE /notes/{id}":
         "packages/functions/src/patientDashboard/notes/delete.main",
+
+      // Patient Reports
+      "GET /reports/patient/{id}":
+        "packages/functions/src/reports/getPatientReports.main",
+      "GET /reports/download/{id}":
+        "packages/functions/src/reports/downloadReport.main",
 
       // Patient Dashboard End
 

@@ -67,7 +67,7 @@ const PatientInvestigationSchema: Schema = new Schema(
 
 PatientInvestigationSchema.plugin(paginate);
 
-interface PatientInvestigationDocument
+export interface PatientInvestigationDocument
   extends Document,
     IPatientInvestigation {}
 

@@ -11,7 +11,7 @@ import {
   IPatientPharmacyModel,
 } from "@evara-backend/core/src/models/patientDashboard/PatientPharmacy";
 import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
-import { publishServiceToSNS } from "@evara-backend/core/src/lib/utils/publishServiceToSNS";
+import { publishBillingServiceToSNS } from "@evara-backend/core/src/lib/utils/publishBillingServiceToSNS";
 import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
 import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
 import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
@@ -120,7 +120,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         const serviceName = pharmacyStock.item?.name;
 
         // Publish to SNS
-        await publishServiceToSNS(
+        await publishBillingServiceToSNS(
           newPharmacy.patient,
           newPharmacy.doctor,
           pharmacyStock._id,

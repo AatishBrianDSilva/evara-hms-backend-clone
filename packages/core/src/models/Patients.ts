@@ -2,7 +2,7 @@ import mongoose, { Document, PaginateModel, Types } from "mongoose";
 import paginate from "mongoose-paginate-v2";
 import { autoIncrementIdWithFieldPrefix } from "./Counters";
 
-interface PatientData extends Document {
+export interface PatientData extends Document {
   clinicId: string;
   branchId: string;
   patientId: string;

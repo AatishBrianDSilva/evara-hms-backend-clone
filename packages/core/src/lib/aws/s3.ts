@@ -14,7 +14,7 @@ class S3Service {
    * @returns The content of the object as a string.
    * @throws If the object cannot be retrieved or if the body is undefined.
    */
-  static async getObject(bucket: string, objectKey: string): Promise<string> {
+  static async getObject(bucket: string, objectKey: string): Promise<S3.Body> {
     try {
       // Define the parameters for the getObject request.
       const params: S3.GetObjectRequest = {
@@ -27,7 +27,7 @@ class S3Service {
 
       // Ensure the object body is defined.
       if (data.Body) {
-        return data.Body.toString("utf-8");
+        return data.Body;
       } else {
         throw new Error("S3 object body is undefined");
       }
@@ -35,6 +35,18 @@ class S3Service {
       const e = err as AWSError;
       // Re-throw the error with additional context.
       throw new Error(`Could not retrieve file from S3: ${e.message}`);
+    }
+  }
+
+  static async upload(
+    params: S3.PutObjectRequest
+  ): Promise<S3.ManagedUpload.SendData> {
+    try {
+      const data = await s3.upload(params).promise();
+      return data;
+    } catch (err) {
+      const e = err as AWSError;
+      throw new Error(`Could not upload file to S3: ${e.message}`);
     }
   }
 

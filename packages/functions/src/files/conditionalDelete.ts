@@ -23,11 +23,16 @@ export const main = async (event: SQSEvent, context: Context) => {
       }
     } catch (err) {
       const error = err as Error;
-      console.error(`Error processing record: ${error.message}`, {
+      console.log(`Error processing record: ${error.message}`, {
         bucket,
         key,
         requestId: context.awsRequestId,
       });
+      // console.error(`Error processing record: ${error.message}`, {
+      //   bucket,
+      //   key,
+      //   requestId: context.awsRequestId,
+      // });
     }
   }
 };

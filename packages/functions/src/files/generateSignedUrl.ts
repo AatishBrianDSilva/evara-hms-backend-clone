@@ -97,7 +97,7 @@ function generateObjectKey(
       if (!documentType) {
         throw new Error("Document type is required for user-reports bucket.");
       }
-      return `reports/${userId}/${documentType}/${new Date().toISOString()}.pdf`; // Using timestamp to ensure unique filenames
+      return `${userId}/${documentType}/uploaded/${new Date().toISOString()}.pdf`; // Using timestamp to ensure unique filenames
     default:
       throw new Error("Invalid bucket name.");
   }

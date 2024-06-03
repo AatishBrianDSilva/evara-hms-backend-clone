@@ -2,7 +2,7 @@ import { Schema } from "mongoose";
 import { EPatientBillingServiceType } from "../../models/patientDashboard/Billings/PatientBilling";
 import SNSService from "../aws/sns";
 
-export const publishServiceToSNS = async (
+export const publishBillingServiceToSNS = async (
   patientCode: string,
   doctorId: Schema.Types.ObjectId | undefined,
   masterServiceId: Schema.Types.ObjectId,
