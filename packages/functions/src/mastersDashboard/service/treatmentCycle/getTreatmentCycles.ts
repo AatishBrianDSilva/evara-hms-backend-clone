@@ -14,7 +14,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Connect to MongoDB
     await connectMongoDb();
 
+    const params = event.queryStringParameters || {};
+    const { searchQuery = "" } = params;
+
     let query: any = {};
+
+    if (searchQuery) {
+      query.$or = [{ name: new RegExp(searchQuery, "i") }];
+    }
 
     // Check if the user is an admin
     const isAdmin = event.queryStringParameters?.isAdmin === "true";

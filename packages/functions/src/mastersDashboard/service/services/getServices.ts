@@ -14,9 +14,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Connect to MongoDB
     await connectMongoDb();
 
-    const query = {
-      active: true,
-    };
+    const query: any = {};
+
+    const params = event.queryStringParameters || {};
+    const { searchQuery = "" } = params;
+
+    query.active = true;
+
+    if (searchQuery) {
+      query.$or = [{ name: new RegExp(searchQuery, "i") }];
+    }
 
     const patientId = event.queryStringParameters?.patientId;
 

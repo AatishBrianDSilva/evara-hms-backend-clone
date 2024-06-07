@@ -25,6 +25,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       paginate,
       sort: sortRaw,
       status,
+      searchQuery = "",
     } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
@@ -71,6 +72,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       options.populate = populate;
 
       log("Query", query);
+
+      if (searchQuery) {
+        query.$or = [{ ioNumber: new RegExp(searchQuery, "i") }];
+      }
 
       // Fetching the appointments with pagination
       const result = await InternalOrder.paginate(query, options);

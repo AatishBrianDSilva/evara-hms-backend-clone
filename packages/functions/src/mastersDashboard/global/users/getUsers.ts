@@ -27,6 +27,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       query.isActive = isActive;
     }
 
+    if (params.searchQuery) {
+      const searchQuery = params.searchQuery;
+      query.$or = [
+        { branchId: new RegExp(searchQuery, "i") },
+        { username: new RegExp(searchQuery, "i") },
+        { email: new RegExp(searchQuery, "i") },
+        { phone: new RegExp(searchQuery, "i") },
+        { role: new RegExp(searchQuery, "i") },
+      ];
+    }
+
     await connectMongoDb();
 
     const users = await User.find(query).select("-password");

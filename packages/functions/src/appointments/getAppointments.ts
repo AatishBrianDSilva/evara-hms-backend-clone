@@ -42,11 +42,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
     }
 
-    // Apply additional filters dynamically
-    Object.keys(filters).forEach((key) => {
-      query[key] = filters[key];
-    });
-
     // Pagination options
     const options: IPaginateOptions = {
       page: parseInt(page, 10),
@@ -80,8 +75,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
     }
 
-    console.log("Options", options);
-    console.log("Query", query);
+    if (searchQuery) {
+      query.$or = [
+        { fullName: new RegExp(searchQuery, "i") },
+        { phone: new RegExp(searchQuery, "i") },
+      ];
+    }
 
     // Fetching the appointments with pagination
     const result = await Appointments.paginate(query, options);

@@ -20,7 +20,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const isAdmin = JSON.parse(params.isAdmin || "false");
     const isActive = JSON.parse(params.active || "false");
 
-    const { startDate, endDate, page = "1", limit = "10", ...filters } = params;
+    const {
+      startDate,
+      endDate,
+      page = "1",
+      limit = "10",
+      searchQuery = "",
+    } = params;
 
     const paginate = JSON.parse(params.paginate || "false");
 
@@ -28,6 +34,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     if (!isAdmin) {
       query.isActive = isActive;
+    }
+
+    if (searchQuery) {
+      query.$or = [
+        { firstName: new RegExp(searchQuery, "i") },
+        { lastName: new RegExp(searchQuery, "i") },
+        { mobile: new RegExp(searchQuery, "i") },
+      ];
     }
 
     if (paginate) {
@@ -43,11 +57,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           query.createdAt.$lte = new Date(endDate);
         }
       }
-
-      // Apply additional filters dynamically
-      Object.keys(filters).forEach((key) => {
-        query[key] = filters[key];
-      });
 
       // Pagination options
       const options: IPaginateOptions = {

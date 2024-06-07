@@ -26,6 +26,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       query.isActive = isActive;
     }
 
+    if (params.searchQuery) {
+      const searchQuery = params.searchQuery;
+      query.$or = [
+        { code: new RegExp(searchQuery, "i") },
+        { branchName: new RegExp(searchQuery, "i") },
+      ];
+    }
+
     await connectMongoDb();
 
     const branch = await Branch.find(query).sort({ createdAt: -1 });

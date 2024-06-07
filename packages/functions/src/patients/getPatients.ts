@@ -17,30 +17,41 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Extract query string parameters
     const params = event.queryStringParameters || {};
-    const { startDate, endDate, page = "1", limit = "10", ...filters } = params;
+    const {
+      startDate,
+      endDate,
+      page = "1",
+      limit = "10",
+      searchQuery = "",
+    } = params;
+
+    // Construct the query object
+    let query: any = {};
+
+    // Date range filter
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) {
+        query.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        query.createdAt.$lte = new Date(endDate);
+      }
+    }
+
+    // Add search conditions
+    if (searchQuery) {
+      query.$or = [
+        { patientId: new RegExp(searchQuery, "i") },
+        { firstName: new RegExp(searchQuery, "i") },
+        { lastName: new RegExp(searchQuery, "i") },
+        { mobile: new RegExp(searchQuery, "i") },
+      ];
+    }
 
     const paginate = JSON.parse(params.paginate || "false");
 
     if (paginate) {
-      // Construct the query object
-      let query: any = {};
-
-      // Date range filter
-      if (startDate || endDate) {
-        query.createdAt = {};
-        if (startDate) {
-          query.createdAt.$gte = new Date(startDate);
-        }
-        if (endDate) {
-          query.createdAt.$lte = new Date(endDate);
-        }
-      }
-
-      // Apply additional filters dynamically
-      Object.keys(filters).forEach((key) => {
-        query[key] = filters[key];
-      });
-
       // Pagination options
       const options: IPaginateOptions = {
         page: parseInt(page, 10),
@@ -48,10 +59,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         lean: true,
       };
 
+      // console.log("Query: ", query);
+      // console.log("Options: ", options);
       // Fetching the patients with pagination
       const result = await Patient.paginate(query, options);
 
       const { records, pagination } = formatPaginationResult(result);
+
+      // console.log("Records: ", records);
+      // console.log("Pagination: ", pagination);
 
       // Return success response with pagination info
       return successResponse("Patients fetched successfully", {
@@ -59,7 +75,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const data = await Patient.find().lean();
+      const data = await Patient.find(query).lean();
 
       return successResponse("Success", { records: data });
     }

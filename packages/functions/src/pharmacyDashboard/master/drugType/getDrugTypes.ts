@@ -15,7 +15,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "10", sort: sortRaw } = params;
+    const {
+      page = "1",
+      limit = "10",
+      sort: sortRaw,
+      searchQuery = "",
+    } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
     const paginate = JSON.parse(params.paginate || "false");
@@ -31,6 +36,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       if (sort) {
         options.sort = sort;
+      }
+
+      if (searchQuery) {
+        query.$or = [{ name: new RegExp(searchQuery, "i") }];
       }
 
       // Fetching the appointments with pagination

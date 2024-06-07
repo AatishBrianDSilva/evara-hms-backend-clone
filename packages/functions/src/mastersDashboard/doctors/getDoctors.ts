@@ -21,7 +21,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const params = event.queryStringParameters || {};
     console.log("Params", params);
-    const { startDate, endDate, page = "1", limit = "10" } = params;
+    const {
+      startDate,
+      endDate,
+      page = "1",
+      limit = "10",
+      searchQuery = "",
+    } = params;
 
     const isGlobal = JSON.parse(params.isGlobal || "false");
     const isAdmin = JSON.parse(params.isAdmin || "false");
@@ -46,6 +52,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       if (endDate) {
         query.createdAt.$lte = new Date(endDate);
       }
+    }
+
+    if (searchQuery) {
+      query.$or = [
+        { firstName: new RegExp(searchQuery, "i") },
+        { lastName: new RegExp(searchQuery, "i") },
+        { mobile: new RegExp(searchQuery, "i") },
+        { speciality: new RegExp(searchQuery, "i") },
+      ];
     }
 
     const paginate = JSON.parse(params.paginate || "false");
