@@ -1,0 +1,67 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body { font-family: Arial, sans-serif; } .thin-divider { border-bottom-width: 1px; } main {
+      padding: 10mm; display: flex; flex-direction: column; flex-grow: 1; } .section {
+      margin-bottom: 20px; } .section-title { font-size: 1.5em; margin-bottom: 10px; color:
+      {{styles.primaryColor}}; } .section-content { font-size: 1em; } .key-value { display: flex;
+      justify-content: space-between; margin-bottom: 10px; } .key { color:
+      {{styles.primaryColor}}; } .value { color:
+      {{styles.secondaryColor}}; } h2 { color:
+      {{styles.primaryColor}}; } table { width: 100%; border-collapse: collapse; } th, td { border:
+      1px solid #ddd; padding: 8px; } th { background-color: #f2f2f2; color:
+      {{styles.primaryColor}}; } td { color: black; } td.value { color:
+      {{styles.primaryColor}}; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h2>{{header.reportName}}</h2>
+      <div class="divider thin-divider"></div>
+      {{#each sections}}
+        <div class="section">
+          {{#if showTitle}}
+            <div class="section-title">{{title}}</div>
+          {{/if}}
+          <div class="section-content">
+            {{#if isBillDetails}}
+              <table>
+                <thead>
+                  <tr>
+                    <th>Service Name</th>
+                    <th>Service Type</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Tax</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each content}}
+                    <tr>
+                      <td>{{this.serviceName}}</td>
+                      <td>{{this.serviceType}}</td>
+                      <td>{{this.quantity}}</td>
+                      <td>{{formatCurrency this.price}}</td>
+                      <td>{{formatCurrency this.tax}}</td>
+                      <td>{{formatCurrency this.total}}</td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            {{else}}
+              {{#each content}}
+                <div class="key-value">
+                  <span class="key">{{@key}}</span>
+                  <span class="value">{{formatCurrency this}}</span>
+                </div>
+              {{/each}}
+            {{/if}}
+          </div>
+        </div>
+      {{/each}}
+    </main>
+  </body>
+</html>

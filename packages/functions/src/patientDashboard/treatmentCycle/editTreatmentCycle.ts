@@ -8,6 +8,15 @@ import PatientTreatmentCycle from "@evara-backend/core/src/models/patientDashboa
 import { ETreatmentCycleCategoryKey } from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/DefaultTreatmentCycle";
 import { Document } from "mongoose";
 import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
+import SNSService from "@evara-backend/core/lib/aws/sns";
+import {
+  EBuckets,
+  EDocumentTypes,
+  EReportTemplateTypes,
+  IReportData,
+} from "@evara-backend/core/lib/types/global";
+import { generateSections } from "@evara-backend/core/lib/utils/sanitizeReportData";
+import _ from "lodash";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -100,10 +109,41 @@ async function updateCategory(
     { new: true }
   );
 
+  const processDataForReport = (data: any, result: any) => {
+    const reportData: IReportData = {
+      bucket: EBuckets.UserReports,
+      documentType: EDocumentTypes.TreatmentCycle,
+      templateType: EReportTemplateTypes.Reports,
+      doctor: result.doctor.firstName + " " + result.doctor.lastName,
+      patient: result.patient,
+      clinic: result.clinicId,
+      sections: [],
+      reportName: "",
+      fileName: _.kebabCase(`${category}`),
+      reportId: data.documentId,
+    };
+
+    // reportData.reportName = `${data.name} Report`;
+    reportData.reportName = `${category} Report`;
+
+    reportData.sections = [...generateSections(data.details)];
+
+    return reportData;
+  };
+
   if (!result) {
     console.error("No document found or updated for category:", category);
   } else {
     console.log(`Update successful for category: ${category}`, result);
+
+    const report = processDataForReport(body, result);
+    console.log("Report Data: ", JSON.stringify(report, null, 2));
+
+    // Send to SNS
+    await SNSService.publishMessage({
+      Message: JSON.stringify(report),
+      TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
+    });
   }
 
   return result;
@@ -140,6 +180,7 @@ const updateStatus = async (id: string) => {
   } // If neither is true, status remains "Pending"
 
   log("status", status);
+  // log("Treatment Cycle", treatmentCycle);
 
   await PatientTreatmentCycle.findByIdAndUpdate(id, {
     $set: { status: status },

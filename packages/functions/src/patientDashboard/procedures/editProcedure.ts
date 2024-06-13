@@ -8,6 +8,15 @@ import { log } from "console";
 import { EProcedureType } from "@evara-backend/core/src/models/patientDashboard/procedure/MedicalProcedure";
 import PatientProcedures from "@evara-backend/core/src/models/patientDashboard/procedure/PatientProcedure";
 import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
+import SNSService from "@evara-backend/core/lib/aws/sns";
+import {
+  EBuckets,
+  EDocumentTypes,
+  EReportTemplateTypes,
+  IReportData,
+} from "@evara-backend/core/lib/types/global";
+import { generateSections } from "@evara-backend/core/lib/utils/sanitizeReportData";
+import _ from "lodash";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -64,28 +73,67 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(404, "Procedure not found");
     }
 
-    let allFiles = existingProcedure.result.files || [];
-
-    if (body.result.files && Array.isArray(body.result.files)) {
-      allFiles = [...allFiles, ...body.result.files];
-      for (const fileUrl of body.result.files) {
-        const s3UrlParts = parseS3Url(fileUrl);
-        if (s3UrlParts) {
-          await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
-        } else {
-          throw new ErrorMessage(400, "Invalid image URL");
+    if (body.result?.files && body.result?.files.length > 0) {
+      for (let i = 0; i < body.result.files.length; i++) {
+        if (body.result.files[i].length > 0) {
+          const s3UrlParts = parseS3Url(body.result.files[i]);
+          if (s3UrlParts) {
+            await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
+          } else {
+            throw new ErrorMessage(400, "Invalid image URL");
+          }
         }
       }
-    } else if (body.result.files) {
-      throw new ErrorMessage(400, "Invalid files array");
     }
 
-    updateData.result.files = allFiles;
-
     const procedure = await PatientProcedures.findByIdAndUpdate(id, updateData, { new: true });
+
+    console.log("Procedure Updated successfully", JSON.stringify(procedure, null, 2));
+
+    // Generate Report if investigation is completed
+    if (procedure && procedure.status === "Completed") {
+      const report = processDataForReport(procedure);
+      console.log("Report Data: ", JSON.stringify(report, null, 2));
+
+      // Send to SNS
+      await SNSService.publishMessage({
+        Message: JSON.stringify(report),
+        TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
+      });
+    }
 
     return successResponse("Procedure Updated successfully", procedure);
   } catch (error) {
     return errorResponse(error);
   }
+};
+
+const processDataForReport = (data: any) => {
+  const reportData: IReportData = {
+    bucket: EBuckets.UserReports,
+    documentType: EDocumentTypes.Procedure,
+    templateType: EReportTemplateTypes.Reports,
+    doctor: data.doctor.firstName + " " + data.doctor.lastName,
+    patient: data.patient,
+    clinic: data.clinicId,
+    sections: [],
+    reportName: "",
+    fileName: _.kebabCase(data.result.procedureName),
+    reportId: data._id,
+  };
+
+  reportData.reportName = `${data.result.procedureName} Report`;
+  reportData.sections = [...generateSections(data.result.details)];
+
+  if (data.result.notes) {
+    reportData.sections.push({
+      showTitle: true,
+      title: "Notes",
+      content: {
+        Notes: data.result.notes,
+      },
+    });
+  }
+
+  return reportData;
 };

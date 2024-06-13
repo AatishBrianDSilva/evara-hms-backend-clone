@@ -146,6 +146,13 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/internalOrder/getInternalOrderById.main",
     "DELETE /pharmacy-dashboard/internal-order/{id}":
       "packages/functions/src/pharmacyDashboard/internalOrder/deleteInternalOrder.main",
+
+    // Pharmacy Invoice
+    "POST /pharmacy-dashboard/Pharmacy-Invoice/add":
+      "packages/functions/src/pharmacyDashboard/addInvoice.main",
+    "GET /pharmacy-dashboard/Pharmacy-Invoice":
+      "packages/functions/src/pharmacyDashboard/getInvoice.main",
+    "GET /invoice/download/{id}": "packages/functions/src/pharmacyDashboard/downloadInvoice.main",
   });
 
   stack.addOutputs({

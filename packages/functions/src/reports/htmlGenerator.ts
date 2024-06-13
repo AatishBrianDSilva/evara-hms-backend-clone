@@ -3,11 +3,9 @@ import * as path from "path";
 import * as Handlebars from "handlebars";
 import { SNSHandler } from "aws-lambda";
 import * as SQS from "aws-sdk/clients/sqs";
+import { formatToIndianCurrencyFormat } from "@evara-backend/core/src/lib/utils/formatToIndianCurrencyFormat"; // Adjust the path accordingly
 
-import {
-  IPDFGeneratorMessage,
-  IReportData,
-} from "@evara-backend/core/src/lib/types/global";
+import { IPDFGeneratorMessage, IReportData } from "@evara-backend/core/src/lib/types/global";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import Patient from "@evara-backend/core/src/models/Patients";
 import Clinic from "@evara-backend/core/src/models/mastersDashboard/Clinic";
@@ -15,6 +13,8 @@ import SQSService from "@evara-backend/core/src/lib/aws/sqs";
 import axios from "axios";
 
 const TEMPLATE_PATH = path.resolve(__dirname, "../../../core/src/templates");
+// const files = fs.readdirSync(templatesPath);
+// console.log('Templates directory contents:', files);
 
 async function getBase64ImageFromUrl(imageUrl: string): Promise<string> {
   const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
@@ -25,15 +25,31 @@ async function getBase64ImageFromUrl(imageUrl: string): Promise<string> {
 
 const getHtmlTemplate = async (templateType: string): Promise<string> => {
   const templatePath = path.join(TEMPLATE_PATH, `${templateType}.handlebars`);
+  console.log("Path", templatePath);
   return fs.promises.readFile(templatePath, "utf8");
 };
 
+// const generateHtml = (template: string, data: any): string => {
+//   const compiledTemplate = Handlebars.compile(template);
+//   return compiledTemplate(data);
+// };
+
 const generateHtml = (template: string, data: any): string => {
+  Handlebars.registerHelper("formatCurrency", (value) => {
+    return formatToIndianCurrencyFormat(value);
+  });
+
   const compiledTemplate = Handlebars.compile(template);
   return compiledTemplate(data);
 };
 
 const generateHeaderHtml = (header: any, styles: any): string => {
+  // Check for undefined or empty strings for each value
+  const doctorInfo =
+    header.doctorName && header.doctorName !== "undefined undefined"
+      ? `<p style="margin: 0;font-size: 14px;">Doctor: ${header.doctorName}</p>`
+      : "";
+
   return `
     <header style="color: ${styles.primaryColor}; padding: 5mm; display: inline-block; width: 100%; margin: 1cm 1cm; border-bottom: 1mm solid ${styles.secondaryColor}">
       <div style="float: left; width: 25%;">
@@ -46,8 +62,8 @@ const generateHeaderHtml = (header: any, styles: any): string => {
       <div style="float: right; width: 25%; text-align: right;">
         <p style="margin: 0;font-size: 14px;">ID: ${header.patientId}</p>
         <p style="margin: 0;font-size: 14px;">Patient: ${header.patientName}</p>
-        <p style="margin: 0;font-size: 14px;">Doctor: ${header.doctorName}</p>
-      </div>
+        ${doctorInfo} 
+             </div>
     </header>
   `;
 };
@@ -89,14 +105,15 @@ export const main: SNSHandler = async (event, _context) => {
         "https://www.adaptivewfs.com/wp-content/uploads/2020/07/logo-placeholder-image.png";
 
       const logo = await getBase64ImageFromUrl(logoUrl);
-      console.log("Logo: ", logo);
+
+      // console.log("Logo: ", logo);
 
       const header = {
         logo: logo,
         clinicName: clinic?.name,
         clinicAddress: `${clinic?.headOfficeAddress?.street}, ${clinic?.headOfficeAddress?.city}, ${clinic?.headOfficeAddress?.state}, ${clinic?.headOfficeAddress?.pincode}`,
         patientName: patient?.firstName + " " + patient?.lastName,
-        patientId: patient?.patientId,
+        patientId: patient?.patientId || patient?._id,
         doctorName: data.doctor,
         reportName: data.reportName,
       };
@@ -117,10 +134,7 @@ export const main: SNSHandler = async (event, _context) => {
       const htmlContent = generateHtml(template, templateData);
       console.log("HTML Content: ", htmlContent);
 
-      const headerHtml = generateHeaderHtml(
-        templateData.header,
-        templateData.styles
-      );
+      const headerHtml = generateHeaderHtml(templateData.header, templateData.styles);
       console.log("Header HTML: ", headerHtml);
       const footerHtml = generateFooterHtml(templateData.styles);
       console.log("Footer HTML: ", footerHtml);
@@ -130,9 +144,7 @@ export const main: SNSHandler = async (event, _context) => {
 
       const queueUrl = process.env.REPORT_PDF_GENERATION_QUEUE_URL;
       if (!queueUrl) {
-        throw new Error(
-          "Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set."
-        );
+        throw new Error("Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set.");
       }
 
       const pdfGeneratorMessage: IPDFGeneratorMessage = {

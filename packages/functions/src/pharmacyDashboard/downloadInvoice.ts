@@ -1,12 +1,10 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import PatientReports from "@evara-backend/core/src/models/patientDashboard/PatientReports";
+import { PharmacyInvoice } from "@evara-backend/core/models/pharmacyDashboard/PharmacyInvoice";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import S3Service from "@evara-backend/core/src/lib/aws/s3";
-import PatientInvoices from "@evara-backend/core/models/patientDashboard/PatientInvoices";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -28,35 +26,28 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Id is not provided");
     }
 
-    console.log("Event", event);
-    console.log("Context", _context);
-
     await connectMongoDb();
 
-    // Fetch report based on category
-    let report = await PatientReports.findOne({ source_report_id: id });
-    if (!report) {
-      report = await PatientInvoices.findOne({ source_report_id: id });
+    // Find the pharmacy invoice by id
+    const invoice = await PharmacyInvoice.findById(id);
+    if (!invoice) {
+      throw new ErrorMessage(404, "Invoice does not exist");
     }
 
-    if (!report) {
-      throw new ErrorMessage(404, "Report does not exist");
-    }
+    const { bucket, key } = invoice;
 
-    console.log("Report", report);
-
-    const { bucket, key } = report;
-
+    // Retrieve the PDF data from S3
     const pdfData = await S3Service.getObject(bucket, key);
     if (!pdfData) {
-      throw new ErrorMessage(404, "Report not found");
+      throw new ErrorMessage(404, "Invoice not found");
     }
 
+    // Return the PDF data as a downloadable attachment
     return {
       statusCode: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename=${report.source_report_id}-${report.reportName}`,
+        "Content-Disposition": `attachment; filename=${invoice.createdAt}`,
       },
       body: pdfData,
       isBase64Encoded: true,

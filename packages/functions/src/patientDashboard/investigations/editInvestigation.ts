@@ -84,11 +84,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
     }
 
-    const investigation = await PatientInvestigation.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
-    ).populate([
+    const investigation = await PatientInvestigation.findByIdAndUpdate(id, updateData, {
+      new: true,
+    }).populate([
       {
         path: "investigation",
         model: MasterInvestigation.modelName,
@@ -100,10 +98,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     ]);
 
-    console.log(
-      "Investigation Updated successfully",
-      JSON.stringify(investigation, null, 2)
-    );
+    console.log("Investigation Updated successfully", JSON.stringify(investigation, null, 2));
 
     // Generate Report if investigation is completed
     if (investigation && investigation.status === "Completed") {

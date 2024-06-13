@@ -1,10 +1,7 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
 import S3Service from "@evara-backend/core/src/lib/aws/s3";
-import {
-  EDocumentTypes,
-  EBuckets,
-} from "@evara-backend/core/src/lib/types/global";
+import { EDocumentTypes, EBuckets } from "@evara-backend/core/src/lib/types/global";
 
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
@@ -16,9 +13,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "No data provided");
     }
 
-    const { bucket, userId, documentType, operation, expires } = JSON.parse(
-      event.body
-    );
+    const { bucket, userId, documentType, operation, expires } = JSON.parse(event.body);
 
     if (!bucket || !userId || !operation) {
       throw new ErrorMessage(
@@ -29,10 +24,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const validOperations = ["putObject", "getObject"];
     if (!validOperations.includes(operation)) {
-      throw new ErrorMessage(
-        400,
-        "Invalid operation. Use 'putObject' or 'getObject'."
-      );
+      throw new ErrorMessage(400, "Invalid operation. Use 'putObject' or 'getObject'.");
     }
 
     console.log({
@@ -85,17 +77,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-function generateObjectKey(
-  bucket: string,
-  userId: string,
-  documentType?: EDocumentTypes
-): string {
+function generateObjectKey(bucket: string, userId: string, documentType?: EDocumentTypes): string {
   switch (bucket) {
     case EBuckets.UserProfiles:
       return `profile-images/${userId}/profile.jpg`; // Assuming one profile image per user
     case EBuckets.UserReports:
       if (!documentType) {
         throw new Error("Document type is required for user-reports bucket.");
+      }
+      return `${userId}/${documentType}/uploaded/${new Date().toISOString()}.pdf`; // Using timestamp to ensure unique filenames
+    case EBuckets.PharmacyInvoices:
+      if (!documentType) {
+        throw new Error("Document type is required for user-invoices bucket.");
       }
       return `${userId}/${documentType}/uploaded/${new Date().toISOString()}.pdf`; // Using timestamp to ensure unique filenames
     default:

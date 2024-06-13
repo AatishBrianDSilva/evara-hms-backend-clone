@@ -8,7 +8,6 @@ import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboar
 import { log } from "console";
 import { publishBillingServiceToSNS } from "@evara-backend/core/src/lib/utils/publishBillingServiceToSNS";
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
-import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -30,18 +29,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     console.log("Data: ", data);
 
-    if (data.files && Array.isArray(data.files)) {
-      for (const fileUrl of data.files) {
-        const s3UrlParts = parseS3Url(fileUrl);
-        if (s3UrlParts) {
-          await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
-        } else {
-          throw new ErrorMessage(400, "Invalid image URL");
-        }
-      }
-    } else {
-      throw new ErrorMessage(400, "Invalid files array");
-    }
     for (let i = 0; i < data.length; i++) {
       const masterTreatmentCycle = await MasterTreatmentCycle.findById(data[i].cycle)
         .populate("treatmentCycle")

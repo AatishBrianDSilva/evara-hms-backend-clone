@@ -37,13 +37,28 @@ export const sanitizeReportInput = (input: InputObject): InputObject => {
   return sanitizedObject;
 };
 
-export const transformBloodTestsToKeyValuePairs = (
-  details: any[]
-): Record<string, string> => {
+// export const transformBloodTestsToKeyValuePairs = (
+//   details: any[]
+// ): Record<string, string> => {
+//   return details.reduce((acc, detail) => {
+//     acc[detail.component] = `${detail.value} ${detail.unit} ${
+//       detail.refernceRange && `(Reference Range: ${detail.refernceRange})}`
+//     }`;
+//     return acc;
+//   }, {});
+// };
+
+export const transformBloodTestsToKeyValuePairs = (details: any[]): Record<string, string> => {
+  if (!Array.isArray(details)) {
+    return {}; // Return an empty object if details is not an array
+  }
+
   return details.reduce((acc, detail) => {
-    acc[detail.component] = `${detail.value} ${detail.unit} ${
-      detail.refernceRange && `(Reference Range: ${detail.refernceRange})}`
-    }`;
+    if (detail.component && detail.value !== undefined && detail.unit) {
+      acc[detail.component] = `${detail.value} ${detail.unit} ${
+        detail.referenceRange ? `(Reference Range: ${detail.referenceRange})` : ""
+      }`;
+    }
     return acc;
   }, {});
 };
