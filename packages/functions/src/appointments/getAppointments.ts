@@ -22,11 +22,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const {
       startDate,
       endDate,
+      patientId,
       page = "1",
       limit = "10",
       searchQuery = "",
+      sort: sortRaw,
       ...filters
     } = params;
+
+    const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
     // Construct the query object
     let query: any = {};
@@ -80,6 +84,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         { fullName: new RegExp(searchQuery, "i") },
         { phone: new RegExp(searchQuery, "i") },
       ];
+    }
+
+    if (sort) {
+      options.sort = sort;
+    }
+
+    if (patientId) {
+      query.patientId = new RegExp(patientId, "i"); // Case-insensitive match
     }
 
     // Fetching the appointments with pagination

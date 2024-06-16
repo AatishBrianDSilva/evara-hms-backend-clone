@@ -17,7 +17,7 @@ export enum EGender {
   Both = "both",
 }
 
-enum EBloodTestComponentType {
+export enum EBloodTestComponentType {
   Text = "text",
   Select = "select",
 }
@@ -68,10 +68,7 @@ const MedicalTestSchema: Schema = new Schema(
 // Assume autoIncrementId is a function/middleware you've defined to auto-increment the testId
 MedicalTestSchema.pre("save", autoIncrementId("MedicalTests", "testId", "T-"));
 
-const MedicalTest = mongoose.model<IMedicalTest>(
-  "MedicalTests",
-  MedicalTestSchema
-);
+const MedicalTest = mongoose.model<IMedicalTest>("MedicalTests", MedicalTestSchema);
 
 export default MedicalTest;
 

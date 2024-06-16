@@ -29,14 +29,14 @@ const getHtmlTemplate = async (templateType: string): Promise<string> => {
   return fs.promises.readFile(templatePath, "utf8");
 };
 
-// const generateHtml = (template: string, data: any): string => {
-//   const compiledTemplate = Handlebars.compile(template);
-//   return compiledTemplate(data);
-// };
-
 const generateHtml = (template: string, data: any): string => {
   Handlebars.registerHelper("formatCurrency", (value) => {
     return formatToIndianCurrencyFormat(value);
+  });
+
+  Handlebars.registerHelper("properCase", (str) => {
+    if (typeof str !== "string") return str;
+    return str.replace(/\b\w/g, (char) => char.toUpperCase());
   });
 
   const compiledTemplate = Handlebars.compile(template);

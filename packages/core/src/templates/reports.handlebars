@@ -1,64 +1,38 @@
-<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
-      .thin-divider {
-        border-bottom-width: 1px;
-      }
-      main {
-        padding: 10mm;
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-      }
-      .section {
-        margin-bottom: 20px;
-      }
-      .section-title {
-        font-size: 1.5em;
-        margin-bottom: 10px;
-        color: {{styles.primaryColor}};
-      }
-      .section-content {
-        font-size: 1em;
-      }
-      .key-value {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-      }
-      .key {
-        color: {{styles.primaryColor}};
-      }
-      .value {
-        color: {{styles.secondaryColor}};
-      }
-      h2 {
-        color: {{styles.primaryColor}};
-      }
+      .thin-divider { border-bottom-width: 1px; } main { padding: 10mm; display: flex;
+      flex-direction: column; flex-grow: 1; } .section { margin-bottom: 20px; } .section-title {
+      font-size: 1.5em; margin-bottom: 10px; color:
+      {{styles.primaryColor}}; } .section-content { font-size: 1em; } .key-value { display: flex;
+      justify-content: space-between; margin-bottom: 10px; } .key { color:
+      {{styles.primaryColor}}; } .value { color:
+      {{styles.secondaryColor}}; } h2 { color:
+      {{styles.primaryColor}}; }
     </style>
   </head>
   <body>
     <main>
       <h2>{{header.reportName}}</h2>
       <div class="divider thin-divider"></div>
-        {{#each sections}}
-          <div class="section">
-            {{#if showTitle}}
-            <div class="section-title">{{title}}</div>
-            {{/if}}
-            <div class="section-content">
-              {{#each content}}
+      {{#each sections}}
+        <div class="section">
+          {{#if showTitle}}
+            <div class="section-title">{{properCase title}}</div>
+
+          {{/if}}
+          <div class="section-content">
+            {{#each content}}
               <div class="key-value">
                 <span class="key">{{@key}}</span>
                 <span class="value">{{this}}</span>
               </div>
-              {{/each}}
-            </div>
+            {{/each}}
           </div>
-        {{/each}}
+        </div>
+      {{/each}}
     </main>
   </body>
 </html>

@@ -79,7 +79,8 @@ export function MainStack({ stack }: StackContext) {
 
   const userReportBucket = new Bucket(stack, "UserReportsBucket", {
     name: `gv-evara-hms-user-reports-${stack.stage}`,
-    blockPublicACLs: true,
+    blockPublicACLs: false,
+
     cdk: {
       bucket: {
         bucketName: `gv-evara-hms-user-reports-${stack.stage}`,
