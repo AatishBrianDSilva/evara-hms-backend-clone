@@ -8,12 +8,18 @@ import { PurchaseOrder } from "@evara-backend/core/models/pharmacyDashboard/Purc
 import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
 import mongoose from "mongoose";
 import { log } from "console";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
 
     if (event.body == null) {
@@ -21,9 +27,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     const data = JSON.parse(event.body);
-    data.branchId = "KL";
+    data.branchId = auth.branchId;
+    data.clinicId = auth.clinicId;
 
-    const branch = await Branch.findOne({ code: data.branchId }).lean();
+    const branch = await Branch.findOne({
+      code: data.branchId,
+      clinicId: data.clinicId,
+    }).lean();
     log("Branch", branch);
     // if (!branch) {
     //   throw new ErrorMessage(404, "Branch not found");

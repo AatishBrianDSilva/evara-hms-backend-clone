@@ -14,11 +14,17 @@ import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugT
 import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 import { PatientPharmacy } from "@evara-backend/core/src/models/patientDashboard/PatientPharmacy";
 import { TaxRate } from "@evara-backend/core/src/models/pharmacyDashboard/TaxRate";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
 
     if (event.pathParameters === null) {

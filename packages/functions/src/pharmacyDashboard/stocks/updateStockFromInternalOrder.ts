@@ -55,6 +55,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const mainLocation = await DrugLocation.findOne({
       branchId: purchaseOrder.branchId,
+      clinicId: purchaseOrder.clinicId,
       main: true,
     }).session(session);
     if (!mainLocation) {
@@ -67,6 +68,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const existingStock = await PharmacyStock.findOne({
         item: item.item,
         branchId: purchaseOrder.branchId,
+        clinicId: purchaseOrder.clinicId,
       }).session(session);
 
       if (existingStock) {
@@ -114,6 +116,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         // Create new stock
         const newStock = new PharmacyStock({
           branchId: purchaseOrder.branchId,
+          clinicId: purchaseOrder.clinicId,
           item: item.item,
           batches: [
             {

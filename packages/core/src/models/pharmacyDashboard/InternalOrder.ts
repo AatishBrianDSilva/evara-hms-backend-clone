@@ -21,6 +21,7 @@ const internalOrderBatchDetailSchema = new mongoose.Schema({
 
 export interface IInternalOrder extends Document {
   branchId: string;
+  clinicId: string;
   ioNumber: string;
   date: Date;
   items: {
@@ -61,6 +62,7 @@ const itemSchema = new Schema({
 
 const internalOrderSchema = new Schema(
   {
+    clinicId: { type: String, required: true, index: true },
     branchId: { type: String, required: true, index: true },
     ioNumber: { type: String, unique: true, index: true },
     date: { type: Date, required: true },

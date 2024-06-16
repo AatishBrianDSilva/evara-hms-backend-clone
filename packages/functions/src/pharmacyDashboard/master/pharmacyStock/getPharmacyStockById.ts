@@ -8,12 +8,17 @@ import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugI
 import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
 import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
     await connectMongoDb();
 
     if (event.pathParameters === null) {

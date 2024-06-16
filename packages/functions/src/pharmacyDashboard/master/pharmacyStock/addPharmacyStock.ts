@@ -8,12 +8,18 @@ import {
   PharmacyStock,
   IPharmacyStock,
 } from "@evara-backend/core/models/pharmacyDashboard/PharmacyStock";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
 
     if (event.body == null) {
@@ -23,7 +29,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const data: IPharmacyStock[] = JSON.parse(event.body);
 
     for (const item of data) {
-      item.branchId = "KL";
+      item.branchId = auth.branchId!;
+      item.clinicId = auth.clinicId!;
       await PharmacyStock.create(item);
     }
 

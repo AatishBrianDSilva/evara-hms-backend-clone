@@ -60,6 +60,7 @@ const batchDetailsSchema = new Schema<IBatchDetails>(
 );
 
 export interface IPharmacyStock extends Document {
+  clinicId: string;
   branchId: string;
   item: Schema.Types.ObjectId;
   sellPrice: number;
@@ -70,6 +71,10 @@ export interface IPharmacyStock extends Document {
 
 const pharmacyStockSchema = new Schema<IPharmacyStock>(
   {
+    clinicId: {
+      type: String,
+      required: true,
+    },
     branchId: {
       type: String,
       required: true,

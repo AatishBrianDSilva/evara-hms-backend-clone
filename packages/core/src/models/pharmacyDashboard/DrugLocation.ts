@@ -4,6 +4,7 @@ import paginate from "mongoose-paginate-v2";
 
 export interface IDrugLocation extends Document {
   branchId: string;
+  clinicId: string;
   location: string;
   main: boolean;
   notes: string;
@@ -12,6 +13,11 @@ export interface IDrugLocation extends Document {
 const drugLocationSchema = new Schema<IDrugLocation>(
   {
     branchId: {
+      type: String,
+      index: true,
+      required: true,
+    },
+    clinicId: {
       type: String,
       index: true,
       required: true,

@@ -16,12 +16,19 @@ import {
 } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
 import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
 import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
@@ -65,7 +72,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     ];
 
     const query: any = {};
-    query.branchId = "KL";
+    query.branchId = auth.branchId;
+    query.clinicId = auth.clinicId;
 
     if (status) {
       query.status = status;

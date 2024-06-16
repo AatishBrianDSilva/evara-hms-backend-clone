@@ -10,12 +10,19 @@ import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugI
 import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
 import { log } from "console";
 import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
@@ -48,6 +55,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     ];
 
+    const query: any = {};
+    query.branchId = auth.branchId;
+    query.clinicId = auth.clinicId;
+
     const paginate = JSON.parse(params.paginate || "false");
 
     if (paginate) {
@@ -56,9 +67,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         limit: parseInt(limit, 10),
         lean: true,
       };
-
-      const query: any = {};
-      query.branchId = "KL";
 
       if (status) {
         query.status = status;
@@ -85,7 +93,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const data = await PurchaseOrder.find()
+      const data = await PurchaseOrder.find(query)
         .populate(populate)
         .sort(sort)
         .lean();

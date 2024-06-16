@@ -52,6 +52,7 @@ export interface IPurchaseOrderResponse {
 
 export interface IPurchaseOrder extends Document {
   branchId: string;
+  clinicId: string;
   poNumber: string;
   date: Date;
   vendor: Schema.Types.ObjectId;
@@ -88,6 +89,7 @@ const responseSchema = new Schema({
 
 const purchaseOrderSchema = new Schema(
   {
+    clinicId: { type: String, required: true, index: true },
     branchId: { type: String, required: true, index: true },
     poNumber: { type: String, unique: true, index: true },
     date: { type: Date, required: true },

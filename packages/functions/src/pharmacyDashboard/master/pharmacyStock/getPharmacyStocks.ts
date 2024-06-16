@@ -7,14 +7,24 @@ import { PharmacyStock } from "@evara-backend/core/models/pharmacyDashboard/Phar
 import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
 import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
 import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
-    const stocks = await PharmacyStock.find({ branchId: "KL" })
+    const stocks = await PharmacyStock.find({
+      branchId: auth.branchId,
+      clinicId: auth.clinicId,
+    })
       .populate([
         {
           path: "item",

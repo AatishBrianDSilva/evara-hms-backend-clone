@@ -10,6 +10,7 @@ import { PharmacyStock } from "@evara-backend/core/models/pharmacyDashboard/Phar
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -19,6 +20,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   session.startTransaction();
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     if (event.pathParameters === null) {
       throw new ErrorMessage(400, "Path parameters are null");
     }

@@ -8,6 +8,7 @@ import { PharmacyStock } from "@evara-backend/core/models/pharmacyDashboard/Phar
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -17,6 +18,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   session.startTransaction();
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     if (!event.body) {
       throw new ErrorMessage(400, "Data is required");
     }
@@ -24,7 +30,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const { items, date } = JSON.parse(event.body);
     console.log("Items:", items);
 
-    const branchId = "KL";
+    const branchId = auth.branchId;
+    const clinicId = auth.clinicId;
 
     if (!items || !items.length) {
       throw new ErrorMessage(400, "Items are required in the order");
@@ -38,6 +45,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const stock = await PharmacyStock.findOne(
         {
           branchId,
+          clinicId,
           _id: stockItem,
           "batches.locations.location": transferFrom.location,
         },
@@ -109,6 +117,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Create and save the internal order
     const internalOrder = new InternalOrder({
       items,
+      clinicId,
       branchId,
       createdBy,
       date: date,
