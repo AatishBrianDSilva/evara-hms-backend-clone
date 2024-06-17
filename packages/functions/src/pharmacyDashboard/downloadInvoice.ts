@@ -22,6 +22,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Safely access the id property
     const id = event.pathParameters["id"];
+    console.log("id at api", id);
     if (!id) {
       throw new ErrorMessage(400, "Id is not provided");
     }
@@ -36,6 +37,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const { bucket, key } = invoice;
 
+    console.log("Bucket", bucket);
+    console.log("key", key);
+
     // Retrieve the PDF data from S3
     const pdfData = await S3Service.getObject(bucket, key);
     if (!pdfData) {
@@ -47,7 +51,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       statusCode: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename=${invoice.createdAt}`,
+        "Content-Disposition": `attachment; filename=${invoice}`,
       },
       body: pdfData,
       isBase64Encoded: true,

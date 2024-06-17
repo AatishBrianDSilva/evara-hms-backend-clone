@@ -47,7 +47,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const bucketName = `${bucket}-${stage}`;
 
-    const filePublic = isImage === true;
+    const filePublic = isImage === true || bucket === EBuckets.PharmacyInvoices;
+
+    // console.log("****");
 
     console.log(`Bucket: ${bucketName}`);
     console.log(`Key: ${key}`);
@@ -103,7 +105,9 @@ function generateObjectKey(
       if (!documentType) {
         throw new Error("Document type is required for user-invoices bucket.");
       }
-      return `${userId}/${documentType}/uploaded/${fileName}`; // Using timestamp to ensure unique filenames
+      return `${userId}/${documentType}/uploaded/${fileName}`;
+    // return `${userId}/${documentType}/${reportId}/uploaded/${fileName}`;
+
     default:
       throw new Error("Invalid bucket name.");
   }

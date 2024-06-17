@@ -24,33 +24,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     log("Updating stock from purchase order");
     if (!event.pathParameters || !event.pathParameters.purchaseOrderId) {
-      throw new ErrorMessage(
-        400,
-        "Purchase order ID is required in the URL path"
-      );
+      throw new ErrorMessage(400, "Purchase order ID is required in the URL path");
     }
 
     const purchaseOrderId = event.pathParameters.purchaseOrderId;
-    console.log(
-      "🚀 ~ constmain:APIGatewayProxyHandler= ~ purchaseOrderId:",
-      purchaseOrderId
-    );
+    // console.log(
+    //   "🚀 ~ constmain:APIGatewayProxyHandler= ~ purchaseOrderId:",
+    //   purchaseOrderId
+    // );
 
-    const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId).session(
-      session
-    );
-    console.log(
-      "🚀 ~ constmain:APIGatewayProxyHandler= ~ purchaseOrder:",
-      purchaseOrder
-    );
-    if (
-      !purchaseOrder ||
-      purchaseOrder.status !== EPurchaseOrderStatus.Ordered
-    ) {
-      throw new ErrorMessage(
-        404,
-        "Purchase order not found or is not ordered yet."
-      );
+    const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId).session(session);
+    // console.log(
+    //   "🚀 ~ constmain:APIGatewayProxyHandler= ~ purchaseOrder:",
+    //   purchaseOrder
+    // );
+    if (!purchaseOrder || purchaseOrder.status !== EPurchaseOrderStatus.Ordered) {
+      throw new ErrorMessage(404, "Purchase order not found or is not ordered yet.");
     }
 
     const mainLocation = await DrugLocation.findOne({
@@ -63,7 +52,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     for (const item of purchaseOrder.response.items) {
-      console.log("🚀 ~ constmain:APIGatewayProxyHandler= ~ item:", item);
+      // console.log("🚀 ~ constmain:APIGatewayProxyHandler= ~ item:", item);
 
       const existingStock = await PharmacyStock.findOne({
         item: item.item,
@@ -72,34 +61,33 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }).session(session);
 
       if (existingStock) {
-        console.log("Existing stock found");
+        // console.log("Existing stock found");
         // Update existing stock
         const existingBatchIndex = existingStock.batches.findIndex(
           (batch) => batch.batchNo === item.batchNo
         );
         if (existingBatchIndex > -1) {
-          console.log("Updating existing batch");
+          // console.log("Updating existing batch");
           // Batch exists, update quantity
           const batch = existingStock.batches[existingBatchIndex];
           const locationIndex = batch.locations.findIndex((loc) =>
             (loc.location as unknown as ObjectId).equals(mainLocation._id)
           );
 
-          console.log("🚀 ~ locationIndex:", locationIndex);
+          // console.log("🚀 ~ locationIndex:", locationIndex);
 
           if (locationIndex > -1) {
             console.log("Updaintg existing location quantity");
-            batch.locations[locationIndex].quantity +=
-              item.quantity * item.packSize; // Update existing location quantity
+            batch.locations[locationIndex].quantity += item.quantity * item.packSize; // Update existing location quantity
           } else {
-            console.log("Adding new location");
+            // console.log("Adding new location");
             batch.locations.push({
               location: mainLocation._id,
               quantity: item.quantity * item.packSize,
             });
           }
         } else {
-          console.log("Adding new batch");
+          // console.log("Adding new batch");
           // Add new batch
           existingStock.batches.push({
             batchNo: item.batchNo,
@@ -117,7 +105,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         existingStock.sellPrice = item.mrp;
         await existingStock.save({ session });
       } else {
-        console.log("Creating new stock");
+        // console.log("Creating new stock");
         // Create new stock
         const newStock = new PharmacyStock({
           branchId: purchaseOrder.branchId,

@@ -4,7 +4,7 @@ import paginate from "mongoose-paginate-v2";
 
 export interface IPharmacyInvoice extends Document {
   purchaseOrderId: Schema.Types.ObjectId;
-  invoice: string[];
+  invoice: string;
   bucket: string;
   key: string;
 }
@@ -12,8 +12,7 @@ export interface IPharmacyInvoice extends Document {
 const pharmacyInvoiceSchema = new Schema(
   {
     purchaseOrderId: { type: String, required: true },
-    // purchaseOrderId: { type: Schema.Types.ObjectId, ref: "PurchaseOrder", required: true },
-    invoice: [{ type: String, required: true }],
+    invoice: { type: String, required: true },
     bucket: { type: String, required: true },
     key: { type: String, required: true },
   },

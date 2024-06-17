@@ -47,6 +47,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const { bucket, key } = report;
 
+    console.log("Fetching PDF from S3 with bucket:", bucket, "and key:", key);
+
     const pdfData = await S3Service.getObject(bucket, key);
     if (!pdfData) {
       throw new ErrorMessage(404, "Report not found");

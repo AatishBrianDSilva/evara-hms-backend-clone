@@ -152,7 +152,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/addInvoice.main",
     "GET /pharmacy-dashboard/Pharmacy-Invoice":
       "packages/functions/src/pharmacyDashboard/getInvoice.main",
-    "GET /invoice/download/{id}": "packages/functions/src/pharmacyDashboard/downloadInvoice.main",
+    "GET /pharmacy/invoice/download/{id}":
+      "packages/functions/src/pharmacyDashboard/downloadInvoice.main",
   });
 
   stack.addOutputs({

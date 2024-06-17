@@ -26,13 +26,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const {
-      page = "1",
-      limit = "10",
-      sort: sortRaw,
-      status,
-      searchQuery = "",
-    } = params;
+    const { page = "1", limit = "10", sort: sortRaw, status, searchQuery = "" } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
@@ -78,7 +72,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       options.populate = populate;
 
-      log("Query", query);
+      // log("Query", query);
 
       if (searchQuery) {
         query.$or = [{ poNumber: new RegExp(searchQuery, "i") }];
@@ -93,10 +87,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const data = await PurchaseOrder.find(query)
-        .populate(populate)
-        .sort(sort)
-        .lean();
+      const data = await PurchaseOrder.find().populate(populate).sort(sort).lean();
 
       return successResponse("Success", {
         records: data,

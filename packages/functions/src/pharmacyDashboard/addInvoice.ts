@@ -19,6 +19,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Data is required");
     }
 
+    // console.log("***Event***", event);
+    // console.log("Body", event.body);
+
     const data = JSON.parse(event.body);
     data.branchId = "KL";
 
@@ -29,11 +32,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // }
 
     data.branch = new mongoose.Types.ObjectId(branch?._id);
-    data.createdBy = "User 1";
+    // data.createdBy = "User 1";
     data.response = null;
 
     const pharmacyInvoice = new PharmacyInvoice(data);
-    console.info("Pharmacy Invoice", pharmacyInvoice);
+    // console.info("Pharmacy Invoice", pharmacyInvoice);
     await pharmacyInvoice.save();
 
     return successResponse("Pharmacy Invoice added successfully");
