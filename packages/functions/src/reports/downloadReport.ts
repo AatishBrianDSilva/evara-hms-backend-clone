@@ -28,9 +28,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Id is not provided");
     }
 
-    console.log("Event", event);
-    console.log("Context", _context);
-
     await connectMongoDb();
 
     // Fetch report based on category
@@ -42,8 +39,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (!report) {
       throw new ErrorMessage(404, "Report does not exist");
     }
-
-    console.log("Report", report);
 
     const { bucket, key } = report;
 

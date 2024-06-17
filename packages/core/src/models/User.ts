@@ -1,6 +1,16 @@
 import mongoose, { CallbackError } from "mongoose";
 import bcrypt from "bcryptjs";
 
+export enum EUserRole {
+  Admin = "admin",
+  Reception = "reception",
+  Nurse = "nurse",
+  Doctor = "doctor",
+  Pharmacist = "pharmacist",
+  PharmacyManager = "pharmacy-manager",
+  Billing = "billing",
+}
+
 export interface IUser {
   _id: string;
   clinicId: string;
@@ -9,7 +19,7 @@ export interface IUser {
   email: string;
   password: string;
   phone: string;
-  role: string;
+  role: EUserRole;
   isActive: boolean;
   deletedAt?: Date;
 }
@@ -25,7 +35,7 @@ const userSchema = new mongoose.Schema<IUser>(
     role: {
       type: String,
       required: true,
-      enum: ["doctor", "nurse", "admin", "receptionist"],
+      enum: Object.values(EUserRole),
     },
     isActive: { type: Boolean, required: true, default: true },
     deletedAt: { type: Date },

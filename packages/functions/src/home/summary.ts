@@ -30,7 +30,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const { startDate, endDate } = params;
     console.log("New Params", params);
 
-    const dateRange: DateRange = {
+    const dateRange: IDateRange = {
       startDate: new Date(),
       endDate: new Date(),
     };

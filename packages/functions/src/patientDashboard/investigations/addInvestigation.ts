@@ -8,11 +8,13 @@ import MasterInvestigation from "@evara-backend/core/src/models/patientDashboard
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 import { ETestType } from "@evara-backend/core/src/models/patientDashboard/investigation/MedicalTests";
 import { publishBillingServiceToSNS } from "@evara-backend/core/src/lib/utils/publishBillingServiceToSNS";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
     // Connect to MongoDB
     await connectMongoDb();
 
@@ -24,8 +26,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const data = JSON.parse(event.body);
 
     // TODO: Remove clinicId and branchId after adding authentication
-    data.clinicId = "EV";
-    // data.branchId = "KL";
+    data.clinicId = auth?.clinicId;
+    data.branchId = auth?.branchId;
 
     console.log("Data: ", data);
 

@@ -80,7 +80,6 @@ export function MainStack({ stack }: StackContext) {
   const userReportBucket = new Bucket(stack, "UserReportsBucket", {
     name: `gv-evara-hms-user-reports-${stack.stage}`,
     blockPublicACLs: false,
-
     cdk: {
       bucket: {
         bucketName: `gv-evara-hms-user-reports-${stack.stage}`,
@@ -153,6 +152,52 @@ export function MainStack({ stack }: StackContext) {
     cdk: {
       topic: {
         topicName: "BillingEstimationTopic-" + stack.stage,
+      },
+    },
+  });
+
+  const serviceGenerationDLQ = new Queue(stack, "ServiceGenerationDLQ", {
+    cdk: {
+      queue: {
+        queueName: `ServiceGenerationDLQ-${stack.stage}`,
+        visibilityTimeout: Duration.seconds(300),
+      },
+    },
+  });
+
+  //Create a queue to handle SNS messages from topic "PatientBillingEstimation"
+  const serviceGenerationQueue = new Queue(stack, "ServiceGenerationQueue", {
+    consumer: {
+      function: {
+        handler:
+          "packages/functions/src/patientDashboard/billings/estimation/automateServiceGeneration.main",
+        timeout: 300,
+        role: role,
+      },
+    },
+    cdk: {
+      queue: {
+        queueName: `ServiceGenerationQueue-${stack.stage}`,
+        visibilityTimeout: Duration.seconds(300),
+        deadLetterQueue: {
+          maxReceiveCount: 3,
+          queue: serviceGenerationDLQ.cdk.queue,
+        },
+      },
+    },
+  });
+
+  // Create a topic to add billing estimations for patients
+  const serviceGenerationTopic = new Topic(stack, "ServiceGenerationTopic", {
+    subscribers: {
+      subscriber: {
+        type: "queue",
+        queue: serviceGenerationQueue,
+      },
+    },
+    cdk: {
+      topic: {
+        topicName: "ServiceGenerationTopic-" + stack.stage,
       },
     },
   });
@@ -249,6 +294,7 @@ export function MainStack({ stack }: StackContext) {
         role: role,
         environment: {
           BILLING_ESTIMATION_TOPIC_ARN: billingEstimationTopic.topicArn,
+          SERVICE_GENERATION_TOPIC_ARN: serviceGenerationTopic.topicArn,
           REPORT_HTML_GENERATION_TOPIC_ARN: reportHTMLGenerationTopic.topicArn,
           STAGE: stack.stage,
           REGION: stack.region,

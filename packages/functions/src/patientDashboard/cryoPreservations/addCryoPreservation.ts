@@ -8,11 +8,13 @@ import MasterCryoPreservations from "@evara-backend/core/src/models/patientDashb
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 import { publishBillingServiceToSNS } from "@evara-backend/core/src/lib/utils/publishBillingServiceToSNS";
 import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
     // Connect to MongoDB
     await connectMongoDb();
 
@@ -23,27 +25,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Parse the body from the event
     const data = JSON.parse(event.body);
 
-    // TODO: Remove clinicId and branchId after adding authentication
-    data.clinicId = "EV";
-    // data.branchId = "KL";
-
-    console.log("Data: ", data);
-
-    if (data.files && Array.isArray(data.files)) {
-      for (const fileUrl of data.files) {
-        const s3UrlParts = parseS3Url(fileUrl);
-        if (s3UrlParts) {
-          await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
-        } else {
-          throw new ErrorMessage(400, "Invalid image URL");
-        }
-      }
-    } else {
-      throw new ErrorMessage(400, "Invalid files array");
-    }
-
     for (let i = 0; i < data.length; i++) {
-      data[i].clinicId = "EV";
+      data[i].clinicId = auth?.clinicId;
+      data[i].branchId = auth?.branchId;
       const cryoPreservation = new PatientCryoPreservation(data[i]);
       const newCryoPreservation = await cryoPreservation.save();
 

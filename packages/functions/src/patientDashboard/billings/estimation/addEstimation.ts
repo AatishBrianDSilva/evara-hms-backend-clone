@@ -11,18 +11,16 @@ import MasterService from "@evara-backend/core/src/models/patientDashboard/servi
 import { PatientBillingEstimation } from "@evara-backend/core/models/patientDashboard/Billings/PatientBillingEstimation";
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle";
-import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
-import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
-import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
-import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
-import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
-import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) throw new ErrorMessage(401, "Unauthorized");
+
     await connectMongoDb();
     // Connect to MongoDB
 
@@ -34,8 +32,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const data = JSON.parse(event.body);
 
     // Add clinic and branch IDs (these should ideally come from the message or an authenticated context)
-    data.clinicId = "EV";
-    data.branchId = "KL";
+    data.clinicId = auth.clinicId;
+    data.branchId = auth.branchId;
 
     for (let item of data.items) {
       item.quantity = item.quantity || 1;
@@ -54,11 +52,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       const total = Math.round(estimatedPrice + estimatedTax);
 
+      console.log("Adding estimation for service: ", service.name);
+      console.log("Item", item);
+
       const newEstimation = new PatientBillingEstimation({
         clinicId: data.clinicId,
         branchId: data.branchId,
         patientCode: data.patientCode,
-        doctorId: item.doctorId,
+        doctorId: item.doctor == "null" ? null : item.doctor,
         masterServiceId: item.masterServiceId,
         serviceName: service.name,
         serviceType: data.serviceType,

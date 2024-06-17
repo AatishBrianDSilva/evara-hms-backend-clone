@@ -12,10 +12,16 @@ import {
   EPatientBillingStatus,
   PatientBilling,
 } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
+import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import SNSService from "@evara-backend/core/src/lib/aws/sns";
+import Patient from "@evara-backend/core/src/models/Patients";
+import Cases from "@evara-backend/core/src/models/Cases";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+
+  const auth = extractAuthorizerDetails(event);
 
   const conn = await connectMongoDb();
   const session = await conn.startSession();
@@ -30,16 +36,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const { estimations } = JSON.parse(event.body);
 
-    const clinicId = "EV";
-    const branchId = "KL";
+    const clinicId = auth?.clinicId;
+    const branchId = auth?.branchId;
 
-    const createdBy = "user 1";
+    const createdBy = auth?.username;
 
     const items = [];
     let amount = 0;
     let discount = 0;
     let tax = 0;
     let patientCode = "";
+
+    const automateServiceGeneration = [];
 
     for (const estimationId of estimations) {
       const estimation = await PatientBillingEstimation.findById(
@@ -50,7 +58,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         throw new ErrorMessage(404, "Estimation not found");
       }
 
-      console.log("Estimation", estimation);
+      // console.log("Estimation", estimation);
 
       // Accumulate totals
 
@@ -73,7 +81,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         total: estimation.estimatedTotal,
       });
 
-      console.log("Items", items);
+      if (!estimation.serviceId) {
+        // Auto-generate service
+        automateServiceGeneration.push({
+          masterServiceId: estimation.masterServiceId,
+          serviceType: estimation.serviceType,
+          doctorId: estimation.doctorId,
+          quantity: estimation.quantity,
+        });
+      }
     }
 
     // Create a new billing document
@@ -104,6 +120,30 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         )
       )
     );
+
+    console.log("Automate service generation", automateServiceGeneration);
+
+    const patient = await Patient.findOne({ patientId: patientCode }).lean();
+    const cases = await Cases.findOne({
+      patientId: patient?.patientId,
+    });
+
+    for (const data of automateServiceGeneration) {
+      await SNSService.publishMessage({
+        TopicArn: process.env.SERVICE_GENERATION_TOPIC_ARN as string,
+        Message: JSON.stringify({
+          clinicId: auth?.clinicId,
+          branchId: auth?.branchId,
+          patientId: patient?._id,
+          patientCode: patient?.patientId,
+          caseId: cases?.caseId,
+          masterServiceId: data.masterServiceId,
+          serviceType: data.serviceType,
+          doctorId: data.doctorId,
+          quantity: data.quantity,
+        }),
+      });
+    }
 
     await session.commitTransaction();
     return successResponse("Billing generated successfully");
