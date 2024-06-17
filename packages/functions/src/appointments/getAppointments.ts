@@ -91,7 +91,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     if (patientId) {
-      query.patientId = new RegExp(patientId, "i"); // Case-insensitive match
+      query.patientId = patientId; // Case-insensitive match
     }
 
     // Fetching the appointments with pagination

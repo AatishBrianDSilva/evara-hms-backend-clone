@@ -5,7 +5,10 @@ import { SNSHandler } from "aws-lambda";
 import * as SQS from "aws-sdk/clients/sqs";
 import { formatToIndianCurrencyFormat } from "@evara-backend/core/src/lib/utils/formatToIndianCurrencyFormat"; // Adjust the path accordingly
 
-import { IPDFGeneratorMessage, IReportData } from "@evara-backend/core/src/lib/types/global";
+import {
+  IPDFGeneratorMessage,
+  IReportData,
+} from "@evara-backend/core/src/lib/types/global";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import Patient from "@evara-backend/core/src/models/Patients";
 import Clinic from "@evara-backend/core/src/models/mastersDashboard/Clinic";
@@ -53,7 +56,7 @@ const generateHeaderHtml = (header: any, styles: any): string => {
   return `
     <header style="color: ${styles.primaryColor}; padding: 5mm; display: inline-block; width: 100%; margin: 1cm 1cm; border-bottom: 1mm solid ${styles.secondaryColor}">
       <div style="float: left; width: 25%;">
-        <img src="${header.logo}" alt="Logo" style="width: 80px; height: 80px; border: 1px solid ${styles.primaryColor}; border-radius: 50%;" />
+        <img src="${header.logo}" alt="Logo" style="width: 120px; height: 80px; border: 1px solid ${styles.primaryColor};" />
       </div>
       <div style="float: left; width: 50%; text-align: center; word-wrap: break-word;">
         <h1 style="margin: 0;font-size: 36px;">${header.clinicName}</h1>
@@ -102,7 +105,7 @@ export const main: SNSHandler = async (event, _context) => {
       }
 
       const logoUrl =
-        "https://www.adaptivewfs.com/wp-content/uploads/2020/07/logo-placeholder-image.png";
+        "https://gv-evara-hms-user-profiles-dev.s3.ap-south-1.amazonaws.com/evara-logo.png";
 
       const logo = await getBase64ImageFromUrl(logoUrl);
 
@@ -124,7 +127,7 @@ export const main: SNSHandler = async (event, _context) => {
         sections: data.sections,
         styles: {
           primaryColor: "#FF5C00",
-          secondaryColor: "#5981DE",
+          secondaryColor: "#10535E",
         },
       };
 
@@ -134,7 +137,10 @@ export const main: SNSHandler = async (event, _context) => {
       const htmlContent = generateHtml(template, templateData);
       console.log("HTML Content: ", htmlContent);
 
-      const headerHtml = generateHeaderHtml(templateData.header, templateData.styles);
+      const headerHtml = generateHeaderHtml(
+        templateData.header,
+        templateData.styles
+      );
       console.log("Header HTML: ", headerHtml);
       const footerHtml = generateFooterHtml(templateData.styles);
       console.log("Footer HTML: ", footerHtml);
@@ -144,7 +150,9 @@ export const main: SNSHandler = async (event, _context) => {
 
       const queueUrl = process.env.REPORT_PDF_GENERATION_QUEUE_URL;
       if (!queueUrl) {
-        throw new Error("Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set.");
+        throw new Error(
+          "Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set."
+        );
       }
 
       const pdfGeneratorMessage: IPDFGeneratorMessage = {
