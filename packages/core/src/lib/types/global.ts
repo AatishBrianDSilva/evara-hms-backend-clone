@@ -4,6 +4,7 @@ export enum EBuckets {
   UserProfiles = "gv-evara-hms-user-profiles",
   UserReports = "gv-evara-hms-user-reports",
   PharmacyInvoices = "gv-evara-hms-pharmacy-invoices",
+  UserIdentifications = "gv-evara-hms-user-identifications",
 }
 
 export enum EDocumentTypes {

@@ -35,12 +35,27 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Create a new patient document
     const newPatient = new Patient(data);
 
-    if (data.image) {
+    console.log("Data", data);
+
+    if (data.image && data.image.length > 0) {
       const s3UrlParts = parseS3Url(data.image);
       if (s3UrlParts) {
         await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
       } else {
         throw new ErrorMessage(400, "Invalid image URL");
+      }
+    }
+
+    if (data.identifications && data.identifications > 0) {
+      for (let i = 0; i < data.identifications.length; i++) {
+        if (data.identifications[i].length > 0) {
+          const s3UrlParts = parseS3Url(data.identifications[i]);
+          if (s3UrlParts) {
+            await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
+          } else {
+            throw new ErrorMessage(400, "Invalid image URL");
+          }
+        }
       }
     }
 

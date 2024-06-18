@@ -77,6 +77,27 @@ export function MainStack({ stack }: StackContext) {
     },
   });
 
+  const userIdentificationsBucket = new Bucket(stack, "UseIdentificationsBucket", {
+    name: `gv-evara-hms-user-identifications-${stack.stage}`,
+    cdk: {
+      bucket: {
+        bucketName: `gv-evara-hms-user-identifications-${stack.stage}`,
+        blockPublicAccess: new BlockPublicAccess({
+          blockPublicPolicy: false,
+          ignorePublicAcls: false,
+          restrictPublicBuckets: false,
+          blockPublicAcls: false,
+        }),
+      },
+    },
+    notifications: {
+      ScheduleDeletion: {
+        function: s3ScheduleDeletionFunction,
+        events: ["object_created"],
+      },
+    },
+  });
+
   const userReportBucket = new Bucket(stack, "UserReportsBucket", {
     name: `gv-evara-hms-user-reports-${stack.stage}`,
     blockPublicACLs: false,
@@ -477,6 +498,7 @@ export function MainStack({ stack }: StackContext) {
     UserProfileBucket: userProfileBucket.bucketName,
     UserReportBucket: userReportBucket.bucketName,
     PharmacyInvoicesBucket: pharmacyInvoicesBucket.bucketName,
+    userIdentificationsBucket: userIdentificationsBucket.bucketName,
     StackName: stack.stackName,
   });
 

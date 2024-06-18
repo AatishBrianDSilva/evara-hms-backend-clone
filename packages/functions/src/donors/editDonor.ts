@@ -8,6 +8,7 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import Cases from "@evara-backend/core/models/Cases";
 import Donor from "@evara-backend/core/models/mastersDashboard/local/Donor";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -34,6 +35,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const body = JSON.parse(event.body);
     console.log("body", body);
+
+    if (body.values?.image && body.values?.image.length > 0) {
+      const s3UrlParts = parseS3Url(body.values?.image);
+      if (s3UrlParts) {
+        await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
+      } else {
+        throw new ErrorMessage(400, "Invalid image URL");
+      }
+    }
 
     const updatedDonor = await Donor.findOneAndUpdate(
       { donorId: id },

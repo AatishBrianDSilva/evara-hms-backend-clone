@@ -41,12 +41,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     data.partnerId = id;
 
     console.log(data.partnerId);
-    // TODO: Upload profile image to S3 and get the URL
+
+    console.log("Data", data);
 
     // Create a new patient document
     const newPartner = new Patients(data);
 
-    if (data.image) {
+    if (data.image && data.image.length > 0) {
       const s3UrlParts = parseS3Url(data.image);
       if (s3UrlParts) {
         await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);

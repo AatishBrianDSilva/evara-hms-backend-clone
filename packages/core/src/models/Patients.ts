@@ -56,6 +56,7 @@ export interface PatientData extends Document {
   image?: mongoose.Schema.Types.Mixed;
   remarks?: string;
   status: "active" | "inactive";
+  identifications?: mongoose.Schema.Types.Mixed;
 }
 
 export const patientSchema = new mongoose.Schema(
@@ -118,6 +119,7 @@ export const patientSchema = new mongoose.Schema(
     insurancePolicyHolderName: { type: String },
     insuranceAmountEligible: { type: String },
     image: { type: String },
+    identifications: { type: [String], default: [] },
     remarks: { type: String },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
   },
@@ -126,19 +128,11 @@ export const patientSchema = new mongoose.Schema(
   }
 );
 
-patientSchema.index(
-  { clinicId: 1, branchId: 1, patientId: 1 },
-  { unique: true }
-);
+patientSchema.index({ clinicId: 1, branchId: 1, patientId: 1 }, { unique: true });
 
 patientSchema.pre(
   "save",
-  autoIncrementIdWithFieldPrefix(
-    "patients",
-    "patientId",
-    "clinicId",
-    "branchId"
-  )
+  autoIncrementIdWithFieldPrefix("patients", "patientId", "clinicId", "branchId")
 );
 
 patientSchema.plugin(paginate);

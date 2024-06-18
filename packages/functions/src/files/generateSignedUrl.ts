@@ -92,6 +92,8 @@ function generateObjectKey(
   switch (bucket) {
     case EBuckets.UserProfiles:
       return `profile-images/${userId}/profile.jpg`; // Assuming one profile image per user
+    case EBuckets.UserIdentifications:
+      return `${userId}/${fileName}`; // Assuming one profile image per user
     case EBuckets.UserReports:
       if (!documentType || !reportId) {
         throw new Error("Document type and reportId is required for user-reports bucket.");

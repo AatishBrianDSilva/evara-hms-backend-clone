@@ -6,6 +6,7 @@ import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import Cases from "@evara-backend/core/models/Cases";
+import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -42,6 +43,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       patientId,
       updateData,
     });
+
+    if (body.values?.image && body.values?.image.length > 0) {
+      const s3UrlParts = parseS3Url(body.values?.image);
+      if (s3UrlParts) {
+        await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
+      } else {
+        throw new ErrorMessage(400, "Invalid image URL");
+      }
+    }
 
     const updatedPatient = await Patients.findOneAndUpdate(
       { patientId: patientId },
