@@ -150,8 +150,7 @@ export function PharmacyApiStack({ stack }: StackContext) {
     // Pharmacy Invoice
     "POST /pharmacy-dashboard/invoice/add":
       "packages/functions/src/pharmacyDashboard/addInvoice.main",
-    "GET /pharmacy-dashboard/invoice":
-      "packages/functions/src/pharmacyDashboard/getInvoice.main",
+    "GET /pharmacy-dashboard/invoice": "packages/functions/src/pharmacyDashboard/getInvoice.main",
     "GET /pharmacy-dashboard/invoice/download/{id}":
       "packages/functions/src/pharmacyDashboard/downloadInvoice.main",
   });
@@ -159,5 +158,4 @@ export function PharmacyApiStack({ stack }: StackContext) {
   stack.addOutputs({
     StackName: stack.stackName,
   });
-  8747;
 }

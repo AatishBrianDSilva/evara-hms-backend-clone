@@ -25,16 +25,16 @@ interface S3UrlParts {
 }
 
 export const parseS3Url = (url: string): S3UrlParts | null => {
-  const regex =
-    /^https:\/\/(.+?)\.s3\.(.+?)\.amazonaws\.com\/(.+?)\/(.+?)\/(.+)$/;
+  // Generalized regex for S3 URLs
+  const regex = /^https:\/\/(.+?)\.s3\.(.+?)\.amazonaws\.com\/(.+)$/;
   const match = url.match(regex);
 
-  if (!match) {
-    return null;
+  if (match) {
+    const bucketName = match[1];
+    const key = match[3];
+
+    return { bucketName, key };
   }
 
-  const bucketName = match[1];
-  const key = `${match[3]}/${match[4]}/${match[5]}`;
-
-  return { bucketName, key };
+  return null;
 };

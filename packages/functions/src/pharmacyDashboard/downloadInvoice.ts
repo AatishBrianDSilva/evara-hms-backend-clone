@@ -30,7 +30,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     // Find the pharmacy invoice by id
+    // const invoice = await PharmacyInvoice.findOne({ _id: id });
     const invoice = await PharmacyInvoice.findById(id);
+
     if (!invoice) {
       throw new ErrorMessage(404, "Invoice does not exist");
     }
@@ -45,6 +47,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (!pdfData) {
       throw new ErrorMessage(404, "Invoice not found");
     }
+
+    // console.log("Pdf fetched from invoice table", pdfData);
 
     // Return the PDF data as a downloadable attachment
     return {

@@ -39,6 +39,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     if (data.image && data.image.length > 0) {
       const s3UrlParts = parseS3Url(data.image);
+      // console.log("S3URLParts", s3UrlParts);
       if (s3UrlParts) {
         await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
       } else {
@@ -46,13 +47,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
     }
 
-    if (data.identifications && data.identifications > 0) {
+    if (data.identifications && data.identifications.length > 0) {
       for (let i = 0; i < data.identifications.length; i++) {
         if (data.identifications[i].length > 0) {
           const s3UrlParts = parseS3Url(data.identifications[i]);
+          console.log(`Processing identification ${i + 1}: `, data.identifications[i]);
+          console.log("S3URLParts", s3UrlParts);
+
           if (s3UrlParts) {
             await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
+            console.log(`Successfully made permanent: ${data.identifications[i]}`);
           } else {
+            console.error(`Invalid S3 URL for identification ${i + 1}: `, data.identifications[i]);
+
             throw new ErrorMessage(400, "Invalid image URL");
           }
         }
