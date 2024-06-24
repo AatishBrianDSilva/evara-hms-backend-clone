@@ -1,5 +1,6 @@
 import mongoose, { Document, PaginateModel, Schema } from "mongoose";
 import pagination from "mongoose-paginate-v2";
+import Patient from "../Patients";
 
 interface IPatientPharmacy extends Document {
   patient: string;
@@ -15,6 +16,11 @@ interface IPatientPharmacy extends Document {
   date: Date;
   allocatedBy: string;
   totalQuantity: number;
+  // patientData?: {
+  //   firstName: string;
+  //   lastName: string;
+  // };
+  patientData?: Schema.Types.ObjectId;
 }
 
 const detailsSchema = new Schema({
@@ -40,6 +46,7 @@ const itemSchema = new Schema({
 const patientPharmacySchema = new Schema(
   {
     patient: { type: String, required: true, index: true },
+
     item: itemSchema,
     doctor: { type: Schema.Types.ObjectId, ref: "Doctor", required: true },
     date: { type: Date, required: true },
@@ -55,6 +62,14 @@ const patientPharmacySchema = new Schema(
 patientPharmacySchema.virtual("totalQuantity").get(function () {
   // This function calculates the sum of all quantities in each location detail
   return this.item?.details.reduce((acc, curr) => acc + curr.quantity, 0);
+});
+
+// Virtual field to populate patient data
+patientPharmacySchema.virtual("patientData", {
+  ref: "Patient",
+  localField: "patient",
+  foreignField: "patientId",
+  justOne: true,
 });
 
 patientPharmacySchema.plugin(pagination);

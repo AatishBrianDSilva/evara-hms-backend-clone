@@ -1,5 +1,4 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
@@ -8,12 +7,10 @@ import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
 import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
 import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
-import { log } from "console";
 import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 
-// Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
@@ -26,7 +23,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "10", sort: sortRaw, status, searchQuery = "" } = params;
+    const {
+      page = "1",
+      limit = "10",
+      sort: sortRaw,
+      status,
+      searchQuery = "",
+      vendorName = "", // Adjust to use vendorName from filters
+    } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
@@ -53,6 +57,39 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     query.branchId = auth.branchId;
     query.clinicId = auth.clinicId;
 
+    if (status) {
+      query.status = status;
+    }
+
+    if (searchQuery) {
+      query.$or = [{ poNumber: new RegExp(searchQuery, "i") }];
+    }
+
+    // Vendor name filtering
+    if (vendorName) {
+      // Fetch vendors matching the name
+      const matchingVendors = await DrugVendor.find({
+        name: new RegExp(vendorName, "i"),
+      })
+        .select("_id")
+        .lean();
+      // console.log("Matching vendors based on vendorName:", matchingVendors);
+
+      const vendorIds = matchingVendors.map((vendor) => vendor._id);
+
+      if (vendorIds.length > 0) {
+        query.vendor = { $in: vendorIds };
+      } else {
+        // Return empty result if no matching vendors
+        return successResponse("No matching vendors found", {
+          records: [],
+          pagination: { totalDocs: 0, totalPages: 0, page: 1, limit: 10 },
+        });
+      }
+    }
+
+    console.log("Final query for PurchaseOrder:", JSON.stringify(query));
+
     const paginate = JSON.parse(params.paginate || "false");
 
     if (paginate) {
@@ -60,25 +97,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         page: parseInt(page, 10),
         limit: parseInt(limit, 10),
         lean: true,
+        sort,
+        populate,
       };
 
-      if (status) {
-        query.status = status;
-      }
-
-      if (sort) {
-        options.sort = sort;
-      }
-
-      options.populate = populate;
-
-      // log("Query", query);
-
-      if (searchQuery) {
-        query.$or = [{ poNumber: new RegExp(searchQuery, "i") }];
-      }
-
-      // Fetching the appointments with pagination
       const result = await PurchaseOrder.paginate(query, options);
       const { records, pagination } = formatPaginationResult(result);
 
@@ -87,7 +109,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const data = await PurchaseOrder.find().populate(populate).sort(sort).lean();
+      const data = await PurchaseOrder.find(query).populate(populate).sort(sort).lean();
 
       return successResponse("Success", {
         records: data,

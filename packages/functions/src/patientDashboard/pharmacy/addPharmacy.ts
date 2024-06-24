@@ -46,7 +46,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         totalRequested += detail.quantity;
       });
 
-      console.log("Total requested:", totalRequested);
+      // console.log("Total requested:", totalRequested);
 
       if (stock.totalQuantity < totalRequested) {
         throw new ErrorMessage(400, "Insufficient stock available");
@@ -54,9 +54,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       // Deduct quantities from the relevant locations in the stock
       item.details.forEach(async (detail: any) => {
-        const batch = stock.batches.find(
-          (b) => b.batchNo === detail.batchNumber
-        );
+        const batch = stock.batches.find((b) => b.batchNo === detail.batchNumber);
         if (!batch) {
           throw new Error("Batch number not found");
         }
@@ -66,7 +64,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         if (!locationQuantity) {
           throw new Error("Location not found");
         }
-        console.log("Location quantity:", locationQuantity);
+        // console.log("Location quantity:", locationQuantity);
         if (locationQuantity.quantity < detail.quantity) {
           throw new Error("Insufficient stock at location");
         }
@@ -85,9 +83,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       });
       const newPharmacy = await newPatientPharmacy.save({ session });
 
-      const pharmacyStock: any = await PharmacyStock.findById(
-        newPharmacy.item.stock
-      ).populate([
+      const pharmacyStock: any = await PharmacyStock.findById(newPharmacy.item.stock).populate([
         {
           path: "item",
           model: DrugItem.modelName,
@@ -128,7 +124,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           EPatientBillingServiceType.Pharmacy,
           serviceName,
           // ToDO: Change to sell price once it's added to the model
-          pharmacyStock.sellPrice || 10,
+          pharmacyStock.sellPrice,
           newPharmacy.totalQuantity
         );
       } else {
