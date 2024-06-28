@@ -1,7 +1,10 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
 import S3Service from "@evara-backend/core/src/lib/aws/s3";
-import { EDocumentTypes, EBuckets } from "@evara-backend/core/src/lib/types/global";
+import {
+  EDocumentTypes,
+  EBuckets,
+} from "@evara-backend/core/src/lib/types/global";
 
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
@@ -13,8 +16,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "No data provided");
     }
 
-    const { bucket, userId, documentType, operation, expires, fileName, isImage, reportId } =
-      JSON.parse(event.body);
+    const {
+      bucket,
+      userId,
+      documentType,
+      operation,
+      expires,
+      fileName,
+      isImage,
+      reportId,
+    } = JSON.parse(event.body);
 
     if (!bucket || !userId || !operation) {
       throw new ErrorMessage(
@@ -25,7 +36,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const validOperations = ["putObject", "getObject"];
     if (!validOperations.includes(operation)) {
-      throw new ErrorMessage(400, "Invalid operation. Use 'putObject' or 'getObject'.");
+      throw new ErrorMessage(
+        400,
+        "Invalid operation. Use 'putObject' or 'getObject'."
+      );
     }
 
     console.log({
@@ -37,7 +51,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       isImage,
     });
 
-    const key = generateObjectKey(bucket, userId, fileName, isImage, documentType, reportId);
+    const key = generateObjectKey(
+      bucket,
+      userId,
+      fileName,
+      isImage,
+      documentType,
+      reportId
+    );
+
+    console.log("Key,", key);
 
     const region = process.env.REGION;
     const stage = process.env.STAGE;
@@ -96,20 +119,23 @@ function generateObjectKey(
       return `${userId}/${fileName}`; // Assuming one profile image per user
     case EBuckets.UserReports:
       if (!documentType || !reportId) {
-        throw new Error("Document type and reportId is required for user-reports bucket.");
+        throw new Error(
+          "Document type and reportId is required for user-reports bucket."
+        );
       }
-      if (isImage) {
-        return `${userId}/${documentType}/${reportId}/uploaded/images/${fileName}`; // Using timestamp to ensure unique filenames
+
+      if (isImage && documentType !== EDocumentTypes.BillingDiscount) {
+        return `${userId}/${documentType}/${reportId}/uploaded/images/${fileName}`;
+      } else if (documentType === EDocumentTypes.BillingDiscount) {
+        return `${userId}/${EDocumentTypes.Billing}/${reportId}/DiscountProof/${fileName}`;
       }
-      return `${userId}/${documentType}/${reportId}/uploaded/${fileName}`; // Using timestamp to ensure unique filenames
+      return `${userId}/${documentType}/${reportId}/uploaded/${fileName}`;
 
     case EBuckets.PharmacyInvoices:
       if (!documentType) {
         throw new Error("Document type is required for user-invoices bucket.");
       }
       return `${userId}/${documentType}/uploaded/${fileName}`;
-    // return `${userId}/${documentType}/${reportId}/uploaded/${fileName}`;
-
     default:
       throw new Error("Invalid bucket name.");
   }

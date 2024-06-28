@@ -37,9 +37,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
   const conn = await connectMongoDb();
 
-  // console.log("Event", event);
-  // console.log("Context", _context);
-
   const session = await conn.startSession();
   session.startTransaction();
   try {
@@ -51,11 +48,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const results = [];
 
-    console.log("Data", data);
-
     for (const { billingId, payments } of data.billings) {
       if (!billingId || !payments) {
-        throw new ErrorMessage(400, "Billing ID and payments are required for each entry");
+        throw new ErrorMessage(
+          400,
+          "Billing ID and payments are required for each entry"
+        );
       }
 
       const billing = await PatientBilling.findById(billingId).session(session);
@@ -63,8 +61,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         throw new ErrorMessage(404, `Billing not found for ID: ${billingId}`);
       }
 
-      let totalPaid = billing.payments.reduce((acc, payment) => acc + payment.amount, 0);
-      let totalPaymentAttempt = payments.reduce((acc, payment) => acc + payment.amount, 0);
+      let totalPaid = billing.payments.reduce(
+        (acc, payment) => acc + payment.amount,
+        0
+      );
+      let totalPaymentAttempt = payments.reduce(
+        (acc, payment) => acc + payment.amount,
+        0
+      );
       let newTotalPaid = totalPaid + totalPaymentAttempt;
 
       if (newTotalPaid < billing.grandTotal) {
@@ -78,7 +82,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         billing.payments.push({
           amount: payment.amount,
           method: payment.method,
-          paymentDate: payment.paymentDate ? new Date(payment.paymentDate) : new Date(),
+          paymentDate: payment.paymentDate
+            ? new Date(payment.paymentDate)
+            : new Date(),
           details: payment.details,
           type: EPaitentBillingPaymentType.Payment,
         });
@@ -120,7 +126,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-const processDataForReport = (data: any, id: string, patientData: any, billing: any) => {
+const processDataForReport = (
+  data: any,
+  id: string,
+  patientData: any,
+  billing: any
+) => {
   const reportData: IInvoiceData = {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.Invoice,

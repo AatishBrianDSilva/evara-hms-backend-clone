@@ -31,11 +31,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     ];
 
-    console.log("Populate: ", populate);
-
     const data = await PatientBilling.findById(id).populate(populate);
-
-    console.log("Data: ", JSON.stringify(data, null, 2));
 
     if (!data) {
       throw new ErrorMessage(404, "Not found");

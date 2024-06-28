@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
 
 let cachedDb: typeof mongoose | null = null;
-const uri: string =
-  "mongodb+srv://admin:EZCpxVfJ1KgfnWcU@evara-hms-dev.hw9cyf9.mongodb.net/?retryWrites=true&w=majority";
+const uri: string = process.env.MONGO_URI as string;
 export async function connectMongoDb() {
   if (cachedDb) {
     return Promise.resolve(cachedDb);

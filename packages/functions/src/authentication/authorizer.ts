@@ -13,7 +13,7 @@ export const main = async (
 ): Promise<APIGatewayAuthorizerResult> => {
   const token = event.authorizationToken.replace("Bearer ", "");
 
-  console.log("Method ARN", event.methodArn);
+  // console.log("Method ARN", event.methodArn);
 
   try {
     const verified = await verifyToken(token);
@@ -31,7 +31,7 @@ export const main = async (
 
     // Use the role to determine the effect
     const effect = getPolicyEffect(role, event.methodArn);
-    console.log("Authorization effect:", effect);
+    // console.log("Authorization effect:", effect);
     return generatePolicy(principalId, effect, event.methodArn, {
       branchId: decoded.branchId,
       clinicId: decoded.clinicId,
@@ -39,6 +39,7 @@ export const main = async (
       role: decoded.role,
     });
   } catch (error) {
+    console.log("Roles");
     console.error("Authorization failed:", error);
     return generatePolicy("user", "Deny", event.methodArn);
   }
@@ -85,11 +86,11 @@ function getPolicyEffect(role: EUserRole, resource: string): string {
 function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
   const { httpMethod, resourcePath } = parseMethodArn(methodArn);
 
-  console.log({
-    resourcePath,
-    httpMethod,
-    role,
-  });
+  // console.log({
+  //   resourcePath,
+  //   httpMethod,
+  //   role,
+  // });
 
   const allRoles: EUserRole[] = Object.values(EUserRole);
 
@@ -311,12 +312,12 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
   };
 
   const baseResource = resourcePath.split("/")[0];
-  console.log("Base resource", baseResource);
+  // console.log("Base resource", baseResource);
 
   const allowedRoles = permissions[baseResource]?.[httpMethod] || [
     EUserRole.Admin,
   ];
-  console.log("Allowed roles", allowedRoles);
+  // console.log("Allowed roles", allowedRoles);
 
   return allowedRoles.includes(role) ? ["allow"] : ["deny"];
 }

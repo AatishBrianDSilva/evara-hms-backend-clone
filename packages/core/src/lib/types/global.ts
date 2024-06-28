@@ -14,6 +14,8 @@ export enum EDocumentTypes {
   TreatmentCycle = "Treatment-Cycle",
   MedicalHistory = "Medical-History",
   Invoice = "Invoice",
+  Billing = "Billing",
+  BillingDiscount = "BillingDiscount",
 }
 
 export enum EReportTemplateTypes {

@@ -7,6 +7,7 @@ import {
   PatientBilling,
   IPatientBilling,
 } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
+import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -31,22 +32,28 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const {
       updates,
     }: {
-      updates: Partial<Pick<IPatientBilling, "discount" | "total">>;
+      updates: Partial<
+        Pick<IPatientBilling, "discount" | "discountReason" | "discountFile">
+      >;
     } = JSON.parse(event.body);
+
+    console.log("Updates", updates);
 
     // Validate the updates - ensure only allowed fields are updated
     const updateKeys = Object.keys(updates);
-    const allowedUpdates = ["discount", "total"];
+    const allowedUpdates = ["discount", "discountReason", "discountFile"];
     const isValidUpdate = updateKeys.every((key) =>
       allowedUpdates.includes(key)
     );
 
     if (!isValidUpdate) {
       throw new ErrorMessage(
-        400,
-        "Invalid update fields. Only 'discount' and 'total' can be updated."
+        4000,
+        "Invalid update fields. Only 'discount', 'discountReason', 'discountFile' can be updated."
       );
     }
+
+    const discountInPercentage = updates.discount ? updates.discount : 0;
 
     // Retrieve the existing billing document
     const billing = await PatientBilling.findById(id);
@@ -54,15 +61,32 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(404, "Billing document not found");
     }
 
+    const discountInAmount = billing.subTotal * (discountInPercentage / 100);
+    console.log("discountInAmount", discountInAmount);
+
     // Using findByIdAndUpdate to update the document directly
     const updatedBilling = await PatientBilling.findByIdAndUpdate(
       id,
-      { $set: updates },
+      {
+        $set: {
+          discountReason: updates.discountReason,
+          discount: discountInAmount,
+          discountInPercentage: discountInPercentage,
+          discountFile: updates.discountFile,
+        },
+      },
       { new: true, runValidators: true } // Return the updated document and run validations
     );
 
     if (!updatedBilling) {
       throw new ErrorMessage(404, "Failed to update billing document");
+    }
+
+    if (updates.discountFile && updates.discountFile.startsWith("https://")) {
+      const s3UrlParts = parseS3Url(updates.discountFile);
+      if (s3UrlParts) {
+        await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
+      }
     }
 
     return successResponse("Billing updated successfully", {
