@@ -7,10 +7,13 @@ import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import Cases from "@evara-backend/core/models/Cases";
 import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+
+  const auth = extractAuthorizerDetails(event);
 
   const mongoose = await connectMongoDb();
   const session = await mongoose.startSession();
@@ -35,8 +38,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const data = JSON.parse(event.body);
 
     // TODO: Remove clinicId and branchId after adding authentication
-    data.clinicId = "EV";
-    data.branchId = "KL";
+    data.clinicId = auth?.clinicId;
+    data.branchId = auth?.branchId;
 
     data.partnerId = id;
 

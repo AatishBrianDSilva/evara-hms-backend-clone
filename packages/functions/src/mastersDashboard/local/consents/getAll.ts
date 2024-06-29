@@ -5,7 +5,6 @@ import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extr
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import Branch from "@evara-backend/core/src/models/mastersDashboard/global/ClinicBranches";
 import Consent from "@evara-backend/core/src/models/mastersDashboard/local/Consent";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {

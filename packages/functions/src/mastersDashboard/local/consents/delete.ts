@@ -3,8 +3,6 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { User } from "@evara-backend/core/src/models/User";
-import Branch from "@evara-backend/core/src/models/mastersDashboard/global/ClinicBranches";
 import Consent from "@evara-backend/core/src/models/mastersDashboard/local/Consent";
 import { APIGatewayProxyHandler } from "aws-lambda";
 

@@ -12,14 +12,11 @@ export const extractAuthorizerDetails = (
   event: APIGatewayProxyEvent
 ): LambdaAuthorizer | null => {
   try {
-    const authorizer = event.requestContext.authorizer as
-      | { lambda: LambdaAuthorizer }
-      | undefined;
-    if (authorizer && authorizer.lambda) {
-      const { branchId, clinicId, userId, username, role } = authorizer.lambda;
-      return { branchId, clinicId, userId, username, role };
-    }
-    return null;
+    const authorizer = event.requestContext.authorizer as {
+      lambda: LambdaAuthorizer;
+    };
+    const { branchId, clinicId, userId, username, role } = authorizer.lambda;
+    return { branchId, clinicId, userId, username, role };
   } catch (error) {
     console.error("Error extracting authorizer details:", error);
     return null;

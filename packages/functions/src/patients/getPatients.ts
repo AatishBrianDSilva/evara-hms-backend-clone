@@ -7,9 +7,12 @@ import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
 
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+
+  const auth = extractAuthorizerDetails(event);
 
   try {
     // Connect to MongoDB

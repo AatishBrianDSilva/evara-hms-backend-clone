@@ -1,11 +1,9 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import { User } from "@evara-backend/core/src/models/User";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
-import Branch from "@evara-backend/core/src/models/mastersDashboard/global/ClinicBranches";
 import Consent from "@evara-backend/core/src/models/mastersDashboard/local/Consent";
 
 // Handler function

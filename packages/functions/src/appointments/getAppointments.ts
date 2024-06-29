@@ -8,9 +8,12 @@ import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 import Appointments from "@evara-backend/core/src/models/Appointments";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
 import mongoose from "mongoose";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+
+  const auth = extractAuthorizerDetails(event);
 
   try {
     // Connect to MongoDB
@@ -34,6 +37,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Construct the query object
     let query: any = {};
+    query.clinicId = auth?.clinicId;
+    query.branchId = auth?.branchId;
 
     // // Date range filter
     if (startDate || endDate) {

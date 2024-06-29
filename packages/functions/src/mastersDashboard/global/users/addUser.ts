@@ -25,6 +25,8 @@ export const main: APIGatewayProxyHandler = async (event, context) => {
     // Parse the body from the event
     const data = JSON.parse(event.body);
 
+    data.clinicId = auth?.clinicId;
+
     const existingUser = await User.findOne({
       $or: [{ email: data.email }, { username: data.username }],
     });

@@ -4,9 +4,12 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import Patient from "@evara-backend/core/src/models/Patients";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+
+  const auth = extractAuthorizerDetails(event);
 
   try {
     await connectMongoDb();
