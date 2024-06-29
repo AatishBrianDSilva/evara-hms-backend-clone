@@ -41,6 +41,9 @@ export function MainStack({ stack }: StackContext) {
     consumer: {
       function: {
         handler: "packages/functions/src/files/conditionalDelete.main",
+        environment: {
+          MONGO_URI: mongodb_uri,
+        },
         timeout: 30,
         permissions: ["sqs", "s3"],
       },
@@ -161,6 +164,9 @@ export function MainStack({ stack }: StackContext) {
       function: {
         handler:
           "packages/functions/src/patientDashboard/billings/estimation/automateEstimation.main",
+        environment: {
+          MONGO_URI: mongodb_uri,
+        },
         timeout: 300,
         role: role as any,
       },
