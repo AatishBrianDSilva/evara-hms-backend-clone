@@ -122,26 +122,26 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const { records, pagination } = formatPaginationResult(result);
 
       // Add the `patient` key to each record
-      const modifiedRecords = records.map((record) => ({
-        ...record.toObject(),
-        patient: patientCode,
-      }));
+      // const modifiedRecords = records.map((record) => ({
+      //   ...record.toObject(),
+      //   patient: patientCode,
+      // }));
 
       return successResponse("Success", {
-        records: modifiedRecords,
+        records: records,
         pagination,
       });
     } else {
-      const data = await PatientPharmacy.find(patientCode).populate(populate).sort(sort);
+      const data = await PatientPharmacy.find(query).populate(populate).sort(sort);
 
       // Add the `patient` key to each record
-      const modifiedData = data.map((record) => ({
-        ...record.toObject(),
-        patient: query.id,
-      }));
+      // const modifiedData = data.map((record) => ({
+      //   ...record.toObject(),
+      //   patient: query.id,
+      // }));
 
       return successResponse("Success", {
-        records: modifiedData,
+        records: data,
       });
     }
   } catch (error) {
