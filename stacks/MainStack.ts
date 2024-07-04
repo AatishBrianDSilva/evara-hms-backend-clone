@@ -24,10 +24,12 @@ export function MainStack({ stack }: StackContext) {
     ],
   });
 
+  // const mongodb_uri =
+  //   stack.stage === "dev"
+  //     ? "mongodb+srv://evara-dev:evara-dev@evara-dev.sqjeodv.mongodb.net/evara-dev?retryWrites=true&w=majority&appName=evara-dev"
+  //     : "mongodb+srv://admin:EZCpxVfJ1KgfnWcU@evara-hms-dev.hw9cyf9.mongodb.net/?retryWrites=true&w=majority";
   const mongodb_uri =
-    stack.stage === "dev"
-      ? "mongodb+srv://evara-dev:evara-dev@evara-dev.sqjeodv.mongodb.net/evara-dev?retryWrites=true&w=majority&appName=evara-dev"
-      : "mongodb+srv://admin:EZCpxVfJ1KgfnWcU@evara-hms-dev.hw9cyf9.mongodb.net/?retryWrites=true&w=majority";
+    "mongodb+srv://admin:EZCpxVfJ1KgfnWcU@evara-hms-dev.hw9cyf9.mongodb.net/?retryWrites=true&w=majority";
 
   // Create a chromium layer for the pdf generation function
   const chromiumLayer = new LayerVersion(stack, "ChromiumLayer", {
