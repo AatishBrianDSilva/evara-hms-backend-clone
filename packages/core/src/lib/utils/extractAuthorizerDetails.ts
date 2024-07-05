@@ -10,7 +10,7 @@ interface LambdaAuthorizer {
 
 export const extractAuthorizerDetails = (
   event: APIGatewayProxyEvent
-): LambdaAuthorizer | null => {
+): LambdaAuthorizer => {
   try {
     const authorizer = event.requestContext.authorizer as {
       lambda: LambdaAuthorizer;
@@ -19,6 +19,6 @@ export const extractAuthorizerDetails = (
     return { branchId, clinicId, userId, username, role };
   } catch (error) {
     console.error("Error extracting authorizer details:", error);
-    return null;
+    throw new Error("Error extracting authorizer details");
   }
 };

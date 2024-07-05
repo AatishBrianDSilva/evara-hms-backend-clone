@@ -24,30 +24,24 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (!id) {
       throw new ErrorMessage(400, "ID is required for update");
     }
-    console.log("check 0");
 
-    console.log("Update PO data", updateData.response);
-
-    if (updateData.response?.invoice && updateData.response?.invoice.length > 0) {
-      console.log("check 1");
+    if (
+      updateData.response?.invoice &&
+      updateData.response?.invoice.length > 0
+    ) {
       for (let i = 0; i < updateData.response?.invoice.length; i++) {
-        console.log("check 2");
-
         if (updateData.response?.invoice[i].length > 0) {
-          console.log("check 3");
-
           const s3UrlParts = parseS3Url(updateData.response?.invoice[i]);
-          console.log("check 4");
 
           if (s3UrlParts) {
-            console.log("check 5");
-
             await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
             console.log("S3 url parts", s3UrlParts);
             const invoicePart = s3UrlParts.key.split("/");
 
+            const po = await PurchaseOrder.findById(id).lean();
+
             const pharmacyInvoice = new PharmacyInvoice({
-              purchaseOrderId: id,
+              purchaseOrderId: po?.poNumber,
               invoice: invoicePart[invoicePart.length - 1],
               bucket: s3UrlParts.bucketName,
               key: s3UrlParts.key,

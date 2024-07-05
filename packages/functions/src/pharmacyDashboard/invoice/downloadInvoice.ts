@@ -39,9 +39,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const { bucket, key } = invoice;
 
-    console.log("Bucket", bucket);
-    console.log("key", key);
-
     // Retrieve the PDF data from S3
     const pdfData = await S3Service.getObject(bucket, key);
     if (!pdfData) {
@@ -50,12 +47,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // console.log("Pdf fetched from invoice table", pdfData);
 
-    // Return the PDF data as a downloadable attachment
     return {
       statusCode: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename=${invoice}`,
+        "Content-Disposition": `attachment; filename=${invoice.purchaseOrderId}-${invoice.invoice}`,
       },
       body: pdfData,
       isBase64Encoded: true,
