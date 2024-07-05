@@ -60,6 +60,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (body.testType === EProcedureType.Hysteroscopy) {
       updateData.result = body.result;
       updateData.status = "Completed";
+    } else if (body.testType === EProcedureType.Laparoscopy) {
+      updateData.result = body.result;
+      updateData.status = "Completed";
     } else if (body.testType === EProcedureType.PGT) {
       updateData.result = body.result;
       updateData.status = "Completed";
