@@ -35,6 +35,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // TODO: Upload profile image to S3 and get the URL
 
+    const exisitingPatient = await Patient.findOne({
+      $or: [{ mobile: data.mobile }, { idProofNumber: data.idProofNumber }],
+    });
+
+    if (exisitingPatient) {
+      throw new ErrorMessage(400, "Patient already exists");
+    }
+
     // Create a new patient document
     const newPatient = new Patient(data);
 
