@@ -78,7 +78,7 @@ export const patientSchema = new mongoose.Schema(
     motherTounge: { type: String },
     occupation: { type: String },
     religion: { type: String },
-    mobile: { type: String, required: true },
+    mobile: { type: String, required: true, unique: true },
     alernativeMobile: { type: String },
     email: {
       type: String,
@@ -99,9 +99,9 @@ export const patientSchema = new mongoose.Schema(
     city: { type: String, required: true },
     pincode: { type: String },
     idProofType: { type: String },
-    idProofNumber: { type: String },
+    idProofNumber: { type: String, unique: true },
     idProofIssuedCountry: { type: String },
-    ABHANumber: { type: String },
+    ABHANumber: { type: String, unique: true },
     reasonOfVisit: { type: String },
     referredBy: { type: String },
     referredByOther: { type: String },
@@ -128,11 +128,19 @@ export const patientSchema = new mongoose.Schema(
   }
 );
 
-patientSchema.index({ clinicId: 1, branchId: 1, patientId: 1 }, { unique: true });
+patientSchema.index(
+  { clinicId: 1, branchId: 1, patientId: 1 },
+  { unique: true }
+);
 
 patientSchema.pre(
   "save",
-  autoIncrementIdWithFieldPrefix("patients", "patientId", "clinicId", "branchId")
+  autoIncrementIdWithFieldPrefix(
+    "patients",
+    "patientId",
+    "clinicId",
+    "branchId"
+  )
 );
 
 patientSchema.plugin(paginate);
