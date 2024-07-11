@@ -25,10 +25,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "ID is required for update");
     }
 
-    if (
-      updateData.response?.invoice &&
-      updateData.response?.invoice.length > 0
-    ) {
+    if (updateData.response?.invoice && updateData.response?.invoice.length > 0) {
       for (let i = 0; i < updateData.response?.invoice.length; i++) {
         if (updateData.response?.invoice[i].length > 0) {
           const s3UrlParts = parseS3Url(updateData.response?.invoice[i]);
@@ -45,6 +42,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               invoice: invoicePart[invoicePart.length - 1],
               bucket: s3UrlParts.bucketName,
               key: s3UrlParts.key,
+              invoiceNumber: updateData.invoiceNumber || undefined,
             });
             // console.info("Pharmacy Invoice", pharmacyInvoice);
             await pharmacyInvoice.save();

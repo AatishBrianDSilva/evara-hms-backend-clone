@@ -7,6 +7,7 @@ export interface IPharmacyInvoice extends Document {
   invoice: string;
   bucket: string;
   key: string;
+  invoiceNumber?: string;
 }
 
 const pharmacyInvoiceSchema = new Schema(
@@ -15,6 +16,7 @@ const pharmacyInvoiceSchema = new Schema(
     invoice: { type: String, required: true },
     bucket: { type: String, required: true },
     key: { type: String, required: true },
+    invoiceNumber: { type: String, required: false },
   },
   { timestamps: true }
 );
