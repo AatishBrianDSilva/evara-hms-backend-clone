@@ -425,6 +425,9 @@ export function MainStack({ stack }: StackContext) {
       "DELETE /treatment-cycles/{id}":
         "packages/functions/src/patientDashboard/treatmentCycle/deleteTreatmentCycle.main",
 
+      // Patient Timeline
+      "GET /timeline": "packages/functions/src/patientDashboard/timeline/timeline.main",
+
       // Patient History
       "GET /history/{id}": "packages/functions/src/patientDashboard/history/getPatientHistory.main",
       "PUT /history/{id}":
@@ -477,6 +480,7 @@ export function MainStack({ stack }: StackContext) {
       "GET /reports/download/{id}": "packages/functions/src/reports/downloadReport.main",
       "GET /reports": "packages/functions/src/patientDashboard/reports/getPatientReports.main",
       "GET /invoices/download/{id}": "packages/functions/src/reports/downloadReport.main",
+      "POST /files/user-files/download": "packages/functions/src/files/downloadFiles.main",
 
       // Patient Dashboard End
 

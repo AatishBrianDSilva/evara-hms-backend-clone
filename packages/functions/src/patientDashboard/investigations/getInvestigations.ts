@@ -100,6 +100,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // console.log("Options", options);
     // console.log("Query", query);
 
+    // Filtering by specific investigation ID
+    if (filters.investigationId) {
+      query._id = new mongoose.Types.ObjectId(filters.investigationId);
+    }
+
     const paginate = JSON.parse(params.paginate || "false");
 
     if (paginate) {

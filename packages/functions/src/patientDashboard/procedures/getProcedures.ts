@@ -78,6 +78,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const patient = await Patient.findOne({
       patientId: filters.patientCode,
     }).lean();
+
     if (!patient) {
       throw new ErrorMessage(404, "Patient not found");
     }
@@ -97,8 +98,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
     }
 
-    // console.log("Options", options);
-    // console.log("Query", query);
+    console.log("Options", options);
+    console.log("Query", query);
+
+    // Filtering by specific ID
+    if (filters.procedureId) {
+      query._id = new mongoose.Types.ObjectId(filters.procedureId);
+    }
 
     const paginate = JSON.parse(params.paginate || "false");
 

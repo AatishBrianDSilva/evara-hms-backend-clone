@@ -62,6 +62,7 @@ export interface IPurchaseOrder extends Document {
   createdBy: string;
   authorizedBy: string;
   status: EPurchaseOrderStatus;
+  invoiceNumber?: string;
 }
 
 const itemSchema = new Schema({
@@ -119,6 +120,7 @@ const purchaseOrderSchema = new Schema(
       required: true,
       default: EPurchaseOrderStatus.Draft,
     },
+    invoiceNumber: { type: String, required: false },
   },
   { timestamps: true }
 );
@@ -130,26 +132,14 @@ purchaseOrderSchema.index({ branchId: 1, date: -1 });
 
 purchaseOrderSchema.pre("validate", function (next) {
   if (this.status === EPurchaseOrderStatus.Approved && !this.authorizedBy) {
-    this.invalidate(
-      "authorizedBy",
-      "approvedBy is required when the status is Approved"
-    );
-  } else if (
-    this.status === EPurchaseOrderStatus.Rejected &&
-    !this.authorizedBy
-  ) {
-    this.invalidate(
-      "authorizedBy",
-      "rejectedBy is required when the status is Rejected"
-    );
+    this.invalidate("authorizedBy", "approvedBy is required when the status is Approved");
+  } else if (this.status === EPurchaseOrderStatus.Rejected && !this.authorizedBy) {
+    this.invalidate("authorizedBy", "rejectedBy is required when the status is Rejected");
   }
   next();
 });
 
-purchaseOrderSchema.pre(
-  "save",
-  autoIncrementId("purchaseOrder", "poNumber", "PO-")
-);
+purchaseOrderSchema.pre("save", autoIncrementId("purchaseOrder", "poNumber", "PO-"));
 
 purchaseOrderSchema.plugin(paginate);
 

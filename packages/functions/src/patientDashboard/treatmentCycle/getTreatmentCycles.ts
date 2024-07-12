@@ -21,6 +21,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Extract query string parameters
     const params = event.queryStringParameters || {};
+    const { ...filters } = params;
 
     // Construct the query object
     let query: any = {};
@@ -29,6 +30,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
     if (params.patientCode) {
       query.patientCode = params.patientCode;
+    }
+
+    if (filters.treatmentCycleId) {
+      query._id = new mongoose.Types.ObjectId(filters.treatmentCycleId);
     }
 
     // Construct the sort object
