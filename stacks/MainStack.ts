@@ -425,6 +425,9 @@ export function MainStack({ stack }: StackContext) {
       "DELETE /treatment-cycles/{id}":
         "packages/functions/src/patientDashboard/treatmentCycle/deleteTreatmentCycle.main",
 
+      // Patient Timeline
+      "GET /timeline": "packages/functions/src/patientDashboard/timeline/timeline.main",
+
       // Patient History
       "GET /history/{id}": "packages/functions/src/patientDashboard/history/getPatientHistory.main",
       "PUT /history/{id}":
