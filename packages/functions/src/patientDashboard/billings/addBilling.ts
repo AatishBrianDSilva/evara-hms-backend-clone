@@ -50,9 +50,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const automateServiceGeneration = [];
 
     for (const estimationId of estimations) {
-      const estimation = await PatientBillingEstimation.findById(
-        estimationId
-      ).lean();
+      const estimation = await PatientBillingEstimation.findById(estimationId).lean();
 
       if (!estimation) {
         throw new ErrorMessage(404, "Estimation not found");
@@ -62,7 +60,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       // Accumulate totals
 
-      amount += Math.round(estimation.estimatedPrice);
+      // amount += Math.round(estimation.estimatedPrice);
+      amount += estimation.estimatedPrice;
+
       tax += estimation.estimatedTax;
 
       patientCode = estimation.patientCode;

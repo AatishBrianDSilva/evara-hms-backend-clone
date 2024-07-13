@@ -9,7 +9,6 @@ import {
 } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 
-// Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
@@ -33,38 +32,41 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       updates,
     }: {
       updates: Partial<
-        Pick<IPatientBilling, "discount" | "discountReason" | "discountFile">
+        Pick<IPatientBilling, "discount" | "discountReason" | "discountFile" | "discountType">
       >;
     } = JSON.parse(event.body);
 
     console.log("Updates", updates);
 
-    // Validate the updates - ensure only allowed fields are updated
     const updateKeys = Object.keys(updates);
-    const allowedUpdates = ["discount", "discountReason", "discountFile"];
-    const isValidUpdate = updateKeys.every((key) =>
-      allowedUpdates.includes(key)
-    );
+    const allowedUpdates = ["discount", "discountReason", "discountFile", "discountType"];
+    const isValidUpdate = updateKeys.every((key) => allowedUpdates.includes(key));
 
     if (!isValidUpdate) {
       throw new ErrorMessage(
         4000,
-        "Invalid update fields. Only 'discount', 'discountReason', 'discountFile' can be updated."
+        "Invalid update fields. Only 'discount', 'discountReason', 'discountFile', 'discountType' can be updated."
       );
     }
 
-    const discountInPercentage = updates.discount ? updates.discount : 0;
+    const discountType = updates.discountType;
+    const discountValue = updates.discount;
+    let discountInAmount = 0;
+    let discountInPercentage = 0;
 
-    // Retrieve the existing billing document
     const billing = await PatientBilling.findById(id);
     if (!billing) {
       throw new ErrorMessage(404, "Billing document not found");
     }
 
-    const discountInAmount = billing.subTotal * (discountInPercentage / 100);
-    console.log("discountInAmount", discountInAmount);
+    if (discountType === "percentage") {
+      discountInPercentage = discountValue;
+      discountInAmount = billing.subTotal * (discountInPercentage / 100);
+    } else if (discountType === "amount") {
+      discountInAmount = discountValue;
+      discountInPercentage = (discountInAmount / billing.subTotal) * 100;
+    }
 
-    // Using findByIdAndUpdate to update the document directly
     const updatedBilling = await PatientBilling.findByIdAndUpdate(
       id,
       {
@@ -75,7 +77,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           discountFile: updates.discountFile,
         },
       },
-      { new: true, runValidators: true } // Return the updated document and run validations
+      { new: true, runValidators: true }
     );
 
     if (!updatedBilling) {
