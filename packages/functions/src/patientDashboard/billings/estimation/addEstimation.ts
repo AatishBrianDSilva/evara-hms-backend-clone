@@ -39,7 +39,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       item.quantity = item.quantity || 1;
 
       const service = await findServiceByIdAndType(item.masterServiceId, data.serviceType);
-      const service = await findServiceByIdAndType(item.masterServiceId, data.serviceType);
 
       if (!service) {
         throw new ErrorMessage(404, "Service not found");
