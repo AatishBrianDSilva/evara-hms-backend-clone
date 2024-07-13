@@ -60,8 +60,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       // Accumulate totals
 
-      // amount += Math.round(estimation.estimatedPrice);
-      amount += estimation.estimatedPrice;
+      amount += Math.round(estimation.estimatedPrice);
+      // amount += estimation.estimatedPrice;
 
       tax += estimation.estimatedTax;
 
