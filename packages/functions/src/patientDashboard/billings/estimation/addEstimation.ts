@@ -51,8 +51,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const total = Math.round(estimatedPrice + estimatedTax);
       // const total = estimatedPrice + estimatedTax;
 
-      console.log("Adding estimation for service: ", service.name);
-      console.log("Item", item);
+      // console.log("Adding estimation for service: ", service.name);
+      // console.log("Item", item);
 
       const newEstimation = new PatientBillingEstimation({
         clinicId: data.clinicId,
