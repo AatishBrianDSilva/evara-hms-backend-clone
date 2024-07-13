@@ -93,16 +93,16 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/taxRate/deleteTaxRate.main",
 
     // Master Pharmacy Stock
-    "POST /pharmacy-dashboard/master/stock/add":
-      "packages/functions/src/pharmacyDashboard/master/pharmacyStock/addPharmacyStock.main",
-    "GET /pharmacy-dashboard/master/stock":
-      "packages/functions/src/pharmacyDashboard/master/pharmacyStock/getPharmacyStocks.main",
-    "GET /pharmacy-dashboard/master/stock/{id}":
-      "packages/functions/src/pharmacyDashboard/master/pharmacyStock/getPharmacyStockById.main",
-    "PUT /pharmacy-dashboard/master/stock/{id}":
-      "packages/functions/src/pharmacyDashboard/master/pharmacyStock/updatePharmacyStock.main",
-    "DELETE /pharmacy-dashboard/master/stock/{id}":
-      "packages/functions/src/pharmacyDashboard/master/pharmacyStock/deletePharmacyStock.main",
+    // "POST /pharmacy-dashboard/master/stock/add":
+    //   "packages/functions/src/pharmacyDashboard/master/pharmacyStock/addPharmacyStock.main",
+    // "GET /pharmacy-dashboard/master/stock":
+    //   "packages/functions/src/pharmacyDashboard/master/pharmacyStock/getPharmacyStocks.main",
+    // "GET /pharmacy-dashboard/master/stock/{id}":
+    //   "packages/functions/src/pharmacyDashboard/master/pharmacyStock/getPharmacyStockById.main",
+    // "PUT /pharmacy-dashboard/master/stock/{id}":
+    //   "packages/functions/src/pharmacyDashboard/master/pharmacyStock/updatePharmacyStock.main",
+    // "DELETE /pharmacy-dashboard/master/stock/{id}":
+    //   "packages/functions/src/pharmacyDashboard/master/pharmacyStock/deletePharmacyStock.main",
     // Pharmacy Masters End
 
     // Stocks
