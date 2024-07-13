@@ -33,6 +33,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }: {
       updates: Partial<
         Pick<IPatientBilling, "discount" | "discountReason" | "discountFile" | "discountType">
+        Pick<IPatientBilling, "discount" | "discountReason" | "discountFile" | "discountType">
       >;
     } = JSON.parse(event.body);
 
@@ -41,14 +42,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const updateKeys = Object.keys(updates);
     const allowedUpdates = ["discount", "discountReason", "discountFile", "discountType"];
     const isValidUpdate = updateKeys.every((key) => allowedUpdates.includes(key));
+    const allowedUpdates = ["discount", "discountReason", "discountFile", "discountType"];
+    const isValidUpdate = updateKeys.every((key) => allowedUpdates.includes(key));
 
     if (!isValidUpdate) {
       throw new ErrorMessage(
         4000,
         "Invalid update fields. Only 'discount', 'discountReason', 'discountFile', 'discountType' can be updated."
+        "Invalid update fields. Only 'discount', 'discountReason', 'discountFile', 'discountType' can be updated."
       );
     }
 
+    const discountType = updates.discountType;
+    const discountValue = updates.discount;
+    let discountInAmount = 0;
+    let discountInPercentage = 0;
     const discountType = updates.discountType;
     const discountValue = updates.discount;
     let discountInAmount = 0;
@@ -81,6 +89,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           discountFile: updates.discountFile,
         },
       },
+      { new: true, runValidators: true }
       { new: true, runValidators: true }
     );
 
