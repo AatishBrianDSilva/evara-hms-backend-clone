@@ -62,7 +62,6 @@ const addEstimation = async (data: any) => {
 
   if (data.serviceType === EPatientBillingServiceType.Pharmacy) {
     const service: any = await PharmacyStock.findById(data.masterServiceId).populate([
-    const service: any = await PharmacyStock.findById(data.masterServiceId).populate([
       {
         path: "item",
         model: DrugItem.modelName,
@@ -124,7 +123,6 @@ const addEstimation = async (data: any) => {
       total,
     });
   } else {
-    const service = await findServiceByIdAndType(data.masterServiceId, data.serviceType);
     const service = await findServiceByIdAndType(data.masterServiceId, data.serviceType);
 
     if (!service) {
