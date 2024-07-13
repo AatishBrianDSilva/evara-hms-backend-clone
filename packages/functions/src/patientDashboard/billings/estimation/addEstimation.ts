@@ -38,19 +38,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     for (let item of data.items) {
       item.quantity = item.quantity || 1;
 
-      const service = await findServiceByIdAndType(
-        item.masterServiceId,
-        data.serviceType
-      );
+      const service = await findServiceByIdAndType(item.masterServiceId, data.serviceType);
 
       if (!service) {
         throw new ErrorMessage(404, "Service not found");
       }
 
       const estimatedPrice = service.cost * item.quantity;
-      const estimatedTax = Math.round((service.tax * estimatedPrice) / 100);
+      // const estimatedTax = Math.round((service.tax * estimatedPrice) / 100);
+      const estimatedTax = (service.tax * estimatedPrice) / 100;
 
-      const total = Math.round(estimatedPrice + estimatedTax);
+      // const total = Math.round(estimatedPrice + estimatedTax);
+      const total = estimatedPrice + estimatedTax;
 
       console.log("Adding estimation for service: ", service.name);
       console.log("Item", item);

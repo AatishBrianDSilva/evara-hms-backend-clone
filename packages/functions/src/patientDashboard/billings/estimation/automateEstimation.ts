@@ -61,9 +61,7 @@ const addEstimation = async (data: any) => {
   let cost: number = 0;
 
   if (data.serviceType === EPatientBillingServiceType.Pharmacy) {
-    const service: any = await PharmacyStock.findById(
-      data.masterServiceId
-    ).populate([
+    const service: any = await PharmacyStock.findById(data.masterServiceId).populate([
       {
         path: "item",
         model: DrugItem.modelName,
@@ -108,9 +106,13 @@ const addEstimation = async (data: any) => {
 
     const mrp = (data.quantity / service.item.packSize) * sellPrice;
 
-    estimatedPrice = Math.round(mrp);
-    estimatedTax = Math.round((tax * estimatedPrice) / 100);
-    total = Math.round(estimatedPrice + estimatedTax);
+    // estimatedPrice = Math.round(mrp);
+    // estimatedTax = Math.round((tax * estimatedPrice) / 100);
+    // total = Math.round(estimatedPrice + estimatedTax);
+
+    estimatedPrice = mrp;
+    estimatedTax = (tax * estimatedPrice) / 100;
+    total = estimatedPrice + estimatedTax;
 
     taxRate = tax;
     cost = mrp;
@@ -121,10 +123,7 @@ const addEstimation = async (data: any) => {
       total,
     });
   } else {
-    const service = await findServiceByIdAndType(
-      data.masterServiceId,
-      data.serviceType
-    );
+    const service = await findServiceByIdAndType(data.masterServiceId, data.serviceType);
 
     if (!service) {
       throw new ErrorMessage(404, "Service not found");
@@ -133,8 +132,8 @@ const addEstimation = async (data: any) => {
     taxRate = service.tax;
     cost = service.cost;
     estimatedPrice = service.cost * data.quantity;
-    estimatedTax = Math.round((service.tax * estimatedPrice) / 100);
-    total = Math.round(estimatedPrice + estimatedTax);
+    estimatedTax = (service.tax * estimatedPrice) / 100;
+    total = estimatedPrice + estimatedTax;
   }
 
   const newEstimation = new PatientBillingEstimation({
