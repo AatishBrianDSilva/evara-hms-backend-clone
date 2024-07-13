@@ -67,6 +67,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       discountInPercentage = (discountInAmount / billing.subTotal) * 100;
     }
 
+    // Round the values to the nearest whole number
+    discountInAmount = Math.round(discountInAmount);
+    discountInPercentage = Math.round(discountInPercentage);
+
     const updatedBilling = await PatientBilling.findByIdAndUpdate(
       id,
       {

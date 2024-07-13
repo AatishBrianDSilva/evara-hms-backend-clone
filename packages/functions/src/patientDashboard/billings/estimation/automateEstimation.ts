@@ -106,13 +106,13 @@ const addEstimation = async (data: any) => {
 
     const mrp = (data.quantity / service.item.packSize) * sellPrice;
 
-    // estimatedPrice = Math.round(mrp);
-    // estimatedTax = Math.round((tax * estimatedPrice) / 100);
-    // total = Math.round(estimatedPrice + estimatedTax);
+    estimatedPrice = Math.round(mrp);
+    estimatedTax = Math.round((tax * estimatedPrice) / 100);
+    total = Math.round(estimatedPrice + estimatedTax);
 
-    estimatedPrice = mrp;
-    estimatedTax = (tax * estimatedPrice) / 100;
-    total = estimatedPrice + estimatedTax;
+    // estimatedPrice = mrp;
+    // estimatedTax = (tax * estimatedPrice) / 100;
+    // total = estimatedPrice + estimatedTax;
 
     taxRate = tax;
     cost = mrp;
@@ -132,8 +132,10 @@ const addEstimation = async (data: any) => {
     taxRate = service.tax;
     cost = service.cost;
     estimatedPrice = service.cost * data.quantity;
-    estimatedTax = (service.tax * estimatedPrice) / 100;
-    total = estimatedPrice + estimatedTax;
+    // estimatedTax = (service.tax * estimatedPrice) / 100;
+    // total = estimatedPrice + estimatedTax;
+    estimatedTax = Math.round((service.tax * estimatedPrice) / 100);
+    total = Math.round(estimatedPrice + estimatedTax);
   }
 
   const newEstimation = new PatientBillingEstimation({

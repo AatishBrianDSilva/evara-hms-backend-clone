@@ -45,11 +45,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
 
       const estimatedPrice = service.cost * item.quantity;
-      // const estimatedTax = Math.round((service.tax * estimatedPrice) / 100);
-      const estimatedTax = (service.tax * estimatedPrice) / 100;
+      const estimatedTax = Math.round((service.tax * estimatedPrice) / 100);
+      // const estimatedTax = (service.tax * estimatedPrice) / 100;
 
-      // const total = Math.round(estimatedPrice + estimatedTax);
-      const total = estimatedPrice + estimatedTax;
+      const total = Math.round(estimatedPrice + estimatedTax);
+      // const total = estimatedPrice + estimatedTax;
 
       console.log("Adding estimation for service: ", service.name);
       console.log("Item", item);
