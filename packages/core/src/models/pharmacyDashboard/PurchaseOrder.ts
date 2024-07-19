@@ -22,6 +22,8 @@ export interface IPurchaseOrderRequest {
     total: number;
     tax: number;
     quantity: number;
+    freeQuantity: number; // Added freeQuantity field
+    noOfPacks: number; // Added noOfPacks field
   }[];
   netAmount: number;
   discount: number;
@@ -41,6 +43,8 @@ export interface IPurchaseOrderResponse {
     buyPrice: number;
     tax: number;
     quantity: number;
+    freeQuantity: number; // Added freeQuantity field
+    noOfPacks: number; // Added noOfPacks field
   }[];
   netAmount: number;
   discount: number;
@@ -75,6 +79,8 @@ const itemSchema = new Schema({
   buyPrice: { type: Number, required: true, min: 0 },
   tax: { type: Number, required: true, min: 0 },
   quantity: { type: Number, required: true, min: 0 },
+  freeQuantity: { type: Number, required: false, min: 0 }, // Added freeQuantity field
+  noOfPacks: { type: Number, required: true, min: 0 }, // New line added
 });
 
 const responseSchema = new Schema({
