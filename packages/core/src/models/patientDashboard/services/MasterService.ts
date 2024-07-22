@@ -8,7 +8,6 @@ interface IMasterService extends Document {
   name: string;
   description?: string;
   cost: number;
-  tax: number;
   total: number;
   active: boolean;
   validTill: Date;
@@ -30,7 +29,6 @@ const MasterServiceSchema: Schema = new Schema({
   description: { type: String },
   gender: { type: String, required: true, enum: Object.values(EGender) },
   cost: { type: Number, required: true },
-  tax: { type: Number, required: true },
   total: { type: Number, required: true },
   active: { type: Boolean, required: true, default: true },
   validTill: { type: Date },
