@@ -24,7 +24,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     log("Updating stock from purchase order");
     if (!event.pathParameters || !event.pathParameters.purchaseOrderId) {
-      throw new ErrorMessage(400, "Purchase order ID is required in the URL path");
+      throw new ErrorMessage(
+        400,
+        "Purchase order ID is required in the URL path"
+      );
     }
 
     const purchaseOrderId = event.pathParameters.purchaseOrderId;
@@ -33,13 +36,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     //   purchaseOrderId
     // );
 
-    const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId).session(session);
+    const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId).session(
+      session
+    );
     // console.log(
     //   "🚀 ~ constmain:APIGatewayProxyHandler= ~ purchaseOrder:",
     //   purchaseOrder
     // );
-    if (!purchaseOrder || purchaseOrder.status !== EPurchaseOrderStatus.Ordered) {
-      throw new ErrorMessage(404, "Purchase order not found or is not ordered yet.");
+    if (
+      !purchaseOrder ||
+      purchaseOrder.status !== EPurchaseOrderStatus.Ordered
+    ) {
+      throw new ErrorMessage(
+        404,
+        "Purchase order not found or is not ordered yet."
+      );
     }
 
     const mainLocation = await DrugLocation.findOne({
@@ -78,7 +89,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
           if (locationIndex > -1) {
             console.log("Updaintg existing location quantity");
-            batch.locations[locationIndex].quantity += item.quantity * item.packSize; // Update existing location quantity
+            batch.locations[locationIndex].quantity +=
+              item.quantity * item.packSize; // Update existing location quantity
           } else {
             // console.log("Adding new location");
             batch.locations.push({
@@ -102,7 +114,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
             ],
           });
         }
-        existingStock.sellPrice = item.mrp;
+        existingStock.sellPrice = item.mrpPerPack;
         await existingStock.save({ session });
       } else {
         // console.log("Creating new stock");
@@ -125,7 +137,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               ],
             },
           ],
-          sellPrice: item.mrp,
+          sellPrice: item.mrpPerPack,
         });
 
         await newStock.save({ session });
