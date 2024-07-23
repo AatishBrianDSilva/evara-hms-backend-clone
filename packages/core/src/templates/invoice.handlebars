@@ -34,7 +34,6 @@
                     <th>Service Type</th>
                     <th>Quantity</th>
                     <th>Price</th>
-                    <th>Tax</th>
                     <th>Total</th>
                   </tr>
                 </thead>
@@ -45,7 +44,6 @@
                       <td>{{this.serviceType}}</td>
                       <td>{{this.quantity}}</td>
                       <td>{{formatCurrency this.price}}</td>
-                      <td>{{formatCurrency this.tax}}</td>
                       <td>{{formatCurrency this.total}}</td>
                     </tr>
                   {{/each}}
@@ -55,7 +53,7 @@
               {{#each content}}
                 <div class="key-value">
                   <span class="key">{{@key}}</span>
-                  <span class="value">{{formatCurrency this}}</span>
+                  <span class="value">{{ this}}</span>
                 </div>
               {{/each}}
             {{/if}}

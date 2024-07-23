@@ -19,6 +19,8 @@ import {
 } from "@evara-backend/core/lib/types/global";
 import _ from "lodash";
 import { sanitizeInvoiceData } from "@evara-backend/core/lib/utils/sanitizeInvoiceData";
+import { format } from "date-fns";
+import { formatToIndianCurrencyFormat } from "@evara-backend/core/lib/utils/formatToIndianCurrencyFormat";
 
 interface BillingsData {
   billings: {
@@ -71,10 +73,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       );
       let newTotalPaid = totalPaid + totalPaymentAttempt;
 
-      if (newTotalPaid < billing.grandTotal) {
+      // if (newTotalPaid < billing.grandTotal) {
+      //   throw new ErrorMessage(
+      //     400,
+      //     `Payment insufficient to clear dues for billing ID: ${billingId}`
+      //   );
+      // }
+
+      if (newTotalPaid > billing.grandTotal) {
         throw new ErrorMessage(
           400,
-          `Payment insufficient to clear dues for billing ID: ${billingId}`
+          `Payment is more than the billing amount for billing ID: ${billingId}`
         );
       }
 
@@ -93,6 +102,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       console.log("Payments", payments);
 
+      billing.status =
+        newTotalPaid >= billing.grandTotal
+          ? EPatientBillingStatus.Paid
+          : EPatientBillingStatus.Pending;
+
       // Generate Report for payment
       if (payments) {
         const report = processDataForReport(payments, billingId, data, billing);
@@ -104,11 +118,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
         });
       }
-
-      billing.status =
-        newTotalPaid >= billing.grandTotal
-          ? EPatientBillingStatus.Paid
-          : EPatientBillingStatus.Pending;
 
       await billing.save({ session });
       results.push({ billingId: billingId, status: "Processed" });
@@ -152,40 +161,49 @@ const processDataForReport = (
     quantity: item.quantity,
     price: item.price,
     amount: item.amount,
-    tax: item.tax,
+    // tax: item.tax,
     total: item.total,
   }));
 
-  const billDetails = {
-    items: billItems,
-    subTotal: billing.subTotal,
-    discount: billing.discount,
-    tax: billing.tax,
-    grandTotal: billing.grandTotal,
-    totalPaid: billing.totalPaid,
-    totalPaymentAttempts: billing.totalPaymentAttempts,
-    totalDues: billing.totalDues,
+  let summaryContent = {
+    Date: format(billing.createdAt, "dd/MM/yyyy h:mm a"),
+    Due:
+      billing.totalDues > 0
+        ? formatToIndianCurrencyFormat(billing.totalDues)
+        : null,
+    CGST: billing.tax ? billing.tax / 2 : null,
+    SGST: billing.tax ? billing.tax / 2 : null,
+    "Sub Total": formatToIndianCurrencyFormat(billing.subTotal),
+    Discount: billing.discount
+      ? formatToIndianCurrencyFormat(billing.discount)
+      : null,
+    "Grand Total": formatToIndianCurrencyFormat(billing.grandTotal),
   };
 
   const sections = [
     {
       title: "Items",
       showTitle: true,
-      isBillDetails: true, // Add this flag to identify the section
+      isBillDetails: true,
       content: billItems,
     },
+    // {
+    //   title: "Payments",
+    //   showTitle: true,
+    //   isBillDetails: false,
+    //   content: billing.payments.map((payment) => ({
+    //     amount: payment.amount,
+    //     method: payment.method,
+    //     paymentDate: payment.paymentDate,
+    //     details: payment.details,
+    //     type: payment.type,
+    //   })),
+    // },
     {
       title: "Summary",
       showTitle: true,
       isBillDetails: false,
-      content: {
-        "Payment Method": data.length > 0 ? data[0].method : "",
-
-        "Sub Total": billing.subTotal,
-        Tax: billing.tax,
-        Discount: billing.discount,
-        "Grand Total": billing.grandTotal,
-      },
+      content: summaryContent,
     },
     // Add other sections as needed
     console.log("Bill Items", billItems),
@@ -196,6 +214,8 @@ const processDataForReport = (
   reportData.reportName = `Invoice ${billing.billingId}`;
   // reportData.sections = [...generateSections(newData)];
   reportData.sections = sanitizeInvoiceData(sections);
+
+  console.log("Sanitized Section", reportData.sections);
 
   return reportData;
 };

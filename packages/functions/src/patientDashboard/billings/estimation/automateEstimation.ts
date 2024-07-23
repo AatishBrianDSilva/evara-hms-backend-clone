@@ -61,7 +61,9 @@ const addEstimation = async (data: any) => {
   let cost: number = 0;
 
   if (data.serviceType === EPatientBillingServiceType.Pharmacy) {
-    const service: any = await PharmacyStock.findById(data.masterServiceId).populate([
+    const service: any = await PharmacyStock.findById(
+      data.masterServiceId
+    ).populate([
       {
         path: "item",
         model: DrugItem.modelName,
@@ -123,25 +125,28 @@ const addEstimation = async (data: any) => {
       total,
     });
   } else {
-    const service = await findServiceByIdAndType(data.masterServiceId, data.serviceType);
+    const service = await findServiceByIdAndType(
+      data.masterServiceId,
+      data.serviceType
+    );
 
     if (!service) {
       throw new ErrorMessage(404, "Service not found");
     }
 
-    taxRate = service.tax;
     cost = service.cost;
     estimatedPrice = service.cost * data.quantity;
-    // estimatedTax = (service.tax * estimatedPrice) / 100;
-    // total = estimatedPrice + estimatedTax;
-    estimatedTax = Math.round((service.tax * estimatedPrice) / 100);
-    total = Math.round(estimatedPrice + estimatedTax);
+    total = Math.round(estimatedPrice);
   }
 
   const newEstimation = new PatientBillingEstimation({
     ...data,
-    estimatedTax: estimatedTax,
-    taxRate: taxRate,
+    estimatedTax:
+      data.serviceType === EPatientBillingServiceType.Pharmacy
+        ? estimatedTax
+        : null,
+    taxRate:
+      data.serviceType === EPatientBillingServiceType.Pharmacy ? taxRate : null,
     cost: cost,
     estimatedPrice: estimatedPrice,
     estimatedTotal: total,

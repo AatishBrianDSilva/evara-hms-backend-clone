@@ -112,8 +112,7 @@ const itemSchema = new Schema<Item>({
   quantity: { type: Number, required: true, min: 0 },
   price: { type: Number, required: true, min: 0 },
   discount: { type: Number, required: true, min: 0 },
-
-  tax: { type: Number, required: true, min: 0 },
+  tax: { type: Number },
   total: { type: Number, required: true, min: 0 },
 });
 

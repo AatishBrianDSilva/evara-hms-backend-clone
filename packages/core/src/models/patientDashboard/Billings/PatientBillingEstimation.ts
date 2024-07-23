@@ -52,9 +52,9 @@ const patientBillingEstimationSchema = new Schema<IPatientBillingEstimation>(
       required: true,
       min: [1, "Quantity must be at least 1"],
     },
-    taxRate: { type: Number, required: true, min: 0 },
+    taxRate: { type: Number },
     cost: { type: Number, required: true, min: 0 },
-    estimatedTax: { type: Number, required: true, min: 0 },
+    estimatedTax: { type: Number },
     estimatedPrice: { type: Number, required: true, min: 0 },
     estimatedTotal: { type: Number, required: true, min: 0 },
     status: {

@@ -32,15 +32,25 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       updates,
     }: {
       updates: Partial<
-        Pick<IPatientBilling, "discount" | "discountReason" | "discountFile" | "discountType">
+        Pick<
+          IPatientBilling,
+          "discount" | "discountReason" | "discountFile" | "discountType"
+        >
       >;
     } = JSON.parse(event.body);
 
     console.log("Updates", updates);
 
     const updateKeys = Object.keys(updates);
-    const allowedUpdates = ["discount", "discountReason", "discountFile", "discountType"];
-    const isValidUpdate = updateKeys.every((key) => allowedUpdates.includes(key));
+    const allowedUpdates = [
+      "discount",
+      "discountReason",
+      "discountFile",
+      "discountType",
+    ];
+    const isValidUpdate = updateKeys.every((key) =>
+      allowedUpdates.includes(key)
+    );
 
     if (!isValidUpdate) {
       throw new ErrorMessage(
@@ -60,16 +70,25 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     if (discountType === "percentage") {
-      discountInPercentage = discountValue;
-      discountInAmount = billing.subTotal * (discountInPercentage / 100);
+      discountInPercentage = Number(discountValue);
+      discountInAmount = Number(
+        (billing.subTotal * (discountInPercentage / 100)).toFixed(2)
+      );
     } else if (discountType === "amount") {
-      discountInAmount = discountValue;
-      discountInPercentage = (discountInAmount / billing.subTotal) * 100;
+      discountInAmount = Number(discountValue);
+      discountInPercentage = Number(
+        ((discountInAmount / billing.subTotal) * 100).toFixed(2)
+      );
     }
 
-    // Round the values to the nearest whole number
-    discountInAmount = Math.round(discountInAmount);
-    discountInPercentage = Math.round(discountInPercentage);
+    console.log("discountInAmount", discountInAmount);
+    console.log("discountInPercentage", discountInPercentage);
+
+    // Remove the rounding to whole numbers
+    // discountInAmount = Math.round(discountInAmount);
+    // discountInPercentage = Math.round(discountInPercentage);
+
+    console.log("After rounding", discountInAmount, discountInPercentage);
 
     const updatedBilling = await PatientBilling.findByIdAndUpdate(
       id,
