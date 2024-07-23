@@ -1,7 +1,5 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
@@ -52,11 +50,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     ];
 
-    const data = await InternalOrder.findById(id).populate(populate).lean();
+    let data = await InternalOrder.findById(id).populate(populate).lean();
 
     if (!data) {
       throw new ErrorMessage(404, "Not found");
     }
+
+    // Filter out batches with deductedQuantity of 0
+    data = {
+      ...data,
+      items: data.items.map((item) => ({
+        ...item,
+        batches: item.batches.filter((batch) => batch.deductedQuantity !== 0),
+      })),
+    };
 
     console.log("Data", JSON.stringify(data, null, 2));
 
