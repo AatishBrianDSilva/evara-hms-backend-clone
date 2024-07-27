@@ -105,19 +105,28 @@ const addEstimation = async (data: any) => {
 
     const sellPrice = service.sellPrice;
     const tax = service.item?.taxRate?.taxRate || 0;
+    const packSize = service.item.packSize || 1;
 
-    const mrp = (data.quantity / service.item.packSize) * sellPrice;
+    const mrpPerUnit = sellPrice / packSize;
 
-    estimatedPrice = Math.round(mrp);
-    estimatedTax = Math.round((tax * estimatedPrice) / 100);
-    total = Math.round(estimatedPrice + estimatedTax);
+    estimatedPrice = parseFloat(mrpPerUnit.toFixed(2));
+    const estimatedPriceWithQuantity = estimatedPrice * data.quantity;
+
+    estimatedTax = parseFloat(
+      (estimatedPriceWithQuantity / (1 + tax / 100)).toFixed(2)
+    );
+    total = parseFloat((estimatedPriceWithQuantity + estimatedTax).toFixed(2));
+
+    // console.log("Estimated Price", estimatedPrice);
+    // console.log("Estimated Tax", estimatedTax);
+    // console.log("Total", total);
 
     // estimatedPrice = mrp;
     // estimatedTax = (tax * estimatedPrice) / 100;
     // total = estimatedPrice + estimatedTax;
 
     taxRate = tax;
-    cost = mrp;
+    cost = total;
 
     console.log("Success", {
       estimatedPrice,

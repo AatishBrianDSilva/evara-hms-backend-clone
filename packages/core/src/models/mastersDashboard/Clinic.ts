@@ -23,5 +23,3 @@ const clinicSchema = new Schema(
 const Clinic = mongoose.model("Clinic", clinicSchema);
 
 export default Clinic;
-
-// 112/361, above mahindra showroom, Khalasi Line, Swaroop Nagar, Kanpur, Uttar Pradesh 208002
