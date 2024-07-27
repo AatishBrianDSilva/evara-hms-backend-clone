@@ -1,5 +1,4 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
@@ -10,6 +9,15 @@ import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 import { PatientBillingEstimation } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBillingEstimation";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 
+interface IPatientBillingEstimation extends Document {
+  estimatedPrice: number;
+  taxRate?: number;
+}
+
+const calculateEstimatedPriceWithoutTax = (estimatedPrice: number, taxRate: number): number => {
+  return estimatedPrice / (1 + taxRate / 100);
+};
+
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -19,13 +27,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const params = event.queryStringParameters || {};
     console.log("params", params);
-    const {
-      page = "1",
-      limit = "10",
-      sort: sortRaw,
-      status,
-      patientCode,
-    } = params;
+    const { page = "1", limit = "10", sort: sortRaw, status, patientCode } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
@@ -68,18 +70,29 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const result = await PatientBillingEstimation.paginate(query, options);
       const { records, pagination } = formatPaginationResult(result);
 
+      // Update estimatedPrice with the value of estimatedPriceWithoutTax
+      const recordsWithUpdatedEstimatedPrice = records.map((record: IPatientBillingEstimation) => {
+        const taxRate = record.taxRate || 0;
+        record.estimatedPrice = calculateEstimatedPriceWithoutTax(record.estimatedPrice, taxRate);
+        return record;
+      });
+
       return successResponse("Success", {
-        records,
+        records: recordsWithUpdatedEstimatedPrice,
         pagination,
       });
     } else {
-      const data = await PatientBillingEstimation.find()
-        .populate(populate)
-        .sort(sort)
-        .lean();
+      const data = await PatientBillingEstimation.find(query).populate(populate).sort(sort).lean();
+
+      // Update estimatedPrice with the value of estimatedPriceWithoutTax
+      const dataWithUpdatedEstimatedPrice = data.map((record: IPatientBillingEstimation) => {
+        const taxRate = record.taxRate || 0;
+        record.estimatedPrice = calculateEstimatedPriceWithoutTax(record.estimatedPrice, taxRate);
+        return record;
+      });
 
       return successResponse("Success", {
-        records: data,
+        records: dataWithUpdatedEstimatedPrice,
       });
     }
   } catch (error) {

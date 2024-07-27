@@ -155,6 +155,10 @@ const formatPaginateRecords = (records) =>
 
     const uniqueLocationString = uniqueLocations.join(", "); // Concatenate all unique location names
 
+    // Calculate MRP per item
+    const packSize = record.item?.packSize || 1; // Default to 1 if packSize is not defined
+    const mrpPerItem = parseFloat((record.sellPrice / packSize).toFixed(2)); // Ensure float value with two decimal precision
+
     // Return the new record with additional fields
     return {
       ...record,
@@ -162,5 +166,6 @@ const formatPaginateRecords = (records) =>
       locations: uniqueLocationCount,
       batchesCount: record.batches.length,
       locationNames: uniqueLocationString, // New field for concatenated locations
+      mrpPerItem, // MRP per individual item
     };
   });

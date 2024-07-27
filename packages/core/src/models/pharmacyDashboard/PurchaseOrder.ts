@@ -1,7 +1,6 @@
 import mongoose, { Document, PaginateModel, Schema } from "mongoose";
 import { autoIncrementId } from "../Counters";
 import paginate from "mongoose-paginate-v2";
-import { log } from "console";
 
 export enum EPurchaseOrderStatus {
   Draft = "Draft",
@@ -10,6 +9,13 @@ export enum EPurchaseOrderStatus {
   Ordered = "Ordered",
   PartiallyProcessed = "PartiallyProcessed",
   Processed = "Processed",
+}
+
+export enum EItemStatus {
+  Processed = "Processed",
+  PartiallyProcessed = "PartiallyProcessed",
+  Pending = "Pending",
+  NewlyProcessed = "NewlyProcessed",
 }
 
 export interface IPurchaseOrderRequest {
@@ -22,8 +28,10 @@ export interface IPurchaseOrderRequest {
     total: number;
     tax: number;
     quantity: number;
-    freeQuantity: number; // Added freeQuantity field
-    noOfPacks: number; // Added noOfPacks field
+    fulfilledQuantity: number; // New field to track the fulfilled quantity
+    freeQuantity: number;
+    noOfPacks: number;
+    packsRequired: number; // Include packsRequired in request
   }[];
   netAmount: number;
   discount: number;
@@ -43,8 +51,11 @@ export interface IPurchaseOrderResponse {
     buyPrice: number;
     tax: number;
     quantity: number;
-    freeQuantity: number; // Added freeQuantity field
-    noOfPacks: number; // Added noOfPacks field
+    fulfilledQuantity: number; // New field to track the fulfilled quantity
+    freeQuantity: number;
+    noOfPacks: number;
+    packsRequired: number; // Include packsRequired in response
+    status?: EItemStatus; // Optional status field
   }[];
   netAmount: number;
   discount: number;
@@ -79,13 +90,14 @@ const itemSchema = new Schema({
   buyPrice: { type: Number, required: true, min: 0 },
   tax: { type: Number, required: true, min: 0 },
   quantity: { type: Number, required: true, min: 0 },
-  freeQuantity: { type: Number, required: false, min: 0 }, // Added freeQuantity field
-  noOfPacks: { type: Number, required: true, min: 0 }, // New line added
+  freeQuantity: { type: Number, required: false, min: 0 },
+  noOfPacks: { type: Number, required: true, min: 0 },
+  packsRequired: { type: Number, required: false, min: 0 }, // Include packsRequired
+  status: { type: String, enum: Object.values(EItemStatus), required: false }, // Optional status
 });
 
 const responseSchema = new Schema({
   items: [itemSchema],
-  packSize: { type: Number, required: true, min: 0 },
   netAmount: { type: Number, required: false, min: 0 },
   discount: { type: Number, required: false, min: 0 },
   otherCharges: { type: Number, required: false, min: 0 },

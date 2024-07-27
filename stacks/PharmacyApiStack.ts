@@ -130,6 +130,10 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/purchaseOrder/updateStatusPurchaseOrder.main",
     "PATCH /pharmacy-dashboard/purchase-order/{purchaseOrderId}/update-stock":
       "packages/functions/src/pharmacyDashboard/stocks/updateStockFromPurchaseOrder.main",
+    "PATCH /pharmacy-dashboard/purchase-order/{id}/update-partial":
+      "packages/functions/src/pharmacyDashboard/purchaseOrder/updatePartiallyProcessedPurchaseOrder.main",
+    "PATCH /pharmacy-dashboard/purchase-order/{purchaseOrderId}/update-stock-partial":
+      "packages/functions/src/pharmacyDashboard/stocks/updateStockFromPartiallyProcessedPurchaseOrder.main",
 
     //Internal Orders
     "POST /pharmacy-dashboard/internal-order/create-draft":

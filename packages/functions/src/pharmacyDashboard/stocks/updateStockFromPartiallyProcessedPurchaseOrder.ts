@@ -21,7 +21,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   const session = await conn.startSession();
   session.startTransaction();
   try {
-    log("Starting stock update from purchase order");
+    log("Starting stock update from partially processed purchase order");
 
     // Validate the presence of the purchase order ID
     if (!event.pathParameters || !event.pathParameters.purchaseOrderId) {
@@ -61,10 +61,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     log(`Main location found: ${mainLocation._id}`);
 
-    // Process only the fulfilled (processed) items
+    // Process only the newly processed items
     for (const item of response.items) {
       log(`Processing item: ${item.item} with status: ${item.status}`);
-      if (item.status === "Processed" || item.status === "PartiallyProcessed") {
+      if (item.status === "NewlyProcessed") {
         if (!item.batchNo || !item.expiryDate) {
           log(`Skipping item ${item.item} due to missing batchNo or expiryDate`);
           continue; // Skip items with missing batchNo or expiryDate
@@ -150,25 +150,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           await newStock.save({ session });
           log(`New stock created for item ${item.item}`);
         }
+
+        // Mark item as fully processed after updating stock
+        item.status = "Processed";
       } else {
-        log(`Item ${item.item} not processed; status: ${item.status}`);
+        log(`Skipping item ${item.item} with status: ${item.status}`);
       }
     }
-
-    // Always set the purchase order status to "Processed"
-    await PurchaseOrder.findByIdAndUpdate(
-      purchaseOrderId,
-      { $set: { status: EPurchaseOrderStatus.Processed } },
-      { session }
-    );
-    log(`Purchase order ${purchaseOrderId} status updated to Processed`);
 
     // Commit transaction
     await session.commitTransaction();
     session.endSession();
-    log(`Stock and purchase order ${purchaseOrderId} updated successfully`);
+    log(`Stock update for newly processed items completed successfully`);
 
-    return successResponse("Stock and purchase order updated successfully.");
+    return successResponse("Stock updated successfully for newly processed items.");
   } catch (error) {
     // Abort transaction on error
     await session.abortTransaction();

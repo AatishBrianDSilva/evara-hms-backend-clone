@@ -30,6 +30,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       status,
       searchQuery = "",
       vendorName = "", // Adjust to use vendorName from filters
+      itemStatus = "", // New parameter for item status filtering
     } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
@@ -73,7 +74,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       })
         .select("_id")
         .lean();
-      // console.log("Matching vendors based on vendorName:", matchingVendors);
 
       const vendorIds = matchingVendors.map((vendor) => vendor._id);
 
@@ -86,6 +86,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           pagination: { totalDocs: 0, totalPages: 0, page: 1, limit: 10 },
         });
       }
+    }
+
+    // Item status filtering
+    if (itemStatus) {
+      query["request.items.status"] = itemStatus; // Add condition for item status
     }
 
     console.log("Final query for PurchaseOrder:", JSON.stringify(query));
