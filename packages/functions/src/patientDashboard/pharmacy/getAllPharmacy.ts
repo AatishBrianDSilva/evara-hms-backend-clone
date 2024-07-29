@@ -44,7 +44,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     ];
 
     // Fetch all records from PatientPharmacy and convert them to plain objects with populated fields
-    const pharmacyData = await PatientPharmacy.find().populate(populatePaths).lean();
+    const pharmacyData = await PatientPharmacy.find()
+      .populate(populatePaths)
+      .lean();
 
     // Extract unique patient IDs
     const patientIds = Array.from(
@@ -61,13 +63,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // log("Extracted Patient IDs:", patientIds);
 
     // Fetch patient details using the extracted patient IDs
-    const patientData = await Patient.find({ patientId: { $in: patientIds } }).lean();
+    const patientData = await Patient.find({
+      patientId: { $in: patientIds },
+    }).lean();
 
     // Map patients to a dictionary for easy lookup
-    const patientMap = patientData.reduce((map, patient) => {
-      map[patient.patientId] = patient;
-      return map;
-    }, {});
+    const patientMap: Record<string, any> = patientData.reduce(
+      (map, patient) => {
+        map[patient.patientId] = patient;
+        return map;
+      },
+      {}
+    );
 
     // Combine patient details with pharmacy records
     const combinedData = pharmacyData.map((record) => {
@@ -83,7 +90,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         id: record._id, // Ensure unique `id` for each row
         totalQuantity, // Include the calculated totalQuantity
         patientDetails: {
-          fullName: `${patientDetails.firstName || ""} ${patientDetails.lastName || ""}`.trim(),
+          fullName: `${patientDetails.firstName || ""} ${
+            patientDetails.lastName || ""
+          }`.trim(),
           ...patientDetails,
         },
       };

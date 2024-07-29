@@ -18,10 +18,13 @@ import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugT
 import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
 import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 // AWS Lambda handler function to add data to PatientPharmacy model
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+
+  const auth = extractAuthorizerDetails(event);
 
   const conn = await connectMongoDb();
   const session = await conn.startSession();
@@ -54,7 +57,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       // Deduct quantities from the relevant locations in the stock
       item.details.forEach(async (detail: any) => {
-        const batch = stock.batches.find((b) => b.batchNo === detail.batchNumber);
+        const batch = stock.batches.find(
+          (b) => b.batchNo === detail.batchNumber
+        );
         if (!batch) {
           throw new Error("Batch number not found");
         }
@@ -75,6 +80,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       // Create and save PatientPharmacy entry
       const newPatientPharmacy = new PatientPharmacy({
+        branchId: auth.branchId,
+        clinicId: auth.clinicId,
         patient: data.patient,
         item,
         doctor: data.doctor,
@@ -83,7 +90,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       });
       const newPharmacy = await newPatientPharmacy.save({ session });
 
-      const pharmacyStock: any = await PharmacyStock.findById(newPharmacy.item.stock).populate([
+      const pharmacyStock: any = await PharmacyStock.findById(
+        newPharmacy.item.stock
+      ).populate([
         {
           path: "item",
           model: DrugItem.modelName,

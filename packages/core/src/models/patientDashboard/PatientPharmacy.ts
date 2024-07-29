@@ -46,7 +46,8 @@ const itemSchema = new Schema({
 const patientPharmacySchema = new Schema(
   {
     patient: { type: String, required: true, index: true },
-
+    branchId: { type: String, required: true, index: true },
+    clinicId: { type: String, required: true, index: true },
     item: itemSchema,
     doctor: { type: Schema.Types.ObjectId, ref: "Doctor", required: true },
     date: { type: Date, required: true },
