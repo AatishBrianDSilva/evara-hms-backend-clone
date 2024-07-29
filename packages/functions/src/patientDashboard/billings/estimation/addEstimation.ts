@@ -47,12 +47,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         throw new ErrorMessage(404, "Service not found");
       }
 
-      const estimatedPrice = service.cost * item.quantity;
-      const total = Math.round(estimatedPrice);
-      // const total = estimatedPrice + estimatedTax;
+      const cost = service.cost;
+      const tax = 0;
+      const estimatedUnitPrice = parseFloat(
+        (cost / (1 + tax / 100)).toFixed(2)
+      );
+      const estimatedPrice = parseFloat(
+        (estimatedUnitPrice * item.quantity).toFixed(2)
+      );
 
-      // console.log("Adding estimation for service: ", service.name);
-      // console.log("Item", item);
+      const total = parseFloat((cost * item.quantity).toFixed(2));
 
       const newEstimation = new PatientBillingEstimation({
         clinicId: data.clinicId,
@@ -64,6 +68,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         serviceType: data.serviceType,
         quantity: item.quantity,
         cost: service.cost,
+        estimatedUnitPrice: estimatedUnitPrice,
         estimatedPrice: estimatedPrice,
         estimatedTotal: total,
         status: "Active",

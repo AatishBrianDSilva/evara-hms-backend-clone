@@ -20,6 +20,7 @@ interface IPatientBillingEstimation extends Document {
   estimatedTax: number;
   taxRate: number;
   cost: number;
+  estimatedUnitPrice: number;
   estimatedPrice: number;
   estimatedTotal: number;
   status: "Active" | "Inactive";
@@ -55,6 +56,7 @@ const patientBillingEstimationSchema = new Schema<IPatientBillingEstimation>(
     taxRate: { type: Number },
     cost: { type: Number, required: true, min: 0 },
     estimatedTax: { type: Number },
+    estimatedUnitPrice: { type: Number, required: true, min: 0 },
     estimatedPrice: { type: Number, required: true, min: 0 },
     estimatedTotal: { type: Number, required: true, min: 0 },
     status: {

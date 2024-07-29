@@ -56,6 +56,7 @@ const addEstimation = async (data: any) => {
 
   let estimatedPrice: number = 0;
   let estimatedTax: number = 0;
+  let estimatedUnitPrice: number = 0;
   let total: number = 0;
   let taxRate: number = 0;
   let cost: number = 0;
@@ -109,13 +110,13 @@ const addEstimation = async (data: any) => {
 
     const mrpPerUnit = sellPrice / packSize;
 
-    estimatedPrice = parseFloat(mrpPerUnit.toFixed(2));
-    const estimatedPriceWithQuantity = estimatedPrice * data.quantity;
+    estimatedUnitPrice = parseFloat((mrpPerUnit / (1 + tax / 100)).toFixed(2));
+    estimatedPrice = estimatedUnitPrice * data.quantity;
 
-    estimatedTax = parseFloat(
-      (estimatedPriceWithQuantity / (1 + tax / 100)).toFixed(2)
-    );
-    total = parseFloat((estimatedPriceWithQuantity + estimatedTax).toFixed(2));
+    total = mrpPerUnit * data.quantity;
+    estimatedTax = total - estimatedPrice;
+
+    // total = parseFloat((estimatedPriceWithQuantity + estimatedTax).toFixed(2));
 
     // console.log("Estimated Price", estimatedPrice);
     // console.log("Estimated Tax", estimatedTax);
@@ -144,8 +145,13 @@ const addEstimation = async (data: any) => {
     }
 
     cost = service.cost;
-    estimatedPrice = service.cost * data.quantity;
-    total = Math.round(estimatedPrice);
+    const tax = 0;
+    estimatedUnitPrice = parseFloat((cost / (1 + tax / 100)).toFixed(2));
+    estimatedPrice = parseFloat(
+      (estimatedUnitPrice * data.quantity).toFixed(2)
+    );
+
+    total = parseFloat((cost * data.quantity).toFixed(2));
   }
 
   const newEstimation = new PatientBillingEstimation({
@@ -157,6 +163,7 @@ const addEstimation = async (data: any) => {
     taxRate:
       data.serviceType === EPatientBillingServiceType.Pharmacy ? taxRate : null,
     cost: cost,
+    estimatedUnitPrice: estimatedUnitPrice,
     estimatedPrice: estimatedPrice,
     estimatedTotal: total,
     status: "Active",
