@@ -7,7 +7,7 @@ import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 import { log } from "console";
 import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 import { PatientBillingEstimation } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBillingEstimation";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import { Document } from "mongoose";
 
 interface IPatientBillingEstimation extends Document {
   estimatedPrice: number;
