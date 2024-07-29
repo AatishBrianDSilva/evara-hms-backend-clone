@@ -37,7 +37,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Optionally, find and validate new service if masterServiceId or serviceType is updated
     if (data.masterServiceId && data.serviceType) {
-      const service = await findServiceByIdAndType(data.masterServiceId, data.serviceType);
+      const service = await findServiceByIdAndType(
+        data.masterServiceId,
+        data.serviceType
+      );
       if (!service) {
         throw new ErrorMessage(404, "Service not found");
       }
@@ -54,9 +57,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     // Round the values to the nearest whole number
-    if (data.estimatedTax) data.estimatedTax = Math.round(data.estimatedTax);
-    if (data.estimatedPrice) data.estimatedPrice = Math.round(data.estimatedPrice);
-    if (data.estimatedTotal) data.estimatedTotal = Math.round(data.estimatedTotal);
+    if (data.estimatedTax)
+      data.estimatedTax = parseFloat(data.estimatedTax.toFixed(2));
+    if (data.estimatedPrice)
+      data.estimatedPrice = parseFloat(data.estimatedPrice.toFixed(2));
+    if (data.estimatedTotal)
+      data.estimatedTotal = parseFloat(data.estimatedTotal.toFixed(2));
 
     // Update the estimation
     await PatientBillingEstimation.findByIdAndUpdate(id, {
