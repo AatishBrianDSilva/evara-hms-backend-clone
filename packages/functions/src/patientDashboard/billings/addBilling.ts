@@ -58,14 +58,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         throw new ErrorMessage(404, "Estimation not found");
       }
 
-      // console.log("Estimation", estimation);
+      console.log("Estimation", estimation);
 
       // Accumulate totals
 
       amount += parseFloat(estimation.estimatedPrice.toFixed(2));
       // amount += estimation.estimatedPrice;
 
-      tax += parseFloat(estimation.estimatedTax.toFixed(2)) || 0;
+      tax += parseFloat(estimation?.estimatedTax?.toFixed(2)) || 0;
 
       patientCode = estimation.patientCode;
 
