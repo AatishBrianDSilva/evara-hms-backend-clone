@@ -12,6 +12,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
   try {
     await connectMongoDb(); // Connect to MongoDB
+    console.log("MongoDB connection established.");
 
     if (!event.body) {
       throw new ErrorMessage(400, "Data is required");
@@ -23,10 +24,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "ID is required for update");
     }
 
-    console.log(`Updating partial purchase order with ID: ${id}`);
+    console.log(`Updating purchase order with ID: ${id}`);
     console.log(`Update Data: ${JSON.stringify(updateData)}`);
 
+    const purchaseOrder = await PurchaseOrder.findById(id);
+    if (!purchaseOrder) {
+      throw new ErrorMessage(404, "Purchase order not found");
+    }
+    console.log("Purchase order found:", JSON.stringify(purchaseOrder));
+
     // Handle invoice file uploads
+    const invoiceFileUrls = [];
     if (updateData.response?.invoice && updateData.response?.invoice.length > 0) {
       for (let i = 0; i < updateData.response.invoice.length; i++) {
         if (updateData.response.invoice[i].length > 0) {
@@ -35,16 +43,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           if (s3UrlParts) {
             await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
             const invoicePart = s3UrlParts.key.split("/");
-
-            const po = await PurchaseOrder.findById(id).lean();
-            console.log(`Fetched Purchase Order for invoice processing: ${JSON.stringify(po)}`);
-
-            if (!po) {
-              throw new ErrorMessage(404, "Purchase order not found for invoice processing.");
-            }
+            invoiceFileUrls.push(updateData.response.invoice[i]);
 
             const pharmacyInvoice = new PharmacyInvoice({
-              purchaseOrderId: po.poNumber,
+              purchaseOrderId: purchaseOrder.poNumber,
               invoice: invoicePart[invoicePart.length - 1],
               bucket: s3UrlParts.bucketName,
               key: s3UrlParts.key,
@@ -59,41 +61,37 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
     }
 
-    const purchaseOrder = await PurchaseOrder.findById(id);
-    if (!purchaseOrder) {
-      throw new ErrorMessage(404, "Purchase order not found");
-    }
+    // Initialize new response object for the current update
+    const newResponse = {
+      items: [],
+      invoiceNumber: updateData.invoiceNumber,
+      invoiceFileUrl: invoiceFileUrls,
+      status: "ProcessedWithoutUpdating",
+      invoice: invoiceFileUrls, // Ensure the invoice file URLs are added to the invoice field
+    };
 
-    // Ensure request and response objects are initialized
-    if (!purchaseOrder.request) {
-      purchaseOrder.request = {
-        items: [],
-        subTotal: 0,
-        tax: 0,
-        discount: 0,
-        otherCharges: 0,
-        netAmount: 0,
-      };
-    }
-    if (!purchaseOrder.response) {
-      purchaseOrder.response = {
-        items: [],
-        subTotal: 0,
-        tax: 0,
-        discount: 0,
-        otherCharges: 0,
-        netAmount: 0,
-      };
-    }
-
-    // Keep existing response items and add new ones
-    const existingResponseItems = purchaseOrder.response.items || [];
-    const newResponseItems = [];
     const newRequestItems = [];
+    let requestSubTotal = 0;
+    let requestTotalTax = 0;
     let responseSubTotal = 0;
     let responseTotalTax = 0;
 
     console.log("Processing items in the request...");
+
+    // Extract batchNo and expiryDate before processing items
+    const batchDetails = {};
+    updateData.response.items.forEach((responseItem) => {
+      if (responseItem && responseItem.item) {
+        const itemId = responseItem.item._id || responseItem.item;
+        batchDetails[itemId] = {
+          batchNo: responseItem.batchNo,
+          expiryDate: responseItem.expiryDate ? new Date(responseItem.expiryDate) : null, // Ensure expiryDate is a Date object or null
+        };
+      }
+    });
+
+    console.log("Batch Details:", batchDetails);
+
     // Process each item in the request
     updateData.request.items.forEach((item, index) => {
       console.log(`Processing request item ${index + 1}/${updateData.request.items.length}`);
@@ -102,23 +100,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const packsRequired = item.packsRequired; // Total packs required
       const fulfilledPacks = item.noOfPacks || 0; // Fulfilled packs
 
-      // Find the corresponding response item details from updateData.response.items
-      const responseItemDetails = updateData.response.items.find(
-        (respItem) => respItem.item === item.item && respItem.batchNo && respItem.expiryDate
-      );
-
-      const batchNo = responseItemDetails ? responseItemDetails.batchNo : item.batchNo;
-      const expiryDate = responseItemDetails ? responseItemDetails.expiryDate : item.expiryDate;
-
+      // Calculate the MRP and Tax for the fulfilled packs
       const itemMRP = (item.buyPrice || 0) * fulfilledPacks;
       const itemTax = (itemMRP * (item.tax || 0)) / 100;
 
-      // Add to response totals
+      // Update response totals
       responseSubTotal += itemMRP;
       responseTotalTax += itemTax;
 
       if (fulfilledPacks > 0) {
-        newResponseItems.push({
+        // Use pre-extracted batchNo and expiryDate for the new response
+        const batchInfo = batchDetails[item.item] || {};
+        newResponse.items.push({
           item: item.item,
           packSize: item.packSize,
           quantity: fulfilledPacks * (item.packSize || 1),
@@ -129,78 +122,92 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           freeQuantity: item.freeQuantity || 0,
           noOfPacks: fulfilledPacks,
           packsRequired: item.packsRequired,
-          batchNo, // Use batchNo from response item
-          expiryDate, // Use expiryDate from response item
-          status: "NewlyProcessed", // Mark as newlyProcessed for the new items
+          batchNo: batchInfo.batchNo || "Unknown", // Add batchNo
+          expiryDate: batchInfo.expiryDate || null, // Add expiryDate
+          status: "ProcessedWithoutUpdating",
         });
         console.log(
           `Added to Response Items: ${JSON.stringify(
-            newResponseItems[newResponseItems.length - 1]
+            newResponse.items[newResponse.items.length - 1]
           )}`
         );
       }
 
-      // Add remaining items to request
+      // Calculate remaining packs after fulfilling the current batch
       const remainingPacks = packsRequired - fulfilledPacks;
+      console.log(`Remaining packs after fulfilling: ${remainingPacks}`);
+
+      // If there are remaining packs, update newRequestItems with the remaining quantity
       if (remainingPacks > 0) {
+        const remainingItemMRP = (item.buyPrice || 0) * remainingPacks;
+        const remainingItemTax = (remainingItemMRP * (item.tax || 0)) / 100;
+
+        requestSubTotal += remainingItemMRP;
+        requestTotalTax += remainingItemTax;
+
         newRequestItems.push({
           item: item.item,
           packSize: item.packSize,
           quantity: remainingPacks * (item.packSize || 1),
-          mrp: (item.buyPrice || 0) * remainingPacks,
+          mrp: remainingItemMRP,
           mrpPerPack: item.mrpPerPack || 0,
           buyPrice: item.buyPrice || 0,
           tax: item.tax || 0,
           freeQuantity: item.freeQuantity || 0,
           noOfPacks: remainingPacks,
           packsRequired: item.packsRequired,
-          batchNo: item.batchNo,
-          expiryDate: item.expiryDate,
-          status: "Pending", // Keep status as Pending for remaining items
+          batchNo: item.batchNo || "Unknown",
+          expiryDate: item.expiryDate ? new Date(item.expiryDate) : null, // Ensure expiryDate is a Date object or null
+          status: "Pending",
         });
+        console.log(`Unfulfilled item added with remaining packs: ${remainingPacks}`);
       }
     });
 
-    // Combine old response items with new items
-    const updatedResponseItems = [...existingResponseItems, ...newResponseItems];
+    console.log(`New Request Items: ${JSON.stringify(newRequestItems)}`);
+    console.log(`New Response Items: ${JSON.stringify(newResponse)}`);
 
-    // Calculate totals for response
+    // Calculate totals for request and response
+    let requestDiscountAmount = 0;
     let responseDiscountAmount = 0;
+
+    if (updateData.request.discount) {
+      requestDiscountAmount = (requestSubTotal * updateData.request.discount) / 100;
+    }
 
     if (updateData.response.discount) {
       responseDiscountAmount = (responseSubTotal * updateData.response.discount) / 100;
     }
 
+    const requestOtherCharges = updateData.request.otherCharges || 0;
     const responseOtherCharges = updateData.response.otherCharges || 0;
 
+    const requestNetAmount =
+      requestSubTotal - requestDiscountAmount + requestTotalTax + requestOtherCharges;
     const responseNetAmount =
       responseSubTotal - responseDiscountAmount + responseTotalTax + responseOtherCharges;
 
-    // Update the response in the Purchase Order
-    purchaseOrder.response.items = updatedResponseItems;
-    purchaseOrder.response.subTotal = existingResponseItems.reduce(
-      (acc, item) => acc + (item.mrp || 0),
-      0
-    );
-    purchaseOrder.response.tax = existingResponseItems.reduce(
-      (acc, item) => acc + ((item.mrp || 0) * (item.tax || 0)) / 100,
-      0
-    );
-    purchaseOrder.response.discount = updateData.response.discount || 0;
-    purchaseOrder.response.otherCharges = updateData.response.otherCharges || 0;
-    purchaseOrder.response.netAmount =
-      purchaseOrder.response.subTotal -
-      responseDiscountAmount +
-      purchaseOrder.response.tax +
-      responseOtherCharges;
+    console.log(`Request Net Amount: ${requestNetAmount}`);
+    console.log(`Response Net Amount: ${responseNetAmount}`);
 
     // Update the request in the Purchase Order
     purchaseOrder.request.items = newRequestItems;
-    purchaseOrder.request.subTotal = updateData.request.subTotal || 0;
-    purchaseOrder.request.tax = updateData.request.tax || 0;
+    purchaseOrder.request.subTotal = requestSubTotal;
+    purchaseOrder.request.tax = requestTotalTax;
     purchaseOrder.request.discount = updateData.request.discount || 0;
-    purchaseOrder.request.otherCharges = updateData.request.otherCharges || 0;
-    purchaseOrder.request.netAmount = updateData.request.netAmount || 0;
+    purchaseOrder.request.otherCharges = requestOtherCharges;
+    purchaseOrder.request.netAmount = requestNetAmount;
+
+    // Set response totals
+    newResponse.subTotal = responseSubTotal;
+    newResponse.tax = responseTotalTax;
+    newResponse.discount = updateData.response.discount || 0;
+    newResponse.otherCharges = updateData.response.otherCharges || 0;
+    newResponse.netAmount = responseNetAmount;
+
+    // Add the new response to the Purchase Order's responses array
+    purchaseOrder.responses = purchaseOrder.responses || [];
+    purchaseOrder.responses.push(newResponse);
 
     console.log(`Updated Purchase Order: ${JSON.stringify(purchaseOrder)}`);
 

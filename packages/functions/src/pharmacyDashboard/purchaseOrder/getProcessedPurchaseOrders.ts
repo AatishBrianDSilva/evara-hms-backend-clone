@@ -29,8 +29,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       sort: sortRaw,
       status,
       searchQuery = "",
-      vendorName = "", // Adjust to use vendorName from filters
-      itemStatus = "", // New parameter for item status filtering
+      vendorName = "",
+      itemStatus = "",
     } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
@@ -44,10 +44,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         path: "request.items.item",
         model: DrugItem.modelName,
       },
-      // {
-      //   path: "response.items.item",
-      //   model: DrugItem.modelName,
-      // },
       {
         path: "branch",
         model: Branch.modelName,
@@ -66,9 +62,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       query.$or = [{ poNumber: new RegExp(searchQuery, "i") }];
     }
 
-    // Vendor name filtering
     if (vendorName) {
-      // Fetch vendors matching the name
       const matchingVendors = await DrugVendor.find({
         name: new RegExp(vendorName, "i"),
       })
@@ -80,7 +74,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       if (vendorIds.length > 0) {
         query.vendor = { $in: vendorIds };
       } else {
-        // Return empty result if no matching vendors
         return successResponse("No matching vendors found", {
           records: [],
           pagination: { totalDocs: 0, totalPages: 0, page: 1, limit: 10 },
@@ -88,9 +81,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
     }
 
-    // Item status filtering
     if (itemStatus) {
-      query["request.items.status"] = itemStatus; // Add condition for item status
+      query["request.items.status"] = itemStatus;
     }
 
     console.log("Final query for PurchaseOrder:", JSON.stringify(query));
@@ -109,15 +101,32 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const result = await PurchaseOrder.paginate(query, options);
       const { records, pagination } = formatPaginationResult(result);
 
+      // Flatten the responses
+      const flattenedRecords = records.flatMap((order) =>
+        (order.responses || []).map((response, index) => ({
+          ...order,
+          response,
+          responseIndex: index + 1,
+        }))
+      );
+
       return successResponse("Success", {
-        records,
+        records: flattenedRecords,
         pagination,
       });
     } else {
       const data = await PurchaseOrder.find(query).populate(populate).sort(sort).lean();
 
+      const flattenedData = data.flatMap((order) =>
+        (order.responses || []).map((response, index) => ({
+          ...order,
+          response,
+          responseIndex: index + 1,
+        }))
+      );
+
       return successResponse("Success", {
-        records: data,
+        records: flattenedData,
       });
     }
   } catch (error) {

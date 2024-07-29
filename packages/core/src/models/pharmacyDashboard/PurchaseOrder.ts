@@ -16,6 +16,7 @@ export enum EItemStatus {
   PartiallyProcessed = "PartiallyProcessed",
   Pending = "Pending",
   NewlyProcessed = "NewlyProcessed",
+  ProcessedWithoutUpdating = "ProcessedWithoutUpdating",
 }
 
 export interface IPurchaseOrderRequest {
@@ -63,6 +64,8 @@ export interface IPurchaseOrderResponse {
   subTotal: number;
   tax: number;
   invoice: string[];
+  invoiceNumber: string; // New field for invoice number
+  status: string; // New field for status
 }
 
 export interface IPurchaseOrder extends Document {
@@ -72,12 +75,11 @@ export interface IPurchaseOrder extends Document {
   date: Date;
   vendor: Schema.Types.ObjectId;
   request: IPurchaseOrderRequest;
-  response: IPurchaseOrderResponse;
+  responses: IPurchaseOrderResponse[]; // Change to an array of responses
   branch: Schema.Types.ObjectId;
   createdBy: string;
   authorizedBy: string;
   status: EPurchaseOrderStatus;
-  invoiceNumber?: string;
 }
 
 const itemSchema = new Schema({
@@ -92,8 +94,8 @@ const itemSchema = new Schema({
   quantity: { type: Number, required: true, min: 0 },
   freeQuantity: { type: Number, required: false, min: 0 },
   noOfPacks: { type: Number, required: true, min: 0 },
-  packsRequired: { type: Number, required: false, min: 0 }, // Include packsRequired
-  status: { type: String, enum: Object.values(EItemStatus), required: false }, // Optional status
+  packsRequired: { type: Number, required: false, min: 0 },
+  status: { type: String, enum: Object.values(EItemStatus), required: false },
 });
 
 const responseSchema = new Schema({
@@ -104,6 +106,8 @@ const responseSchema = new Schema({
   subTotal: { type: Number, required: false, min: 0 },
   tax: { type: Number, required: false, min: 0 },
   invoice: [{ type: String }],
+  invoiceNumber: { type: String, required: false },
+  status: { type: String, enum: Object.values(EItemStatus), required: true }, // Status for the response
 });
 
 const purchaseOrderSchema = new Schema(
@@ -121,9 +125,9 @@ const purchaseOrderSchema = new Schema(
       subTotal: { type: Number, required: true, min: 0 },
       tax: { type: Number, required: true, min: 0 },
     },
-    response: {
-      type: responseSchema,
-      default: null,
+    responses: {
+      type: [responseSchema], // Change to an array of responses
+      default: [],
     },
     createdBy: { type: String, required: true },
     authorizedBy: { type: String, required: false },
@@ -150,9 +154,9 @@ purchaseOrderSchema.index({ branchId: 1, date: -1 });
 
 purchaseOrderSchema.pre("validate", function (next) {
   if (this.status === EPurchaseOrderStatus.Approved && !this.authorizedBy) {
-    this.invalidate("authorizedBy", "approvedBy is required when the status is Approved");
+    this.invalidate("authorizedBy", "authorizedBy is required when the status is Approved");
   } else if (this.status === EPurchaseOrderStatus.Rejected && !this.authorizedBy) {
-    this.invalidate("authorizedBy", "rejectedBy is required when the status is Rejected");
+    this.invalidate("authorizedBy", "authorizedBy is required when the status is Rejected");
   }
   next();
 });

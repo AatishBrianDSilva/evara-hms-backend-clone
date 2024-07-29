@@ -12,6 +12,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
   try {
     await connectMongoDb(); // Connect to MongoDB
+    console.log("MongoDB connection established.");
 
     if (!event.body) {
       throw new ErrorMessage(400, "Data is required");
@@ -26,7 +27,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     console.log(`Updating purchase order with ID: ${id}`);
     console.log(`Update Data: ${JSON.stringify(updateData)}`);
 
+    const purchaseOrder = await PurchaseOrder.findById(id);
+    if (!purchaseOrder) {
+      throw new ErrorMessage(404, "Purchase order not found");
+    }
+    console.log("Purchase order found:", JSON.stringify(purchaseOrder));
+
     // Handle invoice file uploads
+    const invoiceFileUrls = [];
     if (updateData.response?.invoice && updateData.response?.invoice.length > 0) {
       for (let i = 0; i < updateData.response.invoice.length; i++) {
         if (updateData.response.invoice[i].length > 0) {
@@ -35,16 +43,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           if (s3UrlParts) {
             await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
             const invoicePart = s3UrlParts.key.split("/");
-
-            const po = await PurchaseOrder.findById(id).lean();
-            console.log(`Fetched Purchase Order for invoice processing: ${JSON.stringify(po)}`);
-
-            if (!po) {
-              throw new ErrorMessage(404, "Purchase order not found for invoice processing.");
-            }
+            invoiceFileUrls.push(updateData.response.invoice[i]);
 
             const pharmacyInvoice = new PharmacyInvoice({
-              purchaseOrderId: po.poNumber,
+              purchaseOrderId: purchaseOrder.poNumber,
               invoice: invoicePart[invoicePart.length - 1],
               bucket: s3UrlParts.bucketName,
               key: s3UrlParts.key,
@@ -59,39 +61,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
     }
 
-    const purchaseOrder = await PurchaseOrder.findById(id);
-    if (!purchaseOrder) {
-      throw new ErrorMessage(404, "Purchase order not found");
-    }
+    // Initialize new response object for the current update
+    const newResponse = {
+      items: [],
+      invoiceNumber: updateData.invoiceNumber,
+      invoiceFileUrl: invoiceFileUrls,
+      status: "ProcessedWithoutUpdating",
+      invoice: invoiceFileUrls, // Ensure the invoice file URLs are added to the invoice field
+    };
 
-    // Ensure request and response objects are initialized
-    if (!purchaseOrder.request) {
-      purchaseOrder.request = {
-        items: [],
-        subTotal: 0,
-        tax: 0,
-        discount: 0,
-        otherCharges: 0,
-        netAmount: 0,
-      };
-    }
-    if (!purchaseOrder.response) {
-      purchaseOrder.response = {
-        items: [],
-        subTotal: 0,
-        tax: 0,
-        discount: 0,
-        otherCharges: 0,
-        netAmount: 0,
-      };
-    }
-
-    const newResponseItems = [];
     const newRequestItems = [];
-    let responseSubTotal = 0;
-    let responseTotalTax = 0;
     let requestSubTotal = 0;
     let requestTotalTax = 0;
+    let responseSubTotal = 0;
+    let responseTotalTax = 0;
 
     console.log("Processing items in the request...");
     // Process each item in the request
@@ -106,12 +89,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const itemMRP = (item.buyPrice || 0) * fulfilledPacks;
       const itemTax = (itemMRP * (item.tax || 0)) / 100;
 
-      // Add to response totals
+      // Update response totals
       responseSubTotal += itemMRP;
       responseTotalTax += itemTax;
 
       if (fulfilledPacks > 0) {
-        newResponseItems.push({
+        // Use the correct index to access batchNo and expiryDate from updateData.response.items
+        const responseItem = updateData.response.items.find(
+          (resItem) => resItem.item === item.item
+        );
+
+        newResponse.items.push({
           item: item.item,
           packSize: item.packSize,
           quantity: fulfilledPacks * (item.packSize || 1),
@@ -122,30 +110,34 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           freeQuantity: item.freeQuantity || 0,
           noOfPacks: fulfilledPacks,
           packsRequired: item.packsRequired,
-          batchNo: item.batchNo,
-          expiryDate: item.expiryDate,
-          status: "Processed",
+          batchNo: responseItem ? responseItem.batchNo : item.batchNo, // Correctly mapped batchNo
+          expiryDate: responseItem ? responseItem.expiryDate : item.expiryDate, // Correctly mapped expiryDate
+          status: "ProcessedWithoutUpdating",
         });
         console.log(
           `Added to Response Items: ${JSON.stringify(
-            newResponseItems[newResponseItems.length - 1]
+            newResponse.items[newResponse.items.length - 1]
           )}`
         );
       }
 
+      // Calculate remaining packs after fulfilling the current batch
       const remainingPacks = packsRequired - fulfilledPacks;
-      if (remainingPacks > 0) {
-        const itemMRP = (item.buyPrice || 0) * remainingPacks;
-        const itemTax = (itemMRP * (item.tax || 0)) / 100;
+      console.log(`Remaining packs after fulfilling: ${remainingPacks}`);
 
-        requestSubTotal += itemMRP;
-        requestTotalTax += itemTax;
+      // If there are remaining packs, update newRequestItems with the remaining quantity
+      if (remainingPacks > 0) {
+        const remainingItemMRP = (item.buyPrice || 0) * remainingPacks;
+        const remainingItemTax = (remainingItemMRP * (item.tax || 0)) / 100;
+
+        requestSubTotal += remainingItemMRP;
+        requestTotalTax += remainingItemTax;
 
         newRequestItems.push({
           item: item.item,
           packSize: item.packSize,
           quantity: remainingPacks * (item.packSize || 1),
-          mrp: itemMRP,
+          mrp: remainingItemMRP,
           mrpPerPack: item.mrpPerPack || 0,
           buyPrice: item.buyPrice || 0,
           tax: item.tax || 0,
@@ -161,29 +153,32 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     });
 
     console.log(`New Request Items: ${JSON.stringify(newRequestItems)}`);
-    console.log(`New Response Items: ${JSON.stringify(newResponseItems)}`);
+    console.log(`New Response Items: ${JSON.stringify(newResponse)}`);
 
-    // Calculate totals for response and request
-    let responseDiscountAmount = 0;
+    // Calculate totals for request and response
     let requestDiscountAmount = 0;
-
-    if (updateData.response.discount) {
-      responseDiscountAmount = (responseSubTotal * updateData.response.discount) / 100;
-    }
+    let responseDiscountAmount = 0;
 
     if (updateData.request.discount) {
       requestDiscountAmount = (requestSubTotal * updateData.request.discount) / 100;
     }
 
-    const responseOtherCharges = updateData.response.otherCharges || 0;
-    const requestOtherCharges = updateData.request.otherCharges || 0;
+    if (updateData.response.discount) {
+      responseDiscountAmount = (responseSubTotal * updateData.response.discount) / 100;
+    }
 
-    const responseNetAmount =
-      responseSubTotal - responseDiscountAmount + responseTotalTax + responseOtherCharges;
+    const requestOtherCharges = updateData.request.otherCharges || 0;
+    const responseOtherCharges = updateData.response.otherCharges || 0;
+
     const requestNetAmount =
       requestSubTotal - requestDiscountAmount + requestTotalTax + requestOtherCharges;
+    const responseNetAmount =
+      responseSubTotal - responseDiscountAmount + responseTotalTax + responseOtherCharges;
 
-    // Update the request and response in the Purchase Order
+    console.log(`Request Net Amount: ${requestNetAmount}`);
+    console.log(`Response Net Amount: ${responseNetAmount}`);
+
+    // Update the request in the Purchase Order
     purchaseOrder.request.items = newRequestItems;
     purchaseOrder.request.subTotal = requestSubTotal;
     purchaseOrder.request.tax = requestTotalTax;
@@ -191,12 +186,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     purchaseOrder.request.otherCharges = requestOtherCharges;
     purchaseOrder.request.netAmount = requestNetAmount;
 
-    purchaseOrder.response.items = newResponseItems;
-    purchaseOrder.response.subTotal = responseSubTotal;
-    purchaseOrder.response.tax = responseTotalTax;
-    purchaseOrder.response.discount = updateData.response.discount || 0;
-    purchaseOrder.response.otherCharges = responseOtherCharges;
-    purchaseOrder.response.netAmount = responseNetAmount;
+    // Set response totals
+    newResponse.subTotal = responseSubTotal;
+    newResponse.tax = responseTotalTax;
+    newResponse.discount = updateData.response.discount || 0;
+    newResponse.otherCharges = updateData.response.otherCharges || 0;
+    newResponse.netAmount = responseNetAmount;
+
+    // Add the new response to the Purchase Order's responses array
+    purchaseOrder.responses = purchaseOrder.responses || [];
+    purchaseOrder.responses.push(newResponse);
 
     console.log(`Updated Purchase Order: ${JSON.stringify(purchaseOrder)}`);
 
