@@ -97,6 +97,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         clinicId,
         branchId,
         patientCode,
+        billType: serviceType,
         createdBy,
         items,
         amount,

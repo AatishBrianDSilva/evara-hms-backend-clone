@@ -1,6 +1,7 @@
 import mongoose, { Document, PaginateModel, Schema } from "mongoose";
 import paginate from "mongoose-paginate-v2";
 import { autoIncrementId } from "../../Counters";
+import { EServiceTypes } from "../services/DefaultService";
 
 export enum EPaitentBillingPaymentType {
   Payment = "Payment",
@@ -67,6 +68,7 @@ export interface IPatientBilling extends Document {
   discountReason: string;
   discountFile: string;
   tax: number;
+  billType: EPatientBillingServiceType;
   payments: PaymentDetail[];
   status: EPatientBillingStatus;
   // createdBy: mongoose.Types.ObjectId;
@@ -122,6 +124,11 @@ const patientBillingSchema = new Schema<IPatientBilling>(
     clinicId: { type: String, required: true, index: true },
     branchId: { type: String, index: true },
     patientCode: { type: String, required: true },
+    billType: {
+      type: String,
+      enum: Object.values(EPatientBillingServiceType),
+      required: true,
+    },
     items: [itemSchema],
     amount: { type: Number, required: true },
     discount: { type: Number, default: 0 },
