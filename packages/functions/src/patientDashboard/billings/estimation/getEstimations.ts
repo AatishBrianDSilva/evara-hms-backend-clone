@@ -14,7 +14,10 @@ interface IPatientBillingEstimation extends Document {
   taxRate?: number;
 }
 
-const calculateEstimatedPriceWithoutTax = (estimatedPrice: number, taxRate: number): number => {
+const calculateEstimatedPriceWithoutTax = (
+  estimatedPrice: number,
+  taxRate: number
+): number => {
   return estimatedPrice / (1 + taxRate / 100);
 };
 
@@ -27,7 +30,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const params = event.queryStringParameters || {};
     console.log("params", params);
-    const { page = "1", limit = "10", sort: sortRaw, status, patientCode } = params;
+    const {
+      page = "1",
+      limit = "10",
+      sort: sortRaw,
+      status,
+      patientCode,
+    } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
@@ -71,28 +80,31 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const { records, pagination } = formatPaginationResult(result);
 
       // Update estimatedPrice with the value of estimatedPriceWithoutTax
-      const recordsWithUpdatedEstimatedPrice = records.map((record: IPatientBillingEstimation) => {
-        const taxRate = record.taxRate || 0;
-        record.estimatedPrice = calculateEstimatedPriceWithoutTax(record.estimatedPrice, taxRate);
-        return record;
-      });
+      // const recordsWithUpdatedEstimatedPrice = records.map((record: IPatientBillingEstimation) => {
+      //   const taxRate = record.taxRate || 0;
+      //   record.estimatedPrice = calculateEstimatedPriceWithoutTax(record.estimatedPrice, taxRate);
+      //   return record;
+      // });
 
       return successResponse("Success", {
-        records: recordsWithUpdatedEstimatedPrice,
+        records: records,
         pagination,
       });
     } else {
-      const data = await PatientBillingEstimation.find(query).populate(populate).sort(sort).lean();
+      const data = await PatientBillingEstimation.find(query)
+        .populate(populate)
+        .sort(sort)
+        .lean();
 
       // Update estimatedPrice with the value of estimatedPriceWithoutTax
-      const dataWithUpdatedEstimatedPrice = data.map((record: IPatientBillingEstimation) => {
-        const taxRate = record.taxRate || 0;
-        record.estimatedPrice = calculateEstimatedPriceWithoutTax(record.estimatedPrice, taxRate);
-        return record;
-      });
+      // const dataWithUpdatedEstimatedPrice = data.map((record: IPatientBillingEstimation) => {
+      //   const taxRate = record.taxRate || 0;
+      //   record.estimatedPrice = calculateEstimatedPriceWithoutTax(record.estimatedPrice, taxRate);
+      //   return record;
+      // });
 
       return successResponse("Success", {
-        records: dataWithUpdatedEstimatedPrice,
+        records: data,
       });
     }
   } catch (error) {
