@@ -16,15 +16,18 @@ import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboar
 import DefaultTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/DefaultTreatmentCycle";
 import { Document, FilterQuery, Model } from "mongoose";
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
+  const auth = extractAuthorizerDetails(event);
   try {
     // Connect to MongoDB
     await connectMongoDb();
 
     const query = {
+      clinicId: auth.clinicId,
       active: true,
       gender: {
         $in: ["both"],

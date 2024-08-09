@@ -129,12 +129,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           newPharmacy.patient,
           newPharmacy.doctor,
           pharmacyStock._id,
-          newPharmacy._id,
+          newPharmacy._id as any,
           EPatientBillingServiceType.Pharmacy,
           serviceName,
           // ToDO: Change to sell price once it's added to the model
           pharmacyStock.sellPrice,
-          newPharmacy.totalQuantity
+          newPharmacy.totalQuantity,
+          auth.clinicId,
+          auth.branchId
         );
       } else {
         console.error("Master Pharmacy not found");

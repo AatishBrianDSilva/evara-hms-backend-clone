@@ -6,13 +6,15 @@ import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
 import { PharmacyInvoice } from "@evara-backend/core/models/pharmacyDashboard/PharmacyInvoice";
 import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
+  const auth = extractAuthorizerDetails(event);
+
   try {
     await connectMongoDb(); // Connect to MongoDB
-    console.log("MongoDB connection established.");
 
     if (!event.body) {
       throw new ErrorMessage(400, "Data is required");
@@ -35,7 +37,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Handle invoice file uploads
     const invoiceFileUrls = [];
-    if (updateData.response?.invoice && updateData.response?.invoice.length > 0) {
+    if (
+      updateData.response?.invoice &&
+      updateData.response?.invoice.length > 0
+    ) {
       for (let i = 0; i < updateData.response.invoice.length; i++) {
         if (updateData.response.invoice[i].length > 0) {
           const s3UrlParts = parseS3Url(updateData.response.invoice[i]);
@@ -46,13 +51,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
             invoiceFileUrls.push(updateData.response.invoice[i]);
 
             const pharmacyInvoice = new PharmacyInvoice({
+              clinicId: auth.clinicId,
+              branchId: auth.branchId,
               purchaseOrderId: purchaseOrder.poNumber,
               invoice: invoicePart[invoicePart.length - 1],
               bucket: s3UrlParts.bucketName,
               key: s3UrlParts.key,
               invoiceNumber: updateData.invoiceNumber || undefined,
             });
-            console.log(`Saving Pharmacy Invoice: ${JSON.stringify(pharmacyInvoice)}`);
+            console.log(
+              `Saving Pharmacy Invoice: ${JSON.stringify(pharmacyInvoice)}`
+            );
             await pharmacyInvoice.save();
           } else {
             throw new ErrorMessage(400, "Invalid image URL");
@@ -85,7 +94,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         const itemId = responseItem.item._id || responseItem.item;
         batchDetails[itemId] = {
           batchNo: responseItem.batchNo,
-          expiryDate: responseItem.expiryDate ? new Date(responseItem.expiryDate) : null, // Ensure expiryDate is a Date object or null
+          expiryDate: responseItem.expiryDate
+            ? new Date(responseItem.expiryDate)
+            : null, // Ensure expiryDate is a Date object or null
         };
       }
     });
@@ -94,7 +105,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Process each item in the request
     updateData.request.items.forEach((item, index) => {
-      console.log(`Processing request item ${index + 1}/${updateData.request.items.length}`);
+      console.log(
+        `Processing request item ${index + 1}/${
+          updateData.request.items.length
+        }`
+      );
       console.log(`Request item data: ${JSON.stringify(item)}`);
 
       const packsRequired = item.packsRequired; // Total packs required
@@ -160,7 +175,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           expiryDate: item.expiryDate ? new Date(item.expiryDate) : null, // Ensure expiryDate is a Date object or null
           status: "Pending",
         });
-        console.log(`Unfulfilled item added with remaining packs: ${remainingPacks}`);
+        console.log(
+          `Unfulfilled item added with remaining packs: ${remainingPacks}`
+        );
       }
     });
 
@@ -172,20 +189,28 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     let responseDiscountAmount = 0;
 
     if (updateData.request.discount) {
-      requestDiscountAmount = (requestSubTotal * updateData.request.discount) / 100;
+      requestDiscountAmount =
+        (requestSubTotal * updateData.request.discount) / 100;
     }
 
     if (updateData.response.discount) {
-      responseDiscountAmount = (responseSubTotal * updateData.response.discount) / 100;
+      responseDiscountAmount =
+        (responseSubTotal * updateData.response.discount) / 100;
     }
 
     const requestOtherCharges = updateData.request.otherCharges || 0;
     const responseOtherCharges = updateData.response.otherCharges || 0;
 
     const requestNetAmount =
-      requestSubTotal - requestDiscountAmount + requestTotalTax + requestOtherCharges;
+      requestSubTotal -
+      requestDiscountAmount +
+      requestTotalTax +
+      requestOtherCharges;
     const responseNetAmount =
-      responseSubTotal - responseDiscountAmount + responseTotalTax + responseOtherCharges;
+      responseSubTotal -
+      responseDiscountAmount +
+      responseTotalTax +
+      responseOtherCharges;
 
     console.log(`Request Net Amount: ${requestNetAmount}`);
     console.log(`Response Net Amount: ${responseNetAmount}`);

@@ -8,6 +8,7 @@ import { log } from "console";
 import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 import { PatientBilling } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 import Patient from "@evara-backend/core/models/Patients";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 interface BillingSummary {
   amount: number;
@@ -37,6 +38,7 @@ const parseSearchQuery = (query) => {
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+  const auth = extractAuthorizerDetails(event);
 
   try {
     await connectMongoDb();
@@ -56,7 +58,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const { patientCode, patientName } = parseSearchQuery(searchQuery);
 
     const query: any = {};
-    query.branchId = "KL"; // Example, this could be dynamic or omitted
+    query.clinicId = auth.clinicId;
     if (status) {
       query.status = status;
     }
@@ -85,11 +87,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const { records, pagination } = formatPaginationResult(result);
 
     // Extract unique patient IDs from the billing records
-    const patientIds = Array.from(new Set(records.map((record) => record.patientCode)));
+    const patientIds = Array.from(
+      new Set(records.map((record) => record.patientCode))
+    );
     // log("Patient IDs to Query:", patientIds);
 
     // Fetch patient details using the extracted patient IDs
-    const patientData = await Patient.find({ patientId: { $in: patientIds } }).lean();
+    const patientData = await Patient.find({
+      patientId: { $in: patientIds },
+    }).lean();
     // log("Fetched Patient Records Count:", patientData.length);
 
     // Map patients to a dictionary for easy lookup

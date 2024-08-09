@@ -10,7 +10,9 @@ export const publishBillingServiceToSNS = async (
   serviceType: EPatientBillingServiceType,
   serviceName: string,
   serviceCost: number,
-  quantity: number
+  quantity: number,
+  clinicId: string,
+  branchId: string
 ) => {
   const messagePayload = {
     action: "Add",
@@ -23,6 +25,8 @@ export const publishBillingServiceToSNS = async (
       serviceCost: serviceCost,
       patientCode: patientCode,
       quantity: quantity,
+      clinicId: clinicId,
+      branchId: branchId,
     },
   };
 

@@ -12,9 +12,11 @@ import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugI
 import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
 import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
 import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+  const auth = extractAuthorizerDetails(event);
 
   try {
     // Connect to MongoDB
@@ -44,7 +46,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     ];
 
     // Fetch all records from PatientPharmacy and convert them to plain objects with populated fields
-    const pharmacyData = await PatientPharmacy.find()
+    const pharmacyData = await PatientPharmacy.find({
+      clinicId: auth.clinicId,
+      branchId: auth.branchId,
+    })
       .populate(populatePaths)
       .lean();
 

@@ -6,6 +6,7 @@ import {
 import { EGender } from "../investigation/MedicalTests";
 
 interface IMasterTreatmentCycle extends Document {
+  clinicId: string;
   cycleType: ETreatmentCycleType;
   treatmentCycle: IDefaultTreatmentCycle;
   gender: EGender;
@@ -18,6 +19,7 @@ interface IMasterTreatmentCycle extends Document {
 }
 
 const MasterTreatmentCycleSchema: Schema = new Schema({
+  clinicId: { type: String, required: true, index: true },
   cycleType: {
     type: String,
     required: true,

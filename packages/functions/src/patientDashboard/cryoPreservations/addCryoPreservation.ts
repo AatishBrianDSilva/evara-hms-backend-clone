@@ -9,6 +9,7 @@ import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patie
 import { publishBillingServiceToSNS } from "@evara-backend/core/src/lib/utils/publishBillingServiceToSNS";
 import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import { ObjectId } from "mongoose";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -43,11 +44,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           newCryoPreservation.patientCode,
           newCryoPreservation.doctor,
           newCryoPreservation.cryo,
-          newCryoPreservation._id,
+          newCryoPreservation._id as ObjectId,
           EPatientBillingServiceType.CryoPreservation,
           serviceName,
           masterCryoPreservation.cost,
-          1
+          1,
+          auth.clinicId,
+          auth.branchId
         );
       } else {
         console.error("Master Cryo Preservation not found");

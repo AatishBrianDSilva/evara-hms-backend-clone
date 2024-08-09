@@ -11,9 +11,11 @@ import DefaultService from "@evara-backend/core/src/models/patientDashboard/serv
 import Patient from "@evara-backend/core/src/models/Patients";
 import MasterService from "@evara-backend/core/src/models/patientDashboard/services/MasterService";
 import PatientService from "@evara-backend/core/src/models/patientDashboard/services/PatientService";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+  const auth = extractAuthorizerDetails(event);
 
   try {
     // Connect to MongoDB
@@ -25,7 +27,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const { startDate, endDate, page = "1", limit = "10", ...filters } = params;
 
     // Construct the query object
-    let query: any = {};
+    let query: any = {
+      clinicId: auth.clinicId,
+      branchId: auth.branchId,
+    };
 
     // // Date range filter
     if (startDate || endDate) {

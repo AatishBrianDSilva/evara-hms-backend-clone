@@ -8,10 +8,12 @@ import {
   TaxRate,
   ITaxRate,
 } from "@evara-backend/core/models/pharmacyDashboard/TaxRate";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+  const auth = extractAuthorizerDetails(event);
 
   try {
     await connectMongoDb();
@@ -23,6 +25,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Parse the body from the event
     const data: ITaxRate = JSON.parse(event.body);
+
+    data.clinicId = auth.clinicId;
+
     const createdTaxRate = await TaxRate.create(data);
 
     return successResponse("Tax rate added successfully", createdTaxRate);

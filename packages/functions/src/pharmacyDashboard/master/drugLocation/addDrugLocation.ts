@@ -8,12 +8,19 @@ import {
   DrugLocation,
   IDrugLocation,
 } from "@evara-backend/core/models/pharmacyDashboard/DrugLocation";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
+  const auth = extractAuthorizerDetails(event);
+
   try {
+    if (auth == null) {
+      throw new ErrorMessage(400, "Authorization is required");
+    }
+
     await connectMongoDb();
 
     if (event.body == null) {
@@ -22,7 +29,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const data: IDrugLocation = JSON.parse(event.body);
 
-    data.branchId = "KL";
+    data.clinicId = auth.clinicId;
+    data.branchId = auth.branchId;
     await DrugLocation.create(data);
 
     return successResponse("Drug Locations added successfully");

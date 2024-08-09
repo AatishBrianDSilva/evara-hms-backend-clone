@@ -80,7 +80,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           status: "Pending",
           details: {},
         })),
-        clinicId: "EV",
+        clinicId: auth.clinicId,
+        branchId: auth.branchId,
       };
 
       const treatmentCycle = new PatientTreatmentCycle(newTreatmentCycle);
@@ -94,11 +95,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           savedTreatmentCycle.patientCode,
           savedTreatmentCycle.doctor,
           savedTreatmentCycle.cycle,
-          savedTreatmentCycle._id,
+          savedTreatmentCycle._id as any,
           EPatientBillingServiceType.TreatmentCycle,
           serviceName,
           masterTreatmentCycle.cost,
-          1
+          1,
+          auth.clinicId,
+          auth.branchId
         );
       } else {
         console.error("Master Treatment Cycle not found");

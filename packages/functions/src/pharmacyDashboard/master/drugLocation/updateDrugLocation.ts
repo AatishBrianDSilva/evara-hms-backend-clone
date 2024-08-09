@@ -24,8 +24,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Drug Location ID is required for update");
     }
 
-    updateData.branchId = "KL"; // Assuming the branch ID is always "KL"
-
     // Find by ID and update the tax rate
     const updatedDrugLocation = await DrugLocation.findByIdAndUpdate(
       id,

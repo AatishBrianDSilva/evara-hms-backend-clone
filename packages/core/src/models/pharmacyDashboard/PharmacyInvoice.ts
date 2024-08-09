@@ -3,6 +3,8 @@ import { autoIncrementId } from "../Counters";
 import paginate from "mongoose-paginate-v2";
 
 export interface IPharmacyInvoice extends Document {
+  clinicId: string;
+  branchId: string;
   purchaseOrderId: Schema.Types.ObjectId;
   invoice: string;
   bucket: string;
@@ -12,6 +14,8 @@ export interface IPharmacyInvoice extends Document {
 
 const pharmacyInvoiceSchema = new Schema(
   {
+    clinicId: { type: String, required: true, index: true },
+    branchId: { type: String, required: true, index: true },
     purchaseOrderId: { type: String, required: true },
     invoice: { type: String, required: true },
     bucket: { type: String, required: true },

@@ -22,7 +22,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // TODO: Remove clinicId and branchId after adding authentication
     data.clinicId = auth?.clinicId;
-    data.branchId = auth?.branchId;
 
     // Create a new Master Investigation
     const procedure = new MasterCryoPreservations(data);

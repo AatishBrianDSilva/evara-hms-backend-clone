@@ -9,6 +9,7 @@ import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patie
 import { ETestType } from "@evara-backend/core/src/models/patientDashboard/investigation/MedicalTests";
 import { publishBillingServiceToSNS } from "@evara-backend/core/src/lib/utils/publishBillingServiceToSNS";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import { ObjectId } from "mongoose";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -32,7 +33,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     console.log("Data: ", data);
 
     for (let i = 0; i < data.length; i++) {
-      data[i].clinicId = "EV";
+      data[i].clinicId = auth.clinicId;
+      data[i].branchId = auth.branchId;
       const investigation = new PatientInvestigation(data[i]);
 
       const newinvestigation = await investigation.save();
@@ -52,11 +54,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           newinvestigation.patientCode,
           newinvestigation.doctor,
           newinvestigation.investigation,
-          newinvestigation._id,
+          newinvestigation._id as ObjectId,
           EPatientBillingServiceType.Investigation,
           serviceName,
           masterInvestigation.cost,
-          1
+          1,
+          auth.clinicId,
+          auth.branchId
         );
       } else {
         console.error("Master investigation not found");

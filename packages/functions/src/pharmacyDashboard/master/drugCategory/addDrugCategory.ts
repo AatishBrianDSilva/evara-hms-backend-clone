@@ -8,10 +8,16 @@ import {
   DrugCategory,
   IDrugCategory,
 } from "@evara-backend/core/models/pharmacyDashboard/DrugCategory";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+  const auth = extractAuthorizerDetails(event);
+
+  if (auth.clinicId == null) {
+    throw new ErrorMessage(400, "Clinic ID is required");
+  }
 
   try {
     await connectMongoDb();
@@ -21,6 +27,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     const data: IDrugCategory = JSON.parse(event.body);
+
+    data.clinicId = auth.clinicId;
 
     await DrugCategory.create(data);
 

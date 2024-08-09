@@ -7,9 +7,11 @@ import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import MasterProcedure from "@evara-backend/core/src/models/patientDashboard/procedure/MasterProcedure";
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 import { publishBillingServiceToSNS } from "@evara-backend/core/src/lib/utils/publishBillingServiceToSNS";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+  const auth = extractAuthorizerDetails(event);
 
   try {
     // Connect to MongoDB
@@ -23,17 +25,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const data = JSON.parse(event.body);
 
     // TODO: Remove clinicId and branchId after adding authentication
-    data.clinicId = "EV";
-    // data.branchId = "KL";
+    data.clinicId = auth.clinicId;
+    data.branchId = auth.branchId;
 
     console.log("Data: ", data);
 
     for (let i = 0; i < data.length; i++) {
-      data[i].clinicId = "EV";
+      data[i].clinicId = auth.clinicId;
+      data[i].branchId = auth.branchId;
       const procedure = new PatientProcedures(data[i]);
       const newProcedure = await procedure.save();
 
-      const masterProcedure = await MasterProcedure.findById(newProcedure.procedure).lean();
+      const masterProcedure = await MasterProcedure.findById(
+        newProcedure.procedure
+      ).lean();
 
       if (masterProcedure) {
         const serviceName = masterProcedure.name;
@@ -43,11 +48,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           newProcedure.patientCode,
           newProcedure.doctor,
           newProcedure.procedure,
-          newProcedure._id,
+          newProcedure._id as any,
           EPatientBillingServiceType.Procedure,
           serviceName,
           masterProcedure.cost,
-          1
+          1,
+          auth.clinicId,
+          auth.branchId
         );
       } else {
         console.error("Master Procedure not found");

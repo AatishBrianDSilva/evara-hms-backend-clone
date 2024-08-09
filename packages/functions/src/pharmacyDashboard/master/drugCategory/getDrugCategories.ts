@@ -6,12 +6,19 @@ import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { DrugCategory } from "@evara-backend/core/models/pharmacyDashboard/DrugCategory";
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import ErrorMessage from "@evara-backend/core/lib/utils/ErrorMessage";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
+  const auth = extractAuthorizerDetails(event);
+
   try {
+    if (auth.clinicId == null) {
+      throw new ErrorMessage(400, "Clinic ID is required");
+    }
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
@@ -34,6 +41,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
 
       const query: any = {};
+      query.clinicId = auth.clinicId;
 
       if (searchQuery) {
         query.$or = [{ name: new RegExp(searchQuery, "i") }];
@@ -52,7 +60,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const data = await DrugCategory.find().sort(sort).lean();
+      const data = await DrugCategory.find({ clinicId: auth.clinicId })
+        .sort(sort)
+        .lean();
 
       return successResponse("Success", { records: data, pagination: {} });
     }

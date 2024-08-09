@@ -8,12 +8,18 @@ import {
   DrugItem,
   IDrugItem,
 } from "@evara-backend/core/models/pharmacyDashboard/DrugItem";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
+  const auth = extractAuthorizerDetails(event);
+
   try {
+    if (auth.clinicId == null) {
+      throw new ErrorMessage(400, "Clinic ID is required");
+    }
     await connectMongoDb();
 
     if (event.body == null) {
@@ -21,6 +27,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     const data: IDrugItem = JSON.parse(event.body);
+    data.clinicId = auth.clinicId;
 
     await DrugItem.create(data);
 

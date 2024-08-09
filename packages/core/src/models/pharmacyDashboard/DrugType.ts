@@ -2,6 +2,7 @@ import mongoose, { Document, PaginateModel, Schema } from "mongoose";
 import pagination from "mongoose-paginate-v2";
 
 export interface IDrugType extends Document {
+  clinicId: string;
   name: string;
   shortcode: string;
   notes?: string;
@@ -9,6 +10,11 @@ export interface IDrugType extends Document {
 
 const drugTypeSchema = new Schema<IDrugType>(
   {
+    clinicId: {
+      type: String,
+      required: true,
+      index: true,
+    },
     name: {
       type: String,
       required: true,

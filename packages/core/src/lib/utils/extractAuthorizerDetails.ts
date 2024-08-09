@@ -1,11 +1,11 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
 
 interface LambdaAuthorizer {
-  branchId?: string;
-  clinicId?: string;
-  userId?: string;
-  username?: string;
-  role?: string;
+  branchId: string;
+  clinicId: string;
+  userId: string;
+  username: string;
+  role: string;
 }
 
 export const extractAuthorizerDetails = (

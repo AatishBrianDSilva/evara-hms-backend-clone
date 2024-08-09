@@ -29,7 +29,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     } = params;
 
     // Construct the query object
-    let query: any = {};
+    let query: any = {
+      clinicId: auth.clinicId,
+      branchId: auth.branchId,
+    };
 
     // Date range filter
     if (startDate || endDate) {

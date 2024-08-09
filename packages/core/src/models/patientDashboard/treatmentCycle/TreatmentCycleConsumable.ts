@@ -1,6 +1,7 @@
 import mongoose, { Document } from "mongoose";
 
 interface ITreatmentCycleConsumable extends Document {
+  clinicId: string;
   pharmacyStock: mongoose.Schema.Types.ObjectId;
   stage: mongoose.Schema.Types.ObjectId;
   // treatmentCycle: mongoose.Schema.Types.ObjectId;
@@ -10,6 +11,7 @@ interface ITreatmentCycleConsumable extends Document {
 const TreatmentCycleConsumableSchema =
   new mongoose.Schema<ITreatmentCycleConsumable>(
     {
+      clinicId: { type: String, required: true, index: true },
       pharmacyStock: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "PharmacyStock",

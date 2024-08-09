@@ -4,10 +4,13 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 // Handler function for updating a single tax rate
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+
+  const auth = extractAuthorizerDetails(event);
 
   try {
     await connectMongoDb(); // Connect to MongoDB

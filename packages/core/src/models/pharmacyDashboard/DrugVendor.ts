@@ -3,6 +3,7 @@ import { autoIncrementId } from "../Counters";
 import paginate from "mongoose-paginate-v2";
 
 export interface IDrugVendor extends Document {
+  clinicId: string;
   branchId: string;
   name: string;
   code: string;
@@ -29,6 +30,11 @@ export interface IDrugVendor extends Document {
 
 const drugVendorSchema = new Schema<IDrugVendor>(
   {
+    clinicId: {
+      type: String,
+      required: true,
+      index: true,
+    },
     branchId: {
       type: String,
       required: true,

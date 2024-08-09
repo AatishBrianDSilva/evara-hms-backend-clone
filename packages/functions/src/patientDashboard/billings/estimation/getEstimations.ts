@@ -8,6 +8,7 @@ import { log } from "console";
 import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
 import { PatientBillingEstimation } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBillingEstimation";
 import { Document } from "mongoose";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 interface IPatientBillingEstimation extends Document {
   estimatedPrice: number;
@@ -24,6 +25,7 @@ const calculateEstimatedPriceWithoutTax = (
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+  const auth = extractAuthorizerDetails(event);
 
   try {
     await connectMongoDb();
@@ -50,7 +52,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const paginate = JSON.parse(params.paginate || "false");
 
     const query: any = {};
-    query.branchId = "KL";
+    query.branchId = auth.branchId;
+    query.clinicId = auth.clinicId;
     query.patientCode = patientCode;
     if (status) {
       query.status = status;

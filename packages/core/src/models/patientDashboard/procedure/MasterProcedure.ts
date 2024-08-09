@@ -3,6 +3,7 @@ import { EGender } from "../investigation/MedicalTests";
 import { EProcedureType } from "./MedicalProcedure";
 
 interface IMasterProcedures extends Document {
+  clinicId: string;
   procedureType: EProcedureType;
   procedure: mongoose.Schema.Types.ObjectId;
   gender: EGender;
@@ -15,6 +16,7 @@ interface IMasterProcedures extends Document {
 }
 
 const MasterProcedureSchema: Schema = new Schema({
+  clinicId: { type: String, required: true, index: true },
   procedureType: {
     type: String,
     required: true,

@@ -12,6 +12,7 @@ import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/D
 import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
 import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
 import { TreatmentCycleStage } from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/TreatmentCycleStage";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;

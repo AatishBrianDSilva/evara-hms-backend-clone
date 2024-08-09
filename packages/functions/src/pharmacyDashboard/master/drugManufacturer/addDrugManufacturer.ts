@@ -8,11 +8,13 @@ import {
   DrugManufacturer,
   IDrugManufacturer,
 } from "@evara-backend/core/models/pharmacyDashboard/DrugManufacturer";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
+  const auth = extractAuthorizerDetails(event);
   try {
     await connectMongoDb();
 
@@ -22,6 +24,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const data: IDrugManufacturer = JSON.parse(event.body);
 
+    data.clinicId = auth.clinicId;
     await DrugManufacturer.create(data);
 
     return successResponse("Drug Manufacture added successfully");

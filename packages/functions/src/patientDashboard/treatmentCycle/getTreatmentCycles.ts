@@ -11,10 +11,12 @@ import PatientTreatmentCycle from "@evara-backend/core/src/models/patientDashboa
 import DefaultTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/DefaultTreatmentCycle";
 import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle";
 import { log } from "console";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
+  const auth = extractAuthorizerDetails(event);
   try {
     // Connect to MongoDB
     await connectMongoDb();
@@ -24,7 +26,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const { ...filters } = params;
 
     // Construct the query object
-    let query: any = {};
+    let query: any = {
+      clinicId: auth.clinicId,
+      branchId: auth.branchId,
+    };
     if (params.doctor) {
       query.doctor = new mongoose.Types.ObjectId(params.doctor);
     }

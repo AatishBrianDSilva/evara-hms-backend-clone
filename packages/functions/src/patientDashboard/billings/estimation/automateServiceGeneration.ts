@@ -48,7 +48,7 @@ export const main: SQSHandler = async (event: SQSEvent) => {
 
 // Add estimation function
 const generateService = async (data: IData) => {
-  console.log("Data: ", data);
+  // console.log("Data: ", data);
   switch (data.serviceType) {
     case EPatientBillingServiceType.CryoPreservation:
       await PatientCryoPreservation.create({

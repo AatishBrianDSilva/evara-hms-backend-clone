@@ -6,15 +6,20 @@ import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import Patient from "@evara-backend/core/src/models/Patients";
 import MasterService from "@evara-backend/core/src/models/patientDashboard/services/MasterService";
 import DefaultService from "@evara-backend/core/src/models/patientDashboard/services/DefaultService";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+
+  const auth = extractAuthorizerDetails(event);
 
   try {
     // Connect to MongoDB
     await connectMongoDb();
 
-    const query: any = {};
+    const query: any = {
+      clinicId: auth.clinicId,
+    };
 
     const params = event.queryStringParameters || {};
     const { searchQuery = "" } = params;

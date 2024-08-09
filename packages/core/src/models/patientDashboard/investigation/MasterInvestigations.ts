@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from "mongoose";
 import { EGender, ETestType } from "./MedicalTests";
 
 interface IMasterInvestigation extends Document {
+  clinicId: string;
   testType: ETestType;
   test: mongoose.Schema.Types.ObjectId;
   gender: EGender;
@@ -14,6 +15,7 @@ interface IMasterInvestigation extends Document {
 }
 
 const MasterInvestigationSchema: Schema = new Schema({
+  clinicId: { type: String, required: true, index: true },
   testType: {
     type: String,
     required: true,

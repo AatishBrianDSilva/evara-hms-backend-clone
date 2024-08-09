@@ -3,6 +3,7 @@ import { EGender } from "../investigation/MedicalTests";
 import { ECryoPreservationType } from "./CryoPreservations";
 
 interface IMasterCryoPreservations extends Document {
+  clinicId: string;
   cryoPreservationType: ECryoPreservationType;
   cryoPreservation: mongoose.Schema.Types.ObjectId;
   gender: EGender;
@@ -16,6 +17,7 @@ interface IMasterCryoPreservations extends Document {
 
 const MasterCryoPreservationsSchema: Schema =
   new Schema<IMasterCryoPreservations>({
+    clinicId: { type: String, required: true, index: true },
     cryoPreservationType: {
       type: String,
       required: true,

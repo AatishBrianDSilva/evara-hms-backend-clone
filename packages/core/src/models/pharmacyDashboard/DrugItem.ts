@@ -2,8 +2,24 @@ import mongoose, { Document, PaginateModel, Schema } from "mongoose";
 import { autoIncrementId } from "../Counters";
 import paginate from "mongoose-paginate-v2";
 
+export enum EDrugClass {
+  ScheduleH1 = "Schedule H1",
+  Gas = "Gas",
+  ScheduleH = "Schedule H",
+  ScheduleX = "Schedule X",
+  General = "General",
+  ScheduleH2 = "Schedule H2",
+  ScheduleII = "Schedule II",
+  Surgical = "Surgical",
+  IVF = "IVF",
+  ScheduleG = "Schedule G",
+}
+
 export interface IDrugItem extends Document {
+  clinicId: string;
   name: string;
+  genericName: string;
+  drugClass: EDrugClass;
   code: string;
   hsnCode: string;
   category: Schema.Types.ObjectId;
@@ -18,10 +34,22 @@ export interface IDrugItem extends Document {
 
 const drugItemSchema = new Schema<IDrugItem>(
   {
+    clinicId: {
+      type: String,
+      required: true,
+      index: true,
+    },
     name: {
       type: String,
       required: true,
       unique: true,
+    },
+    genericName: {
+      type: String,
+    },
+    drugClass: {
+      type: String,
+      enum: Object.values(EDrugClass),
     },
     code: {
       type: String,

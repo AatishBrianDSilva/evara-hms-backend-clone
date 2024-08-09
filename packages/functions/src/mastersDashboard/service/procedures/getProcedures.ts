@@ -6,9 +6,12 @@ import MasterProcedure from "@evara-backend/core/src/models/patientDashboard/pro
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import Patient from "@evara-backend/core/src/models/Patients";
 import MedicalProcedure from "@evara-backend/core/src/models/patientDashboard/procedure/MedicalProcedure";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+
+  const auth = extractAuthorizerDetails(event);
 
   try {
     // Connect to MongoDB
@@ -18,6 +21,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const { searchQuery = "" } = params;
 
     let query: any = {};
+
+    query.clinicId = auth.clinicId;
+    // query.branchId = auth.branchId;
 
     if (searchQuery) {
       query.$or = [{ name: new RegExp(searchQuery, "i") }];

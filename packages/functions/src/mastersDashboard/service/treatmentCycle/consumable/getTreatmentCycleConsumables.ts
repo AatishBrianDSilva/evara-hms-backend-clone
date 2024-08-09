@@ -12,15 +12,19 @@ import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/D
 import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
 import { TreatmentCycleConsumable } from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/TreatmentCycleConsumable";
 import { TreatmentCycleStage } from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/TreatmentCycleStage";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+  const auth = extractAuthorizerDetails(event);
 
   try {
     // Connect to MongoDB
     await connectMongoDb();
 
-    let query: any = {};
+    let query: any = {
+      clinicId: auth.clinicId,
+    };
 
     // Check if the user is an admin
     const isAdmin = event.queryStringParameters?.isAdmin === "true";

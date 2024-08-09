@@ -51,8 +51,6 @@ export const main: SQSHandler = async (event: SQSEvent) => {
 // Add estimation function
 const addEstimation = async (data: any) => {
   // Add clinic and branch IDs (these should ideally come from the message or an authenticated context)
-  data.clinicId = "EV";
-  data.branchId = "KL";
 
   let estimatedPrice: number = 0;
   let estimatedTax: number = 0;

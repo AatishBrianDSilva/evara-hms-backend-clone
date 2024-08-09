@@ -6,10 +6,13 @@ import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
 import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+
+  const auth = extractAuthorizerDetails(event);
 
   try {
     await connectMongoDb();
@@ -43,7 +46,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
 
       //Add branchId to query
-      query.branchId = "KL";
+      query.branchId = auth.branchId;
+      query.clinicId = auth.clinicId;
 
       // Fetching the appointments with pagination
       const result = await DrugVendor.paginate(query, options);
@@ -54,7 +58,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const drugVendors = await DrugVendor.find({ branchId: "KL" })
+      const drugVendors = await DrugVendor.find({
+        branchId: auth.branchId,
+        clinicId: auth.clinicId,
+      })
         .sort(sort)
         .lean();
 

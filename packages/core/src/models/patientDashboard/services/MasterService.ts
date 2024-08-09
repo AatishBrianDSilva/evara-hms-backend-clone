@@ -3,6 +3,7 @@ import { EServiceTypes } from "./DefaultService";
 import { EGender } from "../investigation/MedicalTests";
 
 interface IMasterService extends Document {
+  clinicId: string;
   serviceType: EServiceTypes;
   service: mongoose.Schema.Types.ObjectId;
   name: string;
@@ -15,6 +16,7 @@ interface IMasterService extends Document {
 }
 
 const MasterServiceSchema: Schema = new Schema({
+  clinicId: { type: String, required: true, index: true },
   serviceType: {
     type: String,
     required: true,

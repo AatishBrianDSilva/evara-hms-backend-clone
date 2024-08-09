@@ -4,10 +4,12 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import { TreatmentCycleConsumable } from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/TreatmentCycleConsumable";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
+  const auth = extractAuthorizerDetails(event);
   try {
     // Connect to MongoDB
     await connectMongoDb();
@@ -20,8 +22,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const data = JSON.parse(event.body);
 
     // TODO: Remove clinicId and branchId after adding authentication
-    data.clinicId = "EV";
-    data.branchId = "KL";
+    data.clinicId = auth.clinicId;
+    // data.branchId = "KL";
 
     // Create a new Master Investigation
     const treatmentCycle = new TreatmentCycleConsumable(data);

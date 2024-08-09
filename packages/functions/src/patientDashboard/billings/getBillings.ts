@@ -32,6 +32,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
     const query: any = {};
+    query.clinicId = auth.clinicId;
     query.branchId = auth?.branchId; // Example, this could be dynamic or omitted
     if (status) {
       query.status = status;

@@ -2,6 +2,7 @@ import mongoose, { Document, PaginateModel, Schema } from "mongoose";
 import pagination from "mongoose-paginate-v2";
 
 export interface IDrugManufacturer extends Document {
+  clinicId: string;
   name: string;
   category: [Schema.Types.ObjectId];
   taxRate: Schema.Types.ObjectId;
@@ -28,6 +29,11 @@ export interface IDrugManufacturer extends Document {
 
 const drugManufacturerSchema = new Schema<IDrugManufacturer>(
   {
+    clinicId: {
+      type: String,
+      required: true,
+      index: true,
+    },
     name: {
       type: String,
       required: true,

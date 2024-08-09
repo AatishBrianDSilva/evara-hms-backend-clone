@@ -6,10 +6,13 @@ import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { TaxRate } from "@evara-backend/core/models/pharmacyDashboard/TaxRate";
 import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+
+  const auth = extractAuthorizerDetails(event);
 
   try {
     await connectMongoDb();
@@ -28,7 +31,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         lean: true,
       };
 
-      const query: any = {};
+      const query: any = {
+        clinicId: auth.clinicId,
+      };
 
       if (sort) {
         options.sort = sort;
@@ -43,7 +48,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const taxRates = await TaxRate.find().sort(sort).lean();
+      const taxRates = await TaxRate.find({
+        clinicId: auth.clinicId,
+      })
+        .sort(sort)
+        .lean();
 
       return successResponse("Success", { records: taxRates, pagination: {} });
     }

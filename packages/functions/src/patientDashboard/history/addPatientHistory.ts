@@ -6,10 +6,11 @@ import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import Patient from "@evara-backend/core/src/models/Patients";
 import { PatientHistory } from "@evara-backend/core/models/patientDashboard/PatientHistory";
 import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
-
+  const auth = extractAuthorizerDetails(event);
   try {
     // Connect to MongoDB
     await connectMongoDb();
@@ -21,8 +22,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Parse the body from the event
     const data = JSON.parse(event.body);
 
-    data.clinicId = "EV";
-    data.branchId = "KL";
+    data.clinicId = auth.clinicId;
+    data.branchId = auth.branchId;
 
     if (!data.patientCode) {
       throw new ErrorMessage(400, "Missing required patient history fields");
