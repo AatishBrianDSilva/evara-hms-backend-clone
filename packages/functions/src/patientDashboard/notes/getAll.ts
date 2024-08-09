@@ -5,9 +5,8 @@ import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extr
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import Branch from "@evara-backend/core/src/models/mastersDashboard/global/ClinicBranches";
-import Consent from "@evara-backend/core/src/models/mastersDashboard/local/Consent";
 import PatientNotes from "@evara-backend/core/src/models/patientDashboard/PatientNotes";
+import Doctors from "@evara-backend/core/models/mastersDashboard/Doctors";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -26,9 +25,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     await connectMongoDb();
 
-    const data = await PatientNotes.find({ patient: patient }).sort({
-      createdAt: -1,
-    });
+    const data = await PatientNotes.find({ patient: patient })
+      .populate({
+        path: "doctor",
+        model: Doctors.modelName,
+      })
+      .sort({
+        createdAt: -1,
+      });
 
     return successResponse("Success", data);
   } catch (error) {
