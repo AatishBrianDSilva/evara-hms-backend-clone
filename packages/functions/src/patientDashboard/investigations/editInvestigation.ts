@@ -123,7 +123,7 @@ const processDataForReport = (data: any) => {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.Investigation,
     templateType: EReportTemplateTypes.Reports,
-    doctor: data.doctor.firstName + " " + data.doctor.lastName,
+    doctor: `${data.doctor?.firstName || ""} ${data.doctor?.lastName || ""}`,
     patient: data.patient,
     clinic: data.clinicId,
     sections: [],
@@ -153,7 +153,68 @@ const processDataForReport = (data: any) => {
     reportData.sections = sections;
   } else {
     reportData.reportName = `${data.result.testName} Report`;
-    reportData.sections = [...generateSections(data.result.details)];
+
+    // Extract all details from the result and remove the __v field
+    const { __v, files, ...generalDetails } = data.result.details;
+
+    // Doctor-related fields to be replaced with their names
+    const doctorFields = [
+      "surgeon",
+      "embryologist",
+      "anaesthetist",
+      "gynaecologist",
+      "referredBy",
+      // add other doctor-related fields here as needed
+    ];
+
+    // Replace doctor fields with their names in general details
+    const modifiedGeneralDetails = { ...generalDetails };
+    doctorFields.forEach((field) => {
+      if (
+        modifiedGeneralDetails[field] &&
+        modifiedGeneralDetails[field].firstName &&
+        modifiedGeneralDetails[field].lastName
+      ) {
+        modifiedGeneralDetails[
+          field
+        ] = `${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
+      } else if (modifiedGeneralDetails[field]) {
+        modifiedGeneralDetails[field] = `${modifiedGeneralDetails[field].firstName || ""} ${
+          modifiedGeneralDetails[field].lastName || ""
+        }`;
+      }
+    });
+
+    // Define a regex for ISO 8601 date format as dates are in string with this format
+    const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+    // Helper function to format date strings to dd/mm/yyyy
+    const formatDate = (dateString: string) => {
+      return new Date(dateString).toLocaleDateString("en-GB");
+    };
+
+    // Format dates in general details
+    Object.keys(modifiedGeneralDetails).forEach((key) => {
+      if (
+        typeof modifiedGeneralDetails[key] === "string" &&
+        iso8601Regex.test(modifiedGeneralDetails[key])
+      ) {
+        modifiedGeneralDetails[key] = formatDate(modifiedGeneralDetails[key]);
+      }
+    });
+
+    // Remove keys with empty string or null values
+    const filteredGeneralDetails = Object.fromEntries(
+      Object.entries(modifiedGeneralDetails).filter(
+        ([key, value]) => value !== "" && value !== null
+      )
+    );
+
+    reportData.sections.push({
+      showTitle: true,
+      title: "General Information",
+      content: filteredGeneralDetails,
+    });
 
     if (data.result.notes) {
       reportData.sections.push({

@@ -42,6 +42,19 @@ interface PaymentDetail {
   type: EPaitentBillingPaymentType;
 }
 
+interface PharmacyDetails {
+  stock: mongoose.Types.ObjectId;
+  batchNo: string;
+  location: mongoose.Types.ObjectId;
+}
+
+interface RefundDetail {
+  refundAmount: number;
+  method: EPaymentMethod;
+  reason: string;
+  refundDate?: Date;
+}
+
 interface Item {
   estimationId: mongoose.Types.ObjectId;
   masterServiceId: mongoose.Types.ObjectId;
@@ -54,6 +67,7 @@ interface Item {
   discount: number;
   tax: number;
   total: number;
+  pharmacyDetails?: PharmacyDetails;
 }
 
 export interface IPatientBilling extends Document {
@@ -70,9 +84,8 @@ export interface IPatientBilling extends Document {
   tax: number;
   billType: EPatientBillingServiceType;
   payments: PaymentDetail[];
+  refundDetails?: RefundDetail[]; // field for refund details
   status: EPatientBillingStatus;
-  // createdBy: mongoose.Types.ObjectId;
-  // modifiedBy?: mongoose.Types.ObjectId;
   createdBy: string;
   modifiedBy?: string;
   subTotal: number;
@@ -100,6 +113,23 @@ const paymentDetailSchema = new Schema<PaymentDetail>({
   },
 });
 
+const pharmacyDetailsSchema = new Schema<PharmacyDetails>({
+  stock: { type: mongoose.Schema.Types.ObjectId, ref: "PharmacyStock" },
+  batchNo: { type: String },
+  location: { type: mongoose.Schema.Types.ObjectId, ref: "DrugLocation" },
+});
+
+const refundDetailSchema = new Schema<RefundDetail>({
+  refundAmount: { type: Number, required: true },
+  method: {
+    type: String,
+    enum: Object.values(EPaymentMethod),
+    required: true,
+  },
+  reason: { type: String, required: true },
+  refundDate: { type: Date, default: Date.now },
+});
+
 const itemSchema = new Schema<Item>({
   estimationId: { type: mongoose.Schema.Types.ObjectId, required: true },
   masterServiceId: { type: mongoose.Schema.Types.ObjectId, required: true },
@@ -110,12 +140,13 @@ const itemSchema = new Schema<Item>({
     enum: Object.values(EPatientBillingServiceType),
     required: true,
   },
-  doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "doctors" },
+  doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "Doctors" },
   quantity: { type: Number, required: true, min: 0 },
   price: { type: Number, required: true, min: 0 },
   discount: { type: Number, required: true, min: 0 },
   tax: { type: Number },
   total: { type: Number, required: true, min: 0 },
+  pharmacyDetails: { type: pharmacyDetailsSchema },
 });
 
 const patientBillingSchema = new Schema<IPatientBilling>(
@@ -127,7 +158,7 @@ const patientBillingSchema = new Schema<IPatientBilling>(
     billType: {
       type: String,
       enum: Object.values(EPatientBillingServiceType),
-      required: true,
+      required: false,
     },
     items: [itemSchema],
     amount: { type: Number, required: true },
@@ -137,18 +168,13 @@ const patientBillingSchema = new Schema<IPatientBilling>(
     discountFile: { type: String },
     tax: { type: Number, default: 0 },
     payments: [paymentDetailSchema],
+    refundDetails: { type: [refundDetailSchema], required: false },
     status: {
       type: String,
       enum: Object.values(EPatientBillingStatus),
       default: EPatientBillingStatus.Pending,
       required: true,
     },
-    // createdBy: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   required: true,
-    //   ref: "User",
-    // },
-    // modifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     createdBy: { type: String, required: true },
     modifiedBy: { type: String },
     totalAdvance: { type: Number, default: 0 },
@@ -165,11 +191,9 @@ patientBillingSchema.virtual("subTotal").get(function (this: IPatientBilling) {
   return this.amount + this.tax;
 });
 
-patientBillingSchema
-  .virtual("grandTotal")
-  .get(function (this: IPatientBilling) {
-    return this.subTotal - this.discount;
-  });
+patientBillingSchema.virtual("grandTotal").get(function (this: IPatientBilling) {
+  return this.subTotal - this.discount;
+});
 
 patientBillingSchema.virtual("totalPaid").get(function (this: IPatientBilling) {
   return this.payments
@@ -177,22 +201,17 @@ patientBillingSchema.virtual("totalPaid").get(function (this: IPatientBilling) {
     .reduce((acc, payment) => acc + payment.amount, 0);
 });
 
-patientBillingSchema
-  .virtual("totalPaymentAttempts")
-  .get(function (this: IPatientBilling) {
-    return this.payments.filter(
-      (payment) => payment.type === EPaitentBillingPaymentType.Payment
-    ).length;
-  });
+patientBillingSchema.virtual("totalPaymentAttempts").get(function (this: IPatientBilling) {
+  return this.payments.filter(
+    (payment) => payment.type === EPaitentBillingPaymentType.Payment
+  ).length;
+});
 
 patientBillingSchema.virtual("totalDues").get(function (this: IPatientBilling) {
   return this.grandTotal - this.totalPaid;
 });
 
-patientBillingSchema.pre(
-  "save",
-  autoIncrementId("PatientBilling", "billingId", "BL-")
-);
+patientBillingSchema.pre("save", autoIncrementId("PatientBilling", "billingId", "BL-"));
 
 patientBillingSchema.plugin(paginate);
 

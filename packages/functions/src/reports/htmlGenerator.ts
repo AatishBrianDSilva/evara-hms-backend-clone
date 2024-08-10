@@ -5,10 +5,7 @@ import { SNSHandler } from "aws-lambda";
 import * as SQS from "aws-sdk/clients/sqs";
 import { formatToIndianCurrencyFormat } from "@evara-backend/core/src/lib/utils/formatToIndianCurrencyFormat"; // Adjust the path accordingly
 
-import {
-  IPDFGeneratorMessage,
-  IReportData,
-} from "@evara-backend/core/src/lib/types/global";
+import { IPDFGeneratorMessage, IReportData } from "@evara-backend/core/src/lib/types/global";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import Patient from "@evara-backend/core/src/models/Patients";
 import Clinic from "@evara-backend/core/src/models/mastersDashboard/Clinic";
@@ -39,6 +36,11 @@ const generateHtml = (template: string, data: any): string => {
 
   Handlebars.registerHelper("properCase", (str) => {
     if (typeof str !== "string") return str;
+
+    // Add a space before each capital letter (except the first one)
+    str = str.replace(/([a-z])([A-Z])/g, "$1 $2");
+
+    // Capitalize the first letter of each word
     return str.replace(/\b\w/g, (char) => char.toUpperCase());
   });
 
@@ -49,7 +51,10 @@ const generateHtml = (template: string, data: any): string => {
 const generateHeaderHtml = (header: any, styles: any): string => {
   // Check for undefined or empty strings for each value
   const doctorInfo =
-    header.doctorName && header.doctorName !== "undefined undefined"
+    header.doctorName &&
+    header.doctorName !== "undefined undefined" &&
+    header.doctorName !== "" &&
+    header.doctorName !== " "
       ? `<p style="margin: 0;font-size: 14px;">Doctor: ${header.doctorName}</p>`
       : "";
 
@@ -137,10 +142,7 @@ export const main: SNSHandler = async (event, _context) => {
       const htmlContent = generateHtml(template, templateData);
       console.log("HTML Content: ", htmlContent);
 
-      const headerHtml = generateHeaderHtml(
-        templateData.header,
-        templateData.styles
-      );
+      const headerHtml = generateHeaderHtml(templateData.header, templateData.styles);
       console.log("Header HTML: ", headerHtml);
       const footerHtml = generateFooterHtml(templateData.styles);
       console.log("Footer HTML: ", footerHtml);
@@ -150,9 +152,7 @@ export const main: SNSHandler = async (event, _context) => {
 
       const queueUrl = process.env.REPORT_PDF_GENERATION_QUEUE_URL;
       if (!queueUrl) {
-        throw new Error(
-          "Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set."
-        );
+        throw new Error("Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set.");
       }
 
       const pdfGeneratorMessage: IPDFGeneratorMessage = {

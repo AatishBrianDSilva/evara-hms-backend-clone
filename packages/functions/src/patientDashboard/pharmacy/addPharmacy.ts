@@ -57,9 +57,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       // Deduct quantities from the relevant locations in the stock
       item.details.forEach(async (detail: any) => {
-        const batch = stock.batches.find(
-          (b) => b.batchNo === detail.batchNumber
-        );
+        const batch = stock.batches.find((b) => b.batchNo === detail.batchNumber);
         if (!batch) {
           throw new Error("Batch number not found");
         }
@@ -90,9 +88,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       });
       const newPharmacy = await newPatientPharmacy.save({ session });
 
-      const pharmacyStock: any = await PharmacyStock.findById(
-        newPharmacy.item.stock
-      ).populate([
+      const pharmacyStock: any = await PharmacyStock.findById(newPharmacy.item.stock).populate([
         {
           path: "item",
           model: DrugItem.modelName,

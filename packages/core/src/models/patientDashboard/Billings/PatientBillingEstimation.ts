@@ -73,9 +73,7 @@ const patientBillingEstimationSchema = new Schema<IPatientBillingEstimation>(
 
 patientBillingEstimationSchema.plugin(paginate);
 
-interface PatientBillingEstimationDocument
-  extends Document,
-    IPatientBillingEstimation {}
+interface PatientBillingEstimationDocument extends Document, IPatientBillingEstimation {}
 
 export const PatientBillingEstimation = mongoose.model<
   PatientBillingEstimationDocument,

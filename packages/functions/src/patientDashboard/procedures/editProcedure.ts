@@ -116,7 +116,7 @@ const processDataForReport = (data: any) => {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.Procedure,
     templateType: EReportTemplateTypes.Reports,
-    doctor: data.doctor.firstName + " " + data.doctor.lastName,
+    doctor: `${data.doctor?.firstName || ""} ${data.doctor?.lastName || ""}`,
     patient: data.patient,
     clinic: data.clinicId,
     sections: [],
@@ -126,7 +126,84 @@ const processDataForReport = (data: any) => {
   };
 
   reportData.reportName = `${data.result.procedureName} Report`;
-  reportData.sections = [...generateSections(data.result.details)];
+
+  // Extract all details from the result and remove the __v field
+  const { __v, files, embryoBiopsyDetails, ...generalDetails } = data.result.details;
+
+  // Doctor-related fields to be replaced with their names
+  const doctorFields = [
+    "surgeon",
+    "embryologist",
+    "anaesthetist",
+    "gynaecologist",
+    // add other doctor-related fields here as needed
+  ];
+
+  // Replace doctor fields with their names in general details
+  const modifiedGeneralDetails = { ...generalDetails };
+  doctorFields.forEach((field) => {
+    if (
+      modifiedGeneralDetails[field] &&
+      modifiedGeneralDetails[field].firstName &&
+      modifiedGeneralDetails[field].lastName
+    ) {
+      modifiedGeneralDetails[
+        field
+      ] = `${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
+    } else if (modifiedGeneralDetails[field]) {
+      modifiedGeneralDetails[field] = `${modifiedGeneralDetails[field].firstName || ""} ${
+        modifiedGeneralDetails[field].lastName || ""
+      }`;
+    }
+  });
+
+  // Define a regex for ISO 8601 date format as dates are in string with this format
+  const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+  // Format dates to dd/mm/yyyy if they are date strings
+  Object.keys(modifiedGeneralDetails).forEach((key) => {
+    if (
+      typeof modifiedGeneralDetails[key] === "string" &&
+      iso8601Regex.test(modifiedGeneralDetails[key])
+    ) {
+      modifiedGeneralDetails[key] = new Date(modifiedGeneralDetails[key]).toLocaleDateString(
+        "en-GB"
+      );
+    }
+  });
+
+  // Remove keys with empty string or null values
+  const filteredGeneralDetails = Object.fromEntries(
+    Object.entries(modifiedGeneralDetails).filter(([key, value]) => value !== "" && value !== null)
+  );
+
+  reportData.sections.push({
+    showTitle: true,
+    title: "General Information",
+    content: filteredGeneralDetails,
+  });
+
+  // Add Embryo Biopsy Details as a separate section
+  if (embryoBiopsyDetails && embryoBiopsyDetails.length > 0) {
+    const formattedEmbryoBiopsyDetails = embryoBiopsyDetails.map((detail, index) => {
+      const formattedDetail = {};
+      Object.keys(detail).forEach((key) => {
+        formattedDetail[_.startCase(key)] = detail[key];
+      });
+      return {
+        title: `Embryo Biopsy ${index + 1}`,
+        content: formattedDetail,
+      };
+    });
+
+    formattedEmbryoBiopsyDetails.forEach((section) => {
+      reportData.sections.push({
+        showTitle: true,
+        title: section.title,
+        content: section.content,
+      });
+    });
+  }
 
   if (data.result.notes) {
     reportData.sections.push({

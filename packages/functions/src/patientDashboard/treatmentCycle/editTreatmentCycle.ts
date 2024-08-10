@@ -114,7 +114,7 @@ async function updateCategory(
       bucket: EBuckets.UserReports,
       documentType: EDocumentTypes.TreatmentCycle,
       templateType: EReportTemplateTypes.Reports,
-      doctor: result.doctor.firstName + " " + result.doctor.lastName,
+      doctor: `${result.doctor?.firstName || ""} ${result.doctor?.lastName || ""}`,
       patient: result.patient,
       clinic: result.clinicId,
       sections: [],
@@ -123,10 +123,111 @@ async function updateCategory(
       reportId: data.documentId,
     };
 
-    // reportData.reportName = `${data.name} Report`;
     reportData.reportName = `${category} Report`;
 
-    reportData.sections = [...generateSections(data.details)];
+    // Extract all details from the result and remove the __v field
+    const { __v, files, day0, day1, day2, day3, day4, day5, day6, ...generalDetails } =
+      data.details;
+
+    // Doctor-related fields to be replaced with their names
+    const doctorFields = [
+      "surgeon",
+      "doctor",
+      "embryologist",
+      "embryologistA",
+      "embryologistB",
+      "embryologist1",
+      "embryologist2",
+      "anaesthetist",
+      "gynaecologist",
+      "gyneacologist1",
+      "gyneacologist2",
+      "gynecologistA",
+      "gynecologistB",
+      "assistantDoctor",
+      // add other doctor-related fields here as needed
+    ];
+
+    // Replace doctor fields with their names in general details
+    const modifiedGeneralDetails = { ...generalDetails };
+    doctorFields.forEach((field) => {
+      if (
+        modifiedGeneralDetails[field] &&
+        modifiedGeneralDetails[field].firstName &&
+        modifiedGeneralDetails[field].lastName
+      ) {
+        modifiedGeneralDetails[
+          field
+        ] = `${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
+      } else if (modifiedGeneralDetails[field]) {
+        modifiedGeneralDetails[field] = `${modifiedGeneralDetails[field].firstName || ""} ${
+          modifiedGeneralDetails[field].lastName || ""
+        }`;
+      }
+    });
+
+    // Define a regex for ISO 8601 date format
+    const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+    // Format dates to dd/mm/yyyy if they match the ISO 8601 format
+    Object.keys(modifiedGeneralDetails).forEach((key) => {
+      if (
+        typeof modifiedGeneralDetails[key] === "string" &&
+        iso8601Regex.test(modifiedGeneralDetails[key])
+      ) {
+        modifiedGeneralDetails[key] = new Date(modifiedGeneralDetails[key]).toLocaleDateString(
+          "en-GB"
+        );
+      }
+    });
+
+    // Remove keys with empty string or null values
+    const filteredGeneralDetails = Object.fromEntries(
+      Object.entries(modifiedGeneralDetails).filter(
+        ([key, value]) => value !== "" && value !== null
+      )
+    );
+
+    reportData.sections.push({
+      showTitle: true,
+      title: "General Information",
+      content: filteredGeneralDetails,
+    });
+
+    // Add day0 to day6 details as separate sections if they have non-empty values
+    const dayDetails = { day0, day1, day2, day3, day4, day5, day6 };
+    Object.keys(dayDetails).forEach((dayKey, index) => {
+      const dayDetail = dayDetails[dayKey];
+      if (dayDetail) {
+        // Format dates within day details
+        Object.keys(dayDetail).forEach((key) => {
+          if (typeof dayDetail[key] === "string" && iso8601Regex.test(dayDetail[key])) {
+            dayDetail[key] = new Date(dayDetail[key]).toLocaleDateString("en-GB");
+          }
+        });
+
+        const filteredDayDetail = Object.fromEntries(
+          Object.entries(dayDetail).filter(([key, value]) => value !== "" && value !== null)
+        );
+        if (Object.keys(filteredDayDetail).length > 0) {
+          reportData.sections.push({
+            showTitle: true,
+            title: `Embryo Freezing Day ${index} Details`,
+            content: filteredDayDetail,
+          });
+        }
+      }
+    });
+
+    if (data.details.notes) {
+      reportData.sections.push({
+        showTitle: true,
+        title: "Notes",
+        content: {
+          Notes: data.details.notes,
+        },
+      });
+    }
 
     return reportData;
   };

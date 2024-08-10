@@ -120,7 +120,7 @@ const processDataForReport = (data: any) => {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.CryoPreservation,
     templateType: EReportTemplateTypes.Reports,
-    doctor: data.doctor.firstName + " " + data.doctor.lastName,
+    doctor: `${data.doctor?.firstName || ""} ${data.doctor?.lastName || ""}`,
     patient: data.patient,
     clinic: data.clinicId,
     sections: [],
@@ -130,14 +130,93 @@ const processDataForReport = (data: any) => {
   };
 
   reportData.reportName = `${data.cryo.name} Report`;
-  reportData.sections = [...generateSections(data.details.details)];
+
+  // Extract all details from the result and remove the __v field
+  const { __v, files, sperm_wash_items, ...generalDetails } = data.details.details;
+
+  // Doctor-related fields to be replaced with their names
+  const doctorFields = [
+    "surgeon",
+    "embryologistA",
+    "embryologistB",
+    "doctor",
+    "anaesthetist",
+    "gynaecologist",
+    // add other doctor-related fields here as needed
+  ];
+
+  // Replace doctor fields with their names in general details
+  const modifiedGeneralDetails = { ...generalDetails };
+  doctorFields.forEach((field) => {
+    if (
+      modifiedGeneralDetails[field] &&
+      modifiedGeneralDetails[field].firstName &&
+      modifiedGeneralDetails[field].lastName
+    ) {
+      modifiedGeneralDetails[
+        field
+      ] = `${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
+    } else if (modifiedGeneralDetails[field]) {
+      modifiedGeneralDetails[field] = `${modifiedGeneralDetails[field].firstName || ""} ${
+        modifiedGeneralDetails[field].lastName || ""
+      }`;
+    }
+  });
+
+  // Define a regex for ISO 8601 date format as dates are in string with this format
+  const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+  // Format dates to dd/mm/yyyy if they match the ISO 8601 format
+  Object.keys(modifiedGeneralDetails).forEach((key) => {
+    if (
+      typeof modifiedGeneralDetails[key] === "string" &&
+      iso8601Regex.test(modifiedGeneralDetails[key])
+    ) {
+      modifiedGeneralDetails[key] = new Date(modifiedGeneralDetails[key]).toLocaleDateString(
+        "en-GB"
+      );
+    }
+  });
+
+  // Remove keys with empty string or null values
+  const filteredGeneralDetails = Object.fromEntries(
+    Object.entries(modifiedGeneralDetails).filter(([key, value]) => value !== "" && value !== null)
+  );
+
+  reportData.sections.push({
+    showTitle: true,
+    title: "General Information",
+    content: filteredGeneralDetails,
+  });
+
+  // Add Sperm Wash Items as separate sections
+  if (sperm_wash_items && sperm_wash_items.length > 0) {
+    const formattedSpermWashItems = sperm_wash_items.map((item, index) => {
+      const formattedItem = {};
+      Object.keys(item).forEach((key) => {
+        formattedItem[_.startCase(key)] = item[key];
+      });
+      return {
+        title: `Sperm Wash Item ${index + 1}`,
+        content: formattedItem,
+      };
+    });
+
+    formattedSpermWashItems.forEach((section) => {
+      reportData.sections.push({
+        showTitle: true,
+        title: section.title,
+        content: section.content,
+      });
+    });
+  }
 
   if (data.details.notes) {
     reportData.sections.push({
       showTitle: true,
       title: "Notes",
       content: {
-        Notes: data.result.notes,
+        Notes: data.details.notes,
       },
     });
   }
