@@ -10,16 +10,17 @@ interface IPatientPharmacy extends Document {
       location: Schema.Types.ObjectId;
       quantity: number;
       batchNumber: string;
+      expiryDate: Date; // New field for expiry date
+      vendor: Schema.Types.ObjectId; // New field for vendor
+      mrp: number; // New field for MRP
+      packSize: number; // New field for pack size
+      itemId: Schema.Types.ObjectId; // New field for item ID
     }[];
   };
   doctor: Schema.Types.ObjectId;
   date: Date;
   allocatedBy: string;
   totalQuantity: number;
-  // patientData?: {
-  //   firstName: string;
-  //   lastName: string;
-  // };
   patientData?: Schema.Types.ObjectId;
 }
 
@@ -31,6 +32,11 @@ const detailsSchema = new Schema({
   },
   quantity: { type: Number, required: true, min: 1 },
   batchNumber: { type: String, required: true },
+  expiryDate: { type: Date, required: true }, // Added expiry date
+  vendor: { type: Schema.Types.ObjectId, ref: "DrugVendor", required: true }, // Added vendor
+  mrp: { type: Number, required: true }, // Added MRP
+  packSize: { type: Number, required: true }, // Added pack size
+  itemId: { type: Schema.Types.ObjectId, ref: "DrugItem", required: false }, // Added itemId
 });
 
 const itemSchema = new Schema({
@@ -39,7 +45,6 @@ const itemSchema = new Schema({
     ref: "PharmacyStock",
     required: true,
   },
-
   details: [detailsSchema],
 });
 
@@ -76,7 +81,7 @@ patientPharmacySchema.virtual("patientData", {
 patientPharmacySchema.plugin(pagination);
 
 patientPharmacySchema.index({ "item.stock": 1 });
-patientPharmacySchema.index({ "item.location": 1 });
+patientPharmacySchema.index({ "item.details.location": 1 });
 patientPharmacySchema.index({ doctor: 1 });
 patientPharmacySchema.index({ patient: 1 });
 

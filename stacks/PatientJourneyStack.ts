@@ -21,12 +21,9 @@ export const PatientJourneyStack = ({ stack }: StackContext) => {
 
     // Services
     // Patient Services
-    "POST /services/add":
-      "packages/functions/src/patientDashboard/services/addService.main",
-    "GET /services":
-      "packages/functions/src/patientDashboard/services/getServices.main",
-    "DELETE /services/{id}":
-      "packages/functions/src/patientDashboard/services/deleteService.main",
+    "POST /services/add": "packages/functions/src/patientDashboard/services/addService.main",
+    "GET /services": "packages/functions/src/patientDashboard/services/getServices.main",
+    "DELETE /services/{id}": "packages/functions/src/patientDashboard/services/deleteService.main",
 
     //Treatment Advice
 
@@ -39,14 +36,11 @@ export const PatientJourneyStack = ({ stack }: StackContext) => {
 
     //PROCEDURES
     //Patient Procedures
-    "POST /procedures/add":
-      "packages/functions/src/patientDashboard/procedures/addProcedure.main",
-    "GET /procedures":
-      "packages/functions/src/patientDashboard/procedures/getProcedures.main",
+    "POST /procedures/add": "packages/functions/src/patientDashboard/procedures/addProcedure.main",
+    "GET /procedures": "packages/functions/src/patientDashboard/procedures/getProcedures.main",
     "GET /procedures/{id}":
       "packages/functions/src/patientDashboard/procedures/getProcedureById.main",
-    "PUT /procedures/{id}":
-      "packages/functions/src/patientDashboard/procedures/editProcedure.main",
+    "PUT /procedures/{id}": "packages/functions/src/patientDashboard/procedures/editProcedure.main",
     "DELETE /procedures/{id}":
       "packages/functions/src/patientDashboard/procedures/deleteProcedure.main",
 
@@ -77,16 +71,12 @@ export const PatientJourneyStack = ({ stack }: StackContext) => {
       "packages/functions/src/patientDashboard/treatmentCycle/deleteTreatmentCycle.main",
 
     // Patient Timeline
-    "GET /timeline":
-      "packages/functions/src/patientDashboard/timeline/timeline.main",
+    "GET /timeline": "packages/functions/src/patientDashboard/timeline/timeline.main",
 
     // Patient History
-    "GET /history/{id}":
-      "packages/functions/src/patientDashboard/history/getPatientHistory.main",
-    "PUT /history/{id}":
-      "packages/functions/src/patientDashboard/history/editPatientHistory.main",
-    "POST /history/add":
-      "packages/functions/src/patientDashboard/history/addPatientHistory.main",
+    "GET /history/{id}": "packages/functions/src/patientDashboard/history/getPatientHistory.main",
+    "PUT /history/{id}": "packages/functions/src/patientDashboard/history/editPatientHistory.main",
+    "POST /history/add": "packages/functions/src/patientDashboard/history/addPatientHistory.main",
 
     // Patient Billing
     // Estimations
@@ -101,52 +91,40 @@ export const PatientJourneyStack = ({ stack }: StackContext) => {
     "DELETE /billings/estimations/{id}":
       "packages/functions/src/patientDashboard/billings/estimation/deleteEstimation.main",
     // Billing
-    "POST /billings/add":
-      "packages/functions/src/patientDashboard/billings/addBilling.main",
-    "GET /billings":
-      "packages/functions/src/patientDashboard/billings/getBillings.main",
-    "GET /billings/{id}":
-      "packages/functions/src/patientDashboard/billings/getBillingById.main",
-    "PUT /billings/{id}":
-      "packages/functions/src/patientDashboard/billings/editBilling.main",
+    "POST /billings/add": "packages/functions/src/patientDashboard/billings/addBilling.main",
+    "GET /billings": "packages/functions/src/patientDashboard/billings/getBillings.main",
+    "GET /billings/{id}": "packages/functions/src/patientDashboard/billings/getBillingById.main",
+    "PUT /billings/{id}": "packages/functions/src/patientDashboard/billings/editBilling.main",
     "POST /billings/process":
       "packages/functions/src/patientDashboard/billings/processBilling.main",
-    "POST /billings/refund":
-      "packages/functions/src/patientDashboard/billings/addRefund.main",
-    "DELETE /billings/{id}":
-      "packages/functions/src/patientDashboard/billings/deleteBilling.main",
+    "POST /billings/refund": "packages/functions/src/patientDashboard/billings/addRefund.main",
+    "GET /billings/refunds": "packages/functions/src/patientDashboard/billings/getRefund.main",
+    "GET /billings/refunds/{id}":
+      "packages/functions/src/patientDashboard/billings/getRefundById.main",
+    "DELETE /billings/{id}": "packages/functions/src/patientDashboard/billings/deleteBilling.main",
 
     "GET /master/services/all":
       "packages/functions/src/patientDashboard/billings/getAllServices.main",
     // Patient Pharmacy
-    "POST /pharmacy/add":
-      "packages/functions/src/patientDashboard/pharmacy/addPharmacy.main",
+    "POST /pharmacy/add": "packages/functions/src/patientDashboard/pharmacy/addPharmacy.main",
     "GET /pharmacy/{patientId}":
       "packages/functions/src/patientDashboard/pharmacy/getPharmacy.main",
     "GET /pharmacy/patient/{id}":
       "packages/functions/src/patientDashboard/pharmacy/getPharmacyById.main",
-    "GET /pharmacy/all":
-      "packages/functions/src/patientDashboard/pharmacy/getAllPharmacy.main",
+    "GET /pharmacy/all": "packages/functions/src/patientDashboard/pharmacy/getAllPharmacy.main",
 
     // Patient Notes
     "POST /notes/add": "packages/functions/src/patientDashboard/notes/add.main",
     "GET /notes": "packages/functions/src/patientDashboard/notes/getAll.main",
     "GET /notes/{id}": "packages/functions/src/patientDashboard/notes/get.main",
-    "PUT /notes/{id}":
-      "packages/functions/src/patientDashboard/notes/edit.main",
-    "DELETE /notes/{id}":
-      "packages/functions/src/patientDashboard/notes/delete.main",
+    "PUT /notes/{id}": "packages/functions/src/patientDashboard/notes/edit.main",
+    "DELETE /notes/{id}": "packages/functions/src/patientDashboard/notes/delete.main",
 
     // Patient Reports
-    "GET /reports/patient/{id}":
-      "packages/functions/src/reports/getPatientReports.main",
-    "GET /reports/download/{id}":
-      "packages/functions/src/reports/downloadReport.main",
-    "GET /reports":
-      "packages/functions/src/patientDashboard/reports/getPatientReports.main",
-    "GET /invoices/download/{id}":
-      "packages/functions/src/reports/downloadReport.main",
-    "POST /files/user-files/download":
-      "packages/functions/src/files/downloadFiles.main",
+    "GET /reports/patient/{id}": "packages/functions/src/reports/getPatientReports.main",
+    "GET /reports/download/{id}": "packages/functions/src/reports/downloadReport.main",
+    "GET /reports": "packages/functions/src/patientDashboard/reports/getPatientReports.main",
+    "GET /invoices/download/{id}": "packages/functions/src/reports/downloadReport.main",
+    "POST /files/user-files/download": "packages/functions/src/files/downloadFiles.main",
   });
 };

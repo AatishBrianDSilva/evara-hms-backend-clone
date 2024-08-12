@@ -80,6 +80,13 @@ export interface IPurchaseOrder extends Document {
   createdBy: string;
   authorizedBy: string;
   status: EPurchaseOrderStatus;
+  newAddress?: {
+    branchName: string;
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+  }; // Optional field for new address
 }
 
 const itemSchema = new Schema({
@@ -143,6 +150,13 @@ const purchaseOrderSchema = new Schema(
       default: EPurchaseOrderStatus.Draft,
     },
     invoiceNumber: { type: String, required: false },
+    newAddress: {
+      branchName: { type: String, required: false },
+      street: { type: String, required: false },
+      city: { type: String, required: false },
+      state: { type: String, required: false },
+      zip: { type: String, required: false },
+    }, // Optional field for new address
   },
   { timestamps: true }
 );

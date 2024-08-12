@@ -106,6 +106,10 @@ const addEstimation = async (data: any) => {
 
     const mrpPerUnit = sellPrice / packSize;
 
+    // Log additional information
+    console.log("Expiry Date:", service.batches[0]?.expiryDate);
+    console.log("Vendor:", service.batches[0]?.vendor.name);
+
     estimatedUnitPrice = parseFloat((mrpPerUnit / (1 + tax / 100)).toFixed(2));
     estimatedPrice = estimatedUnitPrice * data.quantity;
 
