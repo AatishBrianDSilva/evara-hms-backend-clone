@@ -13,6 +13,7 @@ interface IMasterService extends Document {
   active: boolean;
   validTill: Date;
   gender: EGender;
+  isPackageItem: Boolean;
 }
 
 const MasterServiceSchema: Schema = new Schema({
@@ -34,11 +35,9 @@ const MasterServiceSchema: Schema = new Schema({
   total: { type: Number, required: true },
   active: { type: Boolean, required: true, default: true },
   validTill: { type: Date },
+  isPackageItem: { type: Boolean, default: false }, // Set default to false
 });
 
-const MasterService = mongoose.model<IMasterService>(
-  "MasterService",
-  MasterServiceSchema
-);
+const MasterService = mongoose.model<IMasterService>("MasterService", MasterServiceSchema);
 
 export default MasterService;

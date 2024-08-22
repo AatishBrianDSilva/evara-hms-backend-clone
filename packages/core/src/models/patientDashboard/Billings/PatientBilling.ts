@@ -24,6 +24,7 @@ export enum EPatientBillingServiceType {
   Service = "Service",
   CryoPreservation = "Cryo Preservation",
   TreatmentCycle = "Treatment Cycle",
+  Package = "Package",
 }
 
 export enum EPaymentMethod {

@@ -12,6 +12,7 @@ interface IMasterInvestigation extends Document {
   total: number;
   active: boolean;
   validTill: Date;
+  isPackageItem: Boolean;
 }
 
 const MasterInvestigationSchema: Schema = new Schema({
@@ -33,6 +34,7 @@ const MasterInvestigationSchema: Schema = new Schema({
   total: { type: Number, required: true },
   active: { type: Boolean, required: true, default: true },
   validTill: { type: Date },
+  isPackageItem: { type: Boolean, default: false }, // Set default to false
 });
 
 const MasterInvestigation = mongoose.model<IMasterInvestigation>(

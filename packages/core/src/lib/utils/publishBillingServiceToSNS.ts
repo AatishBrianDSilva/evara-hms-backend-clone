@@ -13,11 +13,11 @@ export const publishBillingServiceToSNS = async (
   quantity: number,
   clinicId: string,
   branchId: string,
-  itemId: Schema.Types.ObjectId, // New field for item ID
-  mrp?: number, // Optional MRP
-  expiryDate?: Date, // Optional Expiry Date
-  vendor?: Schema.Types.ObjectId, // Optional Vendor ID
-  packSize?: number // Optional Pack Size
+  itemId?: Schema.Types.ObjectId,
+  mrp?: number,
+  expiryDate?: Date,
+  vendor?: Schema.Types.ObjectId,
+  packSize?: number
 ) => {
   const messagePayload = {
     action: "Add",
@@ -32,11 +32,11 @@ export const publishBillingServiceToSNS = async (
       quantity: quantity,
       clinicId: clinicId,
       branchId: branchId,
-      itemId: itemId, // Include item ID
-      mrp: mrp, // Include MRP if available
-      expiryDate: expiryDate, // Include Expiry Date if available
-      vendor: vendor, // Include Vendor ID if available
-      packSize: packSize, // Include Pack Size if available
+      itemId: itemId,
+      mrp: mrp,
+      expiryDate: expiryDate,
+      vendor: vendor,
+      packSize: packSize,
     },
   };
 

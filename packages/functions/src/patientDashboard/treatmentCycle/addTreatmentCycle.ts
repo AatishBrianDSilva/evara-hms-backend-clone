@@ -32,9 +32,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     console.log("Data: ", data);
 
     for (let i = 0; i < data.length; i++) {
-      const masterTreatmentCycle = await MasterTreatmentCycle.findById(
-        data[i].cycle
-      )
+      const masterTreatmentCycle = await MasterTreatmentCycle.findById(data[i].cycle)
         .populate("treatmentCycle")
         .lean();
 
@@ -42,11 +40,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         throw new ErrorMessage(404, "Default treatment cycle not found");
       }
 
-      const existingTreatmentCycle = await PatientTreatmentCycle.countDocuments(
-        {
-          cycle: masterTreatmentCycle._id,
-        }
-      );
+      const existingTreatmentCycle = await PatientTreatmentCycle.countDocuments({
+        cycle: masterTreatmentCycle._id,
+      });
       log("Existing Treatment Cycle: ", existingTreatmentCycle);
 
       const defaultTreatmentCycle = masterTreatmentCycle.treatmentCycle;

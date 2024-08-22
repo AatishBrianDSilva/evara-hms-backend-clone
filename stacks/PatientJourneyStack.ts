@@ -70,6 +70,14 @@ export const PatientJourneyStack = ({ stack }: StackContext) => {
     "DELETE /treatment-cycles/{id}":
       "packages/functions/src/patientDashboard/treatmentCycle/deleteTreatmentCycle.main",
 
+    // PACKAGES
+    // Patient Packages
+    "POST /packages/add": "packages/functions/src/patientDashboard/packages/addPackage.main",
+    "GET /packages": "packages/functions/src/patientDashboard/packages/getPackages.main",
+    "GET /packages/{id}": "packages/functions/src/patientDashboard/packages/getPackageById.main",
+    // "PUT /packages/{id}": "packages/functions/src/patientDashboard/packages/editPackage.main",
+    "DELETE /packages/{id}": "packages/functions/src/patientDashboard/packages/deletePackage.main",
+
     // Patient Timeline
     "GET /timeline": "packages/functions/src/patientDashboard/timeline/timeline.main",
 

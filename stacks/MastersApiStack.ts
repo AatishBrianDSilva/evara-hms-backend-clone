@@ -139,6 +139,14 @@ export const MastersApiStack = ({ stack }: StackContext) => {
     "PUT /master/treatment-cycles/stage/{id}":
       "packages/functions/src/mastersDashboard/service/treatmentCycle/stage/editTreatmentCycleStage.main",
 
+    // Master Packages
+    "POST /master/packages/add":
+      "packages/functions/src/mastersDashboard/service/packages/addPackage.main",
+    "GET /master/packages":
+      "packages/functions/src/mastersDashboard/service/packages/getPackages.main",
+    "GET /master/packages/{id}":
+      "packages/functions/src/mastersDashboard/service/packages/getPackageById.main",
+
     //End Service Masters
   });
 

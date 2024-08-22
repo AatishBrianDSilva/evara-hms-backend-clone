@@ -1,8 +1,5 @@
 import mongoose, { Document, Schema } from "mongoose";
-import {
-  ETreatmentCycleType,
-  IDefaultTreatmentCycle,
-} from "./DefaultTreatmentCycle";
+import { ETreatmentCycleType, IDefaultTreatmentCycle } from "./DefaultTreatmentCycle";
 import { EGender } from "../investigation/MedicalTests";
 
 interface IMasterTreatmentCycle extends Document {
@@ -16,6 +13,7 @@ interface IMasterTreatmentCycle extends Document {
   active: boolean;
   total: number;
   validTill: Date;
+  isPackageItem: Boolean;
 }
 
 const MasterTreatmentCycleSchema: Schema = new Schema({
@@ -37,6 +35,7 @@ const MasterTreatmentCycleSchema: Schema = new Schema({
   active: { type: Boolean, required: true, default: true },
   total: { type: Number, required: true },
   validTill: { type: Date },
+  isPackageItem: { type: Boolean, default: false }, // Set default to false
 });
 
 const MasterTreatmentCycle = mongoose.model<IMasterTreatmentCycle>(

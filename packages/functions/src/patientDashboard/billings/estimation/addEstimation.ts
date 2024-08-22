@@ -12,6 +12,7 @@ import { PatientBillingEstimation } from "@evara-backend/core/models/patientDash
 import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import MasterPackage from "@evara-backend/core/models/patientDashboard/packages/MasterPackage";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -38,10 +39,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     for (let item of data.items) {
       item.quantity = item.quantity || 1;
 
-      const service = await findServiceByIdAndType(
-        item.masterServiceId,
-        data.serviceType
-      );
+      const service = await findServiceByIdAndType(item.masterServiceId, data.serviceType);
 
       if (!service) {
         throw new ErrorMessage(404, "Service not found");
@@ -49,12 +47,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       const cost = service.cost;
       const tax = 0;
-      const estimatedUnitPrice = parseFloat(
-        (cost / (1 + tax / 100)).toFixed(2)
-      );
-      const estimatedPrice = parseFloat(
-        (estimatedUnitPrice * item.quantity).toFixed(2)
-      );
+      const estimatedUnitPrice = parseFloat((cost / (1 + tax / 100)).toFixed(2));
+      const estimatedPrice = parseFloat((estimatedUnitPrice * item.quantity).toFixed(2));
 
       const total = parseFloat((cost * item.quantity).toFixed(2));
 
@@ -98,6 +92,8 @@ export async function findServiceByIdAndType(
       return MasterService.findById(serviceId);
     case EPatientBillingServiceType.TreatmentCycle:
       return MasterTreatmentCycle.findById(serviceId);
+    case EPatientBillingServiceType.Package:
+      return MasterPackage.findById(serviceId);
     default:
       throw new ErrorMessage(400, "Invalid service type: " + serviceType);
   }

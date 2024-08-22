@@ -37,10 +37,7 @@ const MedicalProcedureSchema: Schema = new Schema(
 );
 
 // Assume autoIncrementId is a function/middleware you've defined to auto-increment the testId
-MedicalProcedureSchema.pre(
-  "save",
-  autoIncrementId("MedicalProcedures", "procedureId", "P-")
-);
+MedicalProcedureSchema.pre("save", autoIncrementId("MedicalProcedures", "procedureId", "P-"));
 
 const MedicalProcedure = mongoose.model<IMedicalProcedure>(
   "MedicalProcedures",
