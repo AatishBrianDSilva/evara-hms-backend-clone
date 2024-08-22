@@ -9,6 +9,14 @@ import { PatientRefund } from "@evara-backend/core/src/models/patientDashboard/B
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 import { PharmacyStock } from "@evara-backend/core/models/pharmacyDashboard/PharmacyStock";
 import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
+import SNSService from "@evara-backend/core/lib/aws/sns";
+import {
+  EBuckets,
+  EDocumentTypes,
+  EReportTemplateTypes,
+  IReportData,
+} from "@evara-backend/core/lib/types/global";
+import _ from "lodash";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -31,8 +39,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Data is required");
     }
 
-    const { billingId, refundAmount, refundDetails, pharmacyData } = JSON.parse(event.body);
-    const { method, reason, charges, items } = refundDetails;
+    const { billingId, refundAmount, refundDetails, pharmacyData, patientId } = JSON.parse(
+      event.body
+    );
+    const { method, reason, charges, items, refundNumber, files } = refundDetails;
 
     console.log("Parsed request body:", { billingId, refundAmount, refundDetails, pharmacyData });
 
@@ -79,6 +89,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           qtyToRefund: item.qtyToRefund,
           amountToRefund: item.amountToRefund,
         })),
+        refundNumber: refundNumber || "N/A", // Default value if refundNumber is not provided
+        files: files || [], // Default to an empty array if files are not provided
       },
       createdBy: auth.userId,
       branchId: billing.branchId,
@@ -217,7 +229,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await session.commitTransaction();
     console.log("Transaction committed successfully.");
 
-    return successResponse("Refund added and stock updated successfully");
+    // Generate report after successful transaction
+    const reportData = generateReportData(refundEntry, auth.clinicId, patientId);
+    console.log("Report Data: ", JSON.stringify(reportData, null, 2));
+
+    // Send to SNS
+    await SNSService.publishMessage({
+      Message: JSON.stringify(reportData),
+      TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
+    });
+
+    return successResponse("Refund added, stock updated, and report generated successfully");
   } catch (error) {
     await session.abortTransaction();
     console.log("Transaction aborted due to error.");
@@ -227,4 +249,51 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     session.endSession();
     console.log("Session ended.");
   }
+};
+
+// Function to generate report data
+const generateReportData = (refundEntry: any, clinicId: string, patientId: string) => {
+  const reportData: IReportData = {
+    bucket: EBuckets.UserReports,
+    documentType: EDocumentTypes.Refund,
+    templateType: EReportTemplateTypes.Reports,
+    doctor: "N/A", //refund is not related to doctor
+    patient: patientId,
+    clinicId: clinicId,
+    sections: [],
+    reportName: `Refund Report for ${refundEntry.patientCode}`,
+    fileName: _.kebabCase(`refund-${refundEntry.patientCode}-${refundEntry._id}`),
+    reportId: refundEntry._id,
+  };
+
+  // Add refund details section
+  reportData.sections.push({
+    showTitle: true,
+    title: "Refund Details",
+    content: {
+      RefundNumber: refundEntry.refundDetails.refundNumber || "N/A",
+      Method: refundEntry.refundDetails.method,
+      Reason: refundEntry.refundDetails.reason,
+      Amount: refundEntry.refundDetails.refundAmount,
+      Charges: refundEntry.refundDetails.charges,
+      // Files: refundEntry.refundDetails.files.join(", "),
+    },
+  });
+
+  // Add each item refunded as a section
+  refundEntry.refundDetails.items.forEach((item: any, index: number) => {
+    reportData.sections.push({
+      showTitle: true,
+      title: `Refunded Item ${index + 1}`,
+      content: {
+        ServiceName: item.serviceName,
+        ItemName: item.itemName,
+        BatchNo: item.batchNo,
+        QuantityRefunded: item.qtyToRefund,
+        AmountRefunded: item.amountToRefund,
+      },
+    });
+  });
+
+  return reportData;
 };

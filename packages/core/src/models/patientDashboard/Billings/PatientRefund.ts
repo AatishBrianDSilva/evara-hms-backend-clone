@@ -8,20 +8,22 @@ interface IPatientRefund extends Document {
     refundAmount: number;
     method: string;
     reason: string;
-    refundDate: Date;
-    charges: number;
-    items: {
-      serviceName: string;
-      itemName: string;
-      batchNo: string;
-      qtyToRefund: number;
-      amountToRefund: number;
+    refundDate?: Date;
+    charges?: number;
+    refundNumber?: string;
+    items?: {
+      serviceName?: string;
+      itemName?: string;
+      batchNo?: string;
+      qtyToRefund?: number;
+      amountToRefund?: number;
     }[];
+    files?: string[];
   };
   createdBy: string;
   branchId: string;
   clinicId: string;
-  createdAt: Date;
+  createdAt?: Date;
 }
 
 // Define the schema for PatientRefund
@@ -33,17 +35,19 @@ const patientRefundSchema = new Schema<IPatientRefund>(
       refundAmount: { type: Number, required: true },
       method: { type: String, required: true },
       reason: { type: String, required: true },
-      refundDate: { type: Date, required: true, default: Date.now },
-      charges: { type: Number, required: true },
+      refundDate: { type: Date, default: Date.now },
+      charges: { type: Number },
+      refundNumber: { type: String },
       items: [
         {
-          serviceName: { type: String, required: true },
-          itemName: { type: String, required: true },
-          batchNo: { type: String, required: true },
-          qtyToRefund: { type: Number, required: true },
-          amountToRefund: { type: Number, required: true },
+          serviceName: { type: String },
+          itemName: { type: String },
+          batchNo: { type: String },
+          qtyToRefund: { type: Number },
+          amountToRefund: { type: Number },
         },
       ],
+      files: [{ type: String }],
     },
     createdBy: { type: String, required: true },
     branchId: { type: String, required: true },

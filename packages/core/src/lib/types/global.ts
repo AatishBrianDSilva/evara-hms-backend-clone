@@ -16,6 +16,7 @@ export enum EDocumentTypes {
   Invoice = "Invoice",
   Billing = "Billing",
   BillingDiscount = "BillingDiscount",
+  Refund = "Refund",
 }
 
 export enum EReportTemplateTypes {
