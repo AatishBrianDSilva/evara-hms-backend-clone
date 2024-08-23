@@ -22,6 +22,7 @@ export enum EDocumentTypes {
 export enum EReportTemplateTypes {
   Reports = "reports",
   Invoices = "invoice",
+  Refund = "refund",
 }
 
 export interface ISection {

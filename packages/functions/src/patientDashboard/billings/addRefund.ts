@@ -256,10 +256,10 @@ const generateReportData = (refundEntry: any, clinicId: string, patientId: strin
   const reportData: IReportData = {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.Refund,
-    templateType: EReportTemplateTypes.Reports,
+    templateType: EReportTemplateTypes.Refund,
     doctor: "N/A", //refund is not related to doctor
     patient: patientId,
-    clinicId: clinicId,
+    clinic: clinicId,
     sections: [],
     reportName: `Refund Report for ${refundEntry.patientCode}`,
     fileName: _.kebabCase(`refund-${refundEntry.patientCode}-${refundEntry._id}`),

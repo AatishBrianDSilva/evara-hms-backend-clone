@@ -1,0 +1,68 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body { font-family: Arial, sans-serif; } .thin-divider { border-bottom-width: 1px; } main {
+      padding: 10mm; display: flex; flex-direction: column; flex-grow: 1; } .section {
+      margin-bottom: 20px; } .section-title { font-size: 1.5em; margin-bottom: 10px; color:
+      {{styles.primaryColor}}; } .section-content { font-size: 1em; color: black; } .key-value {
+      display: flex; justify-content: space-between; margin-bottom: 10px; text-transform:
+      capitalize; } .key { color: black; } .value { color: black; } h2 { color:
+      {{styles.primaryColor}}; } table { width: 100%; border-collapse: collapse; } th, td { border:
+      1px solid #ddd; padding: 8px; } th { background-color: #f2f2f2; color:
+      {{styles.primaryColor}}; } td { color: black; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h2>{{reportName}}</h2>
+      <div class="divider thin-divider"></div>
+
+      <!-- Display General Details (First Section) -->
+      <div class="section">
+        <div class="section-content">
+          {{#each sections.0.content}}
+            <div class="key-value">
+              <span class="key">{{@key}}</span>
+              <span class="value">{{this}}</span>
+            </div>
+          {{/each}}
+        </div>
+      </div>
+
+      <!-- Display Items (Subsequent Sections) -->
+      <div class="section">
+        <div class="section-title">Items</div>
+        <div class="section-content">
+          <table>
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                {{#if sections.1.content.BatchNo}}
+                  <th>Batch No</th>
+                  <th>Quantity Refunded</th>
+                {{/if}}
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each sections}}
+                {{#unless @first}}
+                  <tr>
+                    <td>{{content.ItemName}}</td>
+                    {{#if content.BatchNo}}
+                      <td>{{content.BatchNo}}</td>
+                      <td>{{content.QuantityRefunded}}</td>
+                    {{/if}}
+                    <td>{{formatCurrency content.AmountRefunded}}</td>
+                  </tr>
+                {{/unless}}
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
