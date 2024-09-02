@@ -22,24 +22,26 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const params = event.queryStringParameters || {};
     console.log("Query string parameters:", params);
 
-    const { searchQuery = "" } = params;
+    const { searchQuery = "", active } = params;
     console.log("Search query:", searchQuery);
 
     let query: any = {
       clinicId: auth.clinicId,
     };
 
+    if (typeof active !== "undefined") {
+      query.active = active === "true";
+    }
+
     if (searchQuery) {
       query.$or = [{ name: new RegExp(searchQuery, "i") }];
       console.log("Updated query with search criteria:", query);
     }
 
-    // Get all packages
     console.log("Fetching packages with query:", query);
     const packages = await MasterPackage.find(query).sort({ name: 1 }).lean();
     console.log("Fetched packages:", packages);
 
-    // Return success response
     console.log("Returning success response.");
     return successResponse("Success", packages);
   } catch (error) {

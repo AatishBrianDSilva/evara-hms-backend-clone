@@ -146,6 +146,8 @@ export const MastersApiStack = ({ stack }: StackContext) => {
       "packages/functions/src/mastersDashboard/service/packages/getPackages.main",
     "GET /master/packages/{id}":
       "packages/functions/src/mastersDashboard/service/packages/getPackageById.main",
+    "PATCH /master/packages/{id}":
+      "packages/functions/src/mastersDashboard/service/packages/editPackage.main",
 
     //End Service Masters
   });
