@@ -1,10 +1,10 @@
 import { PatientData } from "../../models/Patients";
 
 export enum EBuckets {
-  UserProfiles = "gv-evara-hms-user-profiles",
-  UserReports = "gv-evara-hms-user-reports",
-  PharmacyInvoices = "gv-evara-hms-pharmacy-invoices",
-  UserIdentifications = "gv-evara-hms-user-identifications",
+  UserProfiles = "evara-hms-user-profiles",
+  UserReports = "evara-hms-user-reports",
+  PharmacyInvoices = "evara-hms-pharmacy-invoices",
+  UserIdentifications = "evara-hms-user-identifications",
 }
 
 export enum EDocumentTypes {

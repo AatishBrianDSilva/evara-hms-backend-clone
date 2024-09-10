@@ -8,8 +8,9 @@ import { PatientJourneyStack } from "./stacks/PatientJourneyStack";
 export default {
   config(_input) {
     return {
-      name: "evara-backend",
+      name: "hms-backend",
       region: "ap-south-1",
+      profile: "evara-prod",
     };
   },
   stacks(app) {

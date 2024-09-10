@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "sst dev --profile evara",
-    "build": "sst build --profile evara",
-    "deploy": "sst deploy --profile evara",
-    "remove": "sst remove --profile evara",
-    "console": "sst console --profile evara",
+    "dev": "sst dev --profile",
+    "build": "sst build --profile",
+    "deploy": "sst deploy --profile",
+    "remove": "sst remove --profile",
+    "console": "sst console --profile",
     "typecheck": "tsc --noEmit",
     "generate-docs": "npx @redocly/cli build-docs docs/api-schema.yaml --config docs/redocly.yaml -o docs/index.html"
   },

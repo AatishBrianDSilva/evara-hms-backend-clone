@@ -21,7 +21,6 @@ const DefaultServiceSchema: Schema = new Schema(
   {
     serviceId: {
       type: String,
-      required: true,
       unique: true,
     },
     name: {
