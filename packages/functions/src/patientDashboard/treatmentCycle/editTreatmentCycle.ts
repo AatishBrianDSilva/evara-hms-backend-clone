@@ -17,6 +17,7 @@ import {
 } from "@evara-backend/core/lib/types/global";
 import { generateSections } from "@evara-backend/core/lib/utils/sanitizeReportData";
 import _ from "lodash";
+import Patient from "@evara-backend/core/models/Patients";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -109,7 +110,7 @@ async function updateCategory(
     { new: true }
   );
 
-  const processDataForReport = (data: any, result: any) => {
+  const processDataForReport = (data: any, result: any, patient: any, spouseName: string) => {
     const reportData: IReportData = {
       bucket: EBuckets.UserReports,
       documentType: EDocumentTypes.TreatmentCycle,
@@ -124,6 +125,24 @@ async function updateCategory(
     };
 
     reportData.reportName = `${category} Report`;
+
+    // Adding Patient Details section
+    const patientDetails = {
+      patientName: `${patient.firstName} ${patient.lastName}`,
+      patientId: patient.patientId,
+      gender: patient.gender,
+      age: patient.age,
+      spouseName: spouseName,
+      admissionDate: result.updatedAt
+        ? new Date(result.updatedAt).toLocaleDateString("en-GB")
+        : "N/A",
+    };
+
+    reportData.sections.push({
+      showTitle: true,
+      title: "Patient Details",
+      content: patientDetails,
+    });
 
     // Extract all details from the result and remove the __v field
     const { __v, files, day0, day1, day2, day3, day4, day5, day6, ...generalDetails } =
@@ -148,6 +167,34 @@ async function updateCategory(
       // add other doctor-related fields here as needed
     ];
 
+    // Define which fields require only the time part
+    const timeSpecificFields = [
+      "timeOfTrigger",
+      "opuTime",
+      "timeOfDenudation",
+      "icsiTime",
+      "checkTime",
+      "timeOfThawing",
+      "timeOfCollection",
+      "timeOfDispatch",
+      "timeOfEmbryoTransfer",
+      "triggerTime",
+    ];
+
+    // Function to extract only the time part from a datetime string
+    const formatTime = (dateString: string) => {
+      return new Date(dateString).toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true, // This ensures the time is in 12-hour format with AM/PM
+      });
+    };
+
+    // Helper function to format date strings to dd/mm/yyyy
+    const formatDate = (dateString: string) => {
+      return new Date(dateString).toLocaleDateString("en-GB");
+    };
+
     // Replace doctor fields with their names in general details
     const modifiedGeneralDetails = { ...generalDetails };
     doctorFields.forEach((field) => {
@@ -158,9 +205,9 @@ async function updateCategory(
       ) {
         modifiedGeneralDetails[
           field
-        ] = `${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
+        ] = `Dr. ${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
       } else if (modifiedGeneralDetails[field]) {
-        modifiedGeneralDetails[field] = `${modifiedGeneralDetails[field].firstName || ""} ${
+        modifiedGeneralDetails[field] = `Dr. ${modifiedGeneralDetails[field].firstName || ""} ${
           modifiedGeneralDetails[field].lastName || ""
         }`;
       }
@@ -169,15 +216,19 @@ async function updateCategory(
     // Define a regex for ISO 8601 date format
     const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
-    // Format dates to dd/mm/yyyy if they match the ISO 8601 format
+    // Handle date and time formatting for all other fields
     Object.keys(modifiedGeneralDetails).forEach((key) => {
       if (
         typeof modifiedGeneralDetails[key] === "string" &&
         iso8601Regex.test(modifiedGeneralDetails[key])
       ) {
-        modifiedGeneralDetails[key] = new Date(modifiedGeneralDetails[key]).toLocaleDateString(
-          "en-GB"
-        );
+        if (timeSpecificFields.includes(key)) {
+          // For specific fields, return only the time
+          modifiedGeneralDetails[key] = formatTime(modifiedGeneralDetails[key]);
+        } else {
+          // For all other fields, return only the date
+          modifiedGeneralDetails[key] = formatDate(modifiedGeneralDetails[key]);
+        }
       }
     });
 
@@ -237,7 +288,24 @@ async function updateCategory(
   } else {
     console.log(`Update successful for category: ${category}`, result);
 
-    const report = processDataForReport(body, result);
+    // Fetch patient data
+    const patient = await Patient.findById(result.patient);
+    if (!patient) {
+      throw new ErrorMessage(404, "Patient not found");
+    }
+
+    console.log("Patient Data", patient);
+
+    // Fetch spouse name based on partnerId
+    let spouseName = "N/A";
+    if (patient.partnerId) {
+      const spouse = await Patient.findOne({ patientId: patient.partnerId }); // Fetch patient where patientId matches partnerId
+      if (spouse) {
+        spouseName = `${spouse.firstName} ${spouse.lastName}`; // Combine first name and last name of spouse
+      }
+    }
+
+    const report = processDataForReport(body, result, patient, spouseName);
     console.log("Report Data: ", JSON.stringify(report, null, 2));
 
     // Send to SNS

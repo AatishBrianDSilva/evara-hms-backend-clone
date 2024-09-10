@@ -59,8 +59,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     // Function to update the isActive status of an item
-    const updateItemIsActive = async (itemType, itemId, isActive) => {
-      let itemModel;
+    const updateItemIsActive = async (itemType: string, itemId: string, isActive: boolean) => {
+      let itemModel:
+        | typeof MasterProcedures
+        | typeof MasterInvestigation
+        | typeof MasterCryoPreservations
+        | typeof MasterService
+        | typeof MasterTreatmentCycle;
+
       switch (itemType) {
         case "procedure":
           itemModel = MasterProcedures;
@@ -82,7 +88,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           throw new ErrorMessage(400, `Invalid item type ${itemType}`);
       }
 
-      const item = await itemModel.findById(itemId);
+      const item = await (itemModel as any).findById(itemId).exec(); // Cast `itemModel` to `any` temporarily to bypass TypeScript overload issues
       if (item) {
         item.active = isActive;
         await item.save();

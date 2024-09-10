@@ -44,43 +44,77 @@ const generateHtml = (template: string, data: any): string => {
     return str.replace(/\b\w/g, (char) => char.toUpperCase());
   });
 
+  // Register custom helpers for comparison
+  Handlebars.registerHelper("lt", function (a, b) {
+    return a < b;
+  });
+
+  Handlebars.registerHelper("gte", function (a, b) {
+    return a >= b;
+  });
+
+  // Register helper to increment index
+  Handlebars.registerHelper("inc", function (value) {
+    return parseInt(value) + 1;
+  });
+
+  Handlebars.registerHelper("contains", function (str, substring) {
+    return str && str.indexOf(substring) > -1;
+  });
+
   const compiledTemplate = Handlebars.compile(template);
   return compiledTemplate(data);
 };
 
 const generateHeaderHtml = (header: any, styles: any): string => {
   // Check for undefined or empty strings for each value
-  const doctorInfo =
-    header.doctorName &&
-    header.doctorName !== "undefined undefined" &&
-    header.doctorName !== "" &&
-    header.doctorName !== " "
-      ? `<p style="margin: 0;font-size: 14px;">Doctor: ${header.doctorName}</p>`
-      : "";
+  // const doctorInfo =
+  //   header.doctorName &&
+  //   header.doctorName !== "undefined undefined" &&
+  //   header.doctorName !== "" &&
+  //   header.doctorName !== " "
+  //     ? `<p style="margin: 0;font-size: 14px;">Doctor: ${header.doctorName}</p>`
+  //     : "";
 
   return `
-    <header style="color: ${styles.primaryColor}; padding: 5mm; display: inline-block; width: 100%; margin: 1cm 1cm; border-bottom: 1mm solid ${styles.secondaryColor}">
-      <div style="float: left; width: 25%;">
-        <img src="${header.logo}" alt="Logo" style="width: 120px; height: 80px; border: 1px solid ${styles.primaryColor};" />
+    <header style="display: flex; justify-content: space-between; align-items: flex-start; width: 94%; padding: 20px 0; box-sizing: border-box; margin-left: auto; margin-right: auto;">
+
+      <div style="width: 140px; height: 67px; padding-top: 10px;">
+        <img src="${header.logo}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
       </div>
-      <div style="float: left; width: 50%; text-align: center; word-wrap: break-word;">
-        <h1 style="margin: 0;font-size: 36px;">${header.clinicName}</h1>
-        <p style="margin: 0;font-size: 14px;">${header.clinicAddress}</p>
+      <div style="flex-grow: 1; text-align: center;">
+        <h1 style="margin: 0; font-size: 16px; text-decoration: underline; background: #5C5C5C; color: white; padding: 5px;">Bill of Supply & Tax Invoice</h1>
+        <p style="margin: 10px 0 0 0; font-size: 20px; font-weight: bold; text-transform: uppercase;">Evara Health Pvt Ltd</p>
+        <p style="margin: 0; font-size: 20px; font-weight: bold; text-transform: uppercase;">EVARA FERTILITY</p>
+        <p style="margin: 10px 0 0 0; font-size: 16px;">111/118, Ashok Nagar, Harsh Nagar, Kanpur, Uttar Pradesh 208001</p>
       </div>
-      <div style="float: right; width: 25%; text-align: right;">
-        <p style="margin: 0;font-size: 14px;">ID: ${header.patientId}</p>
-        <p style="margin: 0;font-size: 14px;">Patient: ${header.patientName}</p>
-        ${doctorInfo} 
-             </div>
+      <div style="width: 140px;"></div>
     </header>
   `;
 };
 
-const generateFooterHtml = (styles: any): string => {
+const generateFooterHtml = (): string => {
+  const currentDate = new Date()
+    .toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+    .replace(/ /g, "-");
+
   return `
-  <footer style="width: 100%; display: inline-block; margin: 1cm 1cm; border-top: 1mm solid ${styles.secondaryColor}; font-size: 10px; color: grey;  text-align: center;  padding: 10px; ">
-      Page <span class="pageNumber"></span> of <span class="totalPages"></span>
-  </footer>
+    <footer style="width: 94%; padding: 10px 0; font-size: 18px; color: grey; text-align: center; border-top: 2px solid #288BDB; margin-left: auto; margin-right: auto;">
+      Bill generated on ${currentDate} - evarahealth.com
+    </footer>
+  `;
+};
+
+const generateHtmlWithContentBorders = (bodyHtml: string): string => {
+  return `
+  
+    <div style=" width: 100%;  box-sizing: border-box; padding: 0;">
+      ${bodyHtml}
+    </div>
   `;
 };
 
@@ -147,6 +181,8 @@ export const main: SNSHandler = async (event, _context) => {
       const footerHtml = generateFooterHtml(templateData.styles);
       console.log("Footer HTML: ", footerHtml);
 
+      const htmlContentWithBorders = generateHtmlWithContentBorders(htmlContent);
+
       const key = `${patient._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`;
       console.log("Key: ", key);
 
@@ -158,7 +194,7 @@ export const main: SNSHandler = async (event, _context) => {
       const pdfGeneratorMessage: IPDFGeneratorMessage = {
         headerHtml,
         footerHtml,
-        htmlContent,
+        htmlContent: htmlContentWithBorders, // Use the content with left and right borders
         bucket: data.bucket,
         key: key,
         patient: patient,

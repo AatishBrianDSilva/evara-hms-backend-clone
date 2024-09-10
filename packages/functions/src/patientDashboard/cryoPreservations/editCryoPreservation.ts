@@ -24,6 +24,7 @@ import {
   transformBloodTestsToKeyValuePairs,
 } from "@evara-backend/core/lib/utils/sanitizeReportData";
 import _ from "lodash";
+import Patient from "@evara-backend/core/models/Patients";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -97,9 +98,27 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       JSON.stringify(cryopreservation, null, 2)
     );
 
+    // Fetch patient data
+    const patient = await Patient.findById(cryopreservation.patient);
+    if (!patient) {
+      throw new ErrorMessage(404, "Patient not found");
+    }
+
+    console.log("patient data fetched", patient);
+
+
+    // Fetch spouse name based on partnerId
+    let spouseName = "N/A";
+    if (patient.partnerId) {
+      const spouse = await Patient.findOne({ patientId: patient.partnerId }); // Fetch patient where patientId matches partnerId
+      if (spouse) {
+        spouseName = `${spouse.firstName} ${spouse.lastName}`; // Combine first name and last name of spouse
+      }
+    }
+
     // Generate Report if cryopreservation is completed
     if (cryopreservation && cryopreservation.status === "Completed") {
-      const report = processDataForReport(cryopreservation);
+      const report = processDataForReport(cryopreservation, patient, spouseName);
       console.log("Report Data: ", JSON.stringify(report, null, 2));
 
       // Send to SNS
@@ -115,7 +134,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-const processDataForReport = (data: any) => {
+const processDataForReport = (data: any, patient: any, spouseName: string) => {
   const reportData: IReportData = {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.CryoPreservation,
@@ -130,6 +149,39 @@ const processDataForReport = (data: any) => {
   };
 
   reportData.reportName = `${data.cryo.name} Report`;
+
+  // Adding Patient Details section
+  const patientDetails = {
+    patientName: `${patient.firstName} ${patient.lastName}`,
+    patientId: patient.patientId,
+    gender: patient.gender,
+    age: patient.age,
+    spouseName: spouseName,
+    admissionDate: data.updatedAt ? new Date(data.updatedAt).toLocaleDateString("en-GB") : "N/A",
+  };
+
+  reportData.sections.push({
+    showTitle: true,
+    title: "Patient Details",
+    content: patientDetails,
+  });
+
+  // Function to extract only the time part from a datetime string
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true, // This ensures the time is in 12-hour format with AM/PM
+    });
+  };
+
+  // Helper function to format date strings to dd/mm/yyyy
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-GB");
+  };
+
+  // Define which fields require only the time part
+  const timeSpecificFields = ["time"];
 
   // Extract all details from the result and remove the __v field
   const { __v, files, sperm_wash_items, ...generalDetails } = data.details.details;
@@ -155,9 +207,9 @@ const processDataForReport = (data: any) => {
     ) {
       modifiedGeneralDetails[
         field
-      ] = `${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
+      ] = `Dr. ${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
     } else if (modifiedGeneralDetails[field]) {
-      modifiedGeneralDetails[field] = `${modifiedGeneralDetails[field].firstName || ""} ${
+      modifiedGeneralDetails[field] = `Dr. ${modifiedGeneralDetails[field].firstName || ""} ${
         modifiedGeneralDetails[field].lastName || ""
       }`;
     }
@@ -166,15 +218,19 @@ const processDataForReport = (data: any) => {
   // Define a regex for ISO 8601 date format as dates are in string with this format
   const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
-  // Format dates to dd/mm/yyyy if they match the ISO 8601 format
+  // Handle date and time formatting for all other fields
   Object.keys(modifiedGeneralDetails).forEach((key) => {
     if (
       typeof modifiedGeneralDetails[key] === "string" &&
       iso8601Regex.test(modifiedGeneralDetails[key])
     ) {
-      modifiedGeneralDetails[key] = new Date(modifiedGeneralDetails[key]).toLocaleDateString(
-        "en-GB"
-      );
+      if (timeSpecificFields.includes(key)) {
+        // For specific fields, return only the time
+        modifiedGeneralDetails[key] = formatTime(modifiedGeneralDetails[key]);
+      } else {
+        // For all other fields, return only the date
+        modifiedGeneralDetails[key] = formatDate(modifiedGeneralDetails[key]);
+      }
     }
   });
 

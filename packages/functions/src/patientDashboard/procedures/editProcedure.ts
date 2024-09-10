@@ -17,6 +17,7 @@ import {
 } from "@evara-backend/core/lib/types/global";
 import { generateSections } from "@evara-backend/core/lib/utils/sanitizeReportData";
 import _ from "lodash";
+import Patient from "@evara-backend/core/src/models/Patients";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -93,9 +94,28 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     console.log("Procedure Updated successfully", JSON.stringify(procedure, null, 2));
 
+    // Fetch patient data
+    const patient = await Patient.findById(procedure.patient);
+    if (!patient) {
+      throw new ErrorMessage(404, "Patient not found");
+    }
+
+    console.log("patient data fetched", patient);
+
+    // Fetch spouse name based on partnerId
+    let spouseName = "N/A";
+    if (patient.partnerId) {
+      const spouse = await Patient.findOne({ patientId: patient.partnerId }); // Fetch patient where patientId matches partnerId
+      if (spouse) {
+        spouseName = `${spouse.firstName} ${spouse.lastName}`; // Combine first name and last name of spouse
+      }
+    }
+
+    console.log("spouse name fetched", spouseName);
+
     // Generate Report if investigation is completed
     if (procedure && procedure.status === "Completed") {
-      const report = processDataForReport(procedure);
+      const report = processDataForReport(procedure, patient, spouseName);
       console.log("Report Data: ", JSON.stringify(report, null, 2));
 
       // Send to SNS
@@ -111,7 +131,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-const processDataForReport = (data: any) => {
+const processDataForReport = (data: any, patient: any, spouseName: string) => {
   const reportData: IReportData = {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.Procedure,
@@ -130,6 +150,23 @@ const processDataForReport = (data: any) => {
   // Extract all details from the result and remove the __v field
   const { __v, files, embryoBiopsyDetails, ...generalDetails } = data.result.details;
 
+  // Adding Patient Details section
+  // Adding Patient Details section using the patient data
+  const patientDetails = {
+    patientName: `${patient.firstName} ${patient.lastName}`,
+    patientId: patient.patientId,
+    gender: patient.gender,
+    age: patient.age,
+    spouseName: spouseName, // Now using fetched spouseName
+    admissionDate: data.updatedAt ? new Date(data.updatedAt).toLocaleDateString("en-GB") : "N/A",
+  };
+
+  reportData.sections.push({
+    showTitle: true,
+    title: "Patient Details",
+    content: patientDetails,
+  });
+
   // Doctor-related fields to be replaced with their names
   const doctorFields = [
     "surgeon",
@@ -139,7 +176,7 @@ const processDataForReport = (data: any) => {
     // add other doctor-related fields here as needed
   ];
 
-  // Replace doctor fields with their names in general details
+  // Replace doctor fields with "Dr." prefix and their names in general details
   const modifiedGeneralDetails = { ...generalDetails };
   doctorFields.forEach((field) => {
     if (
@@ -149,9 +186,9 @@ const processDataForReport = (data: any) => {
     ) {
       modifiedGeneralDetails[
         field
-      ] = `${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
+      ] = `Dr. ${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
     } else if (modifiedGeneralDetails[field]) {
-      modifiedGeneralDetails[field] = `${modifiedGeneralDetails[field].firstName || ""} ${
+      modifiedGeneralDetails[field] = `Dr. ${modifiedGeneralDetails[field].firstName || ""} ${
         modifiedGeneralDetails[field].lastName || ""
       }`;
     }

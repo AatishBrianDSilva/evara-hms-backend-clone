@@ -24,6 +24,7 @@ import {
   IReportData,
 } from "@evara-backend/core/src/lib/types/global";
 import SNSService from "@evara-backend/core/src/lib/aws/sns";
+import Patient from "@evara-backend/core/models/Patients";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -100,9 +101,28 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     console.log("Investigation Updated successfully", JSON.stringify(investigation, null, 2));
 
+    // Fetch patient data
+    const patient = await Patient.findById(investigation.patient);
+    if (!patient) {
+      throw new ErrorMessage(404, "Patient not found");
+    }
+
+    console.log("patient data fetched", patient);
+
+    // Fetch spouse name based on partnerId
+    let spouseName = "N/A";
+    if (patient.partnerId) {
+      const spouse = await Patient.findOne({ patientId: patient.partnerId }); // Fetch patient where patientId matches partnerId
+      if (spouse) {
+        spouseName = `${spouse.firstName} ${spouse.lastName}`; // Combine first name and last name of spouse
+      }
+    }
+
+    console.log("spouse name fetched", spouseName);
+
     // Generate Report if investigation is completed
     if (investigation && investigation.status === "Completed") {
-      const report = processDataForReport(investigation);
+      const report = processDataForReport(investigation, patient, spouseName);
       console.log("Report Data: ", JSON.stringify(report, null, 2));
 
       // Send to SNS
@@ -118,12 +138,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-const processDataForReport = (data: any) => {
+const processDataForReport = (data: any, patient: any, spouseName: string) => {
   const reportData: IReportData = {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.Investigation,
     templateType: EReportTemplateTypes.Reports,
-    doctor: `${data.doctor?.firstName || ""} ${data.doctor?.lastName || ""}`,
+    doctor: `Dr. ${data.doctor?.firstName || ""} ${data.doctor?.lastName || ""}`,
     patient: data.patient,
     clinic: data.clinicId,
     sections: [],
@@ -131,6 +151,32 @@ const processDataForReport = (data: any) => {
     fileName: _.kebabCase(data.result.testName),
     reportId: data._id,
   };
+
+  // Adding Patient Details section
+  const patientDetails = {
+    patientName: `${patient.firstName} ${patient.lastName}`,
+    patientId: patient.patientId,
+    gender: patient.gender,
+    age: patient.age,
+    spouseName: spouseName,
+    admissionDate: data.updatedAt ? new Date(data.updatedAt).toLocaleDateString("en-GB") : "N/A",
+  };
+
+  reportData.sections.push({
+    showTitle: true,
+    title: "Patient Details",
+    content: patientDetails,
+  });
+
+  // Function to extract only the time part from a datetime string
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true, // This ensures the time is in 12-hour format with AM/PM
+    });
+  };
+
 
   if (data.investigation.testType === ETestType.BloodTest) {
     reportData.reportName = `${data.result.testName} Report`;
@@ -153,6 +199,13 @@ const processDataForReport = (data: any) => {
     reportData.sections = sections;
   } else {
     reportData.reportName = `${data.result.testName} Report`;
+
+    // Define which fields require only the time part
+    const timeSpecificFields = [
+      "timeOfSampleReceivedAtHospital",
+      "timeOfCollection",
+      "timeOfEvaluation",
+    ];
 
     // Extract all details from the result and remove the __v field
     const { __v, files, ...generalDetails } = data.result.details;
@@ -177,9 +230,9 @@ const processDataForReport = (data: any) => {
       ) {
         modifiedGeneralDetails[
           field
-        ] = `${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
+        ] = `Dr. ${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
       } else if (modifiedGeneralDetails[field]) {
-        modifiedGeneralDetails[field] = `${modifiedGeneralDetails[field].firstName || ""} ${
+        modifiedGeneralDetails[field] = `Dr. ${modifiedGeneralDetails[field].firstName || ""} ${
           modifiedGeneralDetails[field].lastName || ""
         }`;
       }
@@ -193,13 +246,19 @@ const processDataForReport = (data: any) => {
       return new Date(dateString).toLocaleDateString("en-GB");
     };
 
-    // Format dates in general details
+    // Handle date and time formatting for all other fields
     Object.keys(modifiedGeneralDetails).forEach((key) => {
       if (
         typeof modifiedGeneralDetails[key] === "string" &&
         iso8601Regex.test(modifiedGeneralDetails[key])
       ) {
-        modifiedGeneralDetails[key] = formatDate(modifiedGeneralDetails[key]);
+        if (timeSpecificFields.includes(key)) {
+          // For specific fields, return only the time
+          modifiedGeneralDetails[key] = formatTime(modifiedGeneralDetails[key]);
+        } else {
+          // For all other fields, return only the date
+          modifiedGeneralDetails[key] = formatDate(modifiedGeneralDetails[key]);
+        }
       }
     });
 

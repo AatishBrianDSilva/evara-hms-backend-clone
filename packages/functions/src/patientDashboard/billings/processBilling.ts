@@ -52,10 +52,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     for (const { billingId, payments } of data.billings) {
       if (!billingId || !payments) {
-        throw new ErrorMessage(
-          400,
-          "Billing ID and payments are required for each entry"
-        );
+        throw new ErrorMessage(400, "Billing ID and payments are required for each entry");
       }
 
       const billing = await PatientBilling.findById(billingId).session(session);
@@ -63,14 +60,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         throw new ErrorMessage(404, `Billing not found for ID: ${billingId}`);
       }
 
-      let totalPaid = billing.payments.reduce(
-        (acc, payment) => acc + payment.amount,
-        0
-      );
-      let totalPaymentAttempt = payments.reduce(
-        (acc, payment) => acc + payment.amount,
-        0
-      );
+      let totalPaid = billing.payments.reduce((acc, payment) => acc + payment.amount, 0);
+      let totalPaymentAttempt = payments.reduce((acc, payment) => acc + payment.amount, 0);
       let newTotalPaid = totalPaid + totalPaymentAttempt;
 
       // if (newTotalPaid < billing.grandTotal) {
@@ -91,9 +82,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         billing.payments.push({
           amount: payment.amount,
           method: payment.method,
-          paymentDate: payment.paymentDate
-            ? new Date(payment.paymentDate)
-            : new Date(),
+          paymentDate: payment.paymentDate ? new Date(payment.paymentDate) : new Date(),
           details: payment.details,
           type: EPaitentBillingPaymentType.Payment,
         });
@@ -135,16 +124,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-const processDataForReport = (
-  data: any,
-  id: string,
-  patientData: any,
-  billing: any
-) => {
+const processDataForReport = (data: any, id: string, patientData: any, billing: any) => {
+  const templateType =
+    billing.billType === "Pharmacy"
+      ? EReportTemplateTypes.BillPharmacy
+      : EReportTemplateTypes.BillOtherServices;
+
   const reportData: IInvoiceData = {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.Invoice,
-    templateType: EReportTemplateTypes.Invoices,
+    templateType: templateType,
     patient: patientData.patientData,
     clinic: patientData.patientData.clinicId,
     sections: [],
@@ -153,69 +142,103 @@ const processDataForReport = (
     reportId: id,
   };
 
-  console.log("Billing", billing);
+  // If billType is "Pharmacy", we include CGST, SGST, and calculate MRP
+  const billItems = billing.items.map((item: any) => {
+    let CGST = billing.billType === "Pharmacy" ? item.CGST || 0 : null;
+    let SGST = billing.billType === "Pharmacy" ? item.SGST || 0 : null;
 
-  const billItems = billing.items.map((item: any) => ({
-    serviceName: item.serviceName,
-    serviceType: item.serviceType,
-    quantity: item.quantity,
-    price: item.price,
-    amount: item.amount,
-    // tax: item.tax,
-    total: item.total,
-  }));
+    // MRP calculation: total - (CGST + SGST) for Pharmacy items
+    let MRP = billing.billType === "Pharmacy" ? item.total - (CGST + SGST) : null;
 
+    // Tax percentage calculation: (CGST + SGST) as a percentage of the total
+    let taxPercentage = billing.billType === "Pharmacy" ? ((CGST + SGST) / item.total) * 100 : null;
+
+    return {
+      serviceName: item.serviceName,
+      serviceType: item.serviceType,
+      quantity: item.quantity,
+      price: item.price,
+      amount: item.amount,
+      total: item.total,
+      // Add CGST and SGST for Pharmacy items
+      CGST: billing.billType === "Pharmacy" ? CGST : "N/A",
+      SGST: billing.billType === "Pharmacy" ? SGST : "N/A",
+      MRP: billing.billType === "Pharmacy" ? MRP : "N/A", // Add MRP only for Pharmacy items
+      tax: billing.billType === "Pharmacy" ? taxPercentage.toFixed(2) : "N/A", // Add tax percentage field for Pharmacy
+    };
+  });
+
+  const billDescription = billItems.every(
+    (item: any) => item.serviceType === billItems[0].serviceType
+  )
+    ? billItems[0].serviceType
+    : "Multiple Services";
+
+  const billDate = format(billing.createdAt, "dd/MM/yyyy");
+  const billTime = format(billing.createdAt, "h:mm a");
+  const currency = "₹"; //todo add check to check currency
+
+  const patientDetails = {
+    patientName: `${patientData.patientData.firstName} ${patientData.patientData.lastName}`,
+    patientNumber: patientData.patientData.patientId,
+    gender: patientData.patientData.gender,
+    age: patientData.patientData.age,
+    billDescription: billDescription,
+    billNo: billing.billingId,
+    billDate: billDate,
+    billTime: billTime,
+    currency: currency,
+  };
+
+  // let summaryContent = {
+  //   totalAmount: formatToIndianCurrencyFormat(billing.grandTotal), // Grand total
+  //   paidAmount: formatToIndianCurrencyFormat(billing.totalPaid), // Total paid
+  //   LessDiscount: billing.discount ? formatToIndianCurrencyFormat(billing.discount) : null, // Discount applied
+  //   payableAmount: formatToIndianCurrencyFormat(billing.totalDues), // Total dues or payable amount
+  //   CGST: billing.tax ? billing.tax / 2 : null,
+  //   SGST: billing.tax ? billing.tax / 2 : null,
+  //   "Sub Total": formatToIndianCurrencyFormat(billing.subTotal),
+  // };
+
+  // Create the summary content. Exclude CGST and SGST if it's "Pharmacy"
   let summaryContent = {
-    Date: format(billing.createdAt, "dd/MM/yyyy h:mm a"),
-    Due:
-      billing.totalDues > 0
-        ? formatToIndianCurrencyFormat(billing.totalDues)
-        : null,
-    CGST: billing.tax ? billing.tax / 2 : null,
-    SGST: billing.tax ? billing.tax / 2 : null,
+    totalAmount: formatToIndianCurrencyFormat(billing.grandTotal),
+    paidAmount: formatToIndianCurrencyFormat(billing.totalPaid),
+    LessDiscount: billing.discount ? formatToIndianCurrencyFormat(billing.discount) : null,
+    payableAmount: formatToIndianCurrencyFormat(billing.totalDues),
     "Sub Total": formatToIndianCurrencyFormat(billing.subTotal),
-    Discount: billing.discount
-      ? formatToIndianCurrencyFormat(billing.discount)
-      : null,
-    "Grand Total": formatToIndianCurrencyFormat(billing.grandTotal),
+    // Include CGST and SGST only if it's not "Pharmacy" billType
+    ...(billing.billType !== "Pharmacy" && {
+      CGST: billing.tax ? billing.tax / 2 : null,
+      SGST: billing.tax ? billing.tax / 2 : null,
+    }),
   };
 
   const sections = [
+    {
+      title: "Patient Details",
+      showTitle: true,
+      isBillDetails: false,
+      content: patientDetails,
+    },
     {
       title: "Items",
       showTitle: true,
       isBillDetails: true,
       content: billItems,
     },
-    // {
-    //   title: "Payments",
-    //   showTitle: true,
-    //   isBillDetails: false,
-    //   content: billing.payments.map((payment) => ({
-    //     amount: payment.amount,
-    //     method: payment.method,
-    //     paymentDate: payment.paymentDate,
-    //     details: payment.details,
-    //     type: payment.type,
-    //   })),
-    // },
     {
       title: "Summary",
       showTitle: true,
       isBillDetails: false,
       content: summaryContent,
     },
-    // Add other sections as needed
-    console.log("Bill Items", billItems),
   ];
 
-  // console.log("New Data Structure", newData);
-
   reportData.reportName = `Invoice ${billing.billingId}`;
-  // reportData.sections = [...generateSections(newData)];
   reportData.sections = sanitizeInvoiceData(sections);
 
-  console.log("Sanitized Section", reportData.sections);
+  console.log("Sanitized data", reportData.sections);
 
   return reportData;
 };

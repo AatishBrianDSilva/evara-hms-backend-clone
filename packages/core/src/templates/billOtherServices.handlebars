@@ -1,0 +1,103 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; padding: 0; } .thin-divider {
+      border-bottom-width: 1px; } main { padding: 10mm; display: flex; flex-direction: column;
+      flex-grow: 1; } .section { margin-bottom: 20px; } .section-title { font-size: 1.5em;
+      margin-bottom: 10px; color:
+      {{styles.primaryColor}}; } .section-content { font-size: 1em; } /* Key-Value styling for
+      patient details */ .key-value { display: flex; justify-content: flex-start; /* Align both key
+      and value to the left */ margin-bottom: 10px; } .key { font-weight: bold; text-align: left;
+      width: 40%; /* Set width for the key */ } .value { text-align: left; width: 60%; /* Set width
+      for the value */ } h2 { color:
+      {{styles.primaryColor}}; text-align: center; } table { width: 100%; border-collapse: collapse;
+      } th, td { border: 1px solid #ddd; padding: 8px; } th { background-color: #f2f2f2; color:
+      {{styles.primaryColor}}; } td { color: black; } td.value { color:
+      {{styles.primaryColor}}; } .header { text-align: center; font-size: 18px; font-weight: bold;
+      background: #FFECE4; height: 55px; display: flex; justify-content: center; align-items:
+      center; margin-bottom: 10px; } /* Added padding and gap for the Bill of Supply section */
+      .column-container { display: flex; justify-content: space-between; padding: 10px 0; gap: 20px;
+      } .column { width: 48%; } .column.left { padding-left: 15px; } /* Padding for the left column
+      */ .column.right { padding-right: 15px; } /* Padding for the right column */ .item-row {
+      display: flex; justify-content: space-between; padding: 5px 0; } /* Added padding between
+      lines */ .item-number { width: 5%; } .item-name { width: 70%; padding-left: 20px; } /* Move
+      item name to the left */ .item-amount { width: 15%; text-align: right; } /* Header for items
+      section */ .items-header { text-align: left; font-size: 18px; font-weight: bold; background:
+      #FFECE4; height: 55px; display: flex; justify-content: space-between; align-items: center;
+      padding: 0 10px; margin-bottom: 10px; } /* Adjusted summary section */ .summary { display:
+      flex; justify-content: flex-end; width: 100%; margin-bottom: 10px; } /* Added margin between
+      lines */ .summary-key { font-weight: bold; width: 30%; text-align: right; padding-right: 10px;
+      } /* Keys are now at 30% width */ .summary-value { width: 15%; text-align: right; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <!-- Heading -->
+      <div class="header">BILL OF SUPPLY</div>
+
+      <!-- Patient Details Section -->
+      <div class="section">
+        <div class="column-container">
+          <!-- First 6 key-value pairs in the left column -->
+          <div class="column left">
+            {{#with (lookup sections 0)}}
+              {{#each content}}
+                {{#if (lt @index 6)}}
+                  <div class="key-value">
+                    <span class="key">{{@key}}</span>
+                    <span class="value">{{this}}</span>
+                  </div>
+                {{/if}}
+              {{/each}}
+            {{/with}}
+          </div>
+          <!-- Remaining key-value pairs in the right column -->
+          <div class="column right">
+            {{#with (lookup sections 0)}}
+              {{#each content}}
+                {{#if (gte @index 6)}}
+                  <div class="key-value">
+                    <span class="key">{{@key}}</span>
+                    <span class="value">{{this}}</span>
+                  </div>
+                {{/if}}
+              {{/each}}
+            {{/with}}
+          </div>
+        </div>
+      </div>
+
+      <!-- Items Section -->
+      <div class="section">
+        <div class="items-header">
+          <div>#</div>
+          <div>Name</div>
+          <div>Amount</div>
+        </div>
+        {{#with (lookup sections 1)}}
+          {{#each content}}
+            <div class="item-row">
+              <div class="item-number">{{inc @index}}</div>
+              <div class="item-name">{{this.serviceName}}</div>
+              <div class="item-amount">{{formatCurrency this.total}}</div>
+            </div>
+          {{/each}}
+        {{/with}}
+      </div>
+
+      <!-- Summary Section -->
+      <div class="section">
+        {{#with (lookup sections 2)}}
+          {{#each content}}
+            <div class="summary">
+              <div class="summary-key">{{@key}}:</div>
+              <div class="summary-value">{{this}}</div>
+            </div>
+          {{/each}}
+        {{/with}}
+      </div>
+    </main>
+  </body>
+</html>

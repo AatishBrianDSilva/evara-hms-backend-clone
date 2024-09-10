@@ -3,36 +3,100 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
-      .thin-divider { border-bottom-width: 1px; } main { padding: 10mm; display: flex;
-      flex-direction: column; flex-grow: 1; } .section { margin-bottom: 20px; } .section-title {
-      font-size: 1.5em; margin-bottom: 10px; color:
+      body { font-family: Arial, sans-serif; margin: 0; padding: 0; } .thin-divider {
+      border-bottom-width: 1px; } main { padding: 10mm; display: flex; flex-direction: column;
+      flex-grow: 1; } .section { margin-bottom: 20px; } .section-title { font-size: 1.5em;
+      margin-bottom: 10px; color:
       {{styles.primaryColor}}; } .section-content { font-size: 1em; } .key-value { display: flex;
-      justify-content: space-between; margin-bottom: 10px; } .key { color:
-      {{styles.primaryColor}}; } .value { color:
-      {{styles.secondaryColor}}; } h2 { color:
-      {{styles.primaryColor}}; }
+      justify-content: space-between; margin-bottom: 10px; } .key { font-weight: bold; width: 50%;
+      text-align: left; } .value { width: 70%; text-align: left; white-space: pre-wrap; } h2 {
+      color:
+      {{styles.primaryColor}}; text-align: center; } .header { text-align: center; font-size: 18px;
+      font-weight: bold; background: #ffece4; height: 55px; display: flex; justify-content: center;
+      align-items: center; margin-bottom: 10px; } .column-container { display: flex;
+      justify-content: space-between; padding: 10px 0; gap: 20px; } .column { width: 48%; }
+      .column.left { padding-left: 15px; } .column.right { padding-right: 15px; } .padded-section {
+      padding-left: 15px; padding-right: 15px; }
     </style>
   </head>
   <body>
     <main>
-      <h2>{{header.reportName}}</h2>
-      <div class="divider thin-divider"></div>
-      {{#each sections}}
-        <div class="section">
-          {{#if showTitle}}
-            <div class="section-title">{{properCase title}}</div>
+      <!-- Heading -->
+      <div class="header">Patient Details</div>
 
-          {{/if}}
-          <div class="section-content">
-            {{#each content}}
-              <div class="key-value">
-                <span class="key">{{properCase @key}}</span>
-                <span class="value">{{this}}</span>
-              </div>
-            {{/each}}
+      <!-- Patient Details Section -->
+      <div class="section">
+        <div class="column-container">
+          <!-- First 3 key-value pairs in the left column -->
+          <div class="column left">
+            {{#if (lookup sections 0)}}
+              {{#with (lookup sections 0)}}
+                {{#each content}}
+                  {{#if (lt @index 3)}}
+                    <div class="key-value">
+                      <span class="key">{{properCase @key}}</span>
+                      <span class="value">{{this}}</span>
+                    </div>
+                  {{/if}}
+                {{/each}}
+              {{/with}}
+            {{/if}}
+          </div>
+          <!-- Remaining key-value pairs in the right column -->
+          <div class="column right">
+            {{#if (lookup sections 0)}}
+              {{#with (lookup sections 0)}}
+                {{#each content}}
+                  {{#if (gte @index 3)}}
+                    <div class="key-value">
+                      <span class="key">{{properCase @key}}</span>
+                      <span class="value">{{this}}</span>
+                    </div>
+                  {{/if}}
+                {{/each}}
+              {{/with}}
+            {{/if}}
           </div>
         </div>
-      {{/each}}
+      </div>
+
+      <div class="header">Discharge Summary</div>
+
+      <!-- General Information Section -->
+      <div class="section padded-section">
+        <div class="section-content">
+          {{#if (lookup sections 1)}}
+            {{#with (lookup sections 1)}}
+              {{#each content}}
+                <div class="key-value">
+                  <span class="key">{{properCase @key}}</span>
+                  <span class="value">{{this}}</span>
+                </div>
+              {{/each}}
+            {{/with}}
+          {{/if}}
+        </div>
+      </div>
+
+      <!-- Embryo Biopsy Details Section -->
+      {{#if (lookup sections 2)}}
+        {{#each sections}}
+          {{#if (contains title "Embryo Biopsy")}}
+            <div class="section" style="padding-left: 15px;">
+              <div class="section-title" style="color: black;">{{title}}</div>
+              <div class="section-content">
+                {{#each content}}
+                  <div class="key-value">
+                    <span class="key">{{properCase @key}}</span>
+                    <span class="value">{{this}}</span>
+                  </div>
+                {{/each}}
+              </div>
+            </div>
+          {{/if}}
+        {{/each}}
+      {{/if}}
+
     </main>
   </body>
 </html>
