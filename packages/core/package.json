@@ -14,7 +14,6 @@
     "sst": "^2.40.6"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose-paginate-v2": "^1.8.0"
   }

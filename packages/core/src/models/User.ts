@@ -45,17 +45,6 @@ const userSchema = new mongoose.Schema<IUser>(
   }
 );
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  try {
-    this.password = await bcrypt.hash(this.password, 8);
-    next();
-  } catch (error) {
-    const err = error as CallbackError;
-    next(err);
-  }
-});
-
 userSchema.index({ clinicId: 1, branchId: 1 });
 
 export const User = mongoose.model<IUser>("User", userSchema);

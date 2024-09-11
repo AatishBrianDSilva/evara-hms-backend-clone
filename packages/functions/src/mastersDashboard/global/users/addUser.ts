@@ -5,7 +5,7 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
-
+import bcrypt from "bcrypt";
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
@@ -37,6 +37,8 @@ export const main: APIGatewayProxyHandler = async (event, context) => {
 
     // Create a new user document
     const newUser = new User(data);
+
+    newUser.password = await bcrypt.hash(data.password, 8);
 
     // Save the user to the database
     const user = await newUser.save();

@@ -1,5 +1,5 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import { generateUserJwtToken } from "@evara-backend/core/src/lib/utils/auth";
 

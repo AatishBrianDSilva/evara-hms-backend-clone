@@ -37,7 +37,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     // Set new password
-    user.password = newPassword;
+    user.password = await bcrypt.hash(newPassword, 8);
     await user.save();
 
     return successResponse("Password updated successfully", {
