@@ -5,7 +5,11 @@ import { SNSHandler } from "aws-lambda";
 import * as SQS from "aws-sdk/clients/sqs";
 import { formatToIndianCurrencyFormat } from "@evara-backend/core/src/lib/utils/formatToIndianCurrencyFormat"; // Adjust the path accordingly
 
-import { IPDFGeneratorMessage, IReportData } from "@evara-backend/core/src/lib/types/global";
+import {
+  EDocumentTypes,
+  IPDFGeneratorMessage,
+  IReportData,
+} from "@evara-backend/core/src/lib/types/global";
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import Patient from "@evara-backend/core/src/models/Patients";
 import Clinic from "@evara-backend/core/src/models/mastersDashboard/Clinic";
@@ -130,17 +134,29 @@ export const main: SNSHandler = async (event, _context) => {
 
       console.log("SNS Message", JSON.stringify(data, null, 2));
 
-      // Prepare data for template
-      const patient = await Patient.findById(data.patient).lean();
-      if (!patient) {
-        console.error("Patient not found");
-        return;
-      }
+      let clinic = null;
+      let patient = null;
 
-      const clinic = await Clinic.findOne({ code: data.clinic }).lean();
-      if (!clinic) {
-        console.error("Clinic not found");
-        return;
+      // For Purchase Orders, we only need clinic info
+      if (data.documentType === EDocumentTypes.PurchaseOrder) {
+        clinic = await Clinic.findOne({ code: data.clinic }).lean(); // Use findOne with clinic code
+        if (!clinic) {
+          console.error("Clinic not found");
+          return;
+        }
+      } else {
+        // For patient-related documents, continue fetching patient info
+        const patient = await Patient.findById(data.patient).lean();
+        if (!patient) {
+          console.error("Patient not found");
+          return;
+        }
+
+        clinic = await Clinic.findOne({ code: data.clinic }).lean(); // Use findOne with clinic code
+        if (!clinic) {
+          console.error("Clinic not found");
+          return;
+        }
       }
 
       const logoUrl =
@@ -183,7 +199,12 @@ export const main: SNSHandler = async (event, _context) => {
 
       const htmlContentWithBorders = generateHtmlWithContentBorders(htmlContent);
 
-      const key = `${patient._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`;
+      // const key = `${patient._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`;
+
+      const key = patient
+        ? `${patient._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`
+        : `${clinic._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`; // For Purchase Orders, use clinic ID
+
       console.log("Key: ", key);
 
       const queueUrl = process.env.REPORT_PDF_GENERATION_QUEUE_URL;

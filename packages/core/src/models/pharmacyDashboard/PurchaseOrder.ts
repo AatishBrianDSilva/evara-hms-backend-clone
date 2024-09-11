@@ -1,6 +1,7 @@
 import mongoose, { Document, PaginateModel, Schema } from "mongoose";
 import { autoIncrementId } from "../Counters";
 import paginate from "mongoose-paginate-v2";
+import { PoNumberCounter } from "./PONumberCounter";
 
 export enum EPurchaseOrderStatus {
   Draft = "Draft",
@@ -33,9 +34,9 @@ export interface IPurchaseOrderRequest {
     freeQuantity: number;
     noOfPacks: number;
     packsRequired: number; // Include packsRequired in request
+    discount: number; // Discount per item
   }[];
   netAmount: number;
-  discount: number;
   otherCharges: number;
   subTotal: number;
   tax: number;
@@ -57,9 +58,9 @@ export interface IPurchaseOrderResponse {
     noOfPacks: number;
     packsRequired: number; // Include packsRequired in response
     status?: EItemStatus; // Optional status field
+    discount: number; // Discount per item
   }[];
   netAmount: number;
-  discount: number;
   otherCharges: number;
   subTotal: number;
   tax: number;
@@ -75,7 +76,7 @@ export interface IPurchaseOrder extends Document {
   date: Date;
   vendor: Schema.Types.ObjectId;
   request: IPurchaseOrderRequest;
-  responses: IPurchaseOrderResponse[]; // Change to an array of responses
+  responses: IPurchaseOrderResponse[];
   branch: Schema.Types.ObjectId;
   createdBy: string;
   authorizedBy: string;
@@ -87,6 +88,11 @@ export interface IPurchaseOrder extends Document {
     state: string;
     zip: string;
   }; // Optional field for new address
+  report?: {
+    reportName: string;
+    bucket: string;
+    key: string;
+  }; // Field for storing PDF report information
 }
 
 const itemSchema = new Schema({
@@ -102,13 +108,14 @@ const itemSchema = new Schema({
   freeQuantity: { type: Number, required: false, min: 0 },
   noOfPacks: { type: Number, required: true, min: 0 },
   packsRequired: { type: Number, required: false, min: 0 },
+  discount: { type: Number, required: false, min: 0 }, // Discount at the item level
+
   status: { type: String, enum: Object.values(EItemStatus), required: false },
 });
 
 const responseSchema = new Schema({
   items: [itemSchema],
   netAmount: { type: Number, required: false, min: 0 },
-  discount: { type: Number, required: false, min: 0 },
   otherCharges: { type: Number, required: false, min: 0 },
   subTotal: { type: Number, required: false, min: 0 },
   tax: { type: Number, required: false, min: 0 },
@@ -127,7 +134,6 @@ const purchaseOrderSchema = new Schema(
     request: {
       items: [itemSchema],
       netAmount: { type: Number, required: true, min: 0 },
-      discount: { type: Number, required: true, min: 0 },
       otherCharges: { type: Number, required: true, min: 0 },
       subTotal: { type: Number, required: true, min: 0 },
       tax: { type: Number, required: true, min: 0 },
@@ -157,6 +163,11 @@ const purchaseOrderSchema = new Schema(
       state: { type: String, required: false },
       zip: { type: String, required: false },
     }, // Optional field for new address
+    report: {
+      reportName: { type: String, required: false },
+      bucket: { type: String, required: false },
+      key: { type: String, required: false },
+    }, // Add the report field for storing the PDF report details
   },
   { timestamps: true }
 );
@@ -175,7 +186,31 @@ purchaseOrderSchema.pre("validate", function (next) {
   next();
 });
 
-purchaseOrderSchema.pre("save", autoIncrementId("purchaseOrder", "poNumber", "PO-"));
+// purchaseOrderSchema.pre("save", autoIncrementId("purchaseOrder", "poNumber", "PO-"));
+
+purchaseOrderSchema.pre("save", async function (next) {
+  const purchaseOrder = this as IPurchaseOrderDocument;
+
+  const currentDate = new Date();
+  const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Get current month
+  const year = currentDate.getFullYear(); // Get current year
+  const monthYear = `${month}-${year}`; // Format: "09-2024"
+
+  const branchId = purchaseOrder.branchId; // Assuming branchId is available in the document
+
+  // Find or create a counter for the current branch and month-year
+  const counter = await PoNumberCounter.findOneAndUpdate(
+    { branchId, monthYear },
+    { $inc: { sequence: 1 } }, // Increment the sequence
+    { new: true, upsert: true } // Create if doesn't exist
+  );
+
+  // Generate the PO number in the format: KL/09-2024/001
+  const sequence = String(counter.sequence).padStart(3, "0"); // Zero-pad the sequence
+  purchaseOrder.poNumber = `${branchId}/${monthYear}/${sequence}`;
+
+  next();
+});
 
 purchaseOrderSchema.plugin(paginate);
 

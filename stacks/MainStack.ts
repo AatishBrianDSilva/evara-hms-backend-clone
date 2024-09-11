@@ -9,7 +9,7 @@ import {
 } from "sst/constructs";
 import { PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Duration } from "aws-cdk-lib/core";
-import { BlockPublicAccess } from "aws-cdk-lib/aws-s3";
+import { BlockPublicAccess, Bucket as S3Bucket } from "aws-cdk-lib/aws-s3";
 import { LayerVersion, Code } from "aws-cdk-lib/aws-lambda";
 import { SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
 
@@ -102,41 +102,79 @@ export function MainStack({ stack }: StackContext) {
     }
   );
 
-  const userProfileBucket = new Bucket(stack, "UserProfilesBucket", {
-    name: `evara-hms-user-profiles-${stack.stage}`,
-    cdk: {
-      bucket: {
-        bucketName: `evara-hms-user-profiles-${stack.stage}`,
-        blockPublicAccess: new BlockPublicAccess({
-          blockPublicPolicy: false,
-          ignorePublicAcls: false,
-          restrictPublicBuckets: false,
-          blockPublicAcls: false,
-        }),
-      },
-    },
-    notifications: {
-      ScheduleDeletion: {
-        function: s3ScheduleDeletionFunction,
-        events: ["object_created"],
-      },
-    },
-  });
-
-  const userIdentificationsBucket = new Bucket(
-    stack,
-    "UseIdentificationsBucket",
-    {
-      name: `evara-hms-user-identifications-${stack.stage}`,
+  let userProfileBucket;
+  if (stack.stage === "prod") {
+    userProfileBucket = new Bucket(stack, "UserProfileBucketProd", {
+      name: `evara-hms-user-profile-${stack.stage}`,
+      blockPublicACLs: false,
       cdk: {
         bucket: {
-          bucketName: `evara-hms-user-identifications-${stack.stage}`,
-          blockPublicAccess: new BlockPublicAccess({
-            blockPublicPolicy: false,
-            ignorePublicAcls: false,
-            restrictPublicBuckets: false,
-            blockPublicAcls: false,
-          }),
+          bucketName: `evara-hms-user-profile-${stack.stage}`,
+        },
+      },
+    });
+  } else {
+    userProfileBucket = new Bucket(stack, "UserProfileBucketDev", {
+      cdk: {
+        bucket: S3Bucket.fromBucketArn(
+          stack,
+          "UserProfileBucket",
+          `arn:aws:s3:::evara-hms-user-profile-devs`
+        ) as any,
+      },
+    });
+  }
+
+  let userIdentificationsBucket;
+  if (stack.stage === "prod") {
+    userIdentificationsBucket = new Bucket(
+      stack,
+      "UseIdentificationsBucketProd",
+      {
+        name: `evara-hms-user-identifications-${stack.stage}`,
+        cdk: {
+          bucket: {
+            bucketName: `evara-hms-user-identifications-${stack.stage}`,
+            blockPublicAccess: new BlockPublicAccess({
+              blockPublicPolicy: false,
+              ignorePublicAcls: false,
+              restrictPublicBuckets: false,
+              blockPublicAcls: false,
+            }),
+          },
+        },
+        notifications: {
+          ScheduleDeletion: {
+            function: s3ScheduleDeletionFunction,
+            events: ["object_created"],
+          },
+        },
+      }
+    );
+  } else {
+    userIdentificationsBucket = new Bucket(
+      stack,
+      "UseIdentificationsBucketDev",
+      {
+        cdk: {
+          bucket: S3Bucket.fromBucketArn(
+            stack,
+            "UserIdentificationsBucket",
+            `arn:aws:s3:::evara-hms-user-identifications-devs`
+          ) as any,
+        },
+      }
+    );
+  }
+
+  let userReportBucket;
+  if (stack.stage === "prod") {
+    userReportBucket = new Bucket(stack, "UserReportsBucketProd", {
+      name: `evara-hms-user-reports-${stack.stage}`,
+      blockPublicACLs: false,
+      cdk: {
+        bucket: {
+          bucketName: `evara-hms-user-reports-${stack.stage}`,
         },
       },
       notifications: {
@@ -145,41 +183,48 @@ export function MainStack({ stack }: StackContext) {
           events: ["object_created"],
         },
       },
-    }
-  );
+    });
+  } else {
+    userReportBucket = new Bucket(stack, "UserReportsBucketDev", {
+      cdk: {
+        bucket: S3Bucket.fromBucketArn(
+          stack,
+          "UserReportsBucket",
+          `arn:aws:s3:::evara-hms-user-reports-devs`
+        ) as any,
+      },
+    });
+  }
 
-  const userReportBucket = new Bucket(stack, "UserReportsBucket", {
-    name: `evara-hms-user-reports-${stack.stage}`,
-    blockPublicACLs: false,
-    cdk: {
-      bucket: {
-        bucketName: `evara-hms-user-reports-${stack.stage}`,
-      },
-    },
-    notifications: {
-      ScheduleDeletion: {
-        function: s3ScheduleDeletionFunction,
-        events: ["object_created"],
-      },
-    },
-  });
+  let pharmacyInvoicesBucket;
+  if (stack.stage === "prod") {
+    pharmacyInvoicesBucket = new Bucket(stack, "PharmacyInvoicesBucketProd", {
+      name: `evara-hms-pharmacy-invoices-${stack.stage}`,
+      blockPublicACLs: false,
 
-  const pharmacyInvoicesBucket = new Bucket(stack, "PharmacyInvoicesBucket", {
-    name: `evara-hms-pharmacy-invoices-${stack.stage}`,
-    blockPublicACLs: false,
-
-    cdk: {
-      bucket: {
-        bucketName: `evara-hms-pharmacy-invoices-${stack.stage}`,
+      cdk: {
+        bucket: {
+          bucketName: `evara-hms-pharmacy-invoices-${stack.stage}`,
+        },
       },
-    },
-    notifications: {
-      ScheduleDeletion: {
-        function: s3ScheduleDeletionFunction,
-        events: ["object_created"],
+      notifications: {
+        ScheduleDeletion: {
+          function: s3ScheduleDeletionFunction,
+          events: ["object_created"],
+        },
       },
-    },
-  });
+    });
+  } else {
+    pharmacyInvoicesBucket = new Bucket(stack, "PharmacyInvoicesBucketDev", {
+      cdk: {
+        bucket: S3Bucket.fromBucketArn(
+          stack,
+          "PharmacyInvoicesBucket",
+          `arn:aws:s3:::evara-hms-pharmacy-invoices-devs`
+        ) as any,
+      },
+    });
+  }
 
   const billingEstimationDLQ = new Queue(stack, "BillingEstimationDLQ", {
     cdk: {

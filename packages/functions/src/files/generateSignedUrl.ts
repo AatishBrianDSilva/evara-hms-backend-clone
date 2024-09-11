@@ -68,7 +68,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(500, "Environment variable 'STAGE' is not set.");
     }
 
-    const bucketName = `${bucket}-${stage}`;
+    const bucketName =
+      stage === "prod" ? `${bucket}-${stage}` : `${bucket}-devs`;
 
     const filePublic = isImage === true || bucket === EBuckets.PharmacyInvoices;
 

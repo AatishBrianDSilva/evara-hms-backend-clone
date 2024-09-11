@@ -7,6 +7,8 @@ import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/
 import { PharmacyInvoice } from "@evara-backend/core/models/pharmacyDashboard/PharmacyInvoice";
 import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { processPurchaseOrderReportData } from "./processPurchaseOrderReportData";
+import SNSService from "@evara-backend/core/lib/aws/sns";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -37,10 +39,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Handle invoice file uploads
     const invoiceFileUrls = [];
-    if (
-      updateData.response?.invoice &&
-      updateData.response?.invoice.length > 0
-    ) {
+    if (updateData.response?.invoice && updateData.response?.invoice.length > 0) {
       for (let i = 0; i < updateData.response.invoice.length; i++) {
         if (updateData.response.invoice[i].length > 0) {
           const s3UrlParts = parseS3Url(updateData.response.invoice[i]);
@@ -59,9 +58,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               key: s3UrlParts.key,
               invoiceNumber: updateData.invoiceNumber || undefined,
             });
-            console.log(
-              `Saving Pharmacy Invoice: ${JSON.stringify(pharmacyInvoice)}`
-            );
+            console.log(`Saving Pharmacy Invoice: ${JSON.stringify(pharmacyInvoice)}`);
             await pharmacyInvoice.save();
           } else {
             throw new ErrorMessage(400, "Invalid image URL");
@@ -88,11 +85,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     console.log("Processing items in the request...");
     // Process each item in the request
     updateData.request.items.forEach((item, index) => {
-      console.log(
-        `Processing request item ${index + 1}/${
-          updateData.request.items.length
-        }`
-      );
+      console.log(`Processing request item ${index + 1}/${updateData.request.items.length}`);
       console.log(`Request item data: ${JSON.stringify(item)}`);
 
       const packsRequired = item.packsRequired; // Total packs required
@@ -161,9 +154,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           expiryDate: item.expiryDate,
           status: "Pending",
         });
-        console.log(
-          `Unfulfilled item added with remaining packs: ${remainingPacks}`
-        );
+        console.log(`Unfulfilled item added with remaining packs: ${remainingPacks}`);
       }
     });
 
@@ -175,28 +166,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     let responseDiscountAmount = 0;
 
     if (updateData.request.discount) {
-      requestDiscountAmount =
-        (requestSubTotal * updateData.request.discount) / 100;
+      requestDiscountAmount = (requestSubTotal * updateData.request.discount) / 100;
     }
 
     if (updateData.response.discount) {
-      responseDiscountAmount =
-        (responseSubTotal * updateData.response.discount) / 100;
+      responseDiscountAmount = (responseSubTotal * updateData.response.discount) / 100;
     }
 
     const requestOtherCharges = updateData.request.otherCharges || 0;
     const responseOtherCharges = updateData.response.otherCharges || 0;
 
     const requestNetAmount =
-      requestSubTotal -
-      requestDiscountAmount +
-      requestTotalTax +
-      requestOtherCharges;
+      requestSubTotal - requestDiscountAmount + requestTotalTax + requestOtherCharges;
     const responseNetAmount =
-      responseSubTotal -
-      responseDiscountAmount +
-      responseTotalTax +
-      responseOtherCharges;
+      responseSubTotal - responseDiscountAmount + responseTotalTax + responseOtherCharges;
 
     console.log(`Request Net Amount: ${requestNetAmount}`);
     console.log(`Response Net Amount: ${responseNetAmount}`);
@@ -225,6 +208,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Save the updated purchase order
     const updatedData = await purchaseOrder.save();
     console.log("Purchase order updated successfully.");
+
+    // const reportData = processPurchaseOrderReportData(purchaseOrder, auth.clinicId);
+
+    // // Send the report data to SNS for report generation
+    // await SNSService.publishMessage({
+    //   Message: JSON.stringify(reportData),
+    //   TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN, // ARN for report generation
+    // });
 
     return successResponse("Purchase order updated successfully", updatedData);
   } catch (error) {

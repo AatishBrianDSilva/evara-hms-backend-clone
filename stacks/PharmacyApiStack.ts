@@ -126,6 +126,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/purchaseOrder/getPurchaseOrderById.main",
     "PUT /pharmacy-dashboard/purchase-order/{id}":
       "packages/functions/src/pharmacyDashboard/purchaseOrder/updatePurchaseOrder.main",
+    "PUT /pharmacy-dashboard/purchase-order/draft/{id}":
+      "packages/functions/src/pharmacyDashboard/purchaseOrder/editDraftPurchaseOrder.main",
     "DELETE /pharmacy-dashboard/purchase-order/{id}":
       "packages/functions/src/pharmacyDashboard/purchaseOrder/deletePurchaseOrder.main",
     "PATCH /pharmacy-dashboard/purchase-order/{id}/status":
@@ -162,6 +164,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/invoice/getInvoice.main",
     "GET /pharmacy-dashboard/invoice/download/{id}":
       "packages/functions/src/pharmacyDashboard/invoice/downloadInvoice.main",
+    "GET /pharmacy-dashboard/purchase-order/download/{id}":
+      "packages/functions/src/pharmacyDashboard/invoice/downloadPOInvoice.main",
   });
 
   stack.addOutputs({

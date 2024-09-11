@@ -8,6 +8,7 @@ import PatientInvoice from "@evara-backend/core/src/models/patientDashboard/Pati
 import S3Service from "@evara-backend/core/src/lib/aws/s3";
 import { S3 } from "aws-sdk";
 import { EDocumentTypes, IPDFGeneratorMessage } from "@evara-backend/core/src/lib/types/global";
+import { PurchaseOrder } from "@evara-backend/core/models/pharmacyDashboard/PurchaseOrder";
 
 chromium.setHeadlessMode = true;
 chromium.setGraphicsMode = true;
@@ -94,7 +95,7 @@ export const main: SQSHandler = async (event, context) => {
 
       await S3Service.upload(s3Params);
 
-      if (category !== EDocumentTypes.Invoice) {
+      if (category !== EDocumentTypes.Invoice && patient) {
         await PatientReport.findOneAndUpdate(
           { source_report_id },
           {
@@ -109,7 +110,7 @@ export const main: SQSHandler = async (event, context) => {
           },
           { upsert: true }
         );
-      } else {
+      } else if (category === EDocumentTypes.Invoice && patient) {
         await PatientInvoice.findOneAndUpdate(
           { source_report_id },
           {
@@ -124,8 +125,23 @@ export const main: SQSHandler = async (event, context) => {
           },
           { upsert: true }
         );
-      }
+      } else if (!patient && category === EDocumentTypes.PurchaseOrder) {
+        // Handle purchase order reports (No patient involved)
+        const purchaseOrder = await PurchaseOrder.findOne({ poNumber: source_report_id });
 
+        if (purchaseOrder) {
+          purchaseOrder.report = {
+            reportName: reportName,
+            bucket: s3Params.Bucket,
+            key: s3Params.Key,
+          };
+
+          await purchaseOrder.save();
+          console.log(`Purchase order ${source_report_id} updated with report.`);
+        } else {
+          console.error(`Purchase order with poNumber ${source_report_id} not found.`);
+        }
+      }
       console.log("PDF generated and uploaded successfully.");
     }
   } catch (err) {

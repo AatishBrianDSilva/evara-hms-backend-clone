@@ -17,6 +17,7 @@ export enum EDocumentTypes {
   Billing = "Billing",
   BillingDiscount = "BillingDiscount",
   Refund = "Refund",
+  PurchaseOrder = "PurchaseOrder",
 }
 
 export enum EReportTemplateTypes {
@@ -64,9 +65,10 @@ export interface IPDFGeneratorMessage {
   htmlContent: string;
   bucket: EBuckets.UserReports;
   key: string;
-  patient: PatientData;
   doctor: string;
   category: EDocumentTypes;
   reportName: string;
   source_report_id: string;
+  patient?: PatientData;
+  clinic?: string;
 }

@@ -10,7 +10,7 @@ import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extr
 import { processPurchaseOrderReportData } from "./processPurchaseOrderReportData";
 import SNSService from "@evara-backend/core/lib/aws/sns";
 
-// Handler function
+// Handler function to edit a draft purchase order
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
@@ -25,16 +25,33 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     await connectMongoDb();
 
-    if (event.body == null) {
+    if (!event.body) {
       throw new ErrorMessage(400, "Data is required");
     }
 
     const data = JSON.parse(event.body);
     console.log("Parsed data:", JSON.stringify(data, null, 2));
 
+    const { id } = data;
+    if (!id) {
+      throw new ErrorMessage(400, "Purchase order ID is required");
+    }
+
     data.branchId = auth.branchId;
     data.clinicId = auth.clinicId;
 
+    // Fetch the existing purchase order (draft)
+    const purchaseOrder = await PurchaseOrder.findById(id);
+    if (!purchaseOrder) {
+      throw new ErrorMessage(404, "Purchase order not found");
+    }
+
+    // Only allow editing of draft purchase orders
+    if (purchaseOrder.status !== "Draft") {
+      throw new ErrorMessage(400, "Only draft purchase orders can be edited");
+    }
+
+    // Fetch the branch details
     const branch = await Branch.findOne({
       code: data.branchId,
       clinicId: data.clinicId,
@@ -46,9 +63,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     console.log("Branch found:", branch);
 
     data.branch = new mongoose.Types.ObjectId(branch._id);
-    data.createdBy = auth.userId; // Assuming you have userId in auth
+    data.updatedBy = auth.userId; // Assuming userId from auth for updating
 
-    // Ensure the newAddress field is correctly added if isDifferentAddress is true
+    // Handle address updates
     if (data.newAddress) {
       data.newAddress = {
         branchName: data.newAddress.branchName,
@@ -59,17 +76,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
       console.log("New Address added:", JSON.stringify(data.newAddress, null, 2));
     } else {
-      // Ensure the newAddress is not included if isDifferentAddress is false
-      delete data.newAddress;
+      delete data.newAddress; // Remove if not different
     }
 
-    const purchaseOrder = new PurchaseOrder(data);
-    console.info("Purchase Order to be saved:", JSON.stringify(purchaseOrder, null, 2));
+    // Update the purchase order with new data
+    Object.assign(purchaseOrder, data);
+
+    console.info("Purchase Order to be updated:", JSON.stringify(purchaseOrder, null, 2));
 
     await purchaseOrder.save();
-    console.info("Purchase Order saved successfully");
+    console.info("Draft Purchase Order updated successfully");
 
-    // Generate report data
+    // Generate report data after saving the updated draft PO
     const reportData = processPurchaseOrderReportData(purchaseOrder, auth.clinicId);
 
     // Send the report data to SNS for report generation
@@ -78,9 +96,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN, // ARN for report generation
     });
 
-    return successResponse("Purchase Order added successfully");
+    console.info("Report generation triggered successfully");
+
+    return successResponse("Draft Purchase Order updated successfully");
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error editing draft purchase order:", error);
     return errorResponse(error);
   }
 };
