@@ -23,6 +23,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
     await connectMongoDb();
 
     if (!event.pathParameters) {
@@ -110,7 +114,13 @@ async function updateCategory(
     { new: true }
   );
 
-  const processDataForReport = (data: any, result: any, patient: any, spouseName: string) => {
+  const processDataForReport = (
+    data: any,
+    result: any,
+    patient: any,
+    spouseName: string,
+    branch: any
+  ) => {
     const reportData: IReportData = {
       bucket: EBuckets.UserReports,
       documentType: EDocumentTypes.TreatmentCycle,
@@ -194,6 +204,29 @@ async function updateCategory(
     const formatDate = (dateString: string) => {
       return new Date(dateString).toLocaleDateString("en-GB");
     };
+
+    // Check if branch has a valid address and format it
+    let branchAddress = "Address not available";
+    if (branch && branch.address) {
+      const { street, city, state, zip } = branch.address;
+      branchAddress = `${street ? street + ", " : ""}${city ? city + ", " : ""}${
+        state ? state + " - " : ""
+      }${zip || ""}`;
+    }
+
+    // Add Branch Address section
+    const branchDetails = {
+      Branch: branch.branchName || "N/A",
+      Address: branchAddress,
+      Phone: branch.phone || "N/A",
+      Email: branch.email || "N/A",
+    };
+
+    reportData.sections.push({
+      showTitle: true,
+      title: "Branch Details",
+      content: branchDetails,
+    });
 
     // Replace doctor fields with their names in general details
     const modifiedGeneralDetails = { ...generalDetails };
@@ -305,7 +338,26 @@ async function updateCategory(
       }
     }
 
-    const report = processDataForReport(body, result, patient, spouseName);
+    // Log the branchId and clinicId extracted from the auth
+    const branchId = auth.branchId;
+    const clinicId = auth.clinicId;
+    console.log("Extracted Branch ID:", branchId);
+    console.log("Extracted Clinic ID:", clinicId);
+
+    // Fetch the branch using the branchId and clinicId from the auth details
+    const branch = await Branch.findOne({
+      code: branchId,
+      clinicId: clinicId,
+    }).lean();
+
+    if (!branch) {
+      console.log("Branch not found");
+      throw new ErrorMessage(404, "Branch not found");
+    }
+
+    console.log("Branch found:", branch);
+
+    const report = processDataForReport(body, result, patient, spouseName, branch);
     console.log("Report Data: ", JSON.stringify(report, null, 2));
 
     // Send to SNS

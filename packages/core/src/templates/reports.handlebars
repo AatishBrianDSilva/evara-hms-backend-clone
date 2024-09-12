@@ -21,82 +21,71 @@
   </head>
   <body>
     <main>
-      <!-- Heading -->
-      <div class="header">Patient Details</div>
-
       <!-- Patient Details Section -->
+      <div class="header">Patient Details</div>
       <div class="section">
         <div class="column-container">
-          <!-- First 3 key-value pairs in the left column -->
+          <!-- First column -->
           <div class="column left">
-            {{#if (lookup sections 0)}}
-              {{#with (lookup sections 0)}}
-                {{#each content}}
-                  {{#if (lt @index 3)}}
-                    <div class="key-value">
-                      <span class="key">{{properCase @key}}</span>
-                      <span class="value">{{this}}</span>
-                    </div>
-                  {{/if}}
-                {{/each}}
-              {{/with}}
-            {{/if}}
+            {{#getSectionByTitle sections "Patient Details"}}
+              {{#each content}}
+                {{#if (lt @index 3)}}
+                  <div class="key-value">
+                    <span class="key">{{properCase @key}}</span>
+                    <span class="value">{{this}}</span>
+                  </div>
+                {{/if}}
+              {{/each}}
+            {{/getSectionByTitle}}
           </div>
-          <!-- Remaining key-value pairs in the right column -->
+          <!-- Second column -->
           <div class="column right">
-            {{#if (lookup sections 0)}}
-              {{#with (lookup sections 0)}}
-                {{#each content}}
-                  {{#if (gte @index 3)}}
-                    <div class="key-value">
-                      <span class="key">{{properCase @key}}</span>
-                      <span class="value">{{this}}</span>
-                    </div>
-                  {{/if}}
-                {{/each}}
-              {{/with}}
-            {{/if}}
+            {{#getSectionByTitle sections "Patient Details"}}
+              {{#each content}}
+                {{#if (gte @index 3)}}
+                  <div class="key-value">
+                    <span class="key">{{properCase @key}}</span>
+                    <span class="value">{{this}}</span>
+                  </div>
+                {{/if}}
+              {{/each}}
+            {{/getSectionByTitle}}
           </div>
         </div>
       </div>
 
-      <div class="header">Discharge Summary</div>
-
       <!-- General Information Section -->
+      <div class="header">
+        {{capitalizeFirst fileName}}
+        Discharge Summary
+      </div>
       <div class="section padded-section">
-        <div class="section-content">
-          {{#if (lookup sections 1)}}
-            {{#with (lookup sections 1)}}
+        {{#getSectionByTitle sections "General Information"}}
+          {{#each content}}
+            <div class="key-value">
+              <span class="key">{{properCase @key}}</span>
+              <span class="value">{{this}}</span>
+            </div>
+          {{/each}}
+        {{/getSectionByTitle}}
+      </div>
+
+      <!-- Embryo Biopsy Details Section (only if exists) -->
+      {{#each sections}}
+        {{#showIfContainsTitle title "Embryo Biopsy"}}
+          <div class="section padded-section">
+            <div class="section-title" style="color: black;">{{title}}</div>
+            <div class="section-content">
               {{#each content}}
                 <div class="key-value">
                   <span class="key">{{properCase @key}}</span>
                   <span class="value">{{this}}</span>
                 </div>
               {{/each}}
-            {{/with}}
-          {{/if}}
-        </div>
-      </div>
-
-      <!-- Embryo Biopsy Details Section -->
-      {{#if (lookup sections 2)}}
-        {{#each sections}}
-          {{#if (contains title "Embryo Biopsy")}}
-            <div class="section" style="padding-left: 15px;">
-              <div class="section-title" style="color: black;">{{title}}</div>
-              <div class="section-content">
-                {{#each content}}
-                  <div class="key-value">
-                    <span class="key">{{properCase @key}}</span>
-                    <span class="value">{{this}}</span>
-                  </div>
-                {{/each}}
-              </div>
             </div>
-          {{/if}}
-        {{/each}}
-      {{/if}}
-
+          </div>
+        {{/showIfContainsTitle}}
+      {{/each}}
     </main>
   </body>
 </html>

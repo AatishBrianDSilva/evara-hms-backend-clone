@@ -23,6 +23,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(401, "Unauthorized");
     }
 
+    console.log("Auth data", auth);
+
     await connectMongoDb();
 
     if (!event.body) {

@@ -101,7 +101,7 @@ export const patientSchema = new mongoose.Schema(
     idProofType: { type: String },
     idProofNumber: { type: String, unique: true },
     idProofIssuedCountry: { type: String },
-    ABHANumber: { type: String, unique: true },
+    ABHANumber: { type: String },
     reasonOfVisit: { type: String },
     referredBy: { type: String },
     referredByOther: { type: String },

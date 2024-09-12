@@ -37,10 +37,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Handle invoice file uploads
     const invoiceFileUrls = [];
-    if (
-      updateData.response?.invoice &&
-      updateData.response?.invoice.length > 0
-    ) {
+    if (updateData.response?.invoice && updateData.response?.invoice.length > 0) {
       for (let i = 0; i < updateData.response.invoice.length; i++) {
         if (updateData.response.invoice[i].length > 0) {
           const s3UrlParts = parseS3Url(updateData.response.invoice[i]);
@@ -59,9 +56,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               key: s3UrlParts.key,
               invoiceNumber: updateData.invoiceNumber || undefined,
             });
-            console.log(
-              `Saving Pharmacy Invoice: ${JSON.stringify(pharmacyInvoice)}`
-            );
+            console.log(`Saving Pharmacy Invoice: ${JSON.stringify(pharmacyInvoice)}`);
             await pharmacyInvoice.save();
           } else {
             throw new ErrorMessage(400, "Invalid image URL");
@@ -94,9 +89,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         const itemId = responseItem.item._id || responseItem.item;
         batchDetails[itemId] = {
           batchNo: responseItem.batchNo,
-          expiryDate: responseItem.expiryDate
-            ? new Date(responseItem.expiryDate)
-            : null, // Ensure expiryDate is a Date object or null
+          expiryDate: responseItem.expiryDate ? new Date(responseItem.expiryDate) : null, // Ensure expiryDate is a Date object or null
         };
       }
     });
@@ -105,18 +98,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Process each item in the request
     updateData.request.items.forEach((item, index) => {
-      console.log(
-        `Processing request item ${index + 1}/${
-          updateData.request.items.length
-        }`
-      );
+      console.log(`Processing request item ${index + 1}/${updateData.request.items.length}`);
       console.log(`Request item data: ${JSON.stringify(item)}`);
 
       const packsRequired = item.packsRequired; // Total packs required
       const fulfilledPacks = item.noOfPacks || 0; // Fulfilled packs
 
       // Calculate the MRP and Tax for the fulfilled packs
-      const itemMRP = (item.buyPrice || 0) * fulfilledPacks;
+      let itemMRP = (item.buyPrice || 0) * fulfilledPacks;
+
+      // Apply item-wise discount
+      const discount = item.discount ?? 0;
+      const discountAmount = (itemMRP * discount) / 100;
+      itemMRP = itemMRP - discountAmount; // Deduct discount from MRP
+
       const itemTax = (itemMRP * (item.tax || 0)) / 100;
 
       // Update response totals
@@ -140,6 +135,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           batchNo: batchInfo.batchNo || "Unknown", // Add batchNo
           expiryDate: batchInfo.expiryDate || null, // Add expiryDate
           status: "ProcessedWithoutUpdating",
+          discount: discount, // Ensure discount is included in the response item
         });
         console.log(
           `Added to Response Items: ${JSON.stringify(
@@ -174,10 +170,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           batchNo: item.batchNo || "Unknown",
           expiryDate: item.expiryDate ? new Date(item.expiryDate) : null, // Ensure expiryDate is a Date object or null
           status: "Pending",
+          discount: discount, // Add discount field for pending items
         });
-        console.log(
-          `Unfulfilled item added with remaining packs: ${remainingPacks}`
-        );
+        console.log(`Unfulfilled item added with remaining packs: ${remainingPacks}`);
       }
     });
 
@@ -189,28 +184,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     let responseDiscountAmount = 0;
 
     if (updateData.request.discount) {
-      requestDiscountAmount =
-        (requestSubTotal * updateData.request.discount) / 100;
+      requestDiscountAmount = (requestSubTotal * updateData.request.discount) / 100;
     }
 
     if (updateData.response.discount) {
-      responseDiscountAmount =
-        (responseSubTotal * updateData.response.discount) / 100;
+      responseDiscountAmount = (responseSubTotal * updateData.response.discount) / 100;
     }
 
     const requestOtherCharges = updateData.request.otherCharges || 0;
     const responseOtherCharges = updateData.response.otherCharges || 0;
 
     const requestNetAmount =
-      requestSubTotal -
-      requestDiscountAmount +
-      requestTotalTax +
-      requestOtherCharges;
+      requestSubTotal - requestDiscountAmount + requestTotalTax + requestOtherCharges;
     const responseNetAmount =
-      responseSubTotal -
-      responseDiscountAmount +
-      responseTotalTax +
-      responseOtherCharges;
+      responseSubTotal - responseDiscountAmount + responseTotalTax + responseOtherCharges;
 
     console.log(`Request Net Amount: ${requestNetAmount}`);
     console.log(`Response Net Amount: ${responseNetAmount}`);

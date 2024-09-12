@@ -57,6 +57,25 @@ const generateHtml = (template: string, data: any): string => {
     return a >= b;
   });
 
+  Handlebars.registerHelper(
+    "getSectionByTitle",
+    function (sections, title, options) {
+      if (!Array.isArray(sections)) return options.inverse(this); // Check if sections is an array
+      const section = sections.find((section: any) => section.title === title);
+      return section ? options.fn(section) : options.inverse(this);
+    }
+  );
+
+  Handlebars.registerHelper(
+    "showIfContainsTitle",
+    function (title, keyword, options) {
+      if (title && title.includes(keyword)) {
+        return options.fn(this);
+      }
+      return options.inverse(this);
+    }
+  );
+
   // Register helper to increment index
   Handlebars.registerHelper("inc", function (value) {
     return parseInt(value) + 1;
@@ -66,19 +85,27 @@ const generateHtml = (template: string, data: any): string => {
     return str && str.indexOf(substring) > -1;
   });
 
+  Handlebars.registerHelper("capitalizeFirst", (str) => {
+    if (typeof str !== "string" || str.length === 0) return str;
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  });
+
   const compiledTemplate = Handlebars.compile(template);
   return compiledTemplate(data);
 };
 
-const generateHeaderHtml = (header: any, styles: any): string => {
-  // Check for undefined or empty strings for each value
-  // const doctorInfo =
-  //   header.doctorName &&
-  //   header.doctorName !== "undefined undefined" &&
-  //   header.doctorName !== "" &&
-  //   header.doctorName !== " "
-  //     ? `<p style="margin: 0;font-size: 14px;">Doctor: ${header.doctorName}</p>`
-  //     : "";
+const generateHeaderHtml = (
+  header: any,
+  styles: any,
+  sections: any
+): string => {
+  const branchSection = sections.find(
+    (section: any) => section.title === "Branch Details"
+  );
+
+  const branchAddress = branchSection
+    ? branchSection.content.Address
+    : "Address not available";
 
   return `
     <header style="display: flex; justify-content: space-between; align-items: flex-start; width: 94%; padding: 20px 0; box-sizing: border-box; margin-left: auto; margin-right: auto;">
@@ -90,7 +117,8 @@ const generateHeaderHtml = (header: any, styles: any): string => {
         <h1 style="margin: 0; font-size: 16px; text-decoration: underline; background: #5C5C5C; color: white; padding: 5px;">Bill of Supply & Tax Invoice</h1>
         <p style="margin: 10px 0 0 0; font-size: 20px; font-weight: bold; text-transform: uppercase;">Evara Health Pvt Ltd</p>
         <p style="margin: 0; font-size: 20px; font-weight: bold; text-transform: uppercase;">EVARA FERTILITY</p>
-        <p style="margin: 10px 0 0 0; font-size: 16px;">111/118, Ashok Nagar, Harsh Nagar, Kanpur, Uttar Pradesh 208001</p>
+        <p style="margin: 10px 0 0 0; font-size: 16px;">${branchAddress}</p>
+
       </div>
       <div style="width: 140px;"></div>
     </header>
@@ -108,7 +136,7 @@ const generateFooterHtml = (): string => {
 
   return `
     <footer style="width: 94%; padding: 10px 0; font-size: 18px; color: grey; text-align: center; border-top: 2px solid #288BDB; margin-left: auto; margin-right: auto;">
-      Bill generated on ${currentDate} - evarahealth.com
+      Bill generated on ${currentDate} - evarahealth.in
     </footer>
   `;
 };
@@ -146,7 +174,7 @@ export const main: SNSHandler = async (event, _context) => {
         }
       } else {
         // For patient-related documents, continue fetching patient info
-        const patient = await Patient.findById(data.patient).lean();
+        patient = await Patient.findById(data.patient).lean();
         if (!patient) {
           console.error("Patient not found");
           return;
@@ -180,6 +208,8 @@ export const main: SNSHandler = async (event, _context) => {
       const templateData = {
         header,
         sections: data.sections,
+        fileName: data.documentType, // Ensure fileName is passed
+
         styles: {
           primaryColor: "#FF5C00",
           secondaryColor: "#10535E",
@@ -194,7 +224,8 @@ export const main: SNSHandler = async (event, _context) => {
 
       const headerHtml = generateHeaderHtml(
         templateData.header,
-        templateData.styles
+        templateData.styles,
+        templateData.sections
       );
       console.log("Header HTML: ", headerHtml);
       const footerHtml = generateFooterHtml(templateData.styles);

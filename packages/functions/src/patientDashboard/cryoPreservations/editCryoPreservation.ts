@@ -25,11 +25,19 @@ import {
 } from "@evara-backend/core/lib/utils/sanitizeReportData";
 import _ from "lodash";
 import Patient from "@evara-backend/core/models/Patients";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    // Extract authorization details
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
 
     if (!event.pathParameters) {
@@ -106,7 +114,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     console.log("patient data fetched", patient);
 
-
     // Fetch spouse name based on partnerId
     let spouseName = "N/A";
     if (patient.partnerId) {
@@ -116,9 +123,28 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
     }
 
+    // Log the branchId and clinicId extracted from the auth
+    const branchId = auth.branchId;
+    const clinicId = auth.clinicId;
+    console.log("Extracted Branch ID:", branchId);
+    console.log("Extracted Clinic ID:", clinicId);
+
+    // Fetch the branch using the branchId and clinicId from the auth details
+    const branch = await Branch.findOne({
+      code: branchId,
+      clinicId: clinicId,
+    }).lean();
+
+    if (!branch) {
+      console.log("Branch not found");
+      throw new ErrorMessage(404, "Branch not found");
+    }
+
+    console.log("Branch found:", branch);
+
     // Generate Report if cryopreservation is completed
     if (cryopreservation && cryopreservation.status === "Completed") {
-      const report = processDataForReport(cryopreservation, patient, spouseName);
+      const report = processDataForReport(cryopreservation, patient, spouseName, branch);
       console.log("Report Data: ", JSON.stringify(report, null, 2));
 
       // Send to SNS
@@ -134,7 +160,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-const processDataForReport = (data: any, patient: any, spouseName: string) => {
+const processDataForReport = (data: any, patient: any, spouseName: string, branch: any) => {
   const reportData: IReportData = {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.CryoPreservation,
@@ -185,6 +211,29 @@ const processDataForReport = (data: any, patient: any, spouseName: string) => {
 
   // Extract all details from the result and remove the __v field
   const { __v, files, sperm_wash_items, ...generalDetails } = data.details.details;
+
+  // Check if branch has a valid address and format it
+  let branchAddress = "Address not available";
+  if (branch && branch.address) {
+    const { street, city, state, zip } = branch.address;
+    branchAddress = `${street ? street + ", " : ""}${city ? city + ", " : ""}${
+      state ? state + " - " : ""
+    }${zip || ""}`;
+  }
+
+  // Add Branch Address section
+  const branchDetails = {
+    Branch: branch.branchName || "N/A",
+    Address: branchAddress,
+    Phone: branch.phone || "N/A",
+    Email: branch.email || "N/A",
+  };
+
+  reportData.sections.push({
+    showTitle: true,
+    title: "Branch Details",
+    content: branchDetails,
+  });
 
   // Doctor-related fields to be replaced with their names
   const doctorFields = [

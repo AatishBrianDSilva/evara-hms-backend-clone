@@ -25,7 +25,7 @@ const convertHtmlToPdf = async (
   console.log("STAGE", STAGE);
 
   let browser: Browser;
-  if (STAGE === "ratan") {
+  if (STAGE === "ratandeeparunkumar") {
     browser = await puppeteer.launch({
       executablePath: "/Applications/Chromium.app/Contents/MacOS/Chromium",
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
