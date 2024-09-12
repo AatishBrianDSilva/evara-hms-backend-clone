@@ -26,6 +26,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Parse the body from the event
     const data = JSON.parse(event.body);
+    data.clinicId = auth.clinicId;
+    data.branchId = auth.branchId;
 
     // Create a new doctor document
     const newDoctor = new Doctors(data);
