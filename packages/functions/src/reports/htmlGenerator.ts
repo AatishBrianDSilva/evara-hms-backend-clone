@@ -160,7 +160,7 @@ export const main: SNSHandler = async (event, _context) => {
       }
 
       const logoUrl =
-        "https://gv-evara-hms-user-profiles-dev.s3.ap-south-1.amazonaws.com/evara-logo.png";
+        "https://evara-hms-clinics-devs.s3.ap-south-1.amazonaws.com/Evara+new+logo+1.1.png";
 
       const logo = await getBase64ImageFromUrl(logoUrl);
 
@@ -192,12 +192,16 @@ export const main: SNSHandler = async (event, _context) => {
       const htmlContent = generateHtml(template, templateData);
       console.log("HTML Content: ", htmlContent);
 
-      const headerHtml = generateHeaderHtml(templateData.header, templateData.styles);
+      const headerHtml = generateHeaderHtml(
+        templateData.header,
+        templateData.styles
+      );
       console.log("Header HTML: ", headerHtml);
       const footerHtml = generateFooterHtml(templateData.styles);
       console.log("Footer HTML: ", footerHtml);
 
-      const htmlContentWithBorders = generateHtmlWithContentBorders(htmlContent);
+      const htmlContentWithBorders =
+        generateHtmlWithContentBorders(htmlContent);
 
       // const key = `${patient._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`;
 
@@ -209,7 +213,9 @@ export const main: SNSHandler = async (event, _context) => {
 
       const queueUrl = process.env.REPORT_PDF_GENERATION_QUEUE_URL;
       if (!queueUrl) {
-        throw new Error("Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set.");
+        throw new Error(
+          "Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set."
+        );
       }
 
       const pdfGeneratorMessage: IPDFGeneratorMessage = {

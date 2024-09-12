@@ -7,13 +7,20 @@ import PatientReport from "@evara-backend/core/src/models/patientDashboard/Patie
 import PatientInvoice from "@evara-backend/core/src/models/patientDashboard/PatientInvoices";
 import S3Service from "@evara-backend/core/src/lib/aws/s3";
 import { S3 } from "aws-sdk";
-import { EDocumentTypes, IPDFGeneratorMessage } from "@evara-backend/core/src/lib/types/global";
+import {
+  EDocumentTypes,
+  IPDFGeneratorMessage,
+} from "@evara-backend/core/src/lib/types/global";
 import { PurchaseOrder } from "@evara-backend/core/models/pharmacyDashboard/PurchaseOrder";
 
 chromium.setHeadlessMode = true;
 chromium.setGraphicsMode = true;
 
-const convertHtmlToPdf = async (html: string, header: string, footer: string): Promise<Buffer> => {
+const convertHtmlToPdf = async (
+  html: string,
+  header: string,
+  footer: string
+): Promise<Buffer> => {
   const STAGE = process.env.STAGE;
   console.log("STAGE", STAGE);
 
@@ -27,7 +34,8 @@ const convertHtmlToPdf = async (html: string, header: string, footer: string): P
     console.log("browser", browser);
   } else if (STAGE === "aatishbrian") {
     browser = await puppeteer.launch({
-      executablePath: "C:/Users/Brian D'Silva/OneDrive/Desktop/chrome-win/chrome.exe",
+      executablePath:
+        "C:/Users/Brian D'Silva/OneDrive/Desktop/chrome-win/chrome.exe",
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
       headless: false,
     });
@@ -82,11 +90,18 @@ export const main: SQSHandler = async (event, context) => {
         footerHtml,
       }: IPDFGeneratorMessage = JSON.parse(record.body);
 
-      const pdfBuffer = await convertHtmlToPdf(htmlContent, headerHtml, footerHtml);
+      const pdfBuffer = await convertHtmlToPdf(
+        htmlContent,
+        headerHtml,
+        footerHtml
+      );
 
       // Upload PDF to S3
       const s3Params: S3.PutObjectRequest = {
-        Bucket: `${bucket}-${process.env.STAGE}`,
+        Bucket:
+          process.env.STAGE === "prod"
+            ? `${bucket}-${process.env.STAGE}`
+            : `${bucket}-devs`,
         Key: key,
         Body: pdfBuffer,
         ContentType: "application/pdf",
@@ -127,7 +142,9 @@ export const main: SQSHandler = async (event, context) => {
         );
       } else if (!patient && category === EDocumentTypes.PurchaseOrder) {
         // Handle purchase order reports (No patient involved)
-        const purchaseOrder = await PurchaseOrder.findOne({ poNumber: source_report_id });
+        const purchaseOrder = await PurchaseOrder.findOne({
+          poNumber: source_report_id,
+        });
 
         if (purchaseOrder) {
           purchaseOrder.report = {
@@ -137,9 +154,13 @@ export const main: SQSHandler = async (event, context) => {
           };
 
           await purchaseOrder.save();
-          console.log(`Purchase order ${source_report_id} updated with report.`);
+          console.log(
+            `Purchase order ${source_report_id} updated with report.`
+          );
         } else {
-          console.error(`Purchase order with poNumber ${source_report_id} not found.`);
+          console.error(
+            `Purchase order with poNumber ${source_report_id} not found.`
+          );
         }
       }
       console.log("PDF generated and uploaded successfully.");
