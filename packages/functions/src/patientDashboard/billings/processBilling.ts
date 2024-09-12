@@ -21,6 +21,8 @@ import _ from "lodash";
 import { sanitizeInvoiceData } from "@evara-backend/core/lib/utils/sanitizeInvoiceData";
 import { format } from "date-fns";
 import { formatToIndianCurrencyFormat } from "@evara-backend/core/lib/utils/formatToIndianCurrencyFormat";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
 
 interface BillingsData {
   billings: {
@@ -36,6 +38,11 @@ interface BillingsData {
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
+
+  const auth = extractAuthorizerDetails(event);
+  if (!auth) {
+    throw new ErrorMessage(401, "Unauthorized");
+  }
 
   const conn = await connectMongoDb();
 
@@ -96,9 +103,28 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           ? EPatientBillingStatus.Paid
           : EPatientBillingStatus.Pending;
 
+      // Log the branchId and clinicId extracted from the auth
+      const branchId = auth.branchId;
+      const clinicId = auth.clinicId;
+      console.log("Extracted Branch ID:", branchId);
+      console.log("Extracted Clinic ID:", clinicId);
+
+      // Fetch the branch using the branchId and clinicId from the auth details
+      const branch = await Branch.findOne({
+        code: branchId,
+        clinicId: clinicId,
+      }).lean();
+
+      if (!branch) {
+        console.log("Branch not found");
+        throw new ErrorMessage(404, "Branch not found");
+      }
+
+      console.log("Branch found:", branch);
+
       // Generate Report for payment
       if (payments) {
-        const report = processDataForReport(payments, billingId, data, billing);
+        const report = processDataForReport(payments, billingId, data, billing, branch);
         console.log("Report Data: ", JSON.stringify(report, null, 2));
 
         // Send to SNS
@@ -124,7 +150,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-const processDataForReport = (data: any, id: string, patientData: any, billing: any) => {
+const processDataForReport = (
+  data: any,
+  id: string,
+  patientData: any,
+  billing: any,
+  branch: any
+) => {
   const templateType =
     billing.billType === "Pharmacy"
       ? EReportTemplateTypes.BillPharmacy
@@ -176,7 +208,6 @@ const processDataForReport = (data: any, id: string, patientData: any, billing: 
 
   const billDate = format(billing.createdAt, "dd/MM/yyyy");
   const billTime = format(billing.createdAt, "h:mm a");
-  const currency = "₹"; //todo add check to check currency
 
   const patientDetails = {
     patientName: `${patientData.patientData.firstName} ${patientData.patientData.lastName}`,
@@ -187,7 +218,20 @@ const processDataForReport = (data: any, id: string, patientData: any, billing: 
     billNo: billing.billingId,
     billDate: billDate,
     billTime: billTime,
-    currency: currency,
+  };
+
+  // Format Branch Details section with properly formatted address
+  let branchAddress = "Address not available";
+  if (branch && branch.address) {
+    const { street, city, state, zip } = branch.address;
+    branchAddress = `${street || ""}, ${city || ""}, ${state || ""}, ${zip || ""}`.trim();
+  }
+
+  const branchDetails = {
+    branchName: branch.branchName || "N/A",
+    Address: branchAddress || "Address not available",
+    Phone: branch.phone || "N/A",
+    Email: branch.email || "N/A",
   };
 
   // let summaryContent = {
@@ -220,6 +264,12 @@ const processDataForReport = (data: any, id: string, patientData: any, billing: 
       showTitle: true,
       isBillDetails: false,
       content: patientDetails,
+    },
+    {
+      title: "Branch Details",
+      showTitle: true,
+      isBillDetails: false,
+      content: branchDetails,
     },
     {
       title: "Items",
