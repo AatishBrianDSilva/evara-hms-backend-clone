@@ -59,7 +59,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     for (const { billingId, payments } of data.billings) {
       if (!billingId || !payments) {
-        throw new ErrorMessage(400, "Billing ID and payments are required for each entry");
+        throw new ErrorMessage(
+          400,
+          "Billing ID and payments are required for each entry"
+        );
       }
 
       const billing = await PatientBilling.findById(billingId).session(session);
@@ -67,8 +70,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         throw new ErrorMessage(404, `Billing not found for ID: ${billingId}`);
       }
 
-      let totalPaid = billing.payments.reduce((acc, payment) => acc + payment.amount, 0);
-      let totalPaymentAttempt = payments.reduce((acc, payment) => acc + payment.amount, 0);
+      let totalPaid = billing.payments.reduce(
+        (acc, payment) => acc + payment.amount,
+        0
+      );
+      let totalPaymentAttempt = payments.reduce(
+        (acc, payment) => acc + payment.amount,
+        0
+      );
       let newTotalPaid = totalPaid + totalPaymentAttempt;
 
       // if (newTotalPaid < billing.grandTotal) {
@@ -89,7 +98,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         billing.payments.push({
           amount: payment.amount,
           method: payment.method,
-          paymentDate: payment.paymentDate ? new Date(payment.paymentDate) : new Date(),
+          paymentDate: payment.paymentDate
+            ? new Date(payment.paymentDate)
+            : new Date(),
           details: payment.details,
           type: EPaitentBillingPaymentType.Payment,
         });
@@ -124,8 +135,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       // Generate Report for payment
       if (payments) {
-        const report = processDataForReport(payments, billingId, data, billing, branch);
-        console.log("Report Data: ", JSON.stringify(report, null, 2));
+        const report = processDataForReport(
+          payments,
+          billingId,
+          data,
+          billing,
+          branch
+        );
+        // console.log("Report Data: ", JSON.stringify(report, null, 2));
 
         // Send to SNS
         await SNSService.publishMessage({
@@ -175,30 +192,42 @@ const processDataForReport = (
   };
 
   // If billType is "Pharmacy", we include CGST, SGST, and calculate MRP
-  const billItems = billing.items.map((item: any) => {
-    let CGST = billing.billType === "Pharmacy" ? item.CGST || 0 : null;
-    let SGST = billing.billType === "Pharmacy" ? item.SGST || 0 : null;
+  let billItems: any;
 
-    // MRP calculation: total - (CGST + SGST) for Pharmacy items
-    let MRP = billing.billType === "Pharmacy" ? item.total - (CGST + SGST) : null;
-
-    // Tax percentage calculation: (CGST + SGST) as a percentage of the total
-    let taxPercentage = billing.billType === "Pharmacy" ? ((CGST + SGST) / item.total) * 100 : null;
-
-    return {
-      serviceName: item.serviceName,
-      serviceType: item.serviceType,
-      quantity: item.quantity,
-      price: item.price,
-      amount: item.amount,
-      total: item.total,
-      // Add CGST and SGST for Pharmacy items
-      CGST: billing.billType === "Pharmacy" ? CGST : "N/A",
-      SGST: billing.billType === "Pharmacy" ? SGST : "N/A",
-      MRP: billing.billType === "Pharmacy" ? MRP : "N/A", // Add MRP only for Pharmacy items
-      tax: billing.billType === "Pharmacy" ? taxPercentage.toFixed(2) : "N/A", // Add tax percentage field for Pharmacy
-    };
-  });
+  if (billing.billType === "Pharmacy") {
+    billItems = billing.items.map((item: any) => {
+      return {
+        serviceName: item.serviceName,
+        serviceType: item.serviceType,
+        quantity: item.quantity,
+        // mrp: item.mrpPerUnit,
+        mrp: parseFloat(
+          (item.mrpPerUnit + (item.mrpPerUnit * item.taxRate) / 100).toFixed(2)
+        ),
+        value: parseFloat((item.price - item.tax).toFixed(2)),
+        gst: item.taxRate,
+        sgst: (item.tax / 2).toFixed(2),
+        cgst: (item.tax / 2).toFixed(2),
+        amount: item.total,
+      };
+    });
+  } else {
+    billItems = billing.items.map((item: any) => {
+      return {
+        serviceName: item.serviceName,
+        serviceType: item.serviceType,
+        quantity: item.quantity,
+        price: item.price,
+        amount: item.amount,
+        total: item.total,
+        // Add CGST and SGST for Pharmacy items
+        CGST: "N/A",
+        SGST: "N/A",
+        MRP: "N/A", // Add MRP only for Pharmacy items
+        tax: "N/A", // Add tax percentage field for Pharmacy
+      };
+    });
+  }
 
   const billDescription = billItems.every(
     (item: any) => item.serviceType === billItems[0].serviceType
@@ -224,7 +253,9 @@ const processDataForReport = (
   let branchAddress = "Address not available";
   if (branch && branch.address) {
     const { street, city, state, zip } = branch.address;
-    branchAddress = `${street || ""}, ${city || ""}, ${state || ""}, ${zip || ""}`.trim();
+    branchAddress = `${street || ""}, ${city || ""}, ${state || ""}, ${
+      zip || ""
+    }`.trim();
   }
 
   const branchDetails = {
@@ -248,9 +279,11 @@ const processDataForReport = (
   let summaryContent = {
     totalAmount: formatToIndianCurrencyFormat(billing.grandTotal),
     paidAmount: formatToIndianCurrencyFormat(billing.totalPaid),
-    LessDiscount: billing.discount ? formatToIndianCurrencyFormat(billing.discount) : null,
+    lessDiscount: billing.discount
+      ? formatToIndianCurrencyFormat(billing.discount)
+      : formatToIndianCurrencyFormat(0),
     payableAmount: formatToIndianCurrencyFormat(billing.totalDues),
-    "Sub Total": formatToIndianCurrencyFormat(billing.subTotal),
+    // "Sub Total": formatToIndianCurrencyFormat(billing.subTotal),
     // Include CGST and SGST only if it's not "Pharmacy" billType
     ...(billing.billType !== "Pharmacy" && {
       CGST: billing.tax ? billing.tax / 2 : null,

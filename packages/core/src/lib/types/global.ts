@@ -26,6 +26,7 @@ export enum EReportTemplateTypes {
   Refund = "refund",
   BillPharmacy = "billPharmacy",
   BillOtherServices = "billOtherServices",
+  POInvoice = "POInvoice",
 }
 
 export interface ISection {

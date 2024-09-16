@@ -63,10 +63,14 @@ interface Item {
   serviceName: string;
   serviceType: EPatientBillingServiceType;
   doctorId: mongoose.Types.ObjectId;
+  batchNo?: string;
+  expiryDate?: Date;
   quantity: number;
+  mrpPerUnit?: number;
   price: number;
   discount: number;
   tax: number;
+  taxRate?: number;
   total: number;
   pharmacyDetails?: PharmacyDetails;
 }
@@ -143,9 +147,13 @@ const itemSchema = new Schema<Item>({
   },
   doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "Doctors" },
   quantity: { type: Number, required: true, min: 0 },
+  mrpPerUnit: { type: Number, required: false, min: 0 },
+  batchNo: { type: String, required: false },
+  expiryDate: { type: Date, required: false },
   price: { type: Number, required: true, min: 0 },
   discount: { type: Number, required: true, min: 0 },
   tax: { type: Number },
+  taxRate: { type: Number },
   total: { type: Number, required: true, min: 0 },
   pharmacyDetails: { type: pharmacyDetailsSchema },
 });
@@ -192,9 +200,11 @@ patientBillingSchema.virtual("subTotal").get(function (this: IPatientBilling) {
   return this.amount + this.tax;
 });
 
-patientBillingSchema.virtual("grandTotal").get(function (this: IPatientBilling) {
-  return this.subTotal - this.discount;
-});
+patientBillingSchema
+  .virtual("grandTotal")
+  .get(function (this: IPatientBilling) {
+    return this.subTotal - this.discount;
+  });
 
 patientBillingSchema.virtual("totalPaid").get(function (this: IPatientBilling) {
   return this.payments
@@ -202,17 +212,22 @@ patientBillingSchema.virtual("totalPaid").get(function (this: IPatientBilling) {
     .reduce((acc, payment) => acc + payment.amount, 0);
 });
 
-patientBillingSchema.virtual("totalPaymentAttempts").get(function (this: IPatientBilling) {
-  return this.payments.filter(
-    (payment) => payment.type === EPaitentBillingPaymentType.Payment
-  ).length;
-});
+patientBillingSchema
+  .virtual("totalPaymentAttempts")
+  .get(function (this: IPatientBilling) {
+    return this.payments.filter(
+      (payment) => payment.type === EPaitentBillingPaymentType.Payment
+    ).length;
+  });
 
 patientBillingSchema.virtual("totalDues").get(function (this: IPatientBilling) {
   return this.grandTotal - this.totalPaid;
 });
 
-patientBillingSchema.pre("save", autoIncrementId("PatientBilling", "billingId", "BL-"));
+patientBillingSchema.pre(
+  "save",
+  autoIncrementId("PatientBilling", "billingId", "BL-")
+);
 
 patientBillingSchema.plugin(paginate);
 

@@ -9,6 +9,8 @@ import mongoose from "mongoose";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 import { processPurchaseOrderReportData } from "./processPurchaseOrderReportData";
 import SNSService from "@evara-backend/core/lib/aws/sns";
+import { DrugVendor } from "@evara-backend/core/models/pharmacyDashboard/DrugVendor";
+import { DrugItem } from "@evara-backend/core/models/pharmacyDashboard/DrugItem";
 
 // Handler function to edit a draft purchase order
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -64,8 +66,32 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
     console.log("Branch found:", branch);
 
+    // Fetch the vendor details using the vendor ID
+    const vendorDetails = await DrugVendor.findById(data.vendor).lean();
+    if (!vendorDetails) {
+      throw new ErrorMessage(404, "Vendor not found");
+    }
+    console.log("Vendor details:", vendorDetails);
+
     data.branch = new mongoose.Types.ObjectId(branch._id);
     data.updatedBy = auth.userId; // Assuming userId from auth for updating
+
+    // Fetch item details from DrugItem for each item in the purchase order
+    const updatedItems = await Promise.all(
+      data.request.items.map(async (item: any) => {
+        const drugItem = await DrugItem.findById(item.item).lean();
+        if (!drugItem) {
+          throw new ErrorMessage(404, `Drug item not found for ID: ${item.item}`);
+        }
+
+        // Add name, cost, and discount to the item details
+        return {
+          ...item,
+          name: drugItem.name,
+          amount: drugItem.rate,
+        };
+      })
+    );
 
     // Handle address updates
     if (data.newAddress) {
@@ -90,7 +116,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     console.info("Draft Purchase Order updated successfully");
 
     // Generate report data after saving the updated draft PO
-    const reportData = processPurchaseOrderReportData(purchaseOrder, auth.clinicId);
+    const reportData = processPurchaseOrderReportData(
+      purchaseOrder,
+      auth.clinicId,
+      branch,
+      vendorDetails,
+      updatedItems
+    );
 
     // Send the report data to SNS for report generation
     await SNSService.publishMessage({
@@ -98,7 +130,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN, // ARN for report generation
     });
 
-    console.info("Report generation triggered successfully");
+    console.info("Report generation triggered successfully", reportData);
 
     return successResponse("Draft Purchase Order updated successfully");
   } catch (error) {

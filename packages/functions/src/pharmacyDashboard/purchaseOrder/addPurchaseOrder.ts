@@ -9,6 +9,8 @@ import mongoose from "mongoose";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 import { processPurchaseOrderReportData } from "./processPurchaseOrderReportData";
 import SNSService from "@evara-backend/core/lib/aws/sns";
+import { DrugVendor } from "@evara-backend/core/models/pharmacyDashboard/DrugVendor";
+import { DrugItem } from "@evara-backend/core/models/pharmacyDashboard/DrugItem";
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -45,8 +47,32 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
     console.log("Branch found:", branch);
 
+    // Fetch the vendor details using the vendor ID
+    const vendorDetails = await DrugVendor.findById(data.vendor).lean();
+    if (!vendorDetails) {
+      throw new ErrorMessage(404, "Vendor not found");
+    }
+    console.log("Vendor details:", vendorDetails);
+
     data.branch = new mongoose.Types.ObjectId(branch._id);
     data.createdBy = auth.userId; // Assuming you have userId in auth
+
+    // Fetch item details from DrugItem for each item in the purchase order
+    const updatedItems = await Promise.all(
+      data.request.items.map(async (item: any) => {
+        const drugItem = await DrugItem.findById(item.item).lean();
+        if (!drugItem) {
+          throw new ErrorMessage(404, `Drug item not found for ID: ${item.item}`);
+        }
+
+        // Add name, cost, and discount to the item details
+        return {
+          ...item,
+          name: drugItem.name,
+          amount: drugItem.rate,
+        };
+      })
+    );
 
     // Ensure the newAddress field is correctly added if isDifferentAddress is true
     if (data.newAddress) {
@@ -70,7 +96,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     console.info("Purchase Order saved successfully");
 
     // Generate report data
-    const reportData = processPurchaseOrderReportData(purchaseOrder, auth.clinicId);
+    const reportData = processPurchaseOrderReportData(
+      purchaseOrder,
+      auth.clinicId,
+      branch,
+      vendorDetails,
+      updatedItems
+    );
 
     // Send the report data to SNS for report generation
     await SNSService.publishMessage({

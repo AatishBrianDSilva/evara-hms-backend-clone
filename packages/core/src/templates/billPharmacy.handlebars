@@ -71,9 +71,10 @@
             <th>Drug Details</th>
             <th>Qty</th>
             <th>MRP</th>
+            <th>Value</th>
             <th>GST%</th>
-            <th>CGST</th>
             <th>SGST</th>
+            <th>CGST</th>
             <th>Amount</th>
           </tr>
         </thead>
@@ -82,13 +83,14 @@
             {{#each content}}
               <tr>
                 <td>{{inc @index}}</td>
-                <td>{{this.serviceName}}</td>
+                <td style="text-align: left">{{this.serviceName}}</td>
                 <td>{{this.quantity}}</td>
-                <td>{{formatCurrency this.MRP}}</td>
-                <td>{{this.tax}}</td>
-                <td>{{formatCurrency this.CGST}}</td>
-                <td>{{formatCurrency this.SGST}}</td>
-                <td>{{formatCurrency this.total}}</td>
+                <td>{{formatCurrency this.mrp}}</td>
+                <td>{{formatCurrency this.value}}</td>
+                <td>{{this.gst}}</td>
+                <td>{{formatCurrency this.sgst}}</td>
+                <td>{{formatCurrency this.cgst}}</td>
+                <td>{{formatCurrency this.amount}}</td>
               </tr>
             {{/each}}
           {{/getSectionByTitle}}

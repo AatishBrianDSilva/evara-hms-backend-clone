@@ -17,8 +17,6 @@ import SQSService from "@evara-backend/core/src/lib/aws/sqs";
 import axios from "axios";
 
 const TEMPLATE_PATH = path.resolve(__dirname, "../../../core/src/templates");
-// const files = fs.readdirSync(templatesPath);
-// console.log('Templates directory contents:', files);
 
 async function getBase64ImageFromUrl(imageUrl: string): Promise<string> {
   const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
@@ -41,14 +39,11 @@ const generateHtml = (template: string, data: any): string => {
   Handlebars.registerHelper("properCase", (str) => {
     if (typeof str !== "string") return str;
 
-    // Add a space before each capital letter (except the first one)
     str = str.replace(/([a-z])([A-Z])/g, "$1 $2");
 
-    // Capitalize the first letter of each word
     return str.replace(/\b\w/g, (char) => char.toUpperCase());
   });
 
-  // Register custom helpers for comparison
   Handlebars.registerHelper("lt", function (a, b) {
     return a < b;
   });
@@ -57,59 +52,110 @@ const generateHtml = (template: string, data: any): string => {
     return a >= b;
   });
 
-  Handlebars.registerHelper(
-    "getSectionByTitle",
-    function (sections, title, options) {
-      if (!Array.isArray(sections)) return options.inverse(this); // Check if sections is an array
-      const section = sections.find((section: any) => section.title === title);
-      return section ? options.fn(section) : options.inverse(this);
-    }
-  );
-
-  Handlebars.registerHelper(
-    "showIfContainsTitle",
-    function (title, keyword, options) {
-      if (title && title.includes(keyword)) {
-        return options.fn(this);
-      }
+  Handlebars.registerHelper("getSectionByTitle", function (sections, title, options) {
+    if (!Array.isArray(sections)) {
       return options.inverse(this);
     }
-  );
 
-  // Register helper to increment index
+    const section = sections.find((section) => section.title === title);
+
+    if (section) {
+      return options.fn(section);
+    }
+
+    return options.inverse(this);
+  });
+
   Handlebars.registerHelper("inc", function (value) {
     return parseInt(value) + 1;
   });
 
-  Handlebars.registerHelper("contains", function (str, substring) {
-    return str && str.indexOf(substring) > -1;
+  Handlebars.registerHelper("getValue", function (object, key) {
+    return object ? object[key] : null;
   });
 
-  Handlebars.registerHelper("capitalizeFirst", (str) => {
-    if (typeof str !== "string" || str.length === 0) return str;
-    return str.charAt(0).toUpperCase() + str.slice(1);
+  Handlebars.registerHelper("startsWith", function (str, prefix) {
+    if (typeof str !== "string") {
+      str = String(str);
+    }
+    return str.startsWith(prefix);
   });
 
   const compiledTemplate = Handlebars.compile(template);
   return compiledTemplate(data);
 };
-
 const generateHeaderHtml = (
   header: any,
   styles: any,
-  sections: any
+  sections: any,
+  documentType: string
 ): string => {
-  const branchSection = sections.find(
-    (section: any) => section.title === "Branch Details"
-  );
+  if (documentType === "PurchaseOrder") {
+    // Extract PO number and date from "Purchase Order Details" section
+    const poDetailsSection = sections.find(
+      (section: any) => section.title === "Purchase Order Details"
+    );
+    const poNumber = poDetailsSection?.content["PO Number"] || "N/A";
+    const poDate = poDetailsSection?.content["Date"] || "N/A";
 
-  const branchAddress = branchSection
-    ? branchSection.content.Address
-    : "Address not available";
+    // Extract vendor and branch addresses
+    const addressSection = sections.find((section: any) => section.title === "Address Information");
+    const vendorAddress =
+      addressSection?.content["Vendor Address"] || "Vendor address not available";
+    const branchAddress =
+      addressSection?.content["Branch Address"] || "Branch address not available";
+
+    return `
+      <!-- Header with Logo, PO Number & Date -->
+      <header style="padding: 20px; box-sizing: border-box;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <!-- Logo on the left -->
+          <div style="flex: 1; display: flex; align-items: center; padding-left: 20px;"> <!-- Left padding added -->
+            <img src="${header.logo}" alt="Logo" style="width: 140px; height: 67px; object-fit: contain;" />
+          </div>
+
+          <!-- PO Number & Date on the right -->
+          <div style="flex: 1; text-align: right; padding-right: 20px;"> <!-- Padding on the right -->
+            <p style="margin: 0; font-size: 16px;">Purchase Order: ${poNumber}</p>
+            <p style="margin: 0; font-size: 14px;">Date: ${poDate}</p>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <hr style="border: 1px solid #000; margin: 10px 0;">
+
+        <!-- Vendor and Ship To/Bill To Section with Padding and Aligned Headings -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-top: 20px; padding-left: 20px; padding-right: 20px;"> <!-- Added padding on both sides -->
+          <!-- Vendor Section -->
+          <div style="width: 50%; text-align: left;">
+            <p style="font-weight: bold; margin: 0; font-size: 16px;">Vendor:</p> <!-- Increased font size -->
+            <p style="margin: 0; font-size: 14px; padding-top: 5px;">${vendorAddress}</p> <!-- Vendor address with some padding -->
+          </div>
+
+          <!-- Ship To / Bill To Section -->
+          <div style="width: 50%; text-align: left;">
+            <p style="font-weight: bold; margin: 0; font-size: 16px;">Ship To & Bill To:</p> <!-- Increased font size and aligned to left -->
+            <p style="margin: 0; font-size: 14px; padding-top: 5px;">${branchAddress}</p> <!-- Ship To address with some padding -->
+          </div>
+        </div>
+
+               <!-- Another Divider -->
+        <hr style="border: 1px solid #000; margin-top: 10px;">
+
+        <!-- Padding after the address sections to add space before next section -->
+        <div style="padding-top: 30px;"></div>
+
+ 
+      </header>
+    `;
+  }
+
+  // Default header for other document types
+  const branchSection = sections.find((section: any) => section.title === "Branch Details");
+  const branchAddress = branchSection ? branchSection.content.Address : "Address not available";
 
   return `
     <header style="display: flex; justify-content: space-between; align-items: flex-start; width: 94%; padding: 20px 0; box-sizing: border-box; margin-left: auto; margin-right: auto;">
-
       <div style="width: 140px; height: 67px; padding-top: 10px;">
         <img src="${header.logo}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
       </div>
@@ -118,7 +164,6 @@ const generateHeaderHtml = (
         <p style="margin: 10px 0 0 0; font-size: 20px; font-weight: bold; text-transform: uppercase;">Evara Health Pvt Ltd</p>
         <p style="margin: 0; font-size: 20px; font-weight: bold; text-transform: uppercase;">EVARA FERTILITY</p>
         <p style="margin: 10px 0 0 0; font-size: 16px;">${branchAddress}</p>
-
       </div>
       <div style="width: 140px;"></div>
     </header>
@@ -143,8 +188,7 @@ const generateFooterHtml = (): string => {
 
 const generateHtmlWithContentBorders = (bodyHtml: string): string => {
   return `
-  
-    <div style=" width: 100%;  box-sizing: border-box; padding: 0;">
+    <div style="width: 100%; box-sizing: border-box; padding: 0;">
       ${bodyHtml}
     </div>
   `;
@@ -165,22 +209,20 @@ export const main: SNSHandler = async (event, _context) => {
       let clinic = null;
       let patient = null;
 
-      // For Purchase Orders, we only need clinic info
       if (data.documentType === EDocumentTypes.PurchaseOrder) {
-        clinic = await Clinic.findOne({ code: data.clinic }).lean(); // Use findOne with clinic code
+        clinic = await Clinic.findOne({ code: data.clinic }).lean();
         if (!clinic) {
           console.error("Clinic not found");
           return;
         }
       } else {
-        // For patient-related documents, continue fetching patient info
         patient = await Patient.findById(data.patient).lean();
         if (!patient) {
           console.error("Patient not found");
           return;
         }
 
-        clinic = await Clinic.findOne({ code: data.clinic }).lean(); // Use findOne with clinic code
+        clinic = await Clinic.findOne({ code: data.clinic }).lean();
         if (!clinic) {
           console.error("Clinic not found");
           return;
@@ -192,8 +234,6 @@ export const main: SNSHandler = async (event, _context) => {
 
       const logo = await getBase64ImageFromUrl(logoUrl);
 
-      // console.log("Logo: ", logo);
-
       const header = {
         logo: logo,
         clinicName: clinic?.name,
@@ -204,11 +244,10 @@ export const main: SNSHandler = async (event, _context) => {
         reportName: data.reportName,
       };
 
-      // Prepare data for template
       const templateData = {
         header,
         sections: data.sections,
-        fileName: data.documentType, // Ensure fileName is passed
+        fileName: data.documentType,
 
         styles: {
           primaryColor: "#FF5C00",
@@ -216,43 +255,32 @@ export const main: SNSHandler = async (event, _context) => {
         },
       };
 
-      // console.log("Template Data: ", JSON.stringify(templateData, null, 2));
-
       const template = await getHtmlTemplate(data.templateType);
       const htmlContent = generateHtml(template, templateData);
-      console.log("HTML Content: ", htmlContent);
 
       const headerHtml = generateHeaderHtml(
         templateData.header,
         templateData.styles,
-        templateData.sections
+        templateData.sections,
+        data.documentType
       );
-      console.log("Header HTML: ", headerHtml);
+
       const footerHtml = generateFooterHtml(templateData.styles);
-      console.log("Footer HTML: ", footerHtml);
-
-      const htmlContentWithBorders =
-        generateHtmlWithContentBorders(htmlContent);
-
-      // const key = `${patient._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`;
+      const htmlContentWithBorders = generateHtmlWithContentBorders(htmlContent);
 
       const key = patient
         ? `${patient._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`
-        : `${clinic._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`; // For Purchase Orders, use clinic ID
-
-      console.log("Key: ", key);
+        : `${clinic._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`;
 
       const queueUrl = process.env.REPORT_PDF_GENERATION_QUEUE_URL;
       if (!queueUrl) {
-        throw new Error(
-          "Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set."
-        );
+        throw new Error("Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set.");
       }
 
       const pdfGeneratorMessage: IPDFGeneratorMessage = {
         headerHtml,
         footerHtml,
-        htmlContent: htmlContentWithBorders, // Use the content with left and right borders
+        htmlContent: htmlContentWithBorders,
         bucket: data.bucket,
         key: key,
         patient: patient,
@@ -262,9 +290,8 @@ export const main: SNSHandler = async (event, _context) => {
         source_report_id: data.reportId,
       };
 
-      // Send message to SQS
       const sqsParams: SQS.SendMessageRequest = {
-        QueueUrl: queueUrl, // Your SQS Queue URL
+        QueueUrl: queueUrl,
         MessageBody: JSON.stringify(pdfGeneratorMessage),
       };
 

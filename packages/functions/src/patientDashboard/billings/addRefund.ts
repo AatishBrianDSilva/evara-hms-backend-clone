@@ -17,6 +17,7 @@ import {
   IReportData,
 } from "@evara-backend/core/lib/types/global";
 import _ from "lodash";
+import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -229,8 +230,24 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await session.commitTransaction();
     console.log("Transaction committed successfully.");
 
+    const branchId = auth.branchId;
+    const clinicId = auth.clinicId;
+    console.log("Extracted Branch ID:", branchId);
+    console.log("Extracted Clinic ID:", clinicId);
+
+    // Fetch the branch using the branchId and clinicId from the auth details
+    const branch = await Branch.findOne({
+      code: branchId,
+      clinicId: clinicId,
+    }).lean();
+
+    if (!branch) {
+      console.log("Branch not found");
+      throw new ErrorMessage(404, "Branch not found");
+    }
+
     // Generate report after successful transaction
-    const reportData = generateReportData(refundEntry, auth.clinicId, patientId);
+    const reportData = generateReportData(refundEntry, auth.clinicId, patientId, branch);
     console.log("Report Data: ", JSON.stringify(reportData, null, 2));
 
     // Send to SNS
@@ -252,7 +269,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 };
 
 // Function to generate report data
-const generateReportData = (refundEntry: any, clinicId: string, patientId: string) => {
+const generateReportData = (refundEntry: any, clinicId: string, patientId: string, branch: any) => {
   const reportData: IReportData = {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.Refund,
@@ -278,6 +295,29 @@ const generateReportData = (refundEntry: any, clinicId: string, patientId: strin
       Charges: refundEntry.refundDetails.charges,
       // Files: refundEntry.refundDetails.files.join(", "),
     },
+  });
+
+  // Check if branch has a valid address and format it
+  let branchAddress = "Address not available";
+  if (branch && branch.address) {
+    const { street, city, state, zip } = branch.address;
+    branchAddress = `${street ? street + ", " : ""}${city ? city + ", " : ""}${
+      state ? state + " - " : ""
+    }${zip || ""}`;
+  }
+
+  // Add Branch Address section
+  const branchDetails = {
+    Branch: branch.branchName || "N/A",
+    Address: branchAddress,
+    Phone: branch.phone || "N/A",
+    Email: branch.email || "N/A",
+  };
+
+  reportData.sections.push({
+    showTitle: true,
+    title: "Branch Details",
+    content: branchDetails,
   });
 
   // Add each item refunded as a section

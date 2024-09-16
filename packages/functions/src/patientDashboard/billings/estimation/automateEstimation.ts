@@ -60,7 +60,9 @@ const addEstimation = async (data: any) => {
   let cost: number = 0;
 
   if (data.serviceType === EPatientBillingServiceType.Pharmacy) {
-    const service: any = await PharmacyStock.findById(data.masterServiceId).populate([
+    const service: any = await PharmacyStock.findById(
+      data.masterServiceId
+    ).populate([
       {
         path: "item",
         model: DrugItem.modelName,
@@ -114,7 +116,7 @@ const addEstimation = async (data: any) => {
     estimatedPrice = estimatedUnitPrice * data.quantity;
 
     total = mrpPerUnit * data.quantity;
-    estimatedTax = total - estimatedPrice;
+    estimatedTax = parseFloat((total - estimatedPrice).toFixed(2));
 
     // total = parseFloat((estimatedPriceWithQuantity + estimatedTax).toFixed(2));
 
@@ -135,7 +137,10 @@ const addEstimation = async (data: any) => {
       total,
     });
   } else {
-    const service = await findServiceByIdAndType(data.masterServiceId, data.serviceType);
+    const service = await findServiceByIdAndType(
+      data.masterServiceId,
+      data.serviceType
+    );
 
     if (!service) {
       throw new ErrorMessage(404, "Service not found");
@@ -144,15 +149,21 @@ const addEstimation = async (data: any) => {
     cost = service.cost;
     const tax = 0;
     estimatedUnitPrice = parseFloat((cost / (1 + tax / 100)).toFixed(2));
-    estimatedPrice = parseFloat((estimatedUnitPrice * data.quantity).toFixed(2));
+    estimatedPrice = parseFloat(
+      (estimatedUnitPrice * data.quantity).toFixed(2)
+    );
 
     total = parseFloat((cost * data.quantity).toFixed(2));
   }
 
   const newEstimation = new PatientBillingEstimation({
     ...data,
-    estimatedTax: data.serviceType === EPatientBillingServiceType.Pharmacy ? estimatedTax : null,
-    taxRate: data.serviceType === EPatientBillingServiceType.Pharmacy ? taxRate : null,
+    estimatedTax:
+      data.serviceType === EPatientBillingServiceType.Pharmacy
+        ? estimatedTax
+        : null,
+    taxRate:
+      data.serviceType === EPatientBillingServiceType.Pharmacy ? taxRate : null,
     cost: cost,
     estimatedUnitPrice: estimatedUnitPrice,
     estimatedPrice: estimatedPrice,

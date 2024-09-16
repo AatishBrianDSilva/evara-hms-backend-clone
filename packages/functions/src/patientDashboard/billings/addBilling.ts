@@ -68,7 +68,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         amount += parseFloat(estimation.estimatedPrice.toFixed(2));
         tax += parseFloat(estimation?.estimatedTax?.toFixed(2)) || 0;
 
-        items.push({
+        const newItem: any = {
           estimationId: estimation._id,
           masterServiceId: estimation.masterServiceId,
           doctorId: estimation.doctorId,
@@ -76,11 +76,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           serviceName: estimation.serviceName,
           serviceType: estimation.serviceType,
           quantity: estimation.quantity,
+          mrpPerUnit: estimation.estimatedUnitPrice,
           price: estimation.cost,
           discount: 0,
           tax: estimation.estimatedTax,
+          taxRate: estimation.taxRate,
           total: estimation.estimatedTotal,
-        });
+        };
+
+        items.push(newItem);
 
         if (!estimation.serviceId) {
           automateServiceGeneration.push({

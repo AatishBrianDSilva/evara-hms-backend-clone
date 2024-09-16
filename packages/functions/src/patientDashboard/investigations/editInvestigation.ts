@@ -167,39 +167,32 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     return errorResponse(error);
   }
 };
-
-// Process data for report generation
-const processDataForReport = (data: any, patient: any, spouseName: string, branch: any) => {
+const processDataForReport = (purchaseOrder: any, branch: any, vendor: any) => {
   const reportData: IReportData = {
     bucket: EBuckets.UserReports,
-    documentType: EDocumentTypes.Investigation,
+    documentType: EDocumentTypes.PurchaseOrder,
     templateType: EReportTemplateTypes.Reports,
-    doctor: `Dr. ${data.doctor?.firstName || ""} ${data.doctor?.lastName || ""}`,
-    patient: data.patient,
-    clinic: data.clinicId,
+    reportName: `${purchaseOrder.poNumber} Report`, // Use PO number for the report name
+    clinic: purchaseOrder.clinicId,
     sections: [],
-    reportName: `${data.result.testName} Report`,
-    fileName: _.kebabCase(data.result.testName),
-    reportId: data._id,
+    fileName: _.kebabCase(`purchase-order-${purchaseOrder.poNumber}`),
+    reportId: purchaseOrder._id,
   };
 
-  // Add Patient Details section
-  const patientDetails = {
-    patientName: `${patient.firstName} ${patient.lastName}`,
-    patientId: patient.patientId,
-    gender: patient.gender,
-    age: patient.age,
-    spouseName: spouseName,
-    admissionDate: data.updatedAt ? new Date(data.updatedAt).toLocaleDateString("en-GB") : "N/A",
+  // Add Purchase Order Details section
+  const poDetails = {
+    poNumber: purchaseOrder.poNumber,
+    date: purchaseOrder.date ? new Date(purchaseOrder.date).toLocaleDateString("en-GB") : "N/A",
+    companyTIN: vendor.companyTIN || "N/A", // Assuming vendor has company TIN
   };
 
   reportData.sections.push({
     showTitle: true,
-    title: "Patient Details",
-    content: patientDetails,
+    title: "Purchase Order Details",
+    content: poDetails,
   });
 
-  // Add Branch Details section
+  // Add Branch Address section
   let branchAddress = "Address not available";
   if (branch && branch.address) {
     const { street, city, state, zip } = branch.address;
@@ -209,10 +202,10 @@ const processDataForReport = (data: any, patient: any, spouseName: string, branc
   }
 
   const branchDetails = {
-    Branch: branch.branchName || "N/A",
-    Address: branchAddress,
-    Phone: branch.phone || "N/A",
-    Email: branch.email || "N/A",
+    branchName: branch.branchName || "N/A",
+    address: branchAddress,
+    phone: branch.phone || "N/A",
+    email: branch.email || "N/A",
   };
 
   reportData.sections.push({
@@ -221,26 +214,19 @@ const processDataForReport = (data: any, patient: any, spouseName: string, branc
     content: branchDetails,
   });
 
-  // Handle General Information Section
-  const generalInfo = data.result.details || [];
-  const generalInfoContent: any = {};
-
-  generalInfo.forEach((item: any) => {
-    if (item.component && item.value && item.unit) {
-      // Combine value and unit for general information
-      generalInfoContent[item.component] = `${item.value} ${item.unit}`;
-    }
-  });
-
-  // Append Notes to General Information if available
-  if (data.result.notes) {
-    generalInfoContent["Notes"] = data.result.notes;
-  }
+  // Add Items section with details
+  const items = purchaseOrder.request.items.map((item) => ({
+    itemName: item.itemName || "N/A",
+    packSize: item.packSize,
+    quantity: item.quantity,
+    mrp: item.mrp,
+    discount: item.discount || 0,
+  }));
 
   reportData.sections.push({
     showTitle: true,
-    title: "General Information",
-    content: generalInfoContent,
+    title: "Items",
+    content: items,
   });
 
   return reportData;
