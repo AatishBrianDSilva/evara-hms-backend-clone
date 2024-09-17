@@ -229,6 +229,11 @@ const processDataForReport = (
     });
   }
 
+  // Calculate totalAmount by summing up the 'amount' for each item
+  const totalAmount = billItems.reduce((sum: number, item: any) => {
+    return sum + (item.amount ? parseFloat(item.amount) : 0);
+  }, 0);
+
   const billDescription = billItems.every(
     (item: any) => item.serviceType === billItems[0].serviceType
   )
