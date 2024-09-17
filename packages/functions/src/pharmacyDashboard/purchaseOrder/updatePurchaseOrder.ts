@@ -116,6 +116,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           freeQuantity: item.freeQuantity || 0,
           noOfPacks: fulfilledPacks,
           packsRequired: item.packsRequired,
+          discount: responseItem ? responseItem.discount : item.discount, // Correctly mapped batchNo
+
           batchNo: responseItem ? responseItem.batchNo : item.batchNo, // Correctly mapped batchNo
           expiryDate: responseItem ? responseItem.expiryDate : item.expiryDate, // Correctly mapped expiryDate
           status: "ProcessedWithoutUpdating",
@@ -152,6 +154,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           packsRequired: item.packsRequired,
           batchNo: item.batchNo,
           expiryDate: item.expiryDate,
+          discount: item.discount,
           status: "Pending",
         });
         console.log(`Unfulfilled item added with remaining packs: ${remainingPacks}`);

@@ -277,7 +277,7 @@ const processDataForReport = (
 
   // Create the summary content. Exclude CGST and SGST if it's "Pharmacy"
   let summaryContent = {
-    totalAmount: formatToIndianCurrencyFormat(billing.grandTotal),
+    totalAmount: formatToIndianCurrencyFormat(totalAmount),
     paidAmount: formatToIndianCurrencyFormat(billing.totalPaid),
     lessDiscount: billing.discount
       ? formatToIndianCurrencyFormat(billing.discount)

@@ -17,12 +17,17 @@
       width: 100%; border-collapse: collapse; margin-bottom: 30px; /* Added padding after table */ }
       th, td { padding: 8px; text-align: center; /* Center alignment for table items */ } th {
       background-color: #f9f9f9; /* Light off-white background */ color: black; /* Black text */ }
-      td { color: black; } td.value { color:
-      {{styles.primaryColor}}; } .no-borders { border: none; } /* Summary Alignment */ .summary-box
-      { width: 50%; /* Starts at 50% of the page width */ margin-left: auto; padding: 10px;
-      box-sizing: border-box; } .summary-key { font-weight: bold; text-align: left; padding-right:
-      10px; width: 50%; } .summary-value { text-align: right; width: 50%; } .summary-row { display:
-      flex; justify-content: space-between; margin-bottom: 10px; }
+      td { color: black; word-wrap: break-word; word-break: break-word; white-space: normal; }
+      td.value { color:
+      {{styles.primaryColor}}; } .no-borders { border: none; } /* Column width adjustments */
+      th:nth-child(2), td:nth-child(2) { width: 20%; /* Adjust Drug Details to take less space */
+      text-align: left; } th:nth-child(3), td:nth-child(3) { width: 7%; /* Adjust Drug Details to
+      take less space */ text-align: left; } th:nth-child(n+4), td:nth-child(n+4) { width: 12%; /*
+      Adjust other columns to take more space */ } /* Summary Alignment */ .summary-box { width:
+      50%; /* Starts at 50% of the page width */ margin-left: auto; padding: 10px; box-sizing:
+      border-box; } .summary-key { font-weight: bold; text-align: left; padding-right: 10px; width:
+      50%; } .summary-value { text-align: right; width: 50%; } .summary-row { display: flex;
+      justify-content: space-between; margin-bottom: 10px; }
     </style>
   </head>
   <body>
