@@ -133,6 +133,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       console.log("Branch found:", branch);
 
+      console.log("Billing data for report:", billing);
+      console.log("Patient data for report:", data);
+
       // Generate Report for payment
       if (payments) {
         const report = processDataForReport(
@@ -231,7 +234,11 @@ const processDataForReport = (
 
   // Calculate totalAmount by summing up the 'amount' for each item
   const totalAmount = billItems.reduce((sum: number, item: any) => {
-    return sum + (item.amount ? parseFloat(item.amount) : 0);
+    // Fallback to calculate amount if it's not present
+    const itemAmount =
+      item.amount ||
+      (item.price && item.quantity ? item.price * item.quantity : 0);
+    return sum + (itemAmount ? parseFloat(itemAmount) : 0);
   }, 0);
 
   const billDescription = billItems.every(
@@ -323,6 +330,7 @@ const processDataForReport = (
     },
   ];
 
+  console.log("Report Data", reportData);
   reportData.reportName = `Invoice ${billing.billingId}`;
   reportData.sections = sanitizeInvoiceData(sections);
 

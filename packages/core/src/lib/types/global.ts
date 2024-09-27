@@ -18,6 +18,7 @@ export enum EDocumentTypes {
   BillingDiscount = "BillingDiscount",
   Refund = "Refund",
   PurchaseOrder = "PurchaseOrder",
+  PurchaseOrderProcessed = "PurchaseOrderProcessed",
 }
 
 export enum EReportTemplateTypes {
@@ -27,6 +28,7 @@ export enum EReportTemplateTypes {
   BillPharmacy = "billPharmacy",
   BillOtherServices = "billOtherServices",
   POInvoice = "POInvoice",
+  POInvoiceProcessed = "POInvoiceProcessed",
 }
 
 export interface ISection {

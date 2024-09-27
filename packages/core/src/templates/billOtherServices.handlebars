@@ -3,27 +3,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; padding: 0; } main { padding: 10mm; display:
-      flex; flex-direction: column; flex-grow: 1; } .section { margin-bottom: 20px; } .section-title
-      { font-size: 1.5em; margin-bottom: 10px; color:
+      body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 12px; /* Global font
+      size */ } main { padding: 10mm; display: flex; flex-direction: column; flex-grow: 1; }
+      .section { margin-bottom: 20px; } .section-title { font-size: 1.2em; /* Section title font
+      size */ margin-bottom: 10px; color:
       {{styles.primaryColor}}; } .key-value { display: flex; justify-content: space-between;
       margin-bottom: 10px; } .key { font-weight: bold; width: 50%; text-align: left; } .value {
-      width: 50%; text-align: left; white-space: pre-wrap; } h2 { color:
-      {{styles.primaryColor}}; text-align: center; } .header { text-align: center; font-size: 18px;
-      font-weight: bold; background: #ffece4; height: 55px; display: flex; justify-content: center;
-      align-items: center; margin-bottom: 10px; } .column-container { display: flex;
-      justify-content: space-between; padding: 10px 0; gap: 20px; } .column { width: 48%; }
-      .column.left { padding-left: 15px; } .column.right { padding-right: 15px; } .padded-section {
-      padding-left: 15px; padding-right: 15px; } /* Table Styling */ table { width: 100%;
-      border-collapse: collapse; margin-bottom: 30px; /* Added padding after table */ } th, td {
-      padding: 8px; text-align: center; /* Center alignment for table items */ } th {
-      background-color: #f9f9f9; /* Light off-white background */ color: black; /* Black text */ }
-      td { color: black; } td.value { color:
-      {{styles.primaryColor}}; } .no-borders { border: none; } /* Summary Alignment */ .summary-box
-      { width: 50%; /* Starts at 50% of the page width */ margin-left: auto; padding: 10px;
-      box-sizing: border-box; } .summary-key { font-weight: bold; text-align: left; padding-right:
-      10px; width: 50%; } .summary-value { text-align: right; width: 50%; } .summary-row { display:
-      flex; justify-content: space-between; margin-bottom: 10px; }
+      width: 50%; text-align: right; /* Right align values */ white-space: pre-wrap; } h2 { color:
+      {{styles.primaryColor}}; text-align: center; font-size: 16px; /* Font size for h2 */ } .header
+      { text-align: center; font-size: 16px; /* Font size for header */ font-weight: bold;
+      background: #ffece4; height: 55px; display: flex; justify-content: center; align-items:
+      center; margin-bottom: 10px; } .column-container { display: flex; justify-content:
+      space-between; /* Space between columns */ gap: 15px; /* Add space between columns */ padding:
+      10px 0; } .column.left { width: 50%; /* First column width */ padding-left: 15px; }
+      .column.right { width: 25%; /* Updated second column width */ padding-right: 15px; text-align:
+      left; /* Keep keys left aligned */ } .column.right .value { text-align: right; /* Right align
+      values in the right column */ } .padded-section { padding-left: 15px; padding-right: 15px; }
+      /* Table Styling */ table { width: 100%; border-collapse: collapse; margin-bottom: 30px; } th,
+      td { padding: 6px; /* Reduced padding */ text-align: center; /* Center alignment for table
+      items */ font-size: 11px; /* Reduced font size for table */ } th { background-color: #f9f9f9;
+      color: black; } td { color: black; } td.value { color:
+      {{styles.primaryColor}}; } .no-borders { border: none; } /* Column width adjustments */
+      th:nth-child(1), td:nth-child(1) { width: 10%; /* Narrow width for # column */ }
+      th:nth-child(2), td:nth-child(2) { width: 70%; /* Wide width for Service Name column */
+      text-align: left; /* Left alignment for Service Name items */ } th:nth-child(3),
+      td:nth-child(3) { width: 20%; /* Smaller width for Price column */ text-align: right; /* Right
+      alignment for Price items */ } /* Summary Alignment */ .summary-box { width: 35%; /* Updated
+      width for summary box */ margin-left: auto; padding: 10px; box-sizing: border-box; }
+      .summary-key { font-weight: bold; text-align: left; padding-right: 10px; width: 50%;
+      font-size: 12px; /* Summary key font size */ } .summary-value { text-align: right; width: 50%;
+      font-size: 12px; /* Summary value font size */ } .summary-row { display: flex;
+      justify-content: space-between; margin-bottom: 10px; }
     </style>
   </head>
   <body>
@@ -32,7 +42,7 @@
       <div class="header">Patient Details</div>
       <div class="section">
         <div class="column-container">
-          <!-- First 4 key-value pairs in the left column -->
+          <!-- First 4 key-value pairs in the left column (50% width) -->
           <div class="column left">
             {{#getSectionByTitle sections "Patient Details"}}
               {{#each content}}
@@ -45,7 +55,7 @@
               {{/each}}
             {{/getSectionByTitle}}
           </div>
-          <!-- Remaining key-value pairs in the right column -->
+          <!-- Remaining key-value pairs in the right column (25% width) -->
           <div class="column right">
             {{#getSectionByTitle sections "Patient Details"}}
               {{#each content}}
@@ -68,9 +78,7 @@
           <tr>
             <th>#</th>
             <th>Service Name</th>
-            <th>Quantity</th>
             <th>Price</th>
-            <th>Total</th>
           </tr>
         </thead>
         <tbody>
@@ -79,9 +87,7 @@
               <tr>
                 <td>{{inc @index}}</td>
                 <td>{{this.serviceName}}</td>
-                <td>{{this.quantity}}</td>
                 <td>{{formatCurrency this.price}}</td>
-                <td>{{formatCurrency this.total}}</td>
               </tr>
             {{/each}}
           {{/getSectionByTitle}}

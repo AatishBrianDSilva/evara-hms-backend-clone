@@ -78,11 +78,10 @@ export const patientSchema = new mongoose.Schema(
     motherTounge: { type: String },
     occupation: { type: String },
     religion: { type: String },
-    mobile: { type: String, required: true, unique: true },
+    mobile: { type: String },
     alernativeMobile: { type: String },
     email: {
       type: String,
-      required: true,
       match: [/.+\@.+\..+/, "Invalid email format"],
     },
     dependentType: { type: String },
@@ -128,19 +127,11 @@ export const patientSchema = new mongoose.Schema(
   }
 );
 
-patientSchema.index(
-  { clinicId: 1, branchId: 1, patientId: 1 },
-  { unique: true }
-);
+patientSchema.index({ clinicId: 1, branchId: 1, patientId: 1 }, { unique: true });
 
 patientSchema.pre(
   "save",
-  autoIncrementIdWithFieldPrefix(
-    "patients",
-    "patientId",
-    "clinicId",
-    "branchId"
-  )
+  autoIncrementIdWithFieldPrefix("patients", "patientId", "clinicId", "branchId")
 );
 
 patientSchema.plugin(paginate);

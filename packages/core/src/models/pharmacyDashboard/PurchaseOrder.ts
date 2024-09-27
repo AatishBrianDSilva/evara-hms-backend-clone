@@ -93,6 +93,11 @@ export interface IPurchaseOrder extends Document {
     bucket: string;
     key: string;
   }; // Field for storing PDF report information
+  reportProcessed?: {
+    reportName: string;
+    bucket: string;
+    key: string;
+  };
 }
 
 const itemSchema = new Schema({
@@ -168,6 +173,11 @@ const purchaseOrderSchema = new Schema(
       bucket: { type: String, required: false },
       key: { type: String, required: false },
     }, // Add the report field for storing the PDF report details
+    reportProcessed: {
+      reportName: { type: String, required: false },
+      bucket: { type: String, required: false },
+      key: { type: String, required: false },
+    },
   },
   { timestamps: true }
 );
@@ -191,23 +201,26 @@ purchaseOrderSchema.pre("validate", function (next) {
 purchaseOrderSchema.pre("save", async function (next) {
   const purchaseOrder = this as IPurchaseOrderDocument;
 
-  const currentDate = new Date();
-  const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Get current month
-  const year = currentDate.getFullYear(); // Get current year
-  const monthYear = `${month}-${year}`; // Format: "09-2024"
+  // Only generate the PO number if the document is new
+  if (purchaseOrder.isNew) {
+    const currentDate = new Date();
+    const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Get current month
+    const year = currentDate.getFullYear(); // Get current year
+    const monthYear = `${month}-${year}`; // Format: "09-2024"
 
-  const branchId = purchaseOrder.branchId; // Assuming branchId is available in the document
+    const branchId = purchaseOrder.branchId; // Assuming branchId is available in the document
 
-  // Find or create a counter for the current branch and month-year
-  const counter = await PoNumberCounter.findOneAndUpdate(
-    { branchId, monthYear },
-    { $inc: { sequence: 1 } }, // Increment the sequence
-    { new: true, upsert: true } // Create if doesn't exist
-  );
+    // Find or create a counter for the current branch and month-year
+    const counter = await PoNumberCounter.findOneAndUpdate(
+      { branchId, monthYear },
+      { $inc: { sequence: 1 } }, // Increment the sequence
+      { new: true, upsert: true } // Create if doesn't exist
+    );
 
-  // Generate the PO number in the format: KL/09-2024/001
-  const sequence = String(counter.sequence).padStart(3, "0"); // Zero-pad the sequence
-  purchaseOrder.poNumber = `${branchId}/${monthYear}/${sequence}`;
+    // Generate the PO number in the format: KL/09-2024/001
+    const sequence = String(counter.sequence).padStart(3, "0"); // Zero-pad the sequence
+    purchaseOrder.poNumber = `${branchId}/${monthYear}/${sequence}`;
+  }
 
   next();
 });

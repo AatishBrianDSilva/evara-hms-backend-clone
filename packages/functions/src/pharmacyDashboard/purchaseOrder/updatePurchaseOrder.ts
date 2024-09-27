@@ -7,8 +7,11 @@ import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/
 import { PharmacyInvoice } from "@evara-backend/core/models/pharmacyDashboard/PharmacyInvoice";
 import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
-import { processPurchaseOrderReportData } from "./processPurchaseOrderReportData";
 import SNSService from "@evara-backend/core/lib/aws/sns";
+import { processPurchaseOrderProcessedReportData } from "./processPurchaseOrderProcessedReportData";
+import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
+import { DrugVendor } from "@evara-backend/core/models/pharmacyDashboard/DrugVendor";
+import { DrugItem } from "@evara-backend/core/models/pharmacyDashboard/DrugItem";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -21,6 +24,29 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (!event.body) {
       throw new ErrorMessage(400, "Data is required");
     }
+
+    const data = JSON.parse(event.body);
+    console.log("Parsed data:", JSON.stringify(data, null, 2));
+
+    data.branchId = auth.branchId;
+    data.clinicId = auth.clinicId;
+
+    const branch = await Branch.findOne({
+      code: data.branchId,
+      clinicId: data.clinicId,
+    }).lean();
+
+    if (!branch) {
+      throw new ErrorMessage(404, "Branch not found");
+    }
+    console.log("Branch found:", branch);
+
+    // Fetch the vendor details using the vendor ID
+    const vendorDetails = await DrugVendor.findById(data.vendor).lean();
+    if (!vendorDetails) {
+      throw new ErrorMessage(404, "Vendor not found");
+    }
+    console.log("Vendor details:", vendorDetails);
 
     const { id, ...updateData } = JSON.parse(event.body);
 
@@ -93,10 +119,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       // Calculate the MRP and Tax for the fulfilled packs
       const itemMRP = (item.buyPrice || 0) * fulfilledPacks;
-      const itemTax = (itemMRP * (item.tax || 0)) / 100;
+      const discountAmount = itemMRP * ((item.discount || 0) / 100);
+
+      // Calculate actual subtotal after applying discount
+      const actualSubTotal = itemMRP - discountAmount;
+
+      // Calculate tax for the fulfilled packs (after discount is applied)
+      const itemTax = (actualSubTotal * (item.tax || 0)) / 100;
 
       // Update response totals
-      responseSubTotal += itemMRP;
+      responseSubTotal += actualSubTotal;
       responseTotalTax += itemTax;
 
       if (fulfilledPacks > 0) {
@@ -175,6 +207,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (updateData.response.discount) {
       responseDiscountAmount = (responseSubTotal * updateData.response.discount) / 100;
     }
+    console.log("Response subtotal", responseSubTotal);
+    console.log("Response discount", updateData.response.discount);
 
     const requestOtherCharges = updateData.request.otherCharges || 0;
     const responseOtherCharges = updateData.response.otherCharges || 0;
@@ -183,6 +217,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       requestSubTotal - requestDiscountAmount + requestTotalTax + requestOtherCharges;
     const responseNetAmount =
       responseSubTotal - responseDiscountAmount + responseTotalTax + responseOtherCharges;
+
+    console.log("Response subtotal", responseSubTotal);
+    console.log("Response discount", responseDiscountAmount);
+
+    console.log("Response tax", responseTotalTax);
+
+    console.log("Response other charges", responseOtherCharges);
 
     console.log(`Request Net Amount: ${requestNetAmount}`);
     console.log(`Response Net Amount: ${responseNetAmount}`);
@@ -193,14 +234,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     purchaseOrder.request.tax = requestTotalTax;
     purchaseOrder.request.discount = updateData.request.discount || 0;
     purchaseOrder.request.otherCharges = requestOtherCharges;
-    purchaseOrder.request.netAmount = requestNetAmount;
+    purchaseOrder.request.netAmount = Math.round(requestNetAmount);
 
     // Set response totals
     newResponse.subTotal = responseSubTotal;
     newResponse.tax = responseTotalTax;
     newResponse.discount = updateData.response.discount || 0;
     newResponse.otherCharges = updateData.response.otherCharges || 0;
-    newResponse.netAmount = responseNetAmount;
+    newResponse.netAmount = Math.round(responseNetAmount);
 
     // Add the new response to the Purchase Order's responses array
     purchaseOrder.responses = purchaseOrder.responses || [];
@@ -212,13 +253,35 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const updatedData = await purchaseOrder.save();
     console.log("Purchase order updated successfully.");
 
-    // const reportData = processPurchaseOrderReportData(purchaseOrder, auth.clinicId);
+    // Fetch the item names for the updated response
+    const itemIds = newResponse.items.map((item) => item.item);
+    const drugItems = await DrugItem.find({ _id: { $in: itemIds } }).lean();
 
-    // // Send the report data to SNS for report generation
-    // await SNSService.publishMessage({
-    //   Message: JSON.stringify(reportData),
-    //   TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN, // ARN for report generation
-    // });
+    const updatedItemsWithNames = newResponse.items.map((item) => {
+      const drugItem = drugItems.find((di) => di._id.toString() === item.item.toString());
+      return {
+        ...item,
+        name: drugItem ? drugItem.name : "Unknown Item", // Add item name to the response
+      };
+    });
+
+    newResponse.items = updatedItemsWithNames;
+
+    // Generate report data and send to SNS
+    const reportData = processPurchaseOrderProcessedReportData(
+      purchaseOrder,
+      data.clinicId,
+      newResponse,
+      branch,
+      vendorDetails
+    );
+
+    console.log("Report data", reportData);
+
+    await SNSService.publishMessage({
+      Message: JSON.stringify(reportData),
+      TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
+    });
 
     return successResponse("Purchase order updated successfully", updatedData);
   } catch (error) {

@@ -47,6 +47,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
     console.log("Branch found:", branch);
 
+    console.log("Vendor Data", data.vendor);
+
     // Fetch the vendor details using the vendor ID
     const vendorDetails = await DrugVendor.findById(data.vendor).lean();
     if (!vendorDetails) {

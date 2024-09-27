@@ -484,6 +484,19 @@ export function MainStack({ stack }: StackContext) {
       //Billings
       "GET /analytics/billings":
         "packages/functions/src/analyticsDashboard/billings/getAnalyticsPatientBillings.main",
+      //Pharmacy
+      "GET /analytics/pharmacy/sales-by-schedule":
+        "packages/functions/src/analyticsDashboard/pharmacy/getSalesBySchedule.main",
+      "GET /analytics/pharmacy/drugs-and-vendor":
+        "packages/functions/src/analyticsDashboard/pharmacy/getDrugsAndVendor.main",
+      "GET /analytics/pharmacy/expiry-details":
+        "packages/functions/src/analyticsDashboard/pharmacy/getExpiryDetails.main",
+      "GET /analytics/pharmacy/internal-consumption":
+        "packages/functions/src/analyticsDashboard/pharmacy/getInternalConsumption.main",
+      "GET /analytics/pharmacy/stock-summary":
+        "packages/functions/src/analyticsDashboard/pharmacy/getStockSummary.main",
+      "GET /analytics/pharmacy/patient-return":
+        "packages/functions/src/analyticsDashboard/pharmacy/getPatientReturn.main",
     },
   });
 

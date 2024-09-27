@@ -90,7 +90,7 @@ const generateHeaderHtml = (
   sections: any,
   documentType: string
 ): string => {
-  if (documentType === "PurchaseOrder") {
+  if (documentType === "PurchaseOrder" || documentType === "PurchaseOrderProcessed") {
     // Extract PO number and date from "Purchase Order Details" section
     const poDetailsSection = sections.find(
       (section: any) => section.title === "Purchase Order Details"
@@ -209,7 +209,10 @@ export const main: SNSHandler = async (event, _context) => {
       let clinic = null;
       let patient = null;
 
-      if (data.documentType === EDocumentTypes.PurchaseOrder) {
+      if (
+        data.documentType === EDocumentTypes.PurchaseOrder ||
+        EDocumentTypes.PurchaseOrderProcessed
+      ) {
         clinic = await Clinic.findOne({ code: data.clinic }).lean();
         if (!clinic) {
           console.error("Clinic not found");
@@ -283,7 +286,7 @@ export const main: SNSHandler = async (event, _context) => {
         htmlContent: htmlContentWithBorders,
         bucket: data.bucket,
         key: key,
-        patient: patient,
+        patient: data.patient,
         doctor: data.doctor,
         category: data.documentType,
         reportName: data.reportName,
