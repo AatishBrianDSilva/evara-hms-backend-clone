@@ -1,5 +1,6 @@
 import mongoose, { Document, PaginateModel, Schema } from "mongoose";
 import paginate from "mongoose-paginate-v2";
+import { autoIncrementId } from "../Counters";
 
 export interface IInternalConsumptionBatchDetail extends Document {
   batchId: string;
@@ -57,6 +58,9 @@ const internalConsumptionSchema = new Schema(
 );
 
 internalConsumptionSchema.index({ createdBy: 1 });
+
+// Auto-increment logic for icNumber field
+internalConsumptionSchema.pre("save", autoIncrementId("InternalConsumption", "icNumber", "IC-"));
 
 internalConsumptionSchema.plugin(paginate);
 
