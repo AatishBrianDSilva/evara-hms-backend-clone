@@ -7,15 +7,18 @@ import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/
 import { PharmacyInvoice } from "@evara-backend/core/models/pharmacyDashboard/PharmacyInvoice";
 import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
 import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { updateStockFromPurchaseOrder } from "../stocks/updateStockFromPurchaseOrder";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   const auth = extractAuthorizerDetails(event);
 
-  try {
-    await connectMongoDb(); // Connect to MongoDB
+  const conn = await connectMongoDb(); // Connect to MongoDB
+  const session = await conn.startSession(); // Start a session
+  session.startTransaction(); // Start a transaction
 
+  try {
     if (!event.body) {
       throw new ErrorMessage(400, "Data is required");
     }
@@ -29,7 +32,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     console.log(`Updating purchase order with ID: ${id}`);
     console.log(`Update Data: ${JSON.stringify(updateData)}`);
 
-    const purchaseOrder = await PurchaseOrder.findById(id);
+    const purchaseOrder = await PurchaseOrder.findById(id).session(session); // Use session for the query
     if (!purchaseOrder) {
       throw new ErrorMessage(404, "Purchase order not found");
     }
@@ -57,7 +60,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               invoiceNumber: updateData.invoiceNumber || undefined,
             });
             console.log(`Saving Pharmacy Invoice: ${JSON.stringify(pharmacyInvoice)}`);
-            await pharmacyInvoice.save();
+            await pharmacyInvoice.save({ session }); // Save using session
           } else {
             throw new ErrorMessage(400, "Invalid image URL");
           }
@@ -224,11 +227,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     console.log(`Updated Purchase Order: ${JSON.stringify(purchaseOrder)}`);
 
     // Save the updated purchase order
-    const updatedData = await purchaseOrder.save();
+    const updatedData = await purchaseOrder.save({ session }); // Save using session
     console.log("Purchase order updated successfully.");
+
+    // Update stock from purchase order after saving the purchase order
+    await updateStockFromPurchaseOrder(purchaseOrder._id, session);
+    console.log("Stock updated from purchase order successfully.");
+
+    await session.commitTransaction(); // Commit the transaction
+    session.endSession(); // End the session
 
     return successResponse("Purchase order updated successfully", updatedData);
   } catch (error) {
+    await session.abortTransaction(); // Abort the transaction on error
+    session.endSession(); // End the session
     console.error("Error updating purchase order:", error);
     return errorResponse(error);
   }

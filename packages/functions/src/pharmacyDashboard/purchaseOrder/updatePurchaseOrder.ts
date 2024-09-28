@@ -12,15 +12,18 @@ import { processPurchaseOrderProcessedReportData } from "./processPurchaseOrderP
 import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
 import { DrugVendor } from "@evara-backend/core/models/pharmacyDashboard/DrugVendor";
 import { DrugItem } from "@evara-backend/core/models/pharmacyDashboard/DrugItem";
+import { updateStockFromPurchaseOrder } from "../stocks/updateStockFromPurchaseOrder";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   const auth = extractAuthorizerDetails(event);
 
-  try {
-    await connectMongoDb(); // Connect to MongoDB
+  const conn = await connectMongoDb();
+  const session = await conn.startSession();
+  session.startTransaction();
 
+  try {
     if (!event.body) {
       throw new ErrorMessage(400, "Data is required");
     }
@@ -65,7 +68,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Handle invoice file uploads
     const invoiceFileUrls = [];
-    if (updateData.response?.invoice && updateData.response?.invoice.length > 0) {
+    if (
+      updateData.response?.invoice &&
+      updateData.response?.invoice.length > 0
+    ) {
       for (let i = 0; i < updateData.response.invoice.length; i++) {
         if (updateData.response.invoice[i].length > 0) {
           const s3UrlParts = parseS3Url(updateData.response.invoice[i]);
@@ -84,7 +90,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               key: s3UrlParts.key,
               invoiceNumber: updateData.invoiceNumber || undefined,
             });
-            console.log(`Saving Pharmacy Invoice: ${JSON.stringify(pharmacyInvoice)}`);
+            console.log(
+              `Saving Pharmacy Invoice: ${JSON.stringify(pharmacyInvoice)}`
+            );
             await pharmacyInvoice.save();
           } else {
             throw new ErrorMessage(400, "Invalid image URL");
@@ -111,7 +119,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     console.log("Processing items in the request...");
     // Process each item in the request
     updateData.request.items.forEach((item, index) => {
-      console.log(`Processing request item ${index + 1}/${updateData.request.items.length}`);
+      console.log(
+        `Processing request item ${index + 1}/${
+          updateData.request.items.length
+        }`
+      );
       console.log(`Request item data: ${JSON.stringify(item)}`);
 
       const packsRequired = item.packsRequired; // Total packs required
@@ -189,7 +201,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           discount: item.discount,
           status: "Pending",
         });
-        console.log(`Unfulfilled item added with remaining packs: ${remainingPacks}`);
+        console.log(
+          `Unfulfilled item added with remaining packs: ${remainingPacks}`
+        );
       }
     });
 
@@ -201,11 +215,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     let responseDiscountAmount = 0;
 
     if (updateData.request.discount) {
-      requestDiscountAmount = (requestSubTotal * updateData.request.discount) / 100;
+      requestDiscountAmount =
+        (requestSubTotal * updateData.request.discount) / 100;
     }
 
     if (updateData.response.discount) {
-      responseDiscountAmount = (responseSubTotal * updateData.response.discount) / 100;
+      responseDiscountAmount =
+        (responseSubTotal * updateData.response.discount) / 100;
     }
     console.log("Response subtotal", responseSubTotal);
     console.log("Response discount", updateData.response.discount);
@@ -214,9 +230,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const responseOtherCharges = updateData.response.otherCharges || 0;
 
     const requestNetAmount =
-      requestSubTotal - requestDiscountAmount + requestTotalTax + requestOtherCharges;
+      requestSubTotal -
+      requestDiscountAmount +
+      requestTotalTax +
+      requestOtherCharges;
     const responseNetAmount =
-      responseSubTotal - responseDiscountAmount + responseTotalTax + responseOtherCharges;
+      responseSubTotal -
+      responseDiscountAmount +
+      responseTotalTax +
+      responseOtherCharges;
 
     console.log("Response subtotal", responseSubTotal);
     console.log("Response discount", responseDiscountAmount);
@@ -258,7 +280,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const drugItems = await DrugItem.find({ _id: { $in: itemIds } }).lean();
 
     const updatedItemsWithNames = newResponse.items.map((item) => {
-      const drugItem = drugItems.find((di) => di._id.toString() === item.item.toString());
+      const drugItem = drugItems.find(
+        (di) => di._id.toString() === item.item.toString()
+      );
       return {
         ...item,
         name: drugItem ? drugItem.name : "Unknown Item", // Add item name to the response
@@ -283,8 +307,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
     });
 
+    // Update stock from purchase order after saving the purchase order
+    await updateStockFromPurchaseOrder(purchaseOrder._id, session);
+    console.log("Stock updated from purchase order successfully.");
+
+    await session.commitTransaction();
+    session.endSession();
+
     return successResponse("Purchase order updated successfully", updatedData);
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("Error updating purchase order:", error);
     return errorResponse(error);
   }

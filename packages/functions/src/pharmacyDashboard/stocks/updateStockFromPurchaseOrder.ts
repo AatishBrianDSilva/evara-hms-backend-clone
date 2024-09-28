@@ -1,11 +1,7 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+// updateStockFromPurchaseOrder.ts
 import mongoose from "mongoose";
-type ObjectId = mongoose.Types.ObjectId;
-
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { PharmacyStock } from "@evara-backend/core/models/pharmacyDashboard/PharmacyStock";
 import {
   EPurchaseOrderStatus,
@@ -14,97 +10,111 @@ import {
 import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
 import { log } from "console";
 
-export const main: APIGatewayProxyHandler = async (event, _context) => {
-  _context.callbackWaitsForEmptyEventLoop = false;
+type ObjectId = mongoose.Types.ObjectId;
 
-  const conn = await connectMongoDb();
-  const session = await conn.startSession();
-  session.startTransaction();
-  try {
-    log("Starting stock update from purchase order");
+export const updateStockFromPurchaseOrder = async (
+  purchaseOrderId: string,
+  session: mongoose.ClientSession
+) => {
+  log(`Processing Purchase Order ID: ${purchaseOrderId}`);
 
-    if (!event.pathParameters || !event.pathParameters.purchaseOrderId) {
-      log("Error: Purchase order ID is missing in the request");
-      throw new ErrorMessage(400, "Purchase order ID is required in the URL path");
-    }
+  const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId).session(session);
+  if (!purchaseOrder) {
+    log(`Error: Purchase order not found for ID ${purchaseOrderId}`);
+    throw new ErrorMessage(404, "Purchase order not found.");
+  }
 
-    const purchaseOrderId = event.pathParameters.purchaseOrderId;
-    log(`Processing Purchase Order ID: ${purchaseOrderId}`);
+  const { responses } = purchaseOrder;
+  if (!responses || responses.length === 0) {
+    log("Error: No responses found in the purchase order.");
+    throw new ErrorMessage(400, "No responses found in the purchase order.");
+  }
 
-    const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId).session(session);
-    if (!purchaseOrder) {
-      log(`Error: Purchase order not found for ID ${purchaseOrderId}`);
-      throw new ErrorMessage(404, "Purchase order not found.");
-    }
+  log(`Found ${responses.length} responses in the purchase order`);
 
-    const { responses } = purchaseOrder;
-    if (!responses || responses.length === 0) {
-      log("Error: No responses found in the purchase order.");
-      throw new ErrorMessage(400, "No responses found in the purchase order.");
-    }
+  const mainLocation = await DrugLocation.findOne({
+    branchId: purchaseOrder.branchId,
+    clinicId: purchaseOrder.clinicId,
+    main: true,
+  }).session(session);
+  if (!mainLocation) {
+    log(`Error: Main location not found for branch ID ${purchaseOrder.branchId}`);
+    throw new ErrorMessage(404, "Main location not found for the branch");
+  }
 
-    log(`Found ${responses.length} responses in the purchase order`);
+  log(`Main location found: ${mainLocation._id}`);
 
-    const mainLocation = await DrugLocation.findOne({
-      branchId: purchaseOrder.branchId,
-      clinicId: purchaseOrder.clinicId,
-      main: true,
-    }).session(session);
-    if (!mainLocation) {
-      log(`Error: Main location not found for branch ID ${purchaseOrder.branchId}`);
-      throw new ErrorMessage(404, "Main location not found for the branch");
-    }
+  let hasProcessedItems = false;
 
-    log(`Main location found: ${mainLocation._id}`);
+  for (const response of responses) {
+    log(`Processing response with status: ${response.status}`);
+    if (response.status === "ProcessedWithoutUpdating") {
+      for (const item of response.items) {
+        log(`Processing item: ${item.item}`);
 
-    let hasProcessedItems = false;
+        if (!item.batchNo || !item.expiryDate) {
+          log(`Skipping item ${item.item} due to missing batchNo or expiryDate`);
+          continue;
+        }
 
-    for (const response of responses) {
-      log(`Processing response with status: ${response.status}`);
-      if (response.status === "ProcessedWithoutUpdating") {
-        for (const item of response.items) {
-          log(`Processing item: ${item.item}`);
+        const freeQuantityInUnits = (item.freeQuantity || 0) * (item.packSize || 1);
+        const totalQuantity = item.quantity + freeQuantityInUnits;
+        log(`Total quantity for item ${item.item}: ${totalQuantity}`);
 
-          if (!item.batchNo || !item.expiryDate) {
-            log(`Skipping item ${item.item} due to missing batchNo or expiryDate`);
-            continue;
-          }
+        const existingStock = await PharmacyStock.findOne({
+          item: item.item,
+          branchId: purchaseOrder.branchId,
+          clinicId: purchaseOrder.clinicId,
+        }).session(session);
 
-          const freeQuantityInUnits = (item.freeQuantity || 0) * (item.packSize || 1);
-          const totalQuantity = item.quantity + freeQuantityInUnits;
-          log(`Total quantity for item ${item.item}: ${totalQuantity}`);
-
-          const existingStock = await PharmacyStock.findOne({
-            item: item.item,
-            branchId: purchaseOrder.branchId,
-            clinicId: purchaseOrder.clinicId,
-          }).session(session);
-
-          if (existingStock) {
-            log(`Existing stock found for item ${item.item}`);
-            const existingBatchIndex = existingStock.batches.findIndex(
-              (batch) => batch.batchNo === item.batchNo
+        if (existingStock) {
+          log(`Existing stock found for item ${item.item}`);
+          const existingBatchIndex = existingStock.batches.findIndex(
+            (batch) => batch.batchNo === item.batchNo
+          );
+          if (existingBatchIndex > -1) {
+            log(`Updating existing batch for item ${item.item}`);
+            const batch = existingStock.batches[existingBatchIndex];
+            const locationIndex = batch.locations.findIndex((loc) =>
+              (loc.location as unknown as ObjectId).equals(mainLocation._id)
             );
-            if (existingBatchIndex > -1) {
-              log(`Updating existing batch for item ${item.item}`);
-              const batch = existingStock.batches[existingBatchIndex];
-              const locationIndex = batch.locations.findIndex((loc) =>
-                (loc.location as unknown as ObjectId).equals(mainLocation._id)
-              );
 
-              if (locationIndex > -1) {
-                log(`Updating quantity for location ${mainLocation._id}`);
-                batch.locations[locationIndex].quantity += totalQuantity;
-              } else {
-                log(`Adding new location for item ${item.item}`);
-                batch.locations.push({
+            if (locationIndex > -1) {
+              log(`Updating quantity for location ${mainLocation._id}`);
+              batch.locations[locationIndex].quantity += totalQuantity;
+            } else {
+              log(`Adding new location for item ${item.item}`);
+              batch.locations.push({
+                location: mainLocation._id,
+                quantity: totalQuantity,
+              });
+            }
+          } else {
+            log(`Adding new batch for item ${item.item}`);
+            existingStock.batches.push({
+              batchNo: item.batchNo,
+              expiryDate: item.expiryDate,
+              vendor: purchaseOrder.vendor,
+              packSize: item.packSize,
+              locations: [
+                {
                   location: mainLocation._id,
                   quantity: totalQuantity,
-                });
-              }
-            } else {
-              log(`Adding new batch for item ${item.item}`);
-              existingStock.batches.push({
+                },
+              ],
+            });
+          }
+          existingStock.sellPrice = item.mrpPerPack;
+          await existingStock.save({ session });
+          log(`Stock updated for item ${item.item}`);
+        } else {
+          log(`Creating new stock entry for item ${item.item}`);
+          const newStock = new PharmacyStock({
+            branchId: purchaseOrder.branchId,
+            clinicId: purchaseOrder.clinicId,
+            item: item.item,
+            batches: [
+              {
                 batchNo: item.batchNo,
                 expiryDate: item.expiryDate,
                 vendor: purchaseOrder.vendor,
@@ -115,63 +125,28 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
                     quantity: totalQuantity,
                   },
                 ],
-              });
-            }
-            existingStock.sellPrice = item.mrpPerPack;
-            await existingStock.save({ session });
-            log(`Stock updated for item ${item.item}`);
-          } else {
-            log(`Creating new stock entry for item ${item.item}`);
-            const newStock = new PharmacyStock({
-              branchId: purchaseOrder.branchId,
-              clinicId: purchaseOrder.clinicId,
-              item: item.item,
-              batches: [
-                {
-                  batchNo: item.batchNo,
-                  expiryDate: item.expiryDate,
-                  vendor: purchaseOrder.vendor,
-                  packSize: item.packSize,
-                  locations: [
-                    {
-                      location: mainLocation._id,
-                      quantity: totalQuantity,
-                    },
-                  ],
-                },
-              ],
-              sellPrice: item.mrpPerPack,
-            });
+              },
+            ],
+            sellPrice: item.mrpPerPack,
+          });
 
-            await newStock.save({ session });
-            log(`New stock created for item ${item.item}`);
-          }
+          await newStock.save({ session });
+          log(`New stock created for item ${item.item}`);
         }
-
-        hasProcessedItems = true;
-        response.status = "Processed";
-        log(`Response marked as processed: ${JSON.stringify(response)}`);
       }
+
+      hasProcessedItems = true;
+      response.status = "Processed";
+      log(`Response marked as processed: ${JSON.stringify(response)}`);
     }
-
-    if (!hasProcessedItems) {
-      log("No items were processed from the purchase order response.");
-      throw new ErrorMessage(400, "No items found in the purchase order response.");
-    }
-
-    purchaseOrder.status = EPurchaseOrderStatus.Processed;
-    await purchaseOrder.save({ session });
-    log(`Purchase order ${purchaseOrderId} status updated to Processed`);
-
-    await session.commitTransaction();
-    session.endSession();
-    log(`Stock and purchase order ${purchaseOrderId} updated successfully`);
-
-    return successResponse("Stock and purchase order updated successfully.");
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    console.error("Failed to update stock from purchase order:", error);
-    return errorResponse(error);
   }
+
+  if (!hasProcessedItems) {
+    log("No items were processed from the purchase order response.");
+    throw new ErrorMessage(400, "No items found in the purchase order response.");
+  }
+
+  purchaseOrder.status = EPurchaseOrderStatus.Processed;
+  await purchaseOrder.save({ session });
+  log(`Purchase order ${purchaseOrderId} status updated to Processed`);
 };
