@@ -18,6 +18,8 @@ import {
 import { generateSections } from "@evara-backend/core/lib/utils/sanitizeReportData";
 import _ from "lodash";
 import Patient from "@evara-backend/core/models/Patients";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -65,7 +67,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       await updateCategory(
         id,
         body,
-        conditions.category as keyof typeof ETreatmentCycleCategoryKey
+        conditions.category as keyof typeof ETreatmentCycleCategoryKey,
+        auth
       );
     } else {
       throw new ErrorMessage(400, `Invalid category: ${conditions.category}`);
@@ -93,7 +96,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 async function updateCategory(
   id: string,
   body: any,
-  category: keyof typeof ETreatmentCycleCategoryKey
+  category: keyof typeof ETreatmentCycleCategoryKey,
+  auth: any
 ): Promise<Document | null> {
   // Construct the MongoDB update paths dynamically based on the category
   const statusPath = `${category}.$.status`;

@@ -107,43 +107,22 @@ const generateHeaderHtml = (
 
     return `
       <!-- Header with Logo, PO Number & Date -->
-      <header style="padding: 20px; box-sizing: border-box;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+      <header style="padding: 20px; box-sizing: border-box; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
           <!-- Logo on the left -->
-          <div style="flex: 1; display: flex; align-items: center; padding-left: 20px;">
+          <div style="flex: 1; display: flex; align-items: center;">
             <img src="${header.logo}" alt="Logo" style="width: 140px; height: 67px; object-fit: contain;" />
           </div>
-
+    
           <!-- PO Number & Date on the right -->
-          <div style="flex: 1; text-align: right; padding-right: 20px;">
+          <div style="text-align: right;">
             <p style="margin: 0; font-size: 16px;">Purchase Order: ${poNumber}</p>
             <p style="margin: 0; font-size: 14px;">Date: ${poDate}</p>
           </div>
         </div>
-
+    
         <!-- Divider -->
         <hr style="border: 1px solid #000; margin: 10px 0;">
-
-        <!-- Vendor and Ship To/Bill To Section with Padding and Aligned Headings -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-top: 10px; padding-left: 20px; padding-right: 20px;"> <!-- Reduced padding-top -->
-          <!-- Vendor Section -->
-          <div style="width: 50%; text-align: left;">
-            <p style="font-weight: bold; margin: 0; font-size: 14px;">Vendor:</p> <!-- Reduced font size for Vendor heading -->
-            <p style="margin: 0; font-size: 12px; padding-top: 5px;">${vendorAddress}</p> <!-- Reduced font size for Vendor address -->
-          </div>
-
-          <!-- Ship To / Bill To Section -->
-          <div style="width: 50%; text-align: left;">
-            <p style="font-weight: bold; margin: 0; font-size: 14px;">Ship To & Bill To:</p> <!-- Reduced font size for Ship To heading -->
-            <p style="margin: 0; font-size: 12px; padding-top: 5px;">${branchAddress}</p> <!-- Reduced font size for Ship To address -->
-          </div>
-        </div>
-
-        <!-- Another Divider -->
-        <hr style="border: 1px solid #000; margin-top: 10px;">
-
-        <!-- Padding after the address sections to add space before next section -->
-        <div style="padding-top: 30px;"></div>
       </header>
     `;
   }
@@ -207,6 +186,8 @@ export const main: SNSHandler = async (event, _context) => {
       let clinic = null;
       let patient = null;
 
+      let addressData = null; // Initialize address data
+
       if (
         data.documentType === EDocumentTypes.PurchaseOrder ||
         EDocumentTypes.PurchaseOrderProcessed
@@ -216,6 +197,16 @@ export const main: SNSHandler = async (event, _context) => {
           console.error("Clinic not found");
           return;
         }
+        addressData = {
+          vendorAddress:
+            data.sections.find((section) => section.title === "Address Information")?.content[
+              "Vendor Address"
+            ] || "Vendor address not available",
+          branchAddress:
+            data.sections.find((section) => section.title === "Address Information")?.content[
+              "Branch Address"
+            ] || "Branch address not available",
+        };
       } else {
         patient = await Patient.findById(data.patient).lean();
         if (!patient) {
@@ -249,7 +240,7 @@ export const main: SNSHandler = async (event, _context) => {
         header,
         sections: data.sections,
         fileName: data.documentType,
-
+        addressData, // Pass the address data to the template
         styles: {
           primaryColor: "#FF5C00",
           secondaryColor: "#10535E",

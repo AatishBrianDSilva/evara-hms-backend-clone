@@ -18,12 +18,29 @@
       font-weight: bold; margin-bottom: 10px; } .terms-conditions ul { padding-left: 20px; }
       .terms-conditions ul li { margin-bottom: 10px; } .left-column .vendor-detail { margin-bottom:
       10px; /* Adjust the spacing between TIN and Company Name */ } .right-column .vendor-detail {
-      margin-bottom: 10px; /* Adjust the spacing between Name and Number */ }
+      margin-bottom: 10px; /* Adjust the spacing between Name and Number */ } /* Address section
+      styles */ .address-section { margin-bottom: 20px; } .address-container { display: flex;
+      justify-content: space-between; } .address-column { width: 48%; } .address-title {
+      font-weight: bold; margin-bottom: 5px; } .address-content { white-space: pre-wrap; }
     </style>
   </head>
   <body>
     <main>
-      <!-- Purchase Order Details Section -->
+      <!-- Address Section -->
+      <div class="address-section">
+        <div class="address-container">
+          <!-- Vendor Address Column -->
+          <div class="address-column">
+            <div class="address-title">Vendor Address</div>
+            <div class="address-content">{{addressData.vendorAddress}}</div>
+          </div>
+          <!-- Ship To & Bill To Address Column -->
+          <div class="address-column">
+            <div class="address-title">Ship To & Bill To Address</div>
+            <div class="address-content">{{addressData.branchAddress}}</div>
+          </div>
+        </div>
+      </div>
 
       <!-- Items Section -->
       <div class="section">
