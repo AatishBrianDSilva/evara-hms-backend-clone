@@ -42,13 +42,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       dateRange.endDate = new Date(endDate);
     }
 
-    const [appointmentData, treatmentData, billingData, pharmacyData] =
-      await Promise.all([
-        getAppointmentSummary(dateRange, auth.clinicId!, auth.branchId!),
-        getTreatmentsSummary(dateRange, auth.clinicId!),
-        getBillingsSummary(dateRange, auth.clinicId!, auth.branchId!),
-        getPharmacySummary(dateRange, auth.clinicId!, auth.branchId!),
-      ]);
+    const [appointmentData, treatmentData, billingData, pharmacyData] = await Promise.all([
+      getAppointmentSummary(dateRange, auth.clinicId!, auth.branchId!),
+      getTreatmentsSummary(dateRange, auth.clinicId!),
+      getBillingsSummary(dateRange, auth.clinicId!, auth.branchId!),
+      getPharmacySummary(dateRange, auth.clinicId!, auth.branchId!),
+    ]);
 
     return successResponse("Success", {
       appointment: appointmentData,
@@ -61,11 +60,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-const getAppointmentSummary = async (
-  dateRange: IDateRange,
-  clinicId: string,
-  branchId: string
-) => {
+const getAppointmentSummary = async (dateRange: IDateRange, clinicId: string, branchId: string) => {
   const statusMap = {
     Scheduled: { color: "info", label: "Scheduled" },
     Reported: { color: "warning", label: "Reported" },
@@ -123,10 +118,7 @@ const getAppointmentSummary = async (
   return response;
 };
 
-const getTreatmentsSummary = async (
-  dateRange: IDateRange,
-  clinicId: string
-) => {
+const getTreatmentsSummary = async (dateRange: IDateRange, clinicId: string) => {
   const statusMap = {
     Scheduled: { color: "info", label: "Scheduled" },
     "In-Progress": { color: "warning", label: "In-Progress" },
@@ -183,14 +175,18 @@ const getTreatmentsSummary = async (
   return response;
 };
 
-const getBillingsSummary = async (
-  dateRange: IDateRange,
-  clinicId: string,
-  branchId: string
-) => {
+const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branchId: string) => {
   const statusMap = {
     Paid: { color: "success", label: "Paid" },
     Unpaid: { color: "warning", label: "Pending" },
+  };
+
+  const paymentMethodColorMap: Record<string, string> = {
+    Cash: "info",
+    UPI: "warning",
+    Online: "success",
+    CreditCard: "error",
+    BankTransfer: "info",
   };
 
   const data = await PatientBilling.aggregate([
@@ -215,7 +211,15 @@ const getBillingsSummary = async (
         _id: "$status",
         count: { $sum: 1 },
         totalAmount: { $sum: { $add: ["$amount", "$tax"] } },
+        totalDiscount: { $sum: "$discount" },
         totalPaid: { $sum: "$payments.amount" },
+        totalRefunded: { $sum: "$totalRefunded" },
+        paymentsByMethod: {
+          $push: {
+            method: "$payments.method",
+            amount: "$payments.amount",
+          },
+        },
       },
     },
     {
@@ -229,17 +233,47 @@ const getBillingsSummary = async (
         },
         total: { $sum: "$count" },
         totalBillings: { $sum: "$totalAmount" },
+        totalDiscount: { $sum: "$totalDiscount" },
         totalPaid: { $sum: "$totalPaid" },
+        totalRefunded: { $sum: "$totalRefunded" },
+        paymentsByMethod: { $push: "$paymentsByMethod" },
       },
     },
   ]);
 
+  const paymentMethods = {};
+
+  if (data.length > 0) {
+    data[0].paymentsByMethod.forEach((payments) => {
+      payments.forEach((payment) => {
+        if (!paymentMethods[payment.method]) {
+          paymentMethods[payment.method] = 0;
+        }
+        paymentMethods[payment.method] += payment.amount;
+      });
+    });
+  }
+
   const dataResult =
     data.length > 0
       ? data[0]
-      : { statuses: [], total: 0, totalBillings: 0, totalPaid: 0 };
+      : {
+          statuses: [],
+          total: 0,
+          totalBillings: 0,
+          totalPaid: 0,
+          totalDiscount: 0,
+          totalRefunded: 0,
+        }; // Initialize totalRefunded
 
-  const badges = Object.keys(statusMap).map((status) => {
+  const paymentBadges = Object.keys(paymentMethods).map((method) => ({
+    color: paymentMethodColorMap[method] || "primary",
+    count: paymentMethods[method].toFixed(2),
+    label: method,
+  }));
+
+  // Map statuses to badges
+  const statusBadges = Object.keys(statusMap).map((status) => {
     const found = dataResult.statuses.find((d) => d.status === status);
     return {
       color: statusMap[status].color,
@@ -250,24 +284,23 @@ const getBillingsSummary = async (
 
   const response = {
     total: dataResult.total,
-    badges,
-    totalBillings: dataResult.totalBillings,
-    totalPaid: dataResult.totalPaid,
+    badges: [...statusBadges, ...paymentBadges],
+    totalBillings: dataResult.totalBillings - dataResult.totalDiscount,
+    totalPaid: dataResult.totalPaid - dataResult.totalRefunded, // Subtract refunds from total paid
+    totalDiscount: dataResult.totalDiscount, // Return total discount
+    totalRefunded: dataResult.totalRefunded,
   };
 
   return response;
 };
 
-const getPharmacySummary = async (
-  dateRange: IDateRange,
-  clinicId: string,
-  branchId: string
-) => {
+const getPharmacySummary = async (dateRange: IDateRange, clinicId: string, branchId: string) => {
   const data = await PatientBilling.aggregate([
     {
       $match: {
         clinicId,
         branchId,
+        billType: "Pharmacy",
         status: "Paid",
         createdAt: {
           $gte: dateRange.startDate,
@@ -276,23 +309,27 @@ const getPharmacySummary = async (
       },
     },
     {
-      $unwind: "$items",
-    },
-    {
-      $match: {
-        "items.serviceType": "Pharmacy",
-      },
+      $unwind: "$items", // Unwind the items array to process each item individually
     },
     {
       $group: {
         _id: null,
         totalAmount: { $sum: "$items.total" },
+        totalDiscount: { $sum: "$discount" },
+        totalRefunded: { $sum: "$totalRefunded" },
+      },
+    },
+    {
+      $project: {
+        netTotal: {
+          $subtract: [{ $subtract: ["$totalAmount", "$totalDiscount"] }, "$totalRefunded"],
+        },
       },
     },
   ]);
 
   const response = {
-    totalAmount: data.length ? data[0].totalAmount : 0,
+    totalAmount: data.length ? data[0].netTotal : 0,
   };
 
   return response;

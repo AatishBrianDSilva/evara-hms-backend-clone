@@ -44,6 +44,7 @@ export const processPurchaseOrderReportData = (
     const buyPrice = item.buyPrice || 0;
     const discountPercent = item.discount || 0;
     const taxPercent = item.tax || 0;
+    const freeQuantity = item.freeQuantity || 0;
 
     // Calculate the base amount before discount and tax
     const amount = buyPrice * noOfPacks;
@@ -64,6 +65,7 @@ export const processPurchaseOrderReportData = (
     return {
       Item: item.name || "N/A",
       Quantity: noOfPacks,
+      FreeQuantity: freeQuantity, // Include free quantity
       Rate: buyPrice.toFixed(2), // Buy Price per pack
       Amount: amount.toFixed(2), // Amount before discount and tax
       Discount: `${discountPercent}%`, // Discount in percentage
