@@ -3,6 +3,8 @@ import paginate from "mongoose-paginate-v2";
 import { autoIncrementId } from "../../Counters";
 import { EServiceTypes } from "../services/DefaultService";
 
+const round = (num: number) => Math.round(num * 100) / 100;
+
 export enum EPaitentBillingPaymentType {
   Payment = "Payment",
   Refund = "Refund",
@@ -197,37 +199,32 @@ const patientBillingSchema = new Schema<IPatientBilling>(
 );
 
 patientBillingSchema.virtual("subTotal").get(function (this: IPatientBilling) {
-  return this.amount + this.tax;
+  return round(this.amount + this.tax);
 });
 
-patientBillingSchema
-  .virtual("grandTotal")
-  .get(function (this: IPatientBilling) {
-    return this.subTotal - this.discount;
-  });
+patientBillingSchema.virtual("grandTotal").get(function (this: IPatientBilling) {
+  return round(this.subTotal - this.discount);
+});
 
 patientBillingSchema.virtual("totalPaid").get(function (this: IPatientBilling) {
-  return this.payments
-    .filter((payment) => payment.type === EPaitentBillingPaymentType.Payment)
-    .reduce((acc, payment) => acc + payment.amount, 0);
+  return round(
+    this.payments
+      .filter((payment) => payment.type === EPaitentBillingPaymentType.Payment)
+      .reduce((acc, payment) => acc + payment.amount, 0)
+  );
 });
 
-patientBillingSchema
-  .virtual("totalPaymentAttempts")
-  .get(function (this: IPatientBilling) {
-    return this.payments.filter(
-      (payment) => payment.type === EPaitentBillingPaymentType.Payment
-    ).length;
-  });
+patientBillingSchema.virtual("totalPaymentAttempts").get(function (this: IPatientBilling) {
+  return this.payments.filter(
+    (payment) => payment.type === EPaitentBillingPaymentType.Payment
+  ).length;
+});
 
 patientBillingSchema.virtual("totalDues").get(function (this: IPatientBilling) {
-  return this.grandTotal - this.totalPaid;
+  return round(this.grandTotal - this.totalPaid);
 });
 
-patientBillingSchema.pre(
-  "save",
-  autoIncrementId("PatientBilling", "billingId", "BL-")
-);
+patientBillingSchema.pre("save", autoIncrementId("PatientBilling", "billingId", "BL-"));
 
 patientBillingSchema.plugin(paginate);
 

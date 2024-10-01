@@ -8,6 +8,8 @@ import {
   EPatientBillingStatus,
 } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 
+const round = (num: number) => Math.round(num * 100) / 100;
+
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
@@ -33,29 +35,32 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Invalid refund amount");
     }
 
+    // Validate and round refundAmount
+    const roundedRefundAmount = round(refundAmount);
+    if (typeof roundedRefundAmount !== "number" || roundedRefundAmount <= 0) {
+      throw new ErrorMessage(400, "Invalid refund amount");
+    }
+
     const billing = await PatientBilling.findById(id);
     if (!billing) {
       throw new ErrorMessage(404, "Billing not found");
     }
 
     // Ensure the refund does not exceed the total paid or the total refundable
-    const totalPaid = billing.payments.reduce(
-      (acc, payment) => acc + payment.amount,
-      0
-    );
-    if (refundAmount > totalPaid) {
+    const totalPaid = billing.payments.reduce((acc, payment) => acc + payment.amount, 0);
+    if (roundedRefundAmount > totalPaid) {
       throw new ErrorMessage(400, "Refund amount exceeds the amount paid");
     }
 
     // Process the refund as a negative payment
     billing.payments.push({
-      amount: -refundAmount,
+      amount: round(-roundedRefundAmount),
       method: method,
       paymentDate: refundDate ? new Date(refundDate) : new Date(),
     });
 
     // Update billing status if necessary
-    if (totalPaid - refundAmount === 0) {
+    if (round(totalPaid - roundedRefundAmount) === 0) {
       billing.status = EPatientBillingStatus.Refunded;
     } else {
       // billing.status = EPatientBillingStatus.PartiallyRefunded;
