@@ -210,7 +210,7 @@ const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branc
       $group: {
         _id: "$status",
         count: { $sum: 1 },
-        totalAmount: { $sum: { $add: ["$amount", "$tax"] } },
+        totalAmount: { $sum: { $add: ["$amount", "$tax"] } }, // Sum of amount + tax
         totalDiscount: { $sum: "$discount" },
         totalPaid: { $sum: "$payments.amount" },
         totalRefunded: { $sum: "$totalRefunded" },
@@ -229,6 +229,7 @@ const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branc
           $push: {
             status: "$_id",
             count: "$count",
+            totalAmount: { $sum: "$totalAmount" }, // Total amount per status (already calculated)
           },
         },
         total: { $sum: "$count" },
@@ -266,28 +267,29 @@ const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branc
           totalRefunded: 0,
         }; // Initialize totalRefunded
 
+  const finalTotalBillings = dataResult.totalBillings; // Total billings is already calculated as amount - refunded
+
   const paymentBadges = Object.keys(paymentMethods).map((method) => ({
     color: paymentMethodColorMap[method] || "primary",
     count: paymentMethods[method].toFixed(2),
     label: method,
   }));
 
-  // Map statuses to badges
-  const statusBadges = Object.keys(statusMap).map((status) => {
-    const found = dataResult.statuses.find((d) => d.status === status);
+  // Update status badges to reflect the total amounts for Paid and Pending
+  const statusBadges = dataResult.statuses.map((status) => {
     return {
-      color: statusMap[status].color,
-      count: found ? found.count : 0,
-      label: statusMap[status].label,
+      color: statusMap[status.status]?.color || "primary",
+      count: status.totalAmount.toFixed(2), // Show total amount instead of count
+      label: statusMap[status.status]?.label || status.status,
     };
   });
 
   const response = {
     total: dataResult.total,
-    badges: [...statusBadges, ...paymentBadges],
-    totalBillings: dataResult.totalBillings - dataResult.totalDiscount,
+    badges: [...statusBadges, ...paymentBadges], // Include updated status badges with payment badges
+    totalBillings: finalTotalBillings,
     totalPaid: dataResult.totalPaid - dataResult.totalRefunded, // Subtract refunds from total paid
-    totalDiscount: dataResult.totalDiscount, // Return total discount
+    totalDiscount: dataResult.totalDiscount,
     totalRefunded: dataResult.totalRefunded,
   };
 
@@ -300,8 +302,8 @@ const getPharmacySummary = async (dateRange: IDateRange, clinicId: string, branc
       $match: {
         clinicId,
         branchId,
-        billType: "Pharmacy",
-        status: "Paid",
+        billType: "Pharmacy", // Only include Pharmacy bills
+        status: "Paid", // Only include paid bills
         createdAt: {
           $gte: dateRange.startDate,
           $lte: dateRange.endDate,
@@ -309,27 +311,34 @@ const getPharmacySummary = async (dateRange: IDateRange, clinicId: string, branc
       },
     },
     {
-      $unwind: "$items", // Unwind the items array to process each item individually
-    },
-    {
       $group: {
         _id: null,
-        totalAmount: { $sum: "$items.total" },
-        totalDiscount: { $sum: "$discount" },
-        totalRefunded: { $sum: "$totalRefunded" },
-      },
-    },
-    {
-      $project: {
-        netTotal: {
-          $subtract: [{ $subtract: ["$totalAmount", "$totalDiscount"] }, "$totalRefunded"],
+        totalAmountSum: {
+          $sum: {
+            $subtract: [
+              {
+                $add: [
+                  { $ifNull: ["$amount", 0] }, // Ensure amount exists
+                  { $ifNull: ["$tax", 0] }, // Ensure tax exists
+                ],
+              },
+              { $ifNull: ["$discount", 0] }, // Ensure discount exists
+            ],
+          },
         },
+        totalRefundedSum: { $sum: { $ifNull: ["$totalRefunded", 0] } }, // Sum of total refunded
       },
     },
   ]);
 
+  // Ensure correct rounding and handling
+  const totalAmount =
+    data.length > 0
+      ? parseFloat((data[0].totalAmountSum - data[0].totalRefundedSum).toFixed(2))
+      : 0;
+
   const response = {
-    totalAmount: data.length ? data[0].netTotal : 0,
+    totalAmount: totalAmount, // Return the final total
   };
 
   return response;

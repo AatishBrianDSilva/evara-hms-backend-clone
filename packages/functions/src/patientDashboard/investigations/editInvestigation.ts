@@ -167,32 +167,38 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     return errorResponse(error);
   }
 };
-const processDataForReport = (purchaseOrder: any, branch: any, vendor: any) => {
+
+const processDataForReport = (data: any, patient: any, spouseName: string, branch: any) => {
   const reportData: IReportData = {
     bucket: EBuckets.UserReports,
-    documentType: EDocumentTypes.PurchaseOrder,
+    documentType: EDocumentTypes.Investigation,
     templateType: EReportTemplateTypes.Reports,
-    reportName: `${purchaseOrder.poNumber} Report`, // Use PO number for the report name
-    clinic: purchaseOrder.clinicId,
+    doctor: `${data.doctor?.firstName || ""} ${data.doctor?.lastName || ""}`,
+    patient: data.patient,
+    clinic: data.clinicId,
     sections: [],
-    fileName: _.kebabCase(`purchase-order-${purchaseOrder.poNumber}`),
-    reportId: purchaseOrder._id,
+    reportName: `${data.result.testName} Report`, // Assuming testName is part of the result
+    fileName: _.kebabCase(data.result.testName),
+    reportId: data._id,
   };
 
-  // Add Purchase Order Details section
-  const poDetails = {
-    poNumber: purchaseOrder.poNumber,
-    date: purchaseOrder.date ? new Date(purchaseOrder.date).toLocaleDateString("en-GB") : "N/A",
-    companyTIN: vendor.companyTIN || "N/A", // Assuming vendor has company TIN
+  // Adding Patient Details section
+  const patientDetails = {
+    patientName: `${patient.firstName} ${patient.lastName}`,
+    patientId: patient.patientId,
+    gender: patient.gender,
+    age: patient.age,
+    spouseName: spouseName, // Now using fetched spouseName
+    admissionDate: data.updatedAt ? new Date(data.updatedAt).toLocaleDateString("en-GB") : "N/A",
   };
 
   reportData.sections.push({
     showTitle: true,
-    title: "Purchase Order Details",
-    content: poDetails,
+    title: "Patient Details",
+    content: patientDetails,
   });
 
-  // Add Branch Address section
+  // Check if branch has a valid address and format it
   let branchAddress = "Address not available";
   if (branch && branch.address) {
     const { street, city, state, zip } = branch.address;
@@ -201,11 +207,12 @@ const processDataForReport = (purchaseOrder: any, branch: any, vendor: any) => {
     }${zip || ""}`;
   }
 
+  // Add Branch Address section
   const branchDetails = {
-    branchName: branch.branchName || "N/A",
-    address: branchAddress,
-    phone: branch.phone || "N/A",
-    email: branch.email || "N/A",
+    Branch: branch.branchName || "N/A",
+    Address: branchAddress,
+    Phone: branch.phone || "N/A",
+    Email: branch.email || "N/A",
   };
 
   reportData.sections.push({
@@ -214,20 +221,78 @@ const processDataForReport = (purchaseOrder: any, branch: any, vendor: any) => {
     content: branchDetails,
   });
 
-  // Add Items section with details
-  const items = purchaseOrder.request.items.map((item) => ({
-    itemName: item.itemName || "N/A",
-    packSize: item.packSize,
-    quantity: item.quantity,
-    mrp: item.mrp,
-    discount: item.discount || 0,
-  }));
+  // Handle General Information section
+  let generalInformation = data.result.details;
 
-  reportData.sections.push({
-    showTitle: true,
-    title: "Items",
-    content: items,
-  });
+  // If "0" key is present, replace general information with the values inside "0"
+  if (generalInformation && generalInformation["0"]) {
+    generalInformation = generalInformation["0"];
+  }
+
+  // Process general information and remove empty or null values
+  if (generalInformation) {
+    const details: any = {};
+
+    // Add Doctor-related fields to be replaced with their names in general details
+    const doctorFields = [
+      "doctor",
+      "surgeon",
+      "embryologist",
+      "anaesthetist",
+      // Add other doctor-related fields here as needed
+    ];
+
+    for (const key in generalInformation) {
+      const value = generalInformation[key];
+
+      // Only include non-empty and non-null values
+      if (value !== "" && value !== null) {
+        // Format time fields to 12-hour format (AM/PM)
+        if (
+          key === "timeOfSampleReceivedAtHospital" ||
+          key === "timeOfCollection" ||
+          key === "timeOfEvaluation"
+        ) {
+          const timeValue = new Date(value).toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          });
+          details[key] = timeValue;
+        }
+        // Format date to dd/mm/yyyy for any date fields
+        else if (key === "date") {
+          const dateValue = new Date(value).toLocaleDateString("en-GB");
+          details[key] = dateValue;
+        }
+        // Process doctor fields
+        else if (doctorFields.includes(key) && value.firstName && value.lastName) {
+          details[key] = `Dr. ${value.firstName} ${value.lastName}`;
+        } else {
+          // Include the field as-is if it is valid
+          details[key] = value;
+        }
+      }
+    }
+
+    // Add formatted general information as a section
+    reportData.sections.push({
+      showTitle: true,
+      title: "General Information",
+      content: details,
+    });
+  }
+
+  // Add any notes if present
+  if (data.result.notes) {
+    reportData.sections.push({
+      showTitle: true,
+      title: "Notes",
+      content: {
+        Notes: data.result.notes,
+      },
+    });
+  }
 
   return reportData;
 };

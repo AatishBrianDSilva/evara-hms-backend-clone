@@ -44,6 +44,11 @@ const generateHtml = (template: string, data: any): string => {
     return str.replace(/\b\w/g, (char) => char.toUpperCase());
   });
 
+  Handlebars.registerHelper("capitalizeFirst", (str) => {
+    if (typeof str !== "string") return str;
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  });
+
   Handlebars.registerHelper("lt", function (a, b) {
     return a < b;
   });
@@ -79,6 +84,13 @@ const generateHtml = (template: string, data: any): string => {
       str = String(str);
     }
     return str.startsWith(prefix);
+  });
+
+  Handlebars.registerHelper("showIfContainsTitle", function (title, substring, options) {
+    if (typeof title === "string" && title.includes(substring)) {
+      return options.fn(this);
+    }
+    return options.inverse(this);
   });
 
   const compiledTemplate = Handlebars.compile(template);
