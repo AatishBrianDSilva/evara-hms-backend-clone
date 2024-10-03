@@ -59,10 +59,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     for (const { billingId, payments } of data.billings) {
       if (!billingId || !payments) {
-        throw new ErrorMessage(
-          400,
-          "Billing ID and payments are required for each entry"
-        );
+        throw new ErrorMessage(400, "Billing ID and payments are required for each entry");
       }
 
       const billing = await PatientBilling.findById(billingId).session(session);
@@ -70,14 +67,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         throw new ErrorMessage(404, `Billing not found for ID: ${billingId}`);
       }
 
-      let totalPaid = billing.payments.reduce(
-        (acc, payment) => acc + payment.amount,
-        0
-      );
-      let totalPaymentAttempt = payments.reduce(
-        (acc, payment) => acc + payment.amount,
-        0
-      );
+      let totalPaid = billing.payments.reduce((acc, payment) => acc + payment.amount, 0);
+      let totalPaymentAttempt = payments.reduce((acc, payment) => acc + payment.amount, 0);
       let newTotalPaid = totalPaid + totalPaymentAttempt;
 
       // if (newTotalPaid < billing.grandTotal) {
@@ -98,9 +89,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         billing.payments.push({
           amount: payment.amount,
           method: payment.method,
-          paymentDate: payment.paymentDate
-            ? new Date(payment.paymentDate)
-            : new Date(),
+          paymentDate: payment.paymentDate ? new Date(payment.paymentDate) : new Date(),
           details: payment.details,
           type: EPaitentBillingPaymentType.Payment,
         });
@@ -122,8 +111,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       // Fetch the branch using the branchId and clinicId from the auth details
       const branch = await Branch.findOne({
-        code: branchId,
+        code: new RegExp(`^${branchId.trim()}\\s*$`, "i"),
         clinicId: clinicId,
+        isActive: true,
       }).lean();
 
       if (!branch) {
@@ -138,13 +128,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       // Generate Report for payment
       if (payments) {
-        const report = processDataForReport(
-          payments,
-          billingId,
-          data,
-          billing,
-          branch
-        );
+        const report = processDataForReport(payments, billingId, data, billing, branch);
         // console.log("Report Data: ", JSON.stringify(report, null, 2));
 
         // Send to SNS
@@ -204,9 +188,7 @@ const processDataForReport = (
         serviceType: item.serviceType,
         quantity: item.quantity,
         // mrp: item.mrpPerUnit,
-        mrp: parseFloat(
-          (item.mrpPerUnit + (item.mrpPerUnit * item.taxRate) / 100).toFixed(2)
-        ),
+        mrp: parseFloat((item.mrpPerUnit + (item.mrpPerUnit * item.taxRate) / 100).toFixed(2)),
         value: parseFloat((item.price - item.tax).toFixed(2)),
         gst: item.taxRate,
         sgst: (item.tax / 2).toFixed(2),
@@ -236,8 +218,7 @@ const processDataForReport = (
   const totalAmount = billItems.reduce((sum: number, item: any) => {
     // Fallback to calculate amount if it's not present
     const itemAmount =
-      item.amount ||
-      (item.price && item.quantity ? item.price * item.quantity : 0);
+      item.amount || (item.price && item.quantity ? item.price * item.quantity : 0);
     return sum + (itemAmount ? parseFloat(itemAmount) : 0);
   }, 0);
 
@@ -265,9 +246,7 @@ const processDataForReport = (
   let branchAddress = "Address not available";
   if (branch && branch.address) {
     const { street, city, state, zip } = branch.address;
-    branchAddress = `${street || ""}, ${city || ""}, ${state || ""}, ${
-      zip || ""
-    }`.trim();
+    branchAddress = `${street || ""}, ${city || ""}, ${state || ""}, ${zip || ""}`.trim();
   }
 
   const branchDetails = {

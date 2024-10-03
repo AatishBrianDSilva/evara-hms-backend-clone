@@ -86,11 +86,16 @@ const generateHtml = (template: string, data: any): string => {
     return str.startsWith(prefix);
   });
 
+  Handlebars.registerHelper("capitalizeFirst", function (str) {
+    if (typeof str !== "string") return str;
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  });
+
   Handlebars.registerHelper("showIfContainsTitle", function (title, substring, options) {
     if (typeof title === "string" && title.includes(substring)) {
-      return options.fn(this);
+      return options.fn(this); // Render the block if title contains the substring
     }
-    return options.inverse(this);
+    return options.inverse(this); // Otherwise, render the inverse block
   });
 
   const compiledTemplate = Handlebars.compile(template);
@@ -211,9 +216,10 @@ export const main: SNSHandler = async (event, _context) => {
         }
         addressData = {
           vendorAddress:
-            data.sections.find((section) => section.title === "Address Information")?.content[
-              "Vendor Address"
-            ] || "Vendor address not available",
+            data.sections
+              .find((section) => section.title === "Address Information")
+              ?.content["Vendor Address"]?.replace(/,\s*TIN:\s*N\/A$/, "") ||
+            "Vendor address not available",
           branchAddress:
             data.sections.find((section) => section.title === "Address Information")?.content[
               "Branch Address"

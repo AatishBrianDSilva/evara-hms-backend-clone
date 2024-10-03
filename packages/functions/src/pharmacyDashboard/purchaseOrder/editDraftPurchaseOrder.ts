@@ -55,10 +55,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Only draft purchase orders can be edited");
     }
 
-    // Fetch the branch details
+    console.log("branchId (trimmed):", data.branchId.trim());
+    console.log("clinicId:", data.clinicId);
+
     const branch = await Branch.findOne({
-      code: data.branchId,
+      code: new RegExp(`^${data.branchId.trim()}\\s*$`, "i"),
       clinicId: data.clinicId,
+      isActive: true,
+      $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
     }).lean();
 
     if (!branch) {

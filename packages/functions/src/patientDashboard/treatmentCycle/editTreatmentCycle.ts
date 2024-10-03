@@ -350,8 +350,9 @@ async function updateCategory(
 
     // Fetch the branch using the branchId and clinicId from the auth details
     const branch = await Branch.findOne({
-      code: branchId,
+      code: new RegExp(`^${branchId.trim()}\\s*$`, "i"),
       clinicId: clinicId,
+      isActive: true,
     }).lean();
 
     if (!branch) {

@@ -38,8 +38,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     data.clinicId = auth.clinicId;
 
     const branch = await Branch.findOne({
-      code: data.branchId,
+      code: new RegExp(`^${data.branchId.trim()}\\s*$`, "i"),
       clinicId: data.clinicId,
+      isActive: true,
+      $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
     }).lean();
 
     if (!branch) {
