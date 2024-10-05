@@ -63,9 +63,41 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       query.status = status;
     }
 
-    // Add patient code (patient ID) filter to the query
+    // Handle patientCode and patientName filters
+    let patientCodeFilter: any = {};
+
     if (patientCode) {
-      query.patientCode = new RegExp(patientCode, "i"); // Case-insensitive match for Patient ID
+      patientCodeFilter = { patientCode: new RegExp(patientCode, "i") };
+    }
+
+    if (patientName) {
+      // Fetch matching patients
+      const matchingPatients = await Patient.find({
+        clinicId: auth.clinicId,
+        $or: [
+          { firstName: { $regex: patientName, $options: "i" } },
+          { lastName: { $regex: patientName, $options: "i" } },
+        ],
+      }).select("patientId");
+
+      const matchingPatientCodes = matchingPatients.map((p) => p.patientId);
+
+      if (matchingPatientCodes.length === 0) {
+        // No matching patients, so set query to return no results
+        query.patientCode = "__NO_MATCH__"; // This will not match any patientCode
+      } else {
+        if (patientCode) {
+          // Combine patientCode and patientName filters
+          query.$and = [
+            { patientCode: new RegExp(patientCode, "i") },
+            { patientCode: { $in: matchingPatientCodes } },
+          ];
+        } else {
+          query.patientCode = { $in: matchingPatientCodes };
+        }
+      }
+    } else if (patientCode) {
+      query.patientCode = patientCodeFilter.patientCode;
     }
 
     const options: IPaginateOptions = {
@@ -90,13 +122,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const patientIds = Array.from(
       new Set(records.map((record) => record.patientCode))
     );
-    // log("Patient IDs to Query:", patientIds);
 
     // Fetch patient details using the extracted patient IDs
     const patientData = await Patient.find({
       patientId: { $in: patientIds },
     }).lean();
-    // log("Fetched Patient Records Count:", patientData.length);
 
     // Map patients to a dictionary for easy lookup
     const patientMap = patientData.reduce((map, patient) => {
@@ -107,13 +137,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Combine patient details with billing records
     const combinedData = records.map((record) => {
       const patientDetails = patientMap[record.patientCode] || {};
-      // log("Patient Details for Record:", patientDetails);
 
       // Construct the patientName from fetched patient details
       const patientName = `${patientDetails.firstName || ""} ${
         patientDetails.lastName || ""
       }`.trim();
-      // log("Constructed Patient Name:", patientName);
 
       return {
         ...record,
@@ -121,24 +149,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
     });
 
-    // Further filter combinedData by patientName if specified in the searchQuery
-    const filteredData = patientName
-      ? combinedData.filter((record) =>
-          record.patientName.toLowerCase().includes(patientName.toLowerCase())
-        )
-      : combinedData;
+    // No need to filter combinedData by patientName here since it's already applied in the query
 
-    const summary = calculateSummary(filteredData);
-
-    // Update pagination to reflect filtered results if needed
-    const updatedPagination = {
-      ...pagination,
-      totalDocs: filteredData.length,
-    };
+    const summary = calculateSummary(combinedData);
 
     return successResponse("Success", {
-      records: filteredData,
-      pagination: updatedPagination,
+      records: combinedData,
+      pagination,
       summary: summary,
     });
   } catch (error) {
@@ -146,7 +163,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-function calculateSummary(billings: IPatientBilling[]): BillingSummary {
+function calculateSummary(billings): BillingSummary {
   return billings.reduce<BillingSummary>(
     (acc, billing) => {
       const total = billing.subTotal;
