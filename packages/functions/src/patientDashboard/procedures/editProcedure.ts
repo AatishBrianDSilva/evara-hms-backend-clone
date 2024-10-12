@@ -143,7 +143,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Generate Report if investigation is completed
     if (procedure && procedure.status === "Completed") {
-      const report = processDataForReport(procedure, patient, spouseName, branch);
+      const report = processDataForReport(procedure, patient, spouseName, branch, body.actualName);
       console.log("Report Data: ", JSON.stringify(report, null, 2));
 
       // Send to SNS
@@ -159,7 +159,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-const processDataForReport = (data: any, patient: any, spouseName: string, branch: any) => {
+const processDataForReport = (
+  data: any,
+  patient: any,
+  spouseName: string,
+  branch: any,
+  actualName: any
+) => {
+  console.log("Data ar report createion", data);
+  const reportName = actualName || data.result?.procedureName || "Default Procedure Name";
+
   const reportData: IReportData = {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.Procedure,
@@ -168,12 +177,10 @@ const processDataForReport = (data: any, patient: any, spouseName: string, branc
     patient: data.patient,
     clinic: data.clinicId,
     sections: [],
-    reportName: "",
-    fileName: _.kebabCase(data.result.procedureName),
+    reportName,
+    fileName: _.kebabCase(reportName),
     reportId: data._id,
   };
-
-  reportData.reportName = `${data.result.procedureName} Report`;
 
   // Extract all details from the result and remove the __v field
   const { __v, files, embryoBiopsyDetails, ...generalDetails } = data.result.details;

@@ -24,7 +24,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     await connectMongoDb();
 
-    const data = await PatientReports.find({ patient: patient }).sort({
+    const data = await PatientReports.find({
+      patient: patient,
+      category: { $ne: "Refund" }, // Exclude category 'Refund'
+    }).sort({
       createdAt: -1,
     });
 

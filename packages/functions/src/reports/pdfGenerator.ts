@@ -113,13 +113,17 @@ export const main: SQSHandler = async (event, context) => {
 
       if (category !== EDocumentTypes.Invoice && patient) {
         console.log("Updating PatientReport for report ID:", source_report_id);
+
+        // Check if `patient` is an ID (string) or an object
+        const patientId = typeof patient === "object" && patient._id ? patient._id : patient;
+
         const updatedPatientReport = await PatientReport.findOneAndUpdate(
           { source_report_id },
           {
             clinicId: patient.clinicId,
             branchId: patient.branchId,
             doctor: doctor,
-            patient: patient._id,
+            patient: patientId,
             category: category,
             reportName: reportName,
             bucket: s3Params.Bucket,

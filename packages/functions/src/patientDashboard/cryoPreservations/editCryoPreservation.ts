@@ -145,7 +145,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Generate Report if cryopreservation is completed
     if (cryopreservation && cryopreservation.status === "Completed") {
-      const report = processDataForReport(cryopreservation, patient, spouseName, branch);
+      const report = processDataForReport(
+        cryopreservation,
+        patient,
+        spouseName,
+        branch,
+        body.actualName
+      );
       console.log("Report Data: ", JSON.stringify(report, null, 2));
 
       // Send to SNS
@@ -161,7 +167,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-const processDataForReport = (data: any, patient: any, spouseName: string, branch: any) => {
+const processDataForReport = (
+  data: any,
+  patient: any,
+  spouseName: string,
+  branch: any,
+  actualName: any
+) => {
+  const reportName = actualName || data.result?.procedureName || "Default Procedure Name";
+
   const reportData: IReportData = {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.CryoPreservation,
@@ -170,12 +184,10 @@ const processDataForReport = (data: any, patient: any, spouseName: string, branc
     patient: data.patient,
     clinic: data.clinicId,
     sections: [],
-    reportName: "",
-    fileName: _.kebabCase(data.cryo.name),
+    reportName,
+    fileName: _.kebabCase(reportName),
     reportId: data._id,
   };
-
-  reportData.reportName = `${data.cryo.name} Report`;
 
   // Adding Patient Details section
   const patientDetails = {

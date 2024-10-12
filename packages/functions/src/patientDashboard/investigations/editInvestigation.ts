@@ -153,7 +153,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Generate Report if investigation is completed
     if (investigation) {
-      const report = processDataForReport(investigation, patient, spouseName, branch);
+      const report = processDataForReport(
+        investigation,
+        patient,
+        spouseName,
+        branch,
+        body.actualName
+      );
       console.log("Report Data: ", JSON.stringify(report, null, 2));
 
       // Send to SNS
@@ -169,7 +175,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-const processDataForReport = (data: any, patient: any, spouseName: string, branch: any) => {
+const processDataForReport = (
+  data: any,
+  patient: any,
+  spouseName: string,
+  branch: any,
+  actualName: any
+) => {
+  const reportName = actualName || data.result?.procedureName || "Default Procedure Name";
+
   const reportData: IReportData = {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.Investigation,
@@ -178,8 +192,8 @@ const processDataForReport = (data: any, patient: any, spouseName: string, branc
     patient: data.patient,
     clinic: data.clinicId,
     sections: [],
-    reportName: `${data.result.testName} Report`, // Assuming testName is part of the result
-    fileName: _.kebabCase(data.result.testName),
+    reportName,
+    fileName: _.kebabCase(reportName),
     reportId: data._id,
   };
 
