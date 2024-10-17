@@ -57,7 +57,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Update the branch
     const updateFields = {
-      code: data.code,
       branchName: data.branchName,
       address: data.address,
       phone: data.phone,
@@ -68,7 +67,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     };
 
     const updatedBranch = await Branch.findByIdAndUpdate(
-      data.branchId,
+      id,
       { $set: updateFields },
       { new: true, runValidators: true }
     );
