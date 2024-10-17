@@ -23,10 +23,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Id is not provided");
     }
 
-    const taxRate = await DrugLocation.findByIdAndDelete(id);
-    console.log("Drug Location", taxRate);
+    // const taxRate = await DrugLocation.findByIdAndDelete(id);
 
-    return successResponse("Drug Location Deleted Successfully", taxRate);
+    const updatedDrugItem = await DrugLocation.findByIdAndUpdate(
+      id,
+      { status: "Inactive" },
+      { new: true }
+    );
+
+    return successResponse("Drug Location Deleted Successfully", updatedDrugItem);
   } catch (error) {
     return errorResponse(error);
   }

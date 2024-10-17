@@ -8,6 +8,7 @@ export interface IDrugLocation extends Document {
   location: string;
   main: boolean;
   notes: string;
+  status?: "Active" | "Inactive";
 }
 
 const drugLocationSchema = new Schema<IDrugLocation>(
@@ -33,6 +34,11 @@ const drugLocationSchema = new Schema<IDrugLocation>(
       index: true,
     },
     notes: { type: String, required: false },
+    status: {
+      type: String,
+      enum: ["Active", "Inactive"],
+      default: "Active",
+    },
   },
   {
     timestamps: true,

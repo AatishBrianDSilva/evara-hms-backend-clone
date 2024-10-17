@@ -21,9 +21,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Id is not provided");
     }
 
-    const taxRate = await DrugItem.findByIdAndDelete(id);
+    // const taxRate = await DrugItem.findByIdAndDelete(id);
 
-    return successResponse("Deleted Successfully", taxRate);
+    const updatedDrugItem = await DrugItem.findByIdAndUpdate(
+      id,
+      { status: "Inactive" },
+      { new: true }
+    );
+
+    if (!updatedDrugItem) {
+      throw new ErrorMessage(404, "DrugItem not found");
+    }
+
+    return successResponse("Deleted Successfully", updatedDrugItem);
   } catch (error) {
     return errorResponse(error);
   }

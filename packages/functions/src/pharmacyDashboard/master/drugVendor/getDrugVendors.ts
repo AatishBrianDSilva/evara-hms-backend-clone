@@ -1,5 +1,4 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-
 import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
 import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
@@ -18,12 +17,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const {
-      page = "1",
-      limit = "10",
-      sort: sortRaw,
-      searchQuery = "",
-    } = params;
+    const { page = "1", limit = "10", sort: sortRaw, searchQuery = "", status = "" } = params; // Get status directly from params
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
     const paginate = JSON.parse(params.paginate || "false");
@@ -45,11 +39,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         query.$or = [{ name: new RegExp(searchQuery, "i") }];
       }
 
-      //Add branchId to query
+      // Apply status filter if status "Active" is sent in the query string
+      if (status === "Active") {
+        query.status = { $nin: ["Inactive"] }; // Fetch documents where status is not "Inactive"
+      }
+
+      // Add branchId and clinicId to the query
       query.branchId = auth.branchId;
       query.clinicId = auth.clinicId;
 
-      // Fetching the appointments with pagination
+      // Fetching the drug vendors with pagination
       const result = await DrugVendor.paginate(query, options);
       const { records, pagination } = formatPaginationResult(result);
 
@@ -58,12 +57,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const drugVendors = await DrugVendor.find({
+      const query: any = {
         branchId: auth.branchId,
         clinicId: auth.clinicId,
-      })
-        .sort(sort)
-        .lean();
+      };
+
+      // Apply status filter if status "Active" is sent in the query string
+      if (status === "Active") {
+        query.status = { $nin: ["Inactive"] }; // Fetch documents where status is not "Inactive"
+      }
+
+      // Fetching drug vendors without pagination
+      const drugVendors = await DrugVendor.find(query).sort(sort).lean();
 
       return successResponse("Success", {
         records: drugVendors,

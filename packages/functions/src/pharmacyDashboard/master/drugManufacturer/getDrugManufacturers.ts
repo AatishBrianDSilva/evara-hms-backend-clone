@@ -21,12 +21,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const {
-      page = "1",
-      limit = "10",
-      sort: sortRaw,
-      searchQuery = "",
-    } = params;
+    const { page = "1", limit = "10", sort: sortRaw, searchQuery = "", status = "" } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
@@ -58,6 +53,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         options.sort = sort;
       }
 
+      if (status === "Active") {
+        query.status = { $nin: ["Inactive"] }; // Exclude "Inactive" records
+      }
+
       if (searchQuery) {
         query.$or = [{ name: new RegExp(searchQuery, "i") }];
       }
@@ -73,10 +72,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const data = await DrugManufacturer.find({ clinicId: auth.clinicId })
-        .populate(populate)
-        .sort(sort)
-        .lean();
+      const query: any = {
+        clinicId: auth.clinicId,
+      };
+
+      // Apply search query
+      if (searchQuery) {
+        query.$or = [{ name: new RegExp(searchQuery, "i") }];
+      }
+
+      // Apply status filter if "Active" is provided
+      if (status === "Active") {
+        query.status = { $nin: ["Inactive"] }; // Exclude "Inactive" records
+      }
+
+      // Fetching records without pagination
+      const data = await DrugManufacturer.find(query).populate(populate).sort(sort).lean();
 
       return successResponse("Success", { records: data, pagination: {} });
     }

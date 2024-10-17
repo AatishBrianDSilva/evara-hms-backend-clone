@@ -18,7 +18,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "10", sort: sortRaw } = params;
+    const { page = "1", limit = "10", sort: sortRaw, status = "" } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
@@ -35,6 +35,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         clinicId: auth.clinicId,
       };
 
+      if (status === "Active") {
+        query.status = { $nin: ["Inactive"] }; // Exclude "Inactive" records
+      }
+
       if (sort) {
         options.sort = sort;
       }
@@ -48,11 +52,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const taxRates = await TaxRate.find({
+      const query: any = {
         clinicId: auth.clinicId,
-      })
-        .sort(sort)
-        .lean();
+      };
+
+      // Apply status filter if "Active" is provided
+      if (status === "Active") {
+        query.status = { $nin: ["Inactive"] }; // Exclude "Inactive" records
+      }
+
+      // Fetch tax rates without pagination
+      const taxRates = await TaxRate.find(query).sort(sort).lean();
 
       return successResponse("Success", { records: taxRates, pagination: {} });
     }

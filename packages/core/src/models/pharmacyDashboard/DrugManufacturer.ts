@@ -109,7 +109,7 @@ const drugManufacturerSchema = new Schema<IDrugManufacturer>(
     status: {
       type: String,
       enum: ["Active", "Inactive"],
-      default: "Inactive",
+      default: "Active",
     },
   },
   {

@@ -17,7 +17,7 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/drugItem/getDrugItemById.main",
     "PUT /pharmacy-dashboard/master/drug-items/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugItem/updateDrugItem.main",
-    "DELETE /pharmacy-dashboard/master/drug-items/{id}":
+    "PATCH /pharmacy-dashboard/master/drug-items/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugItem/deleteDrugItem.main",
 
     // Drug Categories
@@ -29,7 +29,7 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/drugCategory/getDrugCategoryById.main",
     "PUT /pharmacy-dashboard/master/drug-categories/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugCategory/updateDrugCategory.main",
-    "DELETE /pharmacy-dashboard/master/drug-categories/{id}":
+    "PATCH /pharmacy-dashboard/master/drug-categories/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugCategory/deleteDrugCategory.main",
 
     // Drug Types
@@ -41,7 +41,7 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/drugType/getDrugTypeById.main",
     "PUT /pharmacy-dashboard/master/drug-types/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugType/updateDrugType.main",
-    "DELETE /pharmacy-dashboard/master/drug-types/{id}":
+    "PATCH /pharmacy-dashboard/master/drug-types/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugType/deleteDrugType.main",
 
     // Drug Locations
@@ -53,7 +53,7 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/drugLocation/getDrugLocationById.main",
     "PUT /pharmacy-dashboard/master/drug-locations/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugLocation/updateDrugLocation.main",
-    "DELETE /pharmacy-dashboard/master/drug-locations/{id}":
+    "PATCH /pharmacy-dashboard/master/drug-locations/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugLocation/deleteDrugLocation.main",
 
     // Drug Manufacturers
@@ -65,7 +65,7 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/drugManufacturer/getDrugManufacturerById.main",
     "PUT /pharmacy-dashboard/master/drug-manufacturers/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugManufacturer/updateDrugManufacturer.main",
-    "DELETE /pharmacy-dashboard/master/drug-manufacturers/{id}":
+    "PATCH /pharmacy-dashboard/master/drug-manufacturers/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugManufacturer/deleteDrugManufacturer.main",
 
     // Drug vendors
@@ -77,7 +77,7 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/drugVendor/getDrugVendorById.main",
     "PUT /pharmacy-dashboard/master/drug-vendors/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugVendor/updateDrugVendor.main",
-    "DELETE /pharmacy-dashboard/master/drug-vendors/{id}":
+    "PATCH /pharmacy-dashboard/master/drug-vendors/{id}":
       "packages/functions/src/pharmacyDashboard/master/drugVendor/deleteDrugVendor.main",
 
     // Tax Rates
@@ -89,7 +89,7 @@ export function PharmacyApiStack({ stack }: StackContext) {
       "packages/functions/src/pharmacyDashboard/master/taxRate/getTaxRateById.main",
     "PUT /pharmacy-dashboard/master/tax-rates/{id}":
       "packages/functions/src/pharmacyDashboard/master/taxRate/updateTaxRate.main",
-    "DELETE /pharmacy-dashboard/master/tax-rates/{id}":
+    "PATCH /pharmacy-dashboard/master/tax-rates/{id}":
       "packages/functions/src/pharmacyDashboard/master/taxRate/deleteTaxRate.main",
 
     // Master Pharmacy Stock

@@ -27,6 +27,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       limit = "10",
       sort: sortRaw,
       searchQuery = "",
+      status = "", // Add status to query parameters
     } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
@@ -47,6 +48,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         query.$or = [{ name: new RegExp(searchQuery, "i") }];
       }
 
+      if (status === "Active") {
+        query.status = { $nin: ["Inactive"] }; // Exclude "Inactive" records
+      }
+
       if (sort) {
         options.sort = sort;
       }
@@ -60,9 +65,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         pagination,
       });
     } else {
-      const data = await DrugCategory.find({ clinicId: auth.clinicId })
-        .sort(sort)
-        .lean();
+      const query: any = {
+        clinicId: auth.clinicId,
+      };
+
+      // Search query
+      if (searchQuery) {
+        query.$or = [{ name: new RegExp(searchQuery, "i") }];
+      }
+
+      // Apply status filter if "Active" is sent
+      if (status === "Active") {
+        query.status = { $nin: ["Inactive"] }; // Exclude "Inactive" records
+      }
+
+      // Fetching data without pagination
+      const data = await DrugCategory.find(query).sort(sort).lean();
 
       return successResponse("Success", { records: data, pagination: {} });
     }

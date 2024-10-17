@@ -5,6 +5,7 @@ export interface IDrugCategory extends Document {
   clinicId: string;
   name: string;
   notes: string;
+  status?: "Active" | "Inactive";
 }
 
 const drugCategorySchema = new Schema<IDrugCategory>(
@@ -19,6 +20,11 @@ const drugCategorySchema = new Schema<IDrugCategory>(
       required: true,
     },
     notes: { type: String, required: false },
+    status: {
+      type: String,
+      enum: ["Active", "Inactive"],
+      default: "Active",
+    },
   },
   {
     timestamps: true,

@@ -93,7 +93,7 @@ const drugItemSchema = new Schema<IDrugItem>(
     status: {
       type: String,
       enum: ["Active", "Inactive"],
-      default: "Inactive",
+      default: "Active",
     },
   },
   {
@@ -109,7 +109,7 @@ drugItemSchema.plugin(paginate);
 
 interface IDrugItemDocument extends Document, IDrugItem {}
 
-export const DrugItem = mongoose.model<
-  IDrugItemDocument,
-  PaginateModel<IDrugItemDocument>
->("DrugItem", drugItemSchema);
+export const DrugItem = mongoose.model<IDrugItemDocument, PaginateModel<IDrugItemDocument>>(
+  "DrugItem",
+  drugItemSchema
+);
