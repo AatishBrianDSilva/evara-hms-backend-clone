@@ -7,17 +7,22 @@ export const MastersApiStack = ({ stack }: StackContext) => {
   api.addRoutes(stack, {
     //Global Masters
     //Doctors
-    "POST /master/doctors/add": "packages/functions/src/mastersDashboard/doctors/addDoctor.main",
-    "GET /master/doctors": "packages/functions/src/mastersDashboard/doctors/getDoctors.main",
+    "POST /master/doctors/add":
+      "packages/functions/src/mastersDashboard/doctors/addDoctor.main",
+    "GET /master/doctors":
+      "packages/functions/src/mastersDashboard/doctors/getDoctors.main",
     "GET /master/doctors/{id}":
       "packages/functions/src/mastersDashboard/doctors/getDoctorById.main",
-    "PUT /master/doctors/{id}": "packages/functions/src/mastersDashboard/doctors/editDoctor.main",
+    "PUT /master/doctors/{id}":
+      "packages/functions/src/mastersDashboard/doctors/editDoctor.main",
     "DELETE /master/doctors/{id}":
       "packages/functions/src/mastersDashboard/doctors/deleteDoctor.main",
 
     // Users
-    "POST /master/users/add": "packages/functions/src/mastersDashboard/global/users/addUser.main",
-    "GET /master/users": "packages/functions/src/mastersDashboard/global/users/getUsers.main",
+    "POST /master/users/add":
+      "packages/functions/src/mastersDashboard/global/users/addUser.main",
+    "GET /master/users":
+      "packages/functions/src/mastersDashboard/global/users/getUsers.main",
     "GET /master/users/{id}":
       "packages/functions/src/mastersDashboard/global/users/getUserById.main",
     "PUT /master/users/{id}":
@@ -30,7 +35,14 @@ export const MastersApiStack = ({ stack }: StackContext) => {
     // Branches
     "POST /master/branch/add":
       "packages/functions/src/mastersDashboard/global/branch/addBranch.main",
-    "GET /master/branch": "packages/functions/src/mastersDashboard/global/branch/getBranches.main",
+    "GET /master/branch":
+      "packages/functions/src/mastersDashboard/global/branch/getBranches.main",
+    "GET /master/branch/active": {
+      function:
+        "packages/functions/src/mastersDashboard/global/branch/getActiveBranches.main",
+      authorizer: "none",
+    },
+
     "GET /master/branch/{id}":
       "packages/functions/src/mastersDashboard/global/branch/getBranchById.main",
     "PUT /master/branch/{id}":

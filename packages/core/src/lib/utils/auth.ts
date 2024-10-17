@@ -32,6 +32,7 @@ export const generateUserJwtToken = async (
   const refreshToken = jwt.sign(
     {
       sub: user._id,
+      branchId: user.branchId,
     },
     secret.refreshToken,
     {
