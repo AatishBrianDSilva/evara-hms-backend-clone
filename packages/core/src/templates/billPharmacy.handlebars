@@ -5,10 +5,10 @@
     <style>
       body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 12px; /* Reduced
       global font size */ } main { padding: 10mm; display: flex; flex-direction: column; flex-grow:
-      1; margin-top: 50px; } .section { margin-bottom: 20px; } .key-value { display: flex;
-      justify-content: space-between; margin-bottom: 10px; } .key { font-weight: bold; width: 50%;
-      text-align: left; } .value { width: 50%; text-align: right; /* Right align values */
-      white-space: pre-wrap; } h2 { color:
+      1; margin-top: 5px; box-sizing: border-box; } .section { margin-bottom: 5px; } .key-value {
+      display: flex; justify-content: space-between; margin-bottom: 10px; } .key { font-weight:
+      bold; width: 50%; text-align: left; } .value { width: 50%; text-align: right; /* Right align
+      values */ white-space: pre-wrap; } h2 { color:
       {{styles.primaryColor}}; text-align: center; font-size: 16px; /* Reduced font size for h2 */ }
       /* Updated Header Styling */ .header { text-align: center; font-size: 16px; /* Reduced font
       size for header */ font-weight: bold; background: #ffece4; /* Light off-white background */
@@ -35,11 +35,20 @@
       border-box; } .summary-key { font-weight: bold; text-align: left; padding-right: 10px; width:
       50%; font-size: 12px; /* Adjusted summary key font size */ } .summary-value { text-align:
       right; width: 50%; font-size: 12px; /* Adjusted summary value font size */ } .summary-row {
-      display: flex; justify-content: space-between; margin-bottom: 10px; }
+      display: flex; justify-content: space-between; margin-bottom: 10px; } .branch-address {
+      text-align: center; padding: 20px 0; font-size: 1em; /* Adjust as needed */ color: #333; /*
+      Adjust text color as needed */ }
+
     </style>
   </head>
   <body>
     <main>
+
+      {{#if addressData}}
+        <div class="section branch-address">
+          {{addressData.branchAddress}}
+        </div>
+      {{/if}}
       <!-- Bill of Supply Section -->
       <div class="header">BILL OF SUPPLY</div>
 

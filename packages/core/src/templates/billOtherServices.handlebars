@@ -5,8 +5,8 @@
     <style>
       body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 12px; /* Global font
       size */ } main { padding: 10mm; display: flex; flex-direction: column; flex-grow: 1;
-      margin-top: 50px; } .section { margin-bottom: 20px; } .section-title { font-size: 1.2em; /*
-      Section title font size */ margin-bottom: 10px; color:
+      margin-top: 5px;box-sizing: border-box; } .section { margin-bottom: 5px; } .section-title {
+      font-size: 1.2em; /* Section title font size */ margin-bottom: 10px; color:
       {{styles.primaryColor}}; } .key-value { display: flex; justify-content: space-between;
       margin-bottom: 10px; } .key { font-weight: bold; width: 50%; text-align: left; } .value {
       width: 50%; text-align: right; /* Right align values */ white-space: pre-wrap; } h2 { color:
@@ -33,11 +33,20 @@
       .summary-key { font-weight: bold; text-align: left; padding-right: 10px; width: 50%;
       font-size: 12px; /* Summary key font size */ } .summary-value { text-align: right; width: 50%;
       font-size: 12px; /* Summary value font size */ } .summary-row { display: flex;
-      justify-content: space-between; margin-bottom: 10px; }
+      justify-content: space-between; margin-bottom: 10px; } .branch-address { text-align: center;
+      padding: 20px 0; font-size: 1em; /* Adjust as needed */ color: #333; /* Adjust text color as
+      needed */ }
+
     </style>
   </head>
   <body>
     <main>
+
+      {{#if addressData}}
+        <div class="section branch-address">
+          {{addressData.branchAddress}}
+        </div>
+      {{/if}}
       <!-- Patient Details Section -->
       <div class="header">Patient Details</div>
       <div class="section">

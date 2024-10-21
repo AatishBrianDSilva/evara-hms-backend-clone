@@ -205,6 +205,22 @@ const processDataForReport = (
     content: patientDetails,
   });
 
+  // Extracting and processing files as uploaded images
+  if (patient.gender === "Female" && data.details.files && data.details.files.length > 0) {
+    const uploadedImages = data.details.files.map((fileUrl, index) => ({
+      label: `Image ${index + 1}`,
+      src: fileUrl,
+    }));
+
+    console.log("Uplodaed Images", uploadedImages);
+
+    reportData.sections.push({
+      showTitle: true,
+      title: "Uploaded Images",
+      content: uploadedImages,
+    });
+  }
+
   // Function to extract only the time part from a datetime string
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString("en-GB", {
@@ -253,6 +269,7 @@ const processDataForReport = (
     "surgeon",
     "embryologistA",
     "embryologistB",
+    "embryologist",
     "doctor",
     "anaesthetist",
     "gynaecologist",
@@ -269,9 +286,9 @@ const processDataForReport = (
     ) {
       modifiedGeneralDetails[
         field
-      ] = `Dr. ${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
+      ] = `${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
     } else if (modifiedGeneralDetails[field]) {
-      modifiedGeneralDetails[field] = `Dr. ${modifiedGeneralDetails[field].firstName || ""} ${
+      modifiedGeneralDetails[field] = `${modifiedGeneralDetails[field].firstName || ""} ${
         modifiedGeneralDetails[field].lastName || ""
       }`;
     }

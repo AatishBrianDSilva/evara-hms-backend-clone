@@ -157,7 +157,6 @@ const generateHeaderHtml = (
         <h1 style="margin: 0; font-size: 16px; text-decoration: underline; background: #5C5C5C; color: white; padding: 5px;">Bill of Supply & Tax Invoice</h1>
         <p style="margin: 10px 0 0 0; font-size: 20px; font-weight: bold; text-transform: uppercase;">Evara Health Pvt Ltd</p>
         <p style="margin: 0; font-size: 20px; font-weight: bold; text-transform: uppercase;">EVARA FERTILITY</p>
-        <p style="margin: 10px 0 0 0; font-size: 16px;">${branchAddress}</p>
       </div>
       <div style="width: 140px;"></div>
     </header>
@@ -207,13 +206,14 @@ export const main: SNSHandler = async (event, _context) => {
 
       if (
         data.documentType === EDocumentTypes.PurchaseOrder ||
-        EDocumentTypes.PurchaseOrderProcessed
+        data.documentType === EDocumentTypes.PurchaseOrderProcessed
       ) {
         clinic = await Clinic.findOne({ code: data.clinic }).lean();
         if (!clinic) {
           console.error("Clinic not found");
           return;
         }
+
         addressData = {
           vendorAddress:
             data.sections
@@ -237,6 +237,17 @@ export const main: SNSHandler = async (event, _context) => {
           console.error("Clinic not found");
           return;
         }
+
+        console.log("Sections Array:", JSON.stringify(data.sections, null, 2));
+
+        const branchSection = data.sections.find((section) => section.title === "Branch Details");
+        const branchAddress = branchSection
+          ? branchSection.content.Address
+          : "Address not available";
+
+        addressData = {
+          branchAddress: branchAddress, // Use branch details from sections
+        };
       }
 
       const logoUrl =
@@ -254,11 +265,27 @@ export const main: SNSHandler = async (event, _context) => {
         reportName: data.reportName,
       };
 
+      console.log("Data details", data.details);
+
+      // Extract and convert uploaded images to base64
+      const uploadedImages = [];
+      if (data.details?.files) {
+        for (const [index, fileUrl] of data.details.files.entries()) {
+          const base64Image = await getBase64ImageFromUrl(fileUrl);
+          uploadedImages.push({
+            label: `Image ${index + 1}`,
+            src: base64Image,
+          });
+        }
+      }
+
       const templateData = {
         header,
         sections: data.sections,
         fileName: data.documentType,
         addressData, // Pass the address data to the template
+        uploadedImages, // Add the images to the template data
+
         styles: {
           primaryColor: "#FF5C00",
           secondaryColor: "#10535E",

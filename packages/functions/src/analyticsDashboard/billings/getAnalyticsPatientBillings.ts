@@ -17,7 +17,6 @@ interface BillingSummary {
   due: number;
 }
 
-// Utility function to parse the combined search query
 const parseSearchQuery = (query) => {
   const queryParts = query.split(" ");
   const parsedQuery = {
@@ -49,31 +48,30 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       limit = "10",
       sort: sortRaw,
       status,
-      searchQuery = "", // Combined search query for patient code and patient name
+      paymentMethod,
+      searchQuery = "",
+      saleStartDate,
+      saleEndDate,
     } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
-
-    // Parse the combined search query
     const { patientCode, patientName } = parseSearchQuery(searchQuery);
 
-    const query: any = {};
-    query.clinicId = auth.clinicId;
-    if (status) {
-      query.status = status;
-    }
+    const query: any = {
+      clinicId: auth.clinicId,
+      branchId: auth.branchId,
+    };
 
-    // Handle patientCode and patientName filters
-    let patientCodeFilter: any = {};
+    if (status) query.status = status;
 
     if (patientCode) {
-      patientCodeFilter = { patientCode: new RegExp(patientCode, "i") };
+      query.patientCode = new RegExp(patientCode, "i");
     }
 
     if (patientName) {
-      // Fetch matching patients
       const matchingPatients = await Patient.find({
         clinicId: auth.clinicId,
+        branchId: auth.branchId,
         $or: [
           { firstName: { $regex: patientName, $options: "i" } },
           { lastName: { $regex: patientName, $options: "i" } },
@@ -83,21 +81,69 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const matchingPatientCodes = matchingPatients.map((p) => p.patientId);
 
       if (matchingPatientCodes.length === 0) {
-        // No matching patients, so set query to return no results
-        query.patientCode = "__NO_MATCH__"; // This will not match any patientCode
+        query.patientCode = "__NO_MATCH__";
+      } else if (patientCode) {
+        query.$and = [
+          { patientCode: new RegExp(patientCode, "i") },
+          { patientCode: { $in: matchingPatientCodes } },
+        ];
       } else {
-        if (patientCode) {
-          // Combine patientCode and patientName filters
-          query.$and = [
-            { patientCode: new RegExp(patientCode, "i") },
-            { patientCode: { $in: matchingPatientCodes } },
-          ];
-        } else {
-          query.patientCode = { $in: matchingPatientCodes };
-        }
+        query.patientCode = { $in: matchingPatientCodes };
       }
-    } else if (patientCode) {
-      query.patientCode = patientCodeFilter.patientCode;
+    }
+
+    if (saleStartDate || saleEndDate) {
+      const startDate = saleStartDate ? new Date(saleStartDate) : null;
+      const endDate = saleEndDate ? new Date(saleEndDate) : null;
+
+      query.$expr = {
+        $and: [
+          ...(startDate
+            ? [
+                {
+                  $gte: [
+                    {
+                      $dateFromParts: {
+                        year: { $year: "$createdAt" },
+                        month: { $month: "$createdAt" },
+                        day: { $dayOfMonth: "$createdAt" },
+                      },
+                    },
+                    {
+                      $dateFromParts: {
+                        year: { $year: startDate },
+                        month: { $month: startDate },
+                        day: { $dayOfMonth: startDate },
+                      },
+                    },
+                  ],
+                },
+              ]
+            : []),
+          ...(endDate
+            ? [
+                {
+                  $lte: [
+                    {
+                      $dateFromParts: {
+                        year: { $year: "$createdAt" },
+                        month: { $month: "$createdAt" },
+                        day: { $dayOfMonth: "$createdAt" },
+                      },
+                    },
+                    {
+                      $dateFromParts: {
+                        year: { $year: endDate },
+                        month: { $month: endDate },
+                        day: { $dayOfMonth: endDate },
+                      },
+                    },
+                  ],
+                },
+              ]
+            : []),
+        ],
+      };
     }
 
     const options: IPaginateOptions = {
@@ -114,44 +160,48 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     log("Query", query);
 
-    // Fetching the billings with pagination
     const result = await PatientBilling.paginate(query, options);
     const { records, pagination } = formatPaginationResult(result);
 
-    // Extract unique patient IDs from the billing records
-    const patientIds = Array.from(
-      new Set(records.map((record) => record.patientCode))
-    );
+    const patientIds = Array.from(new Set(records.map((record) => record.patientCode)));
 
-    // Fetch patient details using the extracted patient IDs
     const patientData = await Patient.find({
       patientId: { $in: patientIds },
     }).lean();
 
-    // Map patients to a dictionary for easy lookup
     const patientMap = patientData.reduce((map, patient) => {
       map[patient.patientId] = patient;
       return map;
     }, {});
 
-    // Combine patient details with billing records
-    const combinedData = records.map((record) => {
+    const combinedData = records.flatMap((record) => {
       const patientDetails = patientMap[record.patientCode] || {};
-
-      // Construct the patientName from fetched patient details
       const patientName = `${patientDetails.firstName || ""} ${
         patientDetails.lastName || ""
       }`.trim();
 
-      return {
-        ...record,
-        patientName, // Include the constructed patient name
-      };
+      // Filter payments based on the selected payment method if any
+      const filteredPayments = paymentMethod
+        ? record.payments.filter((payment) => payment.method === paymentMethod)
+        : record.payments;
+
+      // Map each filtered payment to a new row with distinct amount and details
+      return filteredPayments.map((payment) => ({
+        _id: `${record._id}-${payment.method}-${payment.amount}`, // Create a unique identifier combining record ID, payment method, and payment amount
+        billingId: record.billingId,
+        patientCode: record.patientCode,
+        patientName,
+        createdAt: record.createdAt,
+        paymentMethod: payment.method,
+        paymentAmount: payment.amount, // Set the specific payment amount for this row
+        totalPaid: payment.amount, // Keep the paid amount relevant to this specific payment's amount
+        totalDues: record.totalDues, // Use the dues value from the main record
+        discount: record.discount, // Keep other relevant fields from the main record
+        subTotal: record.subTotal, // Preserve the main record subtotal
+        tax: record.tax, // Preserve the tax field
+      }));
     });
-
-    // No need to filter combinedData by patientName here since it's already applied in the query
-
-    const summary = calculateSummary(combinedData);
+    const summary = calculateSummary(records);
 
     return successResponse("Success", {
       records: combinedData,
@@ -163,18 +213,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-function calculateSummary(billings): BillingSummary {
+function calculateSummary(billings: any[]): BillingSummary {
+  const roundToTwo = (num: number) => Math.round(num * 100) / 100;
+
   return billings.reduce<BillingSummary>(
     (acc, billing) => {
-      const total = billing.subTotal;
-      const totalPaid = billing.payments
-        .filter((payment) => payment.type === "Payment")
-        .reduce((sum, payment) => sum + payment.amount, 0);
+      const total = roundToTwo(billing.subTotal);
+      const totalPaid = roundToTwo(
+        billing.payments
+          .filter((payment) => payment.type === "Payment")
+          .reduce((sum, payment) => roundToTwo(sum + payment.amount), 0)
+      );
 
       acc.amount += total;
       acc.payment += totalPaid;
-      acc.discount += billing.discount;
-      acc.due += total - totalPaid - billing.discount;
+      acc.discount += roundToTwo(billing.discount);
+      acc.due += roundToTwo(total - totalPaid - billing.discount);
 
       return acc;
     },

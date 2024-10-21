@@ -243,9 +243,9 @@ const processDataForReport = (
     ) {
       modifiedGeneralDetails[
         field
-      ] = `Dr. ${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
+      ] = `${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
     } else if (modifiedGeneralDetails[field]) {
-      modifiedGeneralDetails[field] = `Dr. ${modifiedGeneralDetails[field].firstName || ""} ${
+      modifiedGeneralDetails[field] = `${modifiedGeneralDetails[field].firstName || ""} ${
         modifiedGeneralDetails[field].lastName || ""
       }`;
     }

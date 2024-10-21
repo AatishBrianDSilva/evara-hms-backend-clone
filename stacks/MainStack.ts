@@ -19,8 +19,7 @@ export function MainStack({ stack }: StackContext) {
     assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
     managedPolicies: [
       {
-        managedPolicyArn:
-          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+        managedPolicyArn: "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
       },
     ],
   });
@@ -52,8 +51,7 @@ export function MainStack({ stack }: StackContext) {
   );
 
   // Reference the MongoDB URI for the prod stage
-  const mongodb_uri =
-    stack.stage === "prod" ? process.env.DB_PROD : process.env.DB_DEV;
+  const mongodb_uri = stack.stage === "prod" ? process.env.DB_PROD : process.env.DB_DEV;
 
   // Create a chromium layer for the pdf generation function
   const chromiumLayer = new LayerVersion(stack, "ChromiumLayer", {
@@ -67,8 +65,7 @@ export function MainStack({ stack }: StackContext) {
     consumer: {
       function: {
         vpc: stack.stage === "prod" ? (vpc as any) : undefined,
-        securityGroups:
-          stack.stage === "prod" ? [securityGroup as any] : undefined,
+        securityGroups: stack.stage === "prod" ? [securityGroup as any] : undefined,
         handler: "packages/functions/src/files/conditionalDelete.main",
         environment: {
           MONGO_URI: mongodb_uri as string,
@@ -85,22 +82,17 @@ export function MainStack({ stack }: StackContext) {
     },
   });
 
-  const s3ScheduleDeletionFunction = new Function(
-    stack,
-    "S3ScheduleDeletionFunction",
-    {
-      handler: "packages/functions/src/files/scheduleDelete.main",
-      timeout: "30 seconds",
-      vpc: stack.stage === "prod" ? (vpc as any) : undefined,
-      securityGroups:
-        stack.stage === "prod" ? [securityGroup as any] : undefined,
-      permissions: ["sqs", "s3"],
-      environment: {
-        S3_SCHEDULE_DELETE_QUEUE_URL: s3FileDeletionQueue.queueUrl,
-        MONGO_URI: mongodb_uri as string,
-      },
-    }
-  );
+  const s3ScheduleDeletionFunction = new Function(stack, "S3ScheduleDeletionFunction", {
+    handler: "packages/functions/src/files/scheduleDelete.main",
+    timeout: "30 seconds",
+    vpc: stack.stage === "prod" ? (vpc as any) : undefined,
+    securityGroups: stack.stage === "prod" ? [securityGroup as any] : undefined,
+    permissions: ["sqs", "s3"],
+    environment: {
+      S3_SCHEDULE_DELETE_QUEUE_URL: s3FileDeletionQueue.queueUrl,
+      MONGO_URI: mongodb_uri as string,
+    },
+  });
 
   let userProfileBucket;
   if (stack.stage === "prod") {
@@ -127,44 +119,36 @@ export function MainStack({ stack }: StackContext) {
 
   let userIdentificationsBucket;
   if (stack.stage === "prod") {
-    userIdentificationsBucket = new Bucket(
-      stack,
-      "UseIdentificationsBucketProd",
-      {
-        name: `evara-hms-user-identifications-${stack.stage}`,
-        cdk: {
-          bucket: {
-            bucketName: `evara-hms-user-identifications-${stack.stage}`,
-            blockPublicAccess: new BlockPublicAccess({
-              blockPublicPolicy: false,
-              ignorePublicAcls: false,
-              restrictPublicBuckets: false,
-              blockPublicAcls: false,
-            }),
-          },
+    userIdentificationsBucket = new Bucket(stack, "UseIdentificationsBucketProd", {
+      name: `evara-hms-user-identifications-${stack.stage}`,
+      cdk: {
+        bucket: {
+          bucketName: `evara-hms-user-identifications-${stack.stage}`,
+          blockPublicAccess: new BlockPublicAccess({
+            blockPublicPolicy: false,
+            ignorePublicAcls: false,
+            restrictPublicBuckets: false,
+            blockPublicAcls: false,
+          }),
         },
-        notifications: {
-          ScheduleDeletion: {
-            function: s3ScheduleDeletionFunction,
-            events: ["object_created"],
-          },
+      },
+      notifications: {
+        ScheduleDeletion: {
+          function: s3ScheduleDeletionFunction,
+          events: ["object_created"],
         },
-      }
-    );
+      },
+    });
   } else {
-    userIdentificationsBucket = new Bucket(
-      stack,
-      "UseIdentificationsBucketDev",
-      {
-        cdk: {
-          bucket: S3Bucket.fromBucketArn(
-            stack,
-            "UserIdentificationsBucket",
-            `arn:aws:s3:::evara-hms-user-identifications-devs`
-          ) as any,
-        },
-      }
-    );
+    userIdentificationsBucket = new Bucket(stack, "UseIdentificationsBucketDev", {
+      cdk: {
+        bucket: S3Bucket.fromBucketArn(
+          stack,
+          "UserIdentificationsBucket",
+          `arn:aws:s3:::evara-hms-user-identifications-devs`
+        ) as any,
+      },
+    });
   }
 
   let userReportBucket;
@@ -240,8 +224,7 @@ export function MainStack({ stack }: StackContext) {
     consumer: {
       function: {
         vpc: stack.stage === "prod" ? (vpc as any) : undefined,
-        securityGroups:
-          stack.stage === "prod" ? [securityGroup as any] : undefined,
+        securityGroups: stack.stage === "prod" ? [securityGroup as any] : undefined,
         handler:
           "packages/functions/src/patientDashboard/billings/estimation/automateEstimation.main",
         environment: {
@@ -292,8 +275,7 @@ export function MainStack({ stack }: StackContext) {
     consumer: {
       function: {
         vpc: stack.stage === "prod" ? (vpc as any) : undefined,
-        securityGroups:
-          stack.stage === "prod" ? [securityGroup as any] : undefined,
+        securityGroups: stack.stage === "prod" ? [securityGroup as any] : undefined,
         handler:
           "packages/functions/src/patientDashboard/billings/estimation/automateServiceGeneration.main",
         timeout: 300,
@@ -340,83 +322,72 @@ export function MainStack({ stack }: StackContext) {
     },
   });
 
-  const reportPdfGenerationQueue = new Queue(
-    stack,
-    "ReportPdfGenerationQueue",
-    {
-      consumer: {
-        function: {
-          vpc: stack.stage === "prod" ? (vpc as any) : undefined,
-          securityGroups:
-            stack.stage === "prod" ? [securityGroup as any] : undefined,
-          handler: "packages/functions/src/reports/pdfGenerator.main",
-          timeout: 15,
-          runtime: "nodejs18.x",
-          layers: [chromiumLayer as any],
-          role: role as any,
-          memorySize: "2 GB",
-          nodejs: {
-            esbuild: {
-              external: ["@sparticuz/chromium"],
-            },
-          },
-          permissions: ["sqs", "s3"],
-          environment: {
-            STAGE: stack.stage,
-            MONGO_URI: mongodb_uri as string,
+  const reportPdfGenerationQueue = new Queue(stack, "ReportPdfGenerationQueue", {
+    consumer: {
+      function: {
+        vpc: stack.stage === "prod" ? (vpc as any) : undefined,
+        securityGroups: stack.stage === "prod" ? [securityGroup as any] : undefined,
+        handler: "packages/functions/src/reports/pdfGenerator.main",
+        timeout: 15,
+        runtime: "nodejs18.x",
+        layers: [chromiumLayer as any],
+        role: role as any,
+        memorySize: "2 GB",
+        nodejs: {
+          esbuild: {
+            external: ["@sparticuz/chromium"],
           },
         },
-      },
-      cdk: {
-        queue: {
-          queueName: `ReportPdfGenerationQueue-${stack.stage}`,
-          visibilityTimeout: Duration.seconds(300) as any,
-          deadLetterQueue: {
-            maxReceiveCount: 3,
-            queue: reportPdfGenerationDLQ.cdk.queue,
-          },
+        permissions: ["sqs", "s3"],
+        environment: {
+          STAGE: stack.stage,
+          MONGO_URI: mongodb_uri as string,
         },
       },
-    }
-  );
+    },
+    cdk: {
+      queue: {
+        queueName: `ReportPdfGenerationQueue-${stack.stage}`,
+        visibilityTimeout: Duration.seconds(300) as any,
+        deadLetterQueue: {
+          maxReceiveCount: 3,
+          queue: reportPdfGenerationDLQ.cdk.queue,
+        },
+      },
+    },
+  });
 
   //Create a topic to handle SNS messages for generating reports html
-  const reportHTMLGenerationTopic = new Topic(
-    stack,
-    "ReportHTMLGenerationTopic",
-    {
-      subscribers: {
-        subscriber: {
-          type: "function",
-          function: new Function(stack, "ReportHTMLGenerationFunction", {
-            vpc: stack.stage === "prod" ? (vpc as any) : undefined,
-            securityGroups:
-              stack.stage === "prod" ? [securityGroup as any] : undefined,
-            handler: "packages/functions/src/reports/htmlGenerator.main",
-            timeout: "30 seconds",
-            permissions: ["sqs"],
-            copyFiles: [
-              {
-                from: "packages/core/src/templates",
-                // to: "templates",
-              },
-            ],
-            environment: {
-              USER_REPORT_BUCKET: userReportBucket.bucketName,
-              REPORT_PDF_GENERATION_QUEUE_URL:
-                reportPdfGenerationQueue.queueUrl,
-              MONGO_URI: mongodb_uri as string,
+  const reportHTMLGenerationTopic = new Topic(stack, "ReportHTMLGenerationTopic", {
+    subscribers: {
+      subscriber: {
+        type: "function",
+        function: new Function(stack, "ReportHTMLGenerationFunction", {
+          vpc: stack.stage === "prod" ? (vpc as any) : undefined,
+          securityGroups: stack.stage === "prod" ? [securityGroup as any] : undefined,
+          handler: "packages/functions/src/reports/htmlGenerator.main",
+          timeout: "30 seconds",
+          permissions: ["sqs"],
+          copyFiles: [
+            {
+              from: "packages/core/src/templates",
+              // to: "templates",
             },
-          }),
-        },
+          ],
+          environment: {
+            USER_REPORT_BUCKET: userReportBucket.bucketName,
+            REPORT_PDF_GENERATION_QUEUE_URL: reportPdfGenerationQueue.queueUrl,
+            MONGO_URI: mongodb_uri as string,
+          },
+        }),
       },
-      cdk: {
-        topic: {
-          topicName: "ReportHTMLGenerationTopic-" + stack.stage,
-        },
+    },
+    cdk: {
+      topic: {
+        topicName: "ReportHTMLGenerationTopic-" + stack.stage,
       },
-    }
-  );
+    },
+  });
 
   /**
    * Represents the API configuration for the MainStack.
@@ -427,8 +398,7 @@ export function MainStack({ stack }: StackContext) {
         type: "lambda",
         function: new Function(stack, "AuthorizerFunction", {
           vpc: stack.stage === "prod" ? (vpc as any) : undefined,
-          securityGroups:
-            stack.stage === "prod" ? [securityGroup as any] : undefined,
+          securityGroups: stack.stage === "prod" ? [securityGroup as any] : undefined,
           handler: "packages/functions/src/authentication/authorizer.main",
           permissions: ["secretsmanager"],
           timeout: "10 seconds",
@@ -440,8 +410,7 @@ export function MainStack({ stack }: StackContext) {
     defaults: {
       function: {
         vpc: stack.stage === "prod" ? (vpc as any) : undefined,
-        securityGroups:
-          stack.stage === "prod" ? [securityGroup as any] : undefined,
+        securityGroups: stack.stage === "prod" ? [securityGroup as any] : undefined,
         timeout: "29 seconds",
         role: role as any,
         environment: {
@@ -459,31 +428,23 @@ export function MainStack({ stack }: StackContext) {
     },
     routes: {
       // Patients
-      "POST /patients/{id}/partner/add":
-        "packages/functions/src/patients/addPartner.main",
+      "POST /patients/{id}/partner/add": "packages/functions/src/patients/addPartner.main",
       "POST /patients/add": "packages/functions/src/patients/addPatient.main",
       "GET /patients": "packages/functions/src/patients/getPatients.main",
-      "GET /patients/{id}":
-        "packages/functions/src/patients/getPatientById.main",
+      "GET /patients/{id}": "packages/functions/src/patients/getPatientById.main",
       "PUT /patients/{id}": "packages/functions/src/patients/editPatient.main",
-      "DELETE /patients/{id}":
-        "packages/functions/src/patients/deletePatient.main",
+      "DELETE /patients/{id}": "packages/functions/src/patients/deletePatient.main",
 
       // Appointments
-      "POST /appointments/add":
-        "packages/functions/src/appointments/addAppointment.main",
-      "GET /appointments":
-        "packages/functions/src/appointments/getAppointments.main",
+      "POST /appointments/add": "packages/functions/src/appointments/addAppointment.main",
+      "GET /appointments": "packages/functions/src/appointments/getAppointments.main",
       "GET /appointments/upcoming":
         "packages/functions/src/appointments/getUpcomingAppointments.main",
-      "GET /appointments/{id}":
-        "packages/functions/src/appointments/getAppointmentById.main",
-      "PUT /appointments/{id}":
-        "packages/functions/src/appointments/editAppointment.main",
+      "GET /appointments/{id}": "packages/functions/src/appointments/getAppointmentById.main",
+      "PUT /appointments/{id}": "packages/functions/src/appointments/editAppointment.main",
       "PATCH /appointments/{id}/status":
         "packages/functions/src/appointments/editAppointmentStatus.main",
-      "DELETE /appointments/{id}":
-        "packages/functions/src/appointments/deleteAppointment.main",
+      "DELETE /appointments/{id}": "packages/functions/src/appointments/deleteAppointment.main",
 
       // Patient Dashboard End
 
@@ -498,15 +459,13 @@ export function MainStack({ stack }: StackContext) {
       },
 
       //File Uploads
-      "POST /files/get-signed-url":
-        "packages/functions/src/files/generateSignedUrl.main",
+      "POST /files/get-signed-url": "packages/functions/src/files/generateSignedUrl.main",
       "DELETE /files/delete": "packages/functions/src/files/deleteFile.main",
 
       // Home Summary
       "GET /home/summary": "packages/functions/src/home/summary.main",
       "GET /home/patient-summary": "packages/functions/src/home/patient.main",
-      "GET /home/appointment-summary":
-        "packages/functions/src/home/appointment.main",
+      "GET /home/appointment-summary": "packages/functions/src/home/appointment.main",
       "GET /home/pharmacy-summary": "packages/functions/src/home/pharmacy.main",
 
       // Admin Dev
@@ -538,6 +497,12 @@ export function MainStack({ stack }: StackContext) {
         "packages/functions/src/analyticsDashboard/pharmacy/getStockSummary.main",
       "GET /analytics/pharmacy/patient-return":
         "packages/functions/src/analyticsDashboard/pharmacy/getPatientReturn.main",
+      "GET /analytics/pharmacy/critical-stocks":
+        "packages/functions/src/analyticsDashboard/pharmacy/getCriticalStocks.main",
+      "GET /analytics/pharmacy/pharmacy-report":
+        "packages/functions/src/analyticsDashboard/pharmacy/getPharmacyReport.main",
+      "GET /analytics/pharmacy/purchase-order-report":
+        "packages/functions/src/analyticsDashboard/pharmacy/getPurchaseOrderReport.main",
     },
   });
 

@@ -4,11 +4,18 @@ import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { PatientRefund } from "@evara-backend/core/models/patientDashboard/Billings/PatientRefund";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import ErrorMessage from "@evara-backend/core/lib/utils/ErrorMessage";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
 
     // Extract query parameters for pagination and filtering
@@ -28,16 +35,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const pageSize = parseInt(limit, 10);
 
     // Build match condition for filtering `PatientRefund` collection
-    const matchCondition: any = {};
+    const matchCondition: any = {
+      branchId: auth.branchId, // Filter by branch
+    };
 
     if (branchId) {
       matchCondition.branchId = branchId; // Filter by branchId if provided
     }
 
-    if (startDate && endDate) {
+    // Apply filtering by `returnedDate` (refundDate in the refundDetails field)
+    if (startDate || endDate) {
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+
       matchCondition["refundDetails.refundDate"] = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate),
+        ...(start && { $gte: new Date(start.setUTCHours(0, 0, 0, 0)) }), // Start of the day
+        ...(end && { $lte: new Date(end.setUTCHours(23, 59, 59, 999)) }), // End of the day
       };
     }
 

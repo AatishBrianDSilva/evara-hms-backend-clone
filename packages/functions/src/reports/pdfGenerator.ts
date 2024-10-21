@@ -52,7 +52,7 @@ const convertHtmlToPdf = async (html: string, header: string, footer: string): P
   const pdf = await page.pdf({
     format: "A4",
     margin: {
-      top: "150px",
+      top: "120px",
       bottom: "100px",
       left: "25px",
       right: "25px",

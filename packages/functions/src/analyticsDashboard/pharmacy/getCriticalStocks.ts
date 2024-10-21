@@ -98,11 +98,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
             batchId: "$batches._id",
           },
           drugCategory: { $first: "$drugCategory.name" },
-          drugCatCode: { $first: "$drugCategory._id" },
           drugName: { $first: "$drugItem.name" },
           drugCode: { $first: "$drugItem.code" },
           centre: { $first: { $concat: ["$clinicId", "$branchId"] } },
-          // Sum quantity based on location name mapping
+
+          totalQty: { $sum: "$batches.locations.quantity" }, // Sum total quantity across all locations
+          criticalCount: { $first: { $ifNull: ["$drugItem.criticalCount", 10] } }, // Set critical count to 10 if not specified
+          // Sum quantities by location
           Central: {
             $sum: {
               $cond: [
@@ -200,8 +202,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               ],
             },
           },
-          totalQty: { $sum: "$batches.locations.quantity" },
         },
+      },
+      {
+        $match: { $expr: { $lte: ["$totalQty", "$criticalCount"] } }, // Match items where total quantity is <= critical count
       },
       {
         $sort: { "drugItem.name": 1 }, // Sort by drug name for clarity
@@ -218,8 +222,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const report = await PharmacyStock.aggregate(aggregationPipeline);
 
     // Fetch total document count for pagination using match condition
-    const totalDocs = await PharmacyStock.countDocuments(matchCondition);
-    const totalPages = Math.ceil(totalDocs / pageSize);
+    const totalDocs = await PharmacyStock.aggregate([
+      { $lookup: { from: "drugitems", localField: "item", foreignField: "_id", as: "drugItem" } },
+      { $unwind: "$drugItem" },
+      { $match: matchCondition },
+      {
+        $group: {
+          _id: "$item",
+          totalQty: { $sum: "$batches.locations.quantity" },
+          criticalCount: { $first: { $ifNull: ["$drugItem.criticalCount", 10] } },
+        },
+      },
+      { $match: { $expr: { $lte: ["$totalQty", "$criticalCount"] } } },
+    ]);
+
+    const totalPages = Math.ceil(totalDocs.length / pageSize);
 
     // Assign serial numbers
     const reportWithSerial = report.map((row, index) => ({
@@ -230,16 +247,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Format the final result with pagination information
     const paginatedResult = formatPaginationResult({
       docs: reportWithSerial,
-      totalDocs,
+      totalDocs: totalDocs.length,
       totalPages,
       currentPage: parseInt(page, 10),
     });
 
-    console.log("Final Stock Report with Pagination: ", paginatedResult);
+    console.log("Critical Stock Report with Pagination: ", paginatedResult);
 
-    return successResponse("Stock Report fetched successfully", paginatedResult);
+    return successResponse("Critical Stock Report fetched successfully", paginatedResult);
   } catch (error) {
-    console.error("Error in stockReport API: ", error);
+    console.error("Error in getCriticalStocks API: ", error);
     return errorResponse(error);
   }
 };

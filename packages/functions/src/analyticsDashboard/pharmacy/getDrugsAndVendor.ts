@@ -4,11 +4,18 @@ import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import ErrorMessage from "@evara-backend/core/lib/utils/ErrorMessage";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
 
     // Extract query string parameters for pagination and filtering
@@ -20,7 +27,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const pageSize = parseInt(limit, 10);
 
     // Build match condition for drugName filtering
-    const matchCondition: any = {};
+    const matchCondition: any = {
+      branchId: auth.branchId, // Filter by branch
+    };
+
     if (drugName) {
       matchCondition.name = { $regex: new RegExp(drugName, "i") }; // Case-insensitive partial match
     }

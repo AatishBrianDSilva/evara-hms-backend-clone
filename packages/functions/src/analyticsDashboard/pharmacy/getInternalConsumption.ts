@@ -4,31 +4,46 @@ import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { InternalConsumption } from "@evara-backend/core/src/models/pharmacyDashboard/InternalConsumption";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import ErrorMessage from "@evara-backend/core/lib/utils/ErrorMessage";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "25", allocDate } = params;
+    const {
+      page = "1",
+      limit = "25",
+      saleStartDate, // Start date for filtering
+      saleEndDate, // End date for filtering
+    } = params;
+
+    console.log("Params", params);
 
     // Calculate skip and limit for pagination
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
     const pageSize = parseInt(limit, 10);
 
     // Build match condition for allocDate filtering
-    const matchCondition: any = {};
-    if (allocDate) {
-      const startOfDay = new Date(allocDate);
-      startOfDay.setUTCHours(0, 0, 0, 0); // Start of the day in UTC
-      const endOfDay = new Date(allocDate);
-      endOfDay.setUTCHours(23, 59, 59, 999); // End of the day in UTC
+    const matchCondition: any = {
+      branchId: auth.branchId, // Filter by branch
+    };
+
+    if (saleStartDate || saleEndDate) {
+      const startDate = saleStartDate ? new Date(saleStartDate) : null;
+      const endDate = saleEndDate ? new Date(saleEndDate) : null;
 
       matchCondition.date = {
-        $gte: startOfDay,
-        $lte: endOfDay,
+        ...(startDate && { $gte: new Date(startDate.setHours(0, 0, 0, 0)) }), // Start of the day
+        ...(endDate && { $lte: new Date(endDate.setHours(23, 59, 59, 999)) }), // End of the day
       };
     }
 
@@ -123,13 +138,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     ];
 
     // Log the aggregation pipeline for debugging
-    console.log("Aggregation Pipeline: ", JSON.stringify(aggregationPipeline, null, 2));
+    // console.log("Aggregation Pipeline: ", JSON.stringify(aggregationPipeline, null, 2));
 
     // Fetch aggregated internal consumption data
     const internalConsumptionReport = await InternalConsumption.aggregate(aggregationPipeline);
 
     // Log the report data for debugging
-    console.log("Internal Consumption Report Data: ", internalConsumptionReport);
+    // console.log("Internal Consumption Report Data: ", internalConsumptionReport);
 
     // Fetch the total document count for pagination
     const totalDocs = await InternalConsumption.countDocuments(matchCondition); // Apply match condition to count
@@ -150,7 +165,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     });
 
     // Log the final result for debugging
-    console.log("Final Internal Consumption Report with Pagination: ", paginatedResult);
+    // console.log("Final Internal Consumption Report with Pagination: ", paginatedResult);
 
     return successResponse("Internal Consumption Report fetched successfully", paginatedResult);
   } catch (error) {

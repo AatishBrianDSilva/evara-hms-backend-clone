@@ -4,9 +4,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
       body { font-family: Arial, sans-serif; margin: 0; padding: 0; } .thin-divider {
-      border-bottom-width: 1px; } main { padding: 10mm; padding-top : 50px; display: flex;
-      flex-direction: column; flex-grow: 1; } .section { margin-bottom: 20px; } .section-title {
-      font-size: 1.5em; margin-bottom: 10px; color:
+      border-bottom-width: 1px; } main { padding: 10mm; padding-top: 5px; display: flex; box-sizing:
+      border-box; flex-direction: column; flex-grow: 1; } .section { margin-bottom: 20px; }
+      .section-title { font-size: 1.5em; margin-bottom: 10px; color:
       {{styles.primaryColor}}; } .section-content { font-size: 1em; } .key-value { display: flex;
       justify-content: space-between; margin-bottom: 10px; } .key { font-weight: bold; width: 50%;
       text-align: left; } .value { width: 70%; text-align: left; white-space: pre-wrap; } h2 {
@@ -16,11 +16,28 @@
       align-items: center; margin-bottom: 10px; } .column-container { display: flex;
       justify-content: space-between; padding: 10px 0; gap: 20px; } .column { width: 48%; }
       .column.left { padding-left: 15px; } .column.right { padding-right: 15px; } .padded-section {
-      padding-left: 15px; padding-right: 15px; }
+      padding-left: 15px; padding-right: 15px; } /* New CSS class for centered branch address */
+      .branch-address { text-align: center; padding: 20px 0; font-size: 1em; /* Adjust as needed */
+      color: #333; /* Adjust text color as needed */ }
+
+        /* CSS for uploaded images */
+      .image-gallery { display: flex; flex-wrap: wrap; gap: 5px; justify-content: space-between; }
+      .image-container { width: 31%; box-sizing: border-box; margin-bottom: 10px; }
+      .uploaded-image { width: 100%; height: auto; }
+      .image-label { text-align: center; font-weight: bold; margin-bottom: 5px; }
+    </style>
     </style>
   </head>
   <body>
     <main>
+
+      <!-- Brand Address Section (conditionally displayed) -->
+      {{#if addressData}}
+        <div class="section branch-address">
+          {{addressData.branchAddress}}
+        </div>
+      {{/if}}
+
       <!-- Patient Details Section -->
       <div class="header">Patient Details</div>
       <div class="section">
@@ -86,6 +103,21 @@
           </div>
         {{/showIfContainsTitle}}
       {{/each}}
+
+            <!-- Uploaded Images Section -->
+ {{#getSectionByTitle sections "Uploaded Images"}}
+  <div class="header">Uploaded Images</div> <!-- Use the same header style -->
+  <div class="section">
+    <div class="image-gallery">
+      {{#each content}}
+        <div class="image-container">
+          <p class="image-label">{{label}}</p>
+          <img src="{{src}}" alt="{{label}}" class="uploaded-image" />
+        </div>
+      {{/each}}
+    </div>
+  </div>
+{{/getSectionByTitle}}
     </main>
   </body>
 </html>

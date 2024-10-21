@@ -29,6 +29,7 @@ export interface IDrugItem extends Document {
   rate: number; // Rate is the buying price
   taxRate: Schema.Types.ObjectId;
   manufacturer: Schema.Types.ObjectId;
+  criticalCount?: number;
   status: "Active" | "Inactive";
 }
 
@@ -89,6 +90,10 @@ const drugItemSchema = new Schema<IDrugItem>(
       type: Schema.Types.ObjectId,
       ref: "DrugManufacturer",
       // required: true,
+    },
+    criticalCount: {
+      type: Number,
+      default: 10, // Default critical count if not specified
     },
     status: {
       type: String,

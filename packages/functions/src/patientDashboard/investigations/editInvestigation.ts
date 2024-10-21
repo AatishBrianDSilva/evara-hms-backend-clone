@@ -282,7 +282,7 @@ const processDataForReport = (
         }
         // Process doctor fields
         else if (doctorFields.includes(key) && value.firstName && value.lastName) {
-          details[key] = `Dr. ${value.firstName} ${value.lastName}`;
+          details[key] = `${value.firstName} ${value.lastName}`;
         } else {
           // Include the field as-is if it is valid
           details[key] = value;

@@ -45,6 +45,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       searchQuery = "", // The combined search query
     } = params;
 
+    log("Received query parameters:", params);
+    log("Parsed limit value:", limit);
+
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
     // Parse the combined search query
@@ -99,12 +102,27 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       query.item = { $in: ids };
     }
 
-    const options: IPaginateOptions = {
-      page: parseInt(page, 10),
-      limit: parseInt(limit, 10),
-      populate,
-      sort,
-    };
+    let options: IPaginateOptions;
+    if (parseInt(limit, 10) === -1) {
+      // Fetch all records if the limit is -1
+
+      log("Fetching all records without pagination.");
+
+      options = {
+        populate,
+        sort,
+        pagination: false, // Disable pagination to get all records
+      };
+    } else {
+      log(`Applying pagination with limit: ${limit}, page: ${page}`);
+
+      options = {
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
+        populate,
+        sort,
+      };
+    }
 
     const result = await PharmacyStock.paginate(query, options);
 

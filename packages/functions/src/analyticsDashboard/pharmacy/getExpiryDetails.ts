@@ -4,25 +4,53 @@ import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
+import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import ErrorMessage from "@evara-backend/core/lib/utils/ErrorMessage";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
 
     // Extract query string parameters for pagination and filtering
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "25", drugName = "" } = params;
+    const { page = "1", limit = "25", drugName = "", startDate, endDate } = params;
 
     // Calculate skip and limit for pagination
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
     const pageSize = parseInt(limit, 10);
 
-    // Build match condition for drugName filtering
-    const matchCondition: any = {};
+    // Build match condition for drugName and expiryDate filtering
+    const matchCondition: any = {
+      branchId: auth.branchId, // Filter by branch
+    };
+
+    // console.log("Current Branch", branchId);
+
     if (drugName) {
       matchCondition["drugItem.name"] = { $regex: new RegExp(drugName, "i") }; // Case-insensitive partial match
+    }
+
+    // Add date range filter on expiryDate while ignoring the time part
+    if (startDate || endDate) {
+      const startDateObj = startDate ? new Date(startDate) : null;
+      const endDateObj = endDate ? new Date(endDate) : null;
+
+      matchCondition["batches.expiryDate"] = {
+        ...(startDateObj && {
+          $gte: new Date(startDateObj.setUTCHours(0, 0, 0, 0)), // Start of the day (ignoring time)
+        }),
+        ...(endDateObj && {
+          $lte: new Date(endDateObj.setUTCHours(23, 59, 59, 999)), // End of the day (ignoring time)
+        }),
+      };
     }
 
     // Aggregation pipeline
@@ -117,7 +145,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         },
       },
       {
-        $match: matchCondition, // Apply drugName filter if provided
+        $match: matchCondition, // Apply drugName and expiryDate filters if provided
       },
       {
         $project: {

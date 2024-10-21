@@ -4,18 +4,26 @@ import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
 import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import { PatientPharmacy } from "@evara-backend/core/src/models/patientDashboard/PatientPharmacy";
 import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
+import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import ErrorMessage from "@evara-backend/core/lib/utils/ErrorMessage";
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    const auth = extractAuthorizerDetails(event);
+    if (!auth) {
+      throw new ErrorMessage(401, "Unauthorized");
+    }
+
     await connectMongoDb();
 
     console.log("Backend Received Query Params:", event.queryStringParameters);
 
     // Extract query string parameters for pagination and filtering
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "25", paginate = "true", saleDate } = params;
+    // const { page = "1", limit = "25", paginate = "true", saleDate } = params;
+    const { page = "1", limit = "25", paginate = "true", saleStartDate, saleEndDate } = params;
 
     // Check if pagination is enabled based on the "paginate" parameter
     const isPaginationEnabled = paginate === "true";
@@ -23,17 +31,50 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Calculate skip value for pagination
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
-    // Build match condition for saleDate filtering
-    const matchCondition: any = {};
-    if (saleDate) {
-      const startOfDay = new Date(saleDate);
-      startOfDay.setHours(0, 0, 0, 0); // Start of the day
-      const endOfDay = new Date(saleDate);
-      endOfDay.setHours(23, 59, 59, 999); // End of the day
+    // Parse the saleStartDate and saleEndDate from query params
+    const startDate = saleStartDate ? new Date(saleStartDate) : null;
+    const endDate = saleEndDate ? new Date(saleEndDate) : null;
 
-      matchCondition.date = {
-        $gte: startOfDay,
-        $lte: endOfDay,
+    const matchCondition: any = {
+      branchId: auth.branchId, // Filter by branch
+    };
+
+    if (startDate || endDate) {
+      matchCondition.$expr = {
+        $and: [
+          ...(startDate
+            ? [
+                {
+                  $gte: [
+                    {
+                      $dateFromParts: {
+                        year: { $year: "$date" },
+                        month: { $month: "$date" },
+                        day: { $dayOfMonth: "$date" },
+                      },
+                    },
+                    startDate,
+                  ],
+                },
+              ]
+            : []),
+          ...(endDate
+            ? [
+                {
+                  $lte: [
+                    {
+                      $dateFromParts: {
+                        year: { $year: "$date" },
+                        month: { $month: "$date" },
+                        day: { $dayOfMonth: "$date" },
+                      },
+                    },
+                    endDate,
+                  ],
+                },
+              ]
+            : []),
+        ],
       };
     }
 
