@@ -484,6 +484,8 @@ export function MainStack({ stack }: StackContext) {
       //Billings
       "GET /analytics/billings":
         "packages/functions/src/analyticsDashboard/billings/getAnalyticsPatientBillings.main",
+      "GET /analytics/refundReports":
+        "packages/functions/src/analyticsDashboard/billings/getRefundReports.main",
       //Pharmacy
       "GET /analytics/pharmacy/sales-by-schedule":
         "packages/functions/src/analyticsDashboard/pharmacy/getSalesBySchedule.main",

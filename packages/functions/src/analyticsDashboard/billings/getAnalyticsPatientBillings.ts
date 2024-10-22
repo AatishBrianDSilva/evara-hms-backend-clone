@@ -46,13 +46,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const {
       page = "1",
       limit = "10",
+      paginate = "true", // This will determine if pagination is applied or not
       sort: sortRaw,
       status,
       paymentMethod,
       searchQuery = "",
       saleStartDate,
       saleEndDate,
+      billType,
     } = params;
+
+    const isPaginationEnabled = paginate === "true"; // Check if we are paginating
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
     const { patientCode, patientName } = parseSearchQuery(searchQuery);
@@ -63,6 +67,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     };
 
     if (status) query.status = status;
+    if (billType) query.billType = billType; // Apply billType filter
 
     if (patientCode) {
       query.patientCode = new RegExp(patientCode, "i");
@@ -146,9 +151,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
     }
 
+    // Pagination options
     const options: IPaginateOptions = {
-      page: parseInt(page, 10),
-      limit: parseInt(limit, 10),
+      page: isPaginationEnabled ? parseInt(page, 10) : undefined,
+      limit: isPaginationEnabled ? parseInt(limit, 10) : undefined,
       sort,
       populate: [
         {
@@ -160,10 +166,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     log("Query", query);
 
-    const result = await PatientBilling.paginate(query, options);
+    // Fetch records based on pagination or without pagination
+    const result = isPaginationEnabled
+      ? await PatientBilling.paginate(query, options)
+      : { docs: await PatientBilling.find(query).sort(sort), totalDocs: 0 };
+
     const { records, pagination } = formatPaginationResult(result);
 
-    const patientIds = Array.from(new Set(records.map((record) => record.patientCode)));
+    const patientIds = Array.from(
+      new Set(records.map((record) => record.patientCode))
+    );
 
     const patientData = await Patient.find({
       patientId: { $in: patientIds },
@@ -199,13 +211,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         discount: record.discount, // Keep other relevant fields from the main record
         subTotal: record.subTotal, // Preserve the main record subtotal
         tax: record.tax, // Preserve the tax field
+        billType: record.billType, // Added billType field
       }));
     });
     const summary = calculateSummary(records);
 
     return successResponse("Success", {
       records: combinedData,
-      pagination,
+      pagination: isPaginationEnabled ? pagination : undefined, // Only include pagination if enabled
       summary: summary,
     });
   } catch (error) {

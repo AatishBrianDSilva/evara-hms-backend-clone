@@ -179,6 +179,8 @@ const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branc
   const statusMap = {
     Paid: { color: "success", label: "Paid" },
     Unpaid: { color: "warning", label: "Pending" },
+    Discount: { color: "primary", label: "Discount" },
+    Refunded: { color: "error", label: "Refunded" },
   };
 
   const paymentMethodColorMap: Record<string, string> = {
@@ -189,6 +191,7 @@ const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branc
     BankTransfer: "info",
   };
 
+  // Aggregation for total billings, discount, and refunded amounts
   const data = await PatientBilling.aggregate([
     {
       $match: {
@@ -201,59 +204,69 @@ const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branc
       },
     },
     {
-      $unwind: {
-        path: "$payments",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
       $group: {
-        _id: "$status",
-        count: { $sum: 1 },
-        totalAmount: { $sum: { $add: ["$amount", "$tax"] } }, // Sum of amount + tax
-        totalDiscount: { $sum: "$discount" },
-        totalPaid: { $sum: "$payments.amount" },
-        totalRefunded: { $sum: "$totalRefunded" },
-        paymentsByMethod: {
-          $push: {
-            method: "$payments.method",
-            amount: "$payments.amount",
-          },
-        },
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        statuses: {
-          $push: {
-            status: "$_id",
-            count: "$count",
-            totalAmount: { $sum: "$totalAmount" }, // Total amount per status (already calculated)
-          },
-        },
-        total: { $sum: "$count" },
-        totalBillings: { $sum: "$totalAmount" },
-        totalDiscount: { $sum: "$totalDiscount" },
-        totalPaid: { $sum: "$totalPaid" },
-        totalRefunded: { $sum: "$totalRefunded" },
-        paymentsByMethod: { $push: "$paymentsByMethod" },
+        _id: "$status", // Group by status (Paid, Pending, etc.)
+        totalBillings: { $sum: { $add: ["$amount", "$tax"] } }, // Sum of amount + tax
+        totalDiscount: { $sum: "$discount" }, // Total discount
+        totalRefunded: { $sum: "$totalRefunded" }, // Total refunded
+        count: { $sum: 1 }, // Count number of records
       },
     },
   ]);
 
-  const paymentMethods = {};
+  // Aggregation for payment methods, ensuring no double counting
+  const paymentData = await PatientBilling.aggregate([
+    {
+      $match: {
+        clinicId,
+        branchId,
+        createdAt: {
+          $gte: dateRange.startDate,
+          $lte: dateRange.endDate,
+        },
+      },
+    },
+    {
+      $unwind: "$payments",
+    }, // Unwind payments array to break down by payment method
+    {
+      $group: {
+        _id: {
+          billingId: "$_id", // Group by billing ID first to avoid double counting
+          method: "$payments.method", // Group by payment method (Cash, UPI, etc.)
+        },
+        totalPaidPerBilling: { $sum: "$payments.amount" }, // Sum payments for each billing document
+      },
+    },
+    {
+      $group: {
+        _id: "$_id.method", // Now group by payment method
+        totalPaid: { $sum: "$totalPaidPerBilling" }, // Sum payments per method, across billing documents
+      },
+    },
+  ]);
 
-  if (data.length > 0) {
-    data[0].paymentsByMethod.forEach((payments) => {
-      payments.forEach((payment) => {
-        if (!paymentMethods[payment.method]) {
-          paymentMethods[payment.method] = 0;
-        }
-        paymentMethods[payment.method] += payment.amount;
-      });
-    });
-  }
+  // Process the payment methods and their totals
+  const paymentMethods = {
+    Cash: 0,
+    UPI: 0,
+    Online: 0,
+    CreditCard: 0,
+    BankTransfer: 0,
+  };
+
+  paymentData.forEach((payment) => {
+    if (paymentMethods.hasOwnProperty(payment._id)) {
+      paymentMethods[payment._id] = payment.totalPaid; // Sum totalPaid only once per method
+    }
+  });
+
+  // Prepare badges for payment methods
+  const paymentBadges = Object.keys(paymentMethods).map((method) => ({
+    color: paymentMethodColorMap[method] || "primary",
+    count: Number(paymentMethods[method]).toFixed(2),
+    label: method,
+  }));
 
   const dataResult =
     data.length > 0
@@ -262,35 +275,48 @@ const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branc
           statuses: [],
           total: 0,
           totalBillings: 0,
-          totalPaid: 0,
           totalDiscount: 0,
           totalRefunded: 0,
-        }; // Initialize totalRefunded
+        };
 
-  const finalTotalBillings = dataResult.totalBillings; // Total billings is already calculated as amount - refunded
+  const finalTotalBillings = dataResult.totalBillings;
 
-  const paymentBadges = Object.keys(paymentMethods).map((method) => ({
-    color: paymentMethodColorMap[method] || "primary",
-    count: paymentMethods[method].toFixed(2),
-    label: method,
-  }));
+  // Status badges for Paid, Pending, Discount, and Refunded
+  const statusBadges = [
+    {
+      color: statusMap.Paid.color,
+      count: dataResult.totalBillings.toFixed(2),
+      label: statusMap.Paid.label,
+    },
+    {
+      color: statusMap.Unpaid.color,
+      count: "0.00", // Pending can be set based on logic if available
+      label: statusMap.Unpaid.label,
+    },
+    {
+      color: statusMap.Discount.color,
+      count: dataResult.totalDiscount.toFixed(2),
+      label: statusMap.Discount.label,
+    },
+    {
+      color: statusMap.Refunded.color,
+      count: dataResult.totalRefunded.toFixed(2),
+      label: statusMap.Refunded.label,
+    },
+  ];
 
-  // Update status badges to reflect the total amounts for Paid and Pending
-  const statusBadges = dataResult.statuses.map((status) => {
-    return {
-      color: statusMap[status.status]?.color || "primary",
-      count: status.totalAmount.toFixed(2), // Show total amount instead of count
-      label: statusMap[status.status]?.label || status.status,
-    };
-  });
+  const totalPaid = Object.values(paymentMethods).reduce((acc, value) => acc + value, 0);
+
+  // Ensure total paid does not exceed total billings (adjusting for overpayments)
+  const adjustedTotalPaid = Math.min(totalPaid, finalTotalBillings);
 
   const response = {
-    total: dataResult.total,
-    badges: [...statusBadges, ...paymentBadges], // Include updated status badges with payment badges
-    totalBillings: finalTotalBillings,
-    totalPaid: dataResult.totalPaid - dataResult.totalRefunded, // Subtract refunds from total paid
-    totalDiscount: dataResult.totalDiscount,
-    totalRefunded: dataResult.totalRefunded,
+    total: dataResult.count,
+    badges: [...statusBadges, ...paymentBadges], // Include all badges (status + payment method)
+    totalBillings: finalTotalBillings - dataResult.totalDiscount,
+    totalPaid: adjustedTotalPaid.toFixed(2), // Adjust total paid to avoid exceeding total billings
+    totalDiscount: dataResult.totalDiscount, // Total discount
+    totalRefunded: dataResult.totalRefunded, // Total refunded amount
   };
 
   return response;
