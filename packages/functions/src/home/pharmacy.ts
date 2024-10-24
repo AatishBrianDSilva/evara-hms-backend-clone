@@ -24,7 +24,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Extract query string parameters
     const params = event.queryStringParameters || {};
     const { startDate, endDate } = params;
-    console.log("New Params", params);
+    // console.log("New Params", params);
 
     const dateRange: IDateRange = {
       startDate: new Date(),
@@ -90,7 +90,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     ]);
 
-    console.log(JSON.stringify(data, null, 2));
+    // console.log(JSON.stringify(data, null, 2));
 
     const purchaseOrders = {
       count: data.length > 0 ? data[0].totalPurchaseOrders : 0,
@@ -133,7 +133,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     ]);
 
-    console.log("Critical Stocks Count", criticalStocks);
+    // console.log("Critical Stocks Count", criticalStocks);
 
     const response = {
       purchaseOrders,

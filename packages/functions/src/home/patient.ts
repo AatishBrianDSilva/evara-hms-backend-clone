@@ -23,7 +23,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Extract query string parameters
     const params = event.queryStringParameters || {};
     const { startDate, endDate } = params;
-    console.log("New Params", params);
+    // console.log("New Params", params);
 
     const dateRange: IDateRange = {
       startDate: new Date(),

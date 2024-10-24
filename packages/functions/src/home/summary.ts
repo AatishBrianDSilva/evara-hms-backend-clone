@@ -8,6 +8,7 @@ import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
 import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
 import PatientTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/PatientTreatmentCycle";
 import { PatientBilling } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
+import { PatientRefund } from "@evara-backend/core/models/patientDashboard/Billings/PatientRefund";
 
 export interface IDateRange {
   startDate: Date;
@@ -42,12 +43,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       dateRange.endDate = new Date(endDate);
     }
 
-    const [appointmentData, treatmentData, billingData, pharmacyData] = await Promise.all([
-      getAppointmentSummary(dateRange, auth.clinicId!, auth.branchId!),
-      getTreatmentsSummary(dateRange, auth.clinicId!),
-      getBillingsSummary(dateRange, auth.clinicId!, auth.branchId!),
-      getPharmacySummary(dateRange, auth.clinicId!, auth.branchId!),
-    ]);
+    const [appointmentData, treatmentData, billingData, pharmacyData] =
+      await Promise.all([
+        getAppointmentSummary(dateRange, auth.clinicId!, auth.branchId!),
+        getTreatmentsSummary(dateRange, auth.clinicId!),
+        getBillingsSummary(dateRange, auth.clinicId!, auth.branchId!),
+        getPharmacySummary(dateRange, auth.clinicId!, auth.branchId!),
+      ]);
 
     return successResponse("Success", {
       appointment: appointmentData,
@@ -60,7 +62,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-const getAppointmentSummary = async (dateRange: IDateRange, clinicId: string, branchId: string) => {
+const getAppointmentSummary = async (
+  dateRange: IDateRange,
+  clinicId: string,
+  branchId: string
+) => {
   const statusMap = {
     Scheduled: { color: "info", label: "Scheduled" },
     Reported: { color: "warning", label: "Reported" },
@@ -118,7 +124,10 @@ const getAppointmentSummary = async (dateRange: IDateRange, clinicId: string, br
   return response;
 };
 
-const getTreatmentsSummary = async (dateRange: IDateRange, clinicId: string) => {
+const getTreatmentsSummary = async (
+  dateRange: IDateRange,
+  clinicId: string
+) => {
   const statusMap = {
     Scheduled: { color: "info", label: "Scheduled" },
     "In-Progress": { color: "warning", label: "In-Progress" },
@@ -175,7 +184,11 @@ const getTreatmentsSummary = async (dateRange: IDateRange, clinicId: string) => 
   return response;
 };
 
-const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branchId: string) => {
+const getBillingsSummary = async (
+  dateRange: IDateRange,
+  clinicId: string,
+  branchId: string
+) => {
   const statusMap = {
     Paid: { color: "success", label: "Paid" },
     Unpaid: { color: "warning", label: "Pending" },
@@ -190,6 +203,46 @@ const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branc
     CreditCard: "error",
     BankTransfer: "info",
   };
+
+  // Fetch total refunded data from PatientRefund collection
+  const refundData = await PatientRefund.aggregate([
+    {
+      $match: {
+        clinicId,
+        branchId,
+        "refundDetails.refundDate": {
+          $gte: dateRange.startDate,
+          $lte: dateRange.endDate,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: "$refundDetails.method", // Group by refund method
+        totalRefunded: { $sum: "$refundDetails.refundAmount" }, // Sum refunded amounts
+        count: { $sum: 1 }, // Count number of refunds
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalRefunded: { $sum: "$totalRefunded" }, // Sum refunded amounts
+        count: { $sum: "$count" }, // Total number of refunds
+        refundedByMethod: {
+          $push: {
+            method: "$_id",
+            amount: "$totalRefunded",
+            count: "$count",
+          }, // Push method, amount, and count for each refund method
+        },
+      },
+    },
+  ]);
+
+  const totalRefunded = refundData.length > 0 ? refundData[0].totalRefunded : 0;
+
+  const amountByRefundMethod =
+    refundData.length > 0 ? refundData[0].refundedByMethod : [];
 
   // Aggregation for total billings, discount, and refunded amounts
   const data = await PatientBilling.aggregate([
@@ -213,6 +266,20 @@ const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branc
       },
     },
   ]);
+
+  console.log("Billing Data", data);
+
+  const dataResult = data.find((item) => item._id === "Paid") || {
+    statuses: [],
+    total: 0,
+    totalBillings: 0,
+    totalDiscount: 0,
+    totalRefunded: 0,
+  };
+
+  const finalTotalBillings = dataResult.totalBillings;
+
+  const paidAmount = finalTotalBillings - dataResult.totalDiscount;
 
   // Aggregation for payment methods, ensuring no double counting
   const paymentData = await PatientBilling.aggregate([
@@ -255,6 +322,28 @@ const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branc
     BankTransfer: 0,
   };
 
+  const refundMethods = {
+    Cash: 0,
+    UPI: 0,
+    Online: 0,
+    CreditCard: 0,
+    BankTransfer: 0,
+  };
+
+  for (const refund of amountByRefundMethod) {
+    if (refund.method === "Cash") {
+      refundMethods.Cash += refund.amount;
+    } else if (refund.method === "UPI") {
+      refundMethods.UPI += refund.amount;
+    } else if (refund.method === "Online") {
+      refundMethods.Online += refund.amount;
+    } else if (refund.method === "CreditCard") {
+      refundMethods.CreditCard += refund.amount;
+    } else if (refund.method === "BankTransfer") {
+      refundMethods.BankTransfer += refund.amount;
+    }
+  }
+
   paymentData.forEach((payment) => {
     if (paymentMethods.hasOwnProperty(payment._id)) {
       paymentMethods[payment._id] = payment.totalPaid; // Sum totalPaid only once per method
@@ -264,28 +353,15 @@ const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branc
   // Prepare badges for payment methods
   const paymentBadges = Object.keys(paymentMethods).map((method) => ({
     color: paymentMethodColorMap[method] || "primary",
-    count: Number(paymentMethods[method]).toFixed(2),
+    count: (paymentMethods[method] - refundMethods[method]).toFixed(2),
     label: method,
   }));
-
-  const dataResult =
-    data.length > 0
-      ? data[0]
-      : {
-          statuses: [],
-          total: 0,
-          totalBillings: 0,
-          totalDiscount: 0,
-          totalRefunded: 0,
-        };
-
-  const finalTotalBillings = dataResult.totalBillings;
 
   // Status badges for Paid, Pending, Discount, and Refunded
   const statusBadges = [
     {
       color: statusMap.Paid.color,
-      count: dataResult.totalBillings.toFixed(2),
+      count: paidAmount.toFixed(2),
       label: statusMap.Paid.label,
     },
     {
@@ -300,12 +376,15 @@ const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branc
     },
     {
       color: statusMap.Refunded.color,
-      count: dataResult.totalRefunded.toFixed(2),
+      count: totalRefunded.toFixed(2), // Use the total refunded from PatientRefund
       label: statusMap.Refunded.label,
     },
   ];
 
-  const totalPaid = Object.values(paymentMethods).reduce((acc, value) => acc + value, 0);
+  const totalPaid = Object.values(paymentMethods).reduce(
+    (acc, value) => acc + value,
+    0
+  );
 
   // Ensure total paid does not exceed total billings (adjusting for overpayments)
   const adjustedTotalPaid = Math.min(totalPaid, finalTotalBillings);
@@ -313,16 +392,22 @@ const getBillingsSummary = async (dateRange: IDateRange, clinicId: string, branc
   const response = {
     total: dataResult.count,
     badges: [...statusBadges, ...paymentBadges], // Include all badges (status + payment method)
-    totalBillings: finalTotalBillings - dataResult.totalDiscount,
-    totalPaid: adjustedTotalPaid.toFixed(2), // Adjust total paid to avoid exceeding total billings
+    totalBillings: (paidAmount - parseFloat(totalRefunded)).toFixed(2), // Total billings after discount and refund
+    totalPaid: parseFloat(adjustedTotalPaid.toFixed(2)), // Adjust total paid to avoid exceeding total billings
     totalDiscount: dataResult.totalDiscount, // Total discount
-    totalRefunded: dataResult.totalRefunded, // Total refunded amount
+    totalRefunded: totalRefunded, // Total refunded amount from PatientRefund
   };
+
+  console.log("Response:", response);
 
   return response;
 };
 
-const getPharmacySummary = async (dateRange: IDateRange, clinicId: string, branchId: string) => {
+const getPharmacySummary = async (
+  dateRange: IDateRange,
+  clinicId: string,
+  branchId: string
+) => {
   const data = await PatientBilling.aggregate([
     {
       $match: {
@@ -352,7 +437,20 @@ const getPharmacySummary = async (dateRange: IDateRange, clinicId: string, branc
             ],
           },
         },
-        totalRefundedSum: { $sum: { $ifNull: ["$totalRefunded", 0] } }, // Sum of total refunded
+        totalRefundedSum: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ["$refundDetails.refundDate", dateRange.startDate] },
+                  { $lte: ["$refundDetails.refundDate", dateRange.endDate] },
+                ],
+              },
+              { $ifNull: ["$totalRefunded", 0] },
+              0,
+            ],
+          },
+        }, // Sum of total refund
       },
     },
   ]);
@@ -360,7 +458,9 @@ const getPharmacySummary = async (dateRange: IDateRange, clinicId: string, branc
   // Ensure correct rounding and handling
   const totalAmount =
     data.length > 0
-      ? parseFloat((data[0].totalAmountSum - data[0].totalRefundedSum).toFixed(2))
+      ? parseFloat(
+          (data[0].totalAmountSum - data[0].totalRefundedSum).toFixed(2)
+        )
       : 0;
 
   const response = {

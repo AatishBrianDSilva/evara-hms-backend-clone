@@ -76,7 +76,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         $unwind: { path: "$batches", preserveNullAndEmptyArrays: true }, // Unwind batches array
       },
       {
-        $unwind: { path: "$batches.locations", preserveNullAndEmptyArrays: true }, // Unwind locations array
+        $unwind: {
+          path: "$batches.locations",
+          preserveNullAndEmptyArrays: true,
+        }, // Unwind locations array
       },
       {
         $lookup: {
@@ -98,7 +101,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
             batchId: "$batches._id",
           },
           drugCategory: { $first: "$drugCategory.name" },
-          drugCatCode: { $first: "$drugCategory._id" },
+          // drugCatCode: { $first: "$drugCategory._id" },
           drugName: { $first: "$drugItem.name" },
           drugCode: { $first: "$drugItem.code" },
           centre: { $first: { $concat: ["$clinicId", "$branchId"] } },
@@ -166,40 +169,40 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               ],
             },
           },
-          Staging: {
-            $sum: {
-              $cond: [
-                { $eq: ["$locationDetails.location", "Staging Pharmacy"] },
-                "$batches.locations.quantity",
-                0,
-              ],
-            },
-          },
-          Other: {
-            $sum: {
-              $cond: [
-                {
-                  $not: {
-                    $in: [
-                      "$locationDetails.location",
-                      [
-                        "Central Pharmacy",
-                        "OPD Pharmacy",
-                        "OT Pharmacy",
-                        "Recovery Pharmacy",
-                        "IVF Pharmacy",
-                        "Emergency Pharmacy",
-                        "Internal Stock",
-                        "Staging Pharmacy",
-                      ],
-                    ],
-                  },
-                },
-                "$batches.locations.quantity",
-                0,
-              ],
-            },
-          },
+          // Staging: {
+          //   $sum: {
+          //     $cond: [
+          //       { $eq: ["$locationDetails.location", "Staging Pharmacy"] },
+          //       "$batches.locations.quantity",
+          //       0,
+          //     ],
+          //   },
+          // },
+          // Other: {
+          //   $sum: {
+          //     $cond: [
+          //       {
+          //         $not: {
+          //           $in: [
+          //             "$locationDetails.location",
+          //             [
+          //               "Central Pharmacy",
+          //               "OPD Pharmacy",
+          //               "OT Pharmacy",
+          //               "Recovery Pharmacy",
+          //               "IVF Pharmacy",
+          //               "Emergency Pharmacy",
+          //               "Internal Stock",
+          //               "Staging Pharmacy",
+          //             ],
+          //           ],
+          //         },
+          //       },
+          //       "$batches.locations.quantity",
+          //       0,
+          //     ],
+          //   },
+          // },
           totalQty: { $sum: "$batches.locations.quantity" },
         },
       },
@@ -237,7 +240,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     console.log("Final Stock Report with Pagination: ", paginatedResult);
 
-    return successResponse("Stock Report fetched successfully", paginatedResult);
+    return successResponse(
+      "Stock Report fetched successfully",
+      paginatedResult
+    );
   } catch (error) {
     console.error("Error in stockReport API: ", error);
     return errorResponse(error);
