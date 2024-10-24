@@ -239,6 +239,8 @@ const getBillingsSummary = async (
     },
   ]);
 
+  console.log("Refund Data", JSON.stringify(refundData, null, 2));
+
   const totalRefunded = refundData.length > 0 ? refundData[0].totalRefunded : 0;
 
   const amountByRefundMethod =
@@ -291,6 +293,7 @@ const getBillingsSummary = async (
           $gte: dateRange.startDate,
           $lte: dateRange.endDate,
         },
+        status: "Paid",
       },
     },
     {
@@ -312,6 +315,8 @@ const getBillingsSummary = async (
       },
     },
   ]);
+
+  console.log("Payment Data", JSON.stringify(paymentData, null, 2));
 
   // Process the payment methods and their totals
   const paymentMethods = {
