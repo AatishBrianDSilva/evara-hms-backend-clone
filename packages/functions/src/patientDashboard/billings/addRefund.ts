@@ -40,19 +40,31 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, "Data is required");
     }
 
-    const { billingId, refundAmount, refundDetails, pharmacyData, patientId } = JSON.parse(
-      event.body
-    );
-    const { method, reason, charges, items, refundNumber, files } = refundDetails;
+    const { billingId, refundAmount, refundDetails, pharmacyData, patientId } =
+      JSON.parse(event.body);
+    const { method, reason, charges, items, refundNumber, files } =
+      refundDetails;
 
-    console.log("Parsed request body:", { billingId, refundAmount, refundDetails, pharmacyData });
+    console.log("Parsed request body:", {
+      billingId,
+      refundAmount,
+      refundDetails,
+      pharmacyData,
+    });
 
     if (!billingId || !refundAmount || !method || !reason) {
-      console.error("Missing required fields:", { billingId, refundAmount, method, reason });
+      console.error("Missing required fields:", {
+        billingId,
+        refundAmount,
+        method,
+        reason,
+      });
       throw new ErrorMessage(400, "Missing required fields");
     }
 
-    const billing = await PatientBilling.findOne({ billingId }).session(session);
+    const billing = await PatientBilling.findOne({ billingId }).session(
+      session
+    );
 
     if (!billing) {
       console.error("Billing not found for ID:", billingId);
@@ -62,7 +74,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     console.log("Billing found:", billing);
 
     // Log the pharmacyData to check its contents
-    console.log("Pharmacy Data received in the request:", JSON.stringify(pharmacyData, null, 2));
+    console.log(
+      "Pharmacy Data received in the request:",
+      JSON.stringify(pharmacyData, null, 2)
+    );
 
     // Calculate and update the total refunded amount
     const netAmount = refundAmount;
@@ -93,7 +108,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         refundNumber: refundNumber || "N/A", // Default value if refundNumber is not provided
         files: files || [], // Default to an empty array if files are not provided
       },
-      createdBy: auth.userId,
+      createdBy: auth.username,
       branchId: billing.branchId,
       clinicId: billing.clinicId,
     });
@@ -102,7 +117,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     console.log("PatientRefund entry saved successfully.");
 
     // If the billType is "Pharmacy," extract pharmacy data and update stock
-    if (billing.billType === "Pharmacy" && pharmacyData && Array.isArray(pharmacyData)) {
+    if (
+      billing.billType === "Pharmacy" &&
+      pharmacyData &&
+      Array.isArray(pharmacyData)
+    ) {
       console.log("Bill type is Pharmacy, updating stock...");
 
       const mainLocation = await DrugLocation.findOne({
@@ -118,12 +137,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       // Iterate over each pharmacyData entry and update stock
       for (let i = 0; i < pharmacyData.length; i++) {
         const pharmacyItem = pharmacyData[i];
-        const { item } = pharmacyItem;
         const itemDetails = pharmacyItem.details;
 
         if (!Array.isArray(itemDetails) || itemDetails.length === 0) {
           console.error("Item details array is missing or empty:", itemDetails);
-          throw new ErrorMessage(400, "Missing required fields in pharmacy item details");
+          throw new ErrorMessage(
+            400,
+            "Missing required fields in pharmacy item details"
+          );
         }
 
         // Iterate through the details array and update stock
@@ -131,7 +152,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           console.log("Raw detail from payload:", detail);
 
           const itemId = detail.itemId; // Use itemId from detail
-          const { expiryDate, vendor, packSize, batchNumber, location, quantity } = detail;
+          const {
+            expiryDate,
+            vendor,
+            packSize,
+            batchNumber,
+            location,
+            quantity,
+          } = detail;
 
           console.log("Mapped pharmacy item details:", {
             itemId,
@@ -150,7 +178,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               vendor,
               packSize,
             });
-            throw new ErrorMessage(400, "Missing required fields in pharmacy item details");
+            throw new ErrorMessage(
+              400,
+              "Missing required fields in pharmacy item details"
+            );
           }
 
           const existingStock = await PharmacyStock.findOne({
@@ -167,7 +198,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
             if (existingBatchIndex > -1) {
               const batch = existingStock.batches[existingBatchIndex];
               const locationIndex = batch.locations.findIndex((loc) =>
-                (loc.location as unknown as mongoose.Types.ObjectId).equals(location)
+                (loc.location as unknown as mongoose.Types.ObjectId).equals(
+                  location
+                )
               );
 
               if (locationIndex > -1) {
@@ -248,7 +281,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     // Generate report after successful transaction
-    const reportData = generateReportData(refundEntry, auth.clinicId, patientId, branch);
+    const reportData = generateReportData(
+      refundEntry,
+      auth.clinicId,
+      patientId,
+      branch
+    );
     console.log("Report Data: ", JSON.stringify(reportData, null, 2));
 
     // Send to SNS
@@ -257,7 +295,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
     });
 
-    return successResponse("Refund added, stock updated, and report generated successfully");
+    return successResponse(
+      "Refund added, stock updated, and report generated successfully"
+    );
   } catch (error) {
     await session.abortTransaction();
     console.log("Transaction aborted due to error.");
@@ -270,7 +310,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 };
 
 // Function to generate report data
-const generateReportData = (refundEntry: any, clinicId: string, patientId: string, branch: any) => {
+const generateReportData = (
+  refundEntry: any,
+  clinicId: string,
+  patientId: string,
+  branch: any
+) => {
   const reportData: IReportData = {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.Refund,
@@ -280,7 +325,9 @@ const generateReportData = (refundEntry: any, clinicId: string, patientId: strin
     clinic: clinicId,
     sections: [],
     reportName: `Refund Report for ${refundEntry.patientCode}`,
-    fileName: _.kebabCase(`refund-${refundEntry.patientCode}-${refundEntry._id}`),
+    fileName: _.kebabCase(
+      `refund-${refundEntry.patientCode}-${refundEntry._id}`
+    ),
     reportId: refundEntry._id,
   };
 

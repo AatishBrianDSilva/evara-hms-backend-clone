@@ -7,18 +7,25 @@ import PatientReport from "@evara-backend/core/src/models/patientDashboard/Patie
 import PatientInvoice from "@evara-backend/core/src/models/patientDashboard/PatientInvoices";
 import S3Service from "@evara-backend/core/src/lib/aws/s3";
 import { S3 } from "aws-sdk";
-import { EDocumentTypes, IPDFGeneratorMessage } from "@evara-backend/core/src/lib/types/global";
+import {
+  EDocumentTypes,
+  IPDFGeneratorMessage,
+} from "@evara-backend/core/src/lib/types/global";
 import { PurchaseOrder } from "@evara-backend/core/models/pharmacyDashboard/PurchaseOrder";
 
 chromium.setHeadlessMode = true;
 chromium.setGraphicsMode = true;
 
-const convertHtmlToPdf = async (html: string, header: string, footer: string): Promise<Buffer> => {
+const convertHtmlToPdf = async (
+  html: string,
+  header: string,
+  footer: string
+): Promise<Buffer> => {
   const STAGE = process.env.STAGE;
   console.log("STAGE", STAGE);
 
   let browser: Browser;
-  if (STAGE === "ratandeeparunkumar") {
+  if (STAGE === "ratan") {
     browser = await puppeteer.launch({
       executablePath: "/Applications/Chromium.app/Contents/MacOS/Chromium",
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -27,7 +34,8 @@ const convertHtmlToPdf = async (html: string, header: string, footer: string): P
     console.log("Browser launched for stage 'ratandeeparunkumar'");
   } else if (STAGE === "aatishbrian") {
     browser = await puppeteer.launch({
-      executablePath: "C:/Users/Brian D'Silva/OneDrive/Desktop/chrome-win/chrome.exe",
+      executablePath:
+        "C:/Users/Brian D'Silva/OneDrive/Desktop/chrome-win/chrome.exe",
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
       headless: false,
     });
@@ -97,11 +105,18 @@ export const main: SQSHandler = async (event, context) => {
         source_report_id,
       });
 
-      const pdfBuffer = await convertHtmlToPdf(htmlContent, headerHtml, footerHtml);
+      const pdfBuffer = await convertHtmlToPdf(
+        htmlContent,
+        headerHtml,
+        footerHtml
+      );
 
       // Upload PDF to S3
       const s3Params: S3.PutObjectRequest = {
-        Bucket: process.env.STAGE === "prod" ? `${bucket}-${process.env.STAGE}` : `${bucket}-devs`,
+        Bucket:
+          process.env.STAGE === "prod"
+            ? `${bucket}-${process.env.STAGE}`
+            : `${bucket}-devs`,
         Key: key,
         Body: pdfBuffer,
         ContentType: "application/pdf",
@@ -115,7 +130,8 @@ export const main: SQSHandler = async (event, context) => {
         console.log("Updating PatientReport for report ID:", source_report_id);
 
         // Check if `patient` is an ID (string) or an object
-        const patientId = typeof patient === "object" && patient._id ? patient._id : patient;
+        const patientId =
+          typeof patient === "object" && patient._id ? patient._id : patient;
 
         const updatedPatientReport = await PatientReport.findOneAndUpdate(
           { source_report_id },
@@ -162,12 +178,22 @@ export const main: SQSHandler = async (event, context) => {
             key: s3Params.Key,
           };
           await purchaseOrder.save();
-          console.log(`Purchase order ${source_report_id} updated with report.`);
+          console.log(
+            `Purchase order ${source_report_id} updated with report.`
+          );
         } else {
-          console.error(`Purchase order with poNumber ${source_report_id} not found.`);
+          console.error(
+            `Purchase order with poNumber ${source_report_id} not found.`
+          );
         }
-      } else if (!patient && category === EDocumentTypes.PurchaseOrderProcessed) {
-        console.log("Handling processed purchase order report for ID:", source_report_id);
+      } else if (
+        !patient &&
+        category === EDocumentTypes.PurchaseOrderProcessed
+      ) {
+        console.log(
+          "Handling processed purchase order report for ID:",
+          source_report_id
+        );
         const purchaseOrder = await PurchaseOrder.findOne({
           poNumber: source_report_id,
         });
@@ -179,9 +205,13 @@ export const main: SQSHandler = async (event, context) => {
             key: s3Params.Key,
           };
           await purchaseOrder.save();
-          console.log(`Processed purchase order ${source_report_id} updated with report.`);
+          console.log(
+            `Processed purchase order ${source_report_id} updated with report.`
+          );
         } else {
-          console.error(`Purchase order with poNumber ${source_report_id} not found.`);
+          console.error(
+            `Purchase order with poNumber ${source_report_id} not found.`
+          );
         }
       }
 

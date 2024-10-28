@@ -36,6 +36,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const data = JSON.parse(event.body);
 
+    const location = data.location;
+
     for (const item of data.items) {
       // Validate and deduct stock
       const stock = await PharmacyStock.findById(item.stock).session(session);
@@ -46,32 +48,29 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       // Capture the ID of the associated item
       const itemId = stock.item;
 
-      let totalRequested = 0;
-      item.details.forEach((detail: any) => {
-        totalRequested += detail.quantity;
-      });
-
-      if (stock.totalQuantity < totalRequested) {
+      if (stock.totalQuantity < item.quantity) {
         throw new ErrorMessage(400, "Insufficient stock available");
       }
 
-      // Deduct quantities from the relevant locations in the stock
-      item.details.forEach((detail: any) => {
-        const batch = stock.batches.find((b) => b.batchNo === detail.batchNumber);
-        if (!batch) {
-          throw new Error("Batch number not found");
-        }
-        const locationQuantity = batch.locations.find(
-          (l) => l.location.toString() === detail.location.toString()
-        );
-        if (!locationQuantity) {
-          throw new Error("Location not found");
-        }
-        if (locationQuantity.quantity < detail.quantity) {
-          throw new Error("Insufficient stock at location");
-        }
-        locationQuantity.quantity -= detail.quantity;
-      });
+      // Deduct quantity from the relevant location and batch in the stock
+      const batch = stock.batches.find((b) => b.batchNo === item.batchNumber);
+      if (!batch) {
+        throw new ErrorMessage(400, "Batch number not found in stock.");
+      }
+
+      const locationQuantity = batch.locations.find(
+        (l) => l.location.toString() === location.toString()
+      );
+      if (!locationQuantity) {
+        throw new ErrorMessage(400, "Location not found");
+      }
+
+      if (locationQuantity.quantity < item.quantity) {
+        throw new ErrorMessage(400, "Insufficient stock at location");
+      }
+
+      // Deduct quantity for the selected location
+      locationQuantity.quantity -= item.quantity;
 
       await stock.save({ session });
 
@@ -82,23 +81,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         patient: data.patient,
         item: {
           stock: item.stock,
-          details: item.details.map((detail: any) => {
-            const batch = stock.batches.find((b) => b.batchNo === detail.batchNumber);
-            if (!batch) {
-              throw new ErrorMessage(400, "Batch number not found in stock.");
-            }
-
-            return {
-              location: detail.location,
-              quantity: detail.quantity,
-              batchNumber: detail.batchNumber,
-              packSize: batch.packSize, // Ensure packSize is populated
-              mrp: stock.sellPrice, // Ensure MRP is populated
-              vendor: batch.vendor, // Ensure vendor is populated
-              expiryDate: batch.expiryDate, // Ensure expiryDate is populated
-              itemId: itemId, // Use the itemId from the stock's item field
-            };
-          }),
+          details: [
+            {
+              location: location, // Use the location from the main data object
+              quantity: item.quantity,
+              batchNumber: item.batchNumber,
+              packSize: batch.packSize,
+              mrp: stock.sellPrice,
+              vendor: batch.vendor,
+              expiryDate: batch.expiryDate,
+              itemId: itemId,
+            },
+          ],
         },
         doctor: data.doctor,
         date: data.date,
@@ -107,7 +101,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       const newPharmacy = await newPatientPharmacy.save({ session });
 
-      const pharmacyStock: any = await PharmacyStock.findById(newPharmacy.item.stock).populate([
+      const pharmacyStock: any = await PharmacyStock.findById(
+        newPharmacy.item.stock
+      ).populate([
         {
           path: "item",
           model: DrugItem.modelName,

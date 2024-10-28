@@ -6,6 +6,7 @@ import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
 import {
   PatientBilling,
   EPatientBillingStatus,
+  EPaitentBillingPaymentType,
 } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
 
 const round = (num: number) => Math.round(num * 100) / 100;
@@ -47,7 +48,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     // Ensure the refund does not exceed the total paid or the total refundable
-    const totalPaid = billing.payments.reduce((acc, payment) => acc + payment.amount, 0);
+    const totalPaid = billing.payments.reduce(
+      (acc, payment) => acc + payment.amount,
+      0
+    );
     if (roundedRefundAmount > totalPaid) {
       throw new ErrorMessage(400, "Refund amount exceeds the amount paid");
     }
@@ -57,6 +61,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       amount: round(-roundedRefundAmount),
       method: method,
       paymentDate: refundDate ? new Date(refundDate) : new Date(),
+      type: EPaitentBillingPaymentType.Refund,
     });
 
     // Update billing status if necessary
