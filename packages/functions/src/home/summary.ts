@@ -667,7 +667,8 @@ const getBillingsSummary = async (
     totalBillings: (
       totals.totalBillings -
       totals.totalDiscount -
-      totals.totalRefunded
+      totals.totalRefunded -
+      totals.totalPending
     ).toFixed(2),
     totalPaid: parseFloat((totals.totalPaid - totals.totalRefunded).toFixed(2)),
     totalDiscount: totals.totalDiscount.toFixed(2),
