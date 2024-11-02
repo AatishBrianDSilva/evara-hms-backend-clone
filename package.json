@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "sst dev ",
     "build": "sst build ",
-    "format": "prettier --write \"packages/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "deploy": "sst deploy ",
     "remove": "sst remove ",
     "console": "sst console ",
