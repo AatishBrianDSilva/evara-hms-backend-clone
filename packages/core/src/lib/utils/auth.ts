@@ -1,6 +1,6 @@
-import jwt from "jsonwebtoken";
-import { IUser } from "../../models/User";
-import getSecret from "../aws/get-secret";
+import jwt from 'jsonwebtoken';
+import { IUser } from '../../models/User';
+import getSecret from '../aws/get-secret';
 
 interface IUserSecret {
   token: string;
@@ -13,7 +13,7 @@ interface IUserToken {
 }
 
 export const generateUserJwtToken = async (
-  user: IUser
+  user: IUser,
 ): Promise<IUserToken> => {
   const payload = {
     sub: user._id, // Using 'sub' for the user ID
@@ -26,7 +26,7 @@ export const generateUserJwtToken = async (
   const secret = await getUserTokenSecret();
 
   const token = jwt.sign(payload, secret.token, {
-    expiresIn: "1h", // Token expires in one hour
+    expiresIn: '1h', // Token expires in one hour
   });
 
   const refreshToken = jwt.sign(
@@ -36,8 +36,8 @@ export const generateUserJwtToken = async (
     },
     secret.refreshToken,
     {
-      expiresIn: "1d",
-    }
+      expiresIn: '1d',
+    },
   );
   return {
     token,
@@ -54,7 +54,7 @@ const getUserTokenSecret = async (): Promise<IUserSecret> => {
   if (process.env.USER_TOKEN_SECRET) {
     return JSON.parse(process.env.USER_TOKEN_SECRET);
   } else {
-    secret = await getSecret("user-token");
+    secret = await getSecret('user-token');
     process.env.USER_TOKEN_SECRET = secret;
   }
   return JSON.parse(secret);
@@ -69,7 +69,7 @@ export const decodeToken = (token: string): any => {
   try {
     return jwt.decode(token);
   } catch (error) {
-    console.error("Failed to decode token:", error);
+    console.error('Failed to decode token:', error);
     return null;
   }
 };
@@ -82,14 +82,14 @@ export const decodeToken = (token: string): any => {
  */
 export const verifyToken = async (
   token: string,
-  isRefreshToken: boolean = false
+  isRefreshToken: boolean = false,
 ): Promise<any> => {
   try {
     const secretData = await getUserTokenSecret(); // Fetch the secret for verification
     const secret = isRefreshToken ? secretData.refreshToken : secretData.token;
     return jwt.verify(token, secret);
   } catch (error) {
-    console.error("Failed to verify token:", error);
+    console.error('Failed to verify token:', error);
     throw error;
   }
 };

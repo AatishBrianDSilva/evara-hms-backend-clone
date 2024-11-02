@@ -1,18 +1,18 @@
-import { IPurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
+import { IPurchaseOrder } from '@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder';
 import {
   EBuckets,
   EDocumentTypes,
   EReportTemplateTypes,
   IReportData,
-} from "@evara-backend/core/lib/types/global";
-import _ from "lodash";
+} from '@evara-backend/core/lib/types/global';
+import _ from 'lodash';
 
 export const processPurchaseOrderReportData = (
   purchaseOrder: IPurchaseOrder,
   clinicId: string,
   branch: any, // Pass branch data here
   vendor: any, // Vendor passed here
-  updatedItems: any[] // Updated items passed here with name and amount
+  updatedItems: any[], // Updated items passed here with name and amount
 ): IReportData => {
   const reportData: IReportData = {
     bucket: EBuckets.PharmacyInvoices,
@@ -23,19 +23,19 @@ export const processPurchaseOrderReportData = (
     sections: [],
     reportId: purchaseOrder.poNumber,
     clinic: clinicId,
-    doctor: "", // No doctor for purchase orders
+    doctor: '', // No doctor for purchase orders
   };
 
   // Add Purchase Order Details Section
   reportData.sections.push({
     showTitle: true,
-    title: "Purchase Order Details",
+    title: 'Purchase Order Details',
     content: {
-      "PO Number": purchaseOrder.poNumber,
-      Vendor: vendor.name || "N/A",
-      VendorTin: vendor.tin || "N/A",
-      "Net Amount": purchaseOrder.request?.netAmount || "N/A",
-      Date: new Date(purchaseOrder.createdAt).toLocaleDateString("en-GB"),
+      'PO Number': purchaseOrder.poNumber,
+      Vendor: vendor.name || 'N/A',
+      VendorTin: vendor.tin || 'N/A',
+      'Net Amount': purchaseOrder.request?.netAmount || 'N/A',
+      Date: new Date(purchaseOrder.createdAt).toLocaleDateString('en-GB'),
     },
   });
 
@@ -63,7 +63,7 @@ export const processPurchaseOrderReportData = (
 
     // Return the correct values with proper formatting
     return {
-      Item: item.name || "N/A",
+      Item: item.name || 'N/A',
       Quantity: noOfPacks,
       FreeQuantity: freeQuantity, // Include free quantity
       Rate: buyPrice.toFixed(2), // Buy Price per pack
@@ -75,44 +75,44 @@ export const processPurchaseOrderReportData = (
   });
   reportData.sections.push({
     showTitle: true,
-    title: "Items",
+    title: 'Items',
     content: items,
   });
 
   // Add Branch and Vendor Address Section
   const branchAddress = branch?.address
-    ? `${branch.branchName}, ${branch.address.street || ""}, ${branch.address.city || ""}, ${
-        branch.address.state || ""
-      } - ${branch.address.zip || ""}`
-    : "Branch address not available";
+    ? `${branch.branchName}, ${branch.address.street || ''}, ${branch.address.city || ''}, ${
+        branch.address.state || ''
+      } - ${branch.address.zip || ''}`
+    : 'Branch address not available';
 
   const vendorAddress = vendor.address
     ? `${vendor.name}, ${vendor.address.addressLine1}, ${vendor.address.city}, ${
         vendor.address.state
-      } - ${vendor.address.pincode}, TIN: ${vendor.tin || "N/A"}`
-    : "Vendor address not available";
+      } - ${vendor.address.pincode}, TIN: ${vendor.tin || 'N/A'}`
+    : 'Vendor address not available';
 
   reportData.sections.push({
     showTitle: true,
-    title: "Address Information",
+    title: 'Address Information',
     content: {
-      "Branch Address": branchAddress,
-      "Vendor Address": vendorAddress,
+      'Branch Address': branchAddress,
+      'Vendor Address': vendorAddress,
     },
   });
 
   // Additional sections like Discounts, Taxes, or Other Charges
   reportData.sections.push({
     showTitle: true,
-    title: "Additional Details",
+    title: 'Additional Details',
     content: {
-      Subtotal: purchaseOrder.request?.subTotal || "N/A",
-      Discount: purchaseOrder.request?.discount || "N/A",
-      "Other Charges": purchaseOrder.request?.otherCharges || "N/A",
-      "Total Amount": purchaseOrder.request?.netAmount
+      Subtotal: purchaseOrder.request?.subTotal || 'N/A',
+      Discount: purchaseOrder.request?.discount || 'N/A',
+      'Other Charges': purchaseOrder.request?.otherCharges || 'N/A',
+      'Total Amount': purchaseOrder.request?.netAmount
         ? purchaseOrder.request.netAmount.toFixed(2)
-        : "N/A",
-      TotalTax: purchaseOrder.request?.tax || "N/A",
+        : 'N/A',
+      TotalTax: purchaseOrder.request?.tax || 'N/A',
     },
   });
 

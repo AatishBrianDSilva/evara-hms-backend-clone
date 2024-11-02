@@ -1,10 +1,10 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import Appointments from "@evara-backend/core/src/models/Appointments";
-import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import Appointments from '@evara-backend/core/src/models/Appointments';
+import Doctors from '@evara-backend/core/src/models/mastersDashboard/Doctors';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -14,23 +14,23 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     if (event.pathParameters === null) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
     // Safely access the id property
-    const id = event.pathParameters["id"];
+    const id = event.pathParameters['id'];
     if (!id) {
-      throw new ErrorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, 'Id is not provided');
     }
 
     if (event.body == null) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     const updates = JSON.parse(event.body);
 
     if (!updates.date || !updates.time) {
-      throw new ErrorMessage(400, "Date and Time is required");
+      throw new ErrorMessage(400, 'Date and Time is required');
     }
 
     if (updates.date || updates.time) {
@@ -42,23 +42,23 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       });
 
       if (conflictingAppointment) {
-        throw new ErrorMessage(400, "Conflict with another appointment");
+        throw new ErrorMessage(400, 'Conflict with another appointment');
       }
     }
 
     const updatedAppointment = await Appointments.findByIdAndUpdate(
       id,
       { $set: updates },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedAppointment) {
-      throw new ErrorMessage(404, "Appointment Not found");
+      throw new ErrorMessage(404, 'Appointment Not found');
     }
 
     // Parse the body from the event
     // console.log(data);
-    return successResponse("Success", updatedAppointment);
+    return successResponse('Success', updatedAppointment);
   } catch (error) {
     return errorResponse(error);
   }

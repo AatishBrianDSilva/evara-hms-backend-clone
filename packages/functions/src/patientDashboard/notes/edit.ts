@@ -1,10 +1,10 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
-import PatientNotes from "@evara-backend/core/src/models/patientDashboard/PatientNotes";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
+import PatientNotes from '@evara-backend/core/src/models/patientDashboard/PatientNotes';
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -15,21 +15,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Connect to MongoDB
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     if (event.pathParameters === null) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
     // Safely access the id property
-    const id = event.pathParameters["id"];
+    const id = event.pathParameters['id'];
     if (!id) {
-      throw new ErrorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, 'Id is not provided');
     }
 
     if (!event.body) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     // Parse the body from the event
@@ -38,14 +38,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const updatedData = await PatientNotes.findByIdAndUpdate(
       id,
       { $set: data },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedData) {
-      throw new ErrorMessage(404, "Data not updated");
+      throw new ErrorMessage(404, 'Data not updated');
     }
 
-    return successResponse("Data updated successfully", updatedData);
+    return successResponse('Data updated successfully', updatedData);
   } catch (error) {
     return errorResponse(error);
   }

@@ -1,5 +1,5 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
 interface IProcedureResult extends Document {
   procedureName: string;
@@ -18,8 +18,8 @@ const IProcedureResultSchema: Schema = new Schema<IProcedureResult>(
     notes: String,
   },
   {
-    timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  }
+    timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
+  },
 );
 
 interface IPatientProcedure extends Document {
@@ -42,27 +42,27 @@ const PatientProcedureSchema: Schema = new Schema(
     caseId: { type: String, index: true },
     patient: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Patient",
+      ref: 'Patient',
       required: true,
       index: true,
     },
     patientCode: { type: String, required: true },
     doctor: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "doctors",
+      ref: 'doctors',
     },
     procedure: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "MasterProcedures",
+      ref: 'MasterProcedures',
       required: true,
     },
     result: IProcedureResultSchema,
     date: { type: Date, default: Date.now },
-    status: { type: String, required: true, default: "Scheduled" },
+    status: { type: String, required: true, default: 'Scheduled' },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 PatientProcedureSchema.plugin(paginate);
@@ -72,6 +72,6 @@ interface PatientProcedureDocument extends Document, IPatientProcedure {}
 const PatientProcedures = mongoose.model<
   PatientProcedureDocument,
   PaginateModel<PatientProcedureDocument>
->("PatientProcedures", PatientProcedureSchema);
+>('PatientProcedures', PatientProcedureSchema);
 
 export default PatientProcedures;

@@ -1,14 +1,14 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import { log } from "console";
-import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
-import { PatientBilling } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
-import Patient from "@evara-backend/core/models/Patients";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import { IPaginateOptions } from '@evara-backend/core/src/lib/types/pagination';
+import { log } from 'console';
+import Doctors from '@evara-backend/core/src/models/mastersDashboard/Doctors';
+import { PatientBilling } from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling';
+import Patient from '@evara-backend/core/models/Patients';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 interface BillingSummary {
   amount: number;
@@ -17,18 +17,18 @@ interface BillingSummary {
   due: number;
 }
 
-const parseSearchQuery = (query) => {
-  const queryParts = query.split(" ");
+const parseSearchQuery = query => {
+  const queryParts = query.split(' ');
   const parsedQuery = {
-    patientCode: "",
-    patientName: "",
+    patientCode: '',
+    patientName: '',
   };
 
-  queryParts.forEach((part) => {
-    if (part.startsWith("patientCode:")) {
-      parsedQuery.patientCode = part.split(":")[1];
-    } else if (part.startsWith("patientName:")) {
-      parsedQuery.patientName = part.split(":")[1];
+  queryParts.forEach(part => {
+    if (part.startsWith('patientCode:')) {
+      parsedQuery.patientCode = part.split(':')[1];
+    } else if (part.startsWith('patientName:')) {
+      parsedQuery.patientName = part.split(':')[1];
     }
   });
 
@@ -44,19 +44,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const params = event.queryStringParameters || {};
     const {
-      page = "1",
-      limit = "10",
-      paginate = "true", // This will determine if pagination is applied or not
+      page = '1',
+      limit = '10',
+      paginate = 'true', // This will determine if pagination is applied or not
       sort: sortRaw,
       status,
       paymentMethod,
-      searchQuery = "",
+      searchQuery = '',
       saleStartDate,
       saleEndDate,
       billType,
     } = params;
 
-    const isPaginationEnabled = paginate === "true"; // Check if we are paginating
+    const isPaginationEnabled = paginate === 'true'; // Check if we are paginating
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
     const { patientCode, patientName } = parseSearchQuery(searchQuery);
@@ -70,7 +70,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (billType) query.billType = billType; // Apply billType filter
 
     if (patientCode) {
-      query.patientCode = new RegExp(patientCode, "i");
+      query.patientCode = new RegExp(patientCode, 'i');
     }
 
     if (patientName) {
@@ -78,18 +78,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         clinicId: auth.clinicId,
         branchId: auth.branchId,
         $or: [
-          { firstName: { $regex: patientName, $options: "i" } },
-          { lastName: { $regex: patientName, $options: "i" } },
+          { firstName: { $regex: patientName, $options: 'i' } },
+          { lastName: { $regex: patientName, $options: 'i' } },
         ],
-      }).select("patientId");
+      }).select('patientId');
 
-      const matchingPatientCodes = matchingPatients.map((p) => p.patientId);
+      const matchingPatientCodes = matchingPatients.map(p => p.patientId);
 
       if (matchingPatientCodes.length === 0) {
-        query.patientCode = "__NO_MATCH__";
+        query.patientCode = '__NO_MATCH__';
       } else if (patientCode) {
         query.$and = [
-          { patientCode: new RegExp(patientCode, "i") },
+          { patientCode: new RegExp(patientCode, 'i') },
           { patientCode: { $in: matchingPatientCodes } },
         ];
       } else {
@@ -109,9 +109,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
                   $gte: [
                     {
                       $dateFromParts: {
-                        year: { $year: "$createdAt" },
-                        month: { $month: "$createdAt" },
-                        day: { $dayOfMonth: "$createdAt" },
+                        year: { $year: '$createdAt' },
+                        month: { $month: '$createdAt' },
+                        day: { $dayOfMonth: '$createdAt' },
                       },
                     },
                     {
@@ -131,9 +131,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
                   $lte: [
                     {
                       $dateFromParts: {
-                        year: { $year: "$createdAt" },
-                        month: { $month: "$createdAt" },
-                        day: { $dayOfMonth: "$createdAt" },
+                        year: { $year: '$createdAt' },
+                        month: { $month: '$createdAt' },
+                        day: { $dayOfMonth: '$createdAt' },
                       },
                     },
                     {
@@ -158,13 +158,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       sort,
       populate: [
         {
-          path: "items.doctorId",
+          path: 'items.doctorId',
           model: Doctors.modelName,
         },
       ],
     };
 
-    log("Query", query);
+    log('Query', query);
 
     // Fetch records based on pagination or without pagination
     const result = isPaginationEnabled
@@ -174,7 +174,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const { records, pagination } = formatPaginationResult(result);
 
     const patientIds = Array.from(
-      new Set(records.map((record) => record.patientCode))
+      new Set(records.map(record => record.patientCode)),
     );
 
     const patientData = await Patient.find({
@@ -186,19 +186,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       return map;
     }, {});
 
-    const combinedData = records.flatMap((record) => {
+    const combinedData = records.flatMap(record => {
       const patientDetails = patientMap[record.patientCode] || {};
-      const patientName = `${patientDetails.firstName || ""} ${
-        patientDetails.lastName || ""
+      const patientName = `${patientDetails.firstName || ''} ${
+        patientDetails.lastName || ''
       }`.trim();
 
       // Filter payments based on the selected payment method if any
       const filteredPayments = paymentMethod
-        ? record.payments.filter((payment) => payment.method === paymentMethod)
+        ? record.payments.filter(payment => payment.method === paymentMethod)
         : record.payments;
 
       // Map each filtered payment to a new row with distinct amount and details
-      return filteredPayments.map((payment) => ({
+      return filteredPayments.map(payment => ({
         _id: `${record._id}-${payment.method}-${payment.amount}`, // Create a unique identifier combining record ID, payment method, and payment amount
         billingId: record.billingId,
         patientCode: record.patientCode,
@@ -216,7 +216,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     });
     const summary = calculateSummary(records);
 
-    return successResponse("Success", {
+    return successResponse('Success', {
       records: combinedData,
       pagination: isPaginationEnabled ? pagination : undefined, // Only include pagination if enabled
       summary: summary,
@@ -234,8 +234,8 @@ function calculateSummary(billings: any[]): BillingSummary {
       const total = roundToTwo(billing.subTotal);
       const totalPaid = roundToTwo(
         billing.payments
-          .filter((payment) => payment.type === "Payment")
-          .reduce((sum, payment) => roundToTwo(sum + payment.amount), 0)
+          .filter(payment => payment.type === 'Payment')
+          .reduce((sum, payment) => roundToTwo(sum + payment.amount), 0),
       );
 
       acc.amount += total;
@@ -245,6 +245,6 @@ function calculateSummary(billings: any[]): BillingSummary {
 
       return acc;
     },
-    { amount: 0, payment: 0, discount: 0, due: 0 }
+    { amount: 0, payment: 0, discount: 0, due: 0 },
   );
 }

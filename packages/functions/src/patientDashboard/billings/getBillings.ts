@@ -1,16 +1,16 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import { log } from "console";
-import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import { IPaginateOptions } from '@evara-backend/core/src/lib/types/pagination';
+import { log } from 'console';
+import Doctors from '@evara-backend/core/src/models/mastersDashboard/Doctors';
 import {
   IPatientBilling,
   PatientBilling,
-} from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+} from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 interface BillingSummary {
   amount: number;
@@ -27,7 +27,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "10", sort: sortRaw, status } = params;
+    const { page = '1', limit = '10', sort: sortRaw, status } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
@@ -49,13 +49,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       sort,
       populate: [
         {
-          path: "items.doctorId",
+          path: 'items.doctorId',
           model: Doctors.modelName,
         },
       ],
     };
 
-    log("Query", query);
+    log('Query', query);
 
     //Get Summary data
     const summaryData = await PatientBilling.find(query);
@@ -66,7 +66,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const summary = calculateSummary(summaryData);
 
-    return successResponse("Success", {
+    return successResponse('Success', {
       records: records,
       pagination: pagination,
       summary: summary,
@@ -81,7 +81,7 @@ function calculateSummary(billings: IPatientBilling[]): BillingSummary {
     (acc, billing) => {
       const total = billing.subTotal;
       const totalPaid = billing.payments
-        .filter((payment) => payment.type === "Payment")
+        .filter(payment => payment.type === 'Payment')
         .reduce((sum, payment) => sum + payment.amount, 0);
 
       acc.amount += total;
@@ -91,6 +91,6 @@ function calculateSummary(billings: IPatientBilling[]): BillingSummary {
 
       return acc;
     },
-    { amount: 0, payment: 0, discount: 0, due: 0 }
+    { amount: 0, payment: 0, discount: 0, due: 0 },
   );
 }

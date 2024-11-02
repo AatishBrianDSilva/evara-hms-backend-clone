@@ -1,14 +1,14 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
-import Appointments from "@evara-backend/core/src/models/Appointments";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import mongoose from "mongoose";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { IPaginateOptions } from '@evara-backend/core/src/lib/types/pagination';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import Doctors from '@evara-backend/core/src/models/mastersDashboard/Doctors';
+import Appointments from '@evara-backend/core/src/models/Appointments';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import mongoose from 'mongoose';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -21,14 +21,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Extract query string parameters
     const params = event.queryStringParameters || {};
-    console.log("Params", params);
+    console.log('Params', params);
     const {
       startDate,
       endDate,
       patientId,
-      page = "1",
-      limit = "10",
-      searchQuery = "",
+      page = '1',
+      limit = '10',
+      searchQuery = '',
       sort: sortRaw,
       ...filters
     } = params;
@@ -60,8 +60,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     //Add populate fields
     options.populate = {
-      path: "doctorId",
-      select: "firstName lastName desgination",
+      path: 'doctorId',
+      select: 'firstName lastName desgination',
       model: Doctors.modelName,
     };
 
@@ -86,8 +86,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     if (searchQuery) {
       query.$or = [
-        { fullName: new RegExp(searchQuery, "i") },
-        { phone: new RegExp(searchQuery, "i") },
+        { fullName: new RegExp(searchQuery, 'i') },
+        { phone: new RegExp(searchQuery, 'i') },
       ];
     }
 
@@ -103,7 +103,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const result = await Appointments.paginate(query, options);
     const { records, pagination } = formatPaginationResult(result);
 
-    return successResponse("Success", {
+    return successResponse('Success', {
       records,
       pagination,
     });

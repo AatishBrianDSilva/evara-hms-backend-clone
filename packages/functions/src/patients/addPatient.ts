@@ -1,13 +1,13 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Patient from "@evara-backend/core/models/Patients";
-import Case from "@evara-backend/core/models/Cases";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { S3KeepPermanently, parseS3Url } from "../files/_KeepPermanently";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import Patient from '@evara-backend/core/models/Patients';
+import Case from '@evara-backend/core/models/Cases';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { S3KeepPermanently, parseS3Url } from '../files/_KeepPermanently';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -40,13 +40,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     });
 
     if (exisitingPatient) {
-      throw new ErrorMessage(400, "Patient already exists");
+      throw new ErrorMessage(400, 'Patient already exists');
     }
 
     // Create a new patient document
     const newPatient = new Patient(data);
 
-    console.log("Data", data);
+    console.log('Data', data);
 
     if (data.image && data.image.length > 0) {
       const s3UrlParts = parseS3Url(data.image);
@@ -54,7 +54,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       if (s3UrlParts) {
         await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
       } else {
-        throw new ErrorMessage(400, "Invalid image URL");
+        throw new ErrorMessage(400, 'Invalid image URL');
       }
     }
 
@@ -64,22 +64,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           const s3UrlParts = parseS3Url(data.identifications[i]);
           console.log(
             `Processing identification ${i + 1}: `,
-            data.identifications[i]
+            data.identifications[i],
           );
-          console.log("S3URLParts", s3UrlParts);
+          console.log('S3URLParts', s3UrlParts);
 
           if (s3UrlParts) {
             await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
             console.log(
-              `Successfully made permanent: ${data.identifications[i]}`
+              `Successfully made permanent: ${data.identifications[i]}`,
             );
           } else {
             console.error(
               `Invalid S3 URL for identification ${i + 1}: `,
-              data.identifications[i]
+              data.identifications[i],
             );
 
-            throw new ErrorMessage(400, "Invalid image URL");
+            throw new ErrorMessage(400, 'Invalid image URL');
           }
         }
       }
@@ -103,7 +103,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       patientId: patient.patientId,
       caseId: caseData.caseId,
     };
-    return successResponse("Patient added successfully", responseData);
+    return successResponse('Patient added successfully', responseData);
   } catch (error) {
     // Rollback the transaction
     await session.abortTransaction();

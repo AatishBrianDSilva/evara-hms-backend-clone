@@ -1,5 +1,5 @@
-import mongoose, { Document, PaginateModel, Types } from "mongoose";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Types } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
 interface DoctorData extends Document {
   clinicId: string;
@@ -19,7 +19,7 @@ interface DoctorData extends Document {
   pincode: string;
   licenceNumber: string;
   image: string;
-  status: "active" | "inactive";
+  status: 'active' | 'inactive';
   global: boolean;
   deletedAt: Date;
 }
@@ -38,7 +38,7 @@ export const doctorSchema = new mongoose.Schema(
     email: {
       type: String,
 
-      match: [/.+\@.+\..+/, "Invalid email format"],
+      match: [/.+\@.+\..+/, 'Invalid email format'],
     },
     addressLine1: { type: String },
     addressLine2: { type: String },
@@ -47,13 +47,13 @@ export const doctorSchema = new mongoose.Schema(
     pincode: { type: String },
     licenceNumber: { type: String },
     image: { type: String },
-    status: { type: String, enum: ["active", "inactive"], default: "active" },
+    status: { type: String, enum: ['active', 'inactive'], default: 'active' },
     global: { type: Boolean, default: false },
     deletedAt: { type: Date },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 doctorSchema.plugin(paginate);
@@ -61,8 +61,8 @@ doctorSchema.plugin(paginate);
 interface DoctorDocument extends mongoose.Document, DoctorData {}
 
 const Doctors = mongoose.model<DoctorDocument, PaginateModel<DoctorDocument>>(
-  "doctors",
-  doctorSchema
+  'doctors',
+  doctorSchema,
 );
 
 export default Doctors;

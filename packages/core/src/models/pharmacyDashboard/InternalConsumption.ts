@@ -1,6 +1,6 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import paginate from "mongoose-paginate-v2";
-import { autoIncrementId } from "../Counters";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
+import { autoIncrementId } from '../Counters';
 
 export interface IInternalConsumptionBatchDetail extends Document {
   batchId: string;
@@ -31,13 +31,13 @@ export interface IInternalConsumption extends Document {
 }
 
 const itemSchema = new Schema({
-  item: { type: Schema.Types.ObjectId, ref: "PharmacyStock", required: true },
+  item: { type: Schema.Types.ObjectId, ref: 'PharmacyStock', required: true },
   quantity: { type: Number, required: true, min: 1 },
   batches: [internalConsumptionBatchDetailSchema],
   transferFrom: {
     location: {
       type: Schema.Types.ObjectId,
-      ref: "DrugLocation",
+      ref: 'DrugLocation',
       required: true,
     },
     quantity: { type: Number, required: true },
@@ -54,19 +54,24 @@ const internalConsumptionSchema = new Schema(
     items: [itemSchema],
     createdBy: { type: String, required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 internalConsumptionSchema.index({ createdBy: 1 });
 
 // Auto-increment logic for icNumber field
-internalConsumptionSchema.pre("save", autoIncrementId("InternalConsumption", "icNumber", "IC-"));
+internalConsumptionSchema.pre(
+  'save',
+  autoIncrementId('InternalConsumption', 'icNumber', 'IC-'),
+);
 
 internalConsumptionSchema.plugin(paginate);
 
-export interface IInternalConsumptionDocument extends Document, IInternalConsumption {}
+export interface IInternalConsumptionDocument
+  extends Document,
+    IInternalConsumption {}
 
 export const InternalConsumption = mongoose.model<
   IInternalConsumptionDocument,
   PaginateModel<IInternalConsumptionDocument>
->("InternalConsumption", internalConsumptionSchema);
+>('InternalConsumption', internalConsumptionSchema);

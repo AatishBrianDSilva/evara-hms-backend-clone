@@ -1,6 +1,6 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import { autoIncrementId } from "../Counters";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import { autoIncrementId } from '../Counters';
+import paginate from 'mongoose-paginate-v2';
 
 export interface IDrugVendor extends Document {
   clinicId: string;
@@ -25,7 +25,7 @@ export interface IDrugVendor extends Document {
     country: string;
   };
   remarks: string;
-  status: "Active" | "Inactive";
+  status: 'Active' | 'Inactive';
 }
 
 const drugVendorSchema = new Schema<IDrugVendor>(
@@ -110,22 +110,22 @@ const drugVendorSchema = new Schema<IDrugVendor>(
     },
     status: {
       type: String,
-      enum: ["Active", "Inactive"],
-      default: "Active",
+      enum: ['Active', 'Inactive'],
+      default: 'Active',
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-drugVendorSchema.pre("save", autoIncrementId("drugVendors", "code", "DV-"));
+drugVendorSchema.pre('save', autoIncrementId('drugVendors', 'code', 'DV-'));
 
 drugVendorSchema.plugin(paginate);
 
 interface IDrugVendorDocument extends Document, IDrugVendor {}
 
-export const DrugVendor = mongoose.model<IDrugVendorDocument, PaginateModel<IDrugVendorDocument>>(
-  "DrugVendor",
-  drugVendorSchema
-);
+export const DrugVendor = mongoose.model<
+  IDrugVendorDocument,
+  PaginateModel<IDrugVendorDocument>
+>('DrugVendor', drugVendorSchema);

@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
 const clinicSchema = new Schema(
   {
@@ -14,12 +14,12 @@ const clinicSchema = new Schema(
     email: {
       type: String,
       required: true,
-      match: [/.+\@.+\..+/, "Invalid email format"],
+      match: [/.+\@.+\..+/, 'Invalid email format'],
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const Clinic = mongoose.model("Clinic", clinicSchema);
+const Clinic = mongoose.model('Clinic', clinicSchema);
 
 export default Clinic;

@@ -1,5 +1,5 @@
-import mongoose, { Document, PaginateModel, Schema, Types } from "mongoose";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema, Types } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
 interface AppointmentData extends Document {
   clinicId: string;
@@ -16,7 +16,7 @@ interface AppointmentData extends Document {
   source: string;
   reportedTime?: Date;
   notes: string;
-  status: "Scheduled" | "Reported" | "Cancelled" | "Completed";
+  status: 'Scheduled' | 'Reported' | 'Cancelled' | 'Completed';
 }
 
 export const appointmentSchema = new mongoose.Schema(
@@ -25,7 +25,7 @@ export const appointmentSchema = new mongoose.Schema(
     branchId: { type: String, required: true, index: true },
     doctorId: {
       type: Schema.Types.ObjectId,
-      ref: "doctors",
+      ref: 'doctors',
       required: true,
       index: true,
     },
@@ -52,13 +52,13 @@ export const appointmentSchema = new mongoose.Schema(
     notes: { type: String },
     status: {
       type: String,
-      enum: ["Scheduled", "Reported", "Cancelled", "Completed"],
-      default: "Scheduled",
+      enum: ['Scheduled', 'Reported', 'Cancelled', 'Completed'],
+      default: 'Scheduled',
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 appointmentSchema.index({ date: 1, time: 1, doctorId: 1 }, { unique: true });
@@ -70,6 +70,6 @@ interface AppointmentDocument extends mongoose.Document, AppointmentData {}
 const Appointments = mongoose.model<
   AppointmentDocument,
   PaginateModel<AppointmentDocument>
->("appointments", appointmentSchema);
+>('appointments', appointmentSchema);
 
 export default Appointments;

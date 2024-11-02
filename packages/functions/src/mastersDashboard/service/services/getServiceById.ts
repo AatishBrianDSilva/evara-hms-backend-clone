@@ -1,11 +1,11 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Patient from "@evara-backend/core/src/models/Patients";
-import MasterService from "@evara-backend/core/src/models/patientDashboard/services/MasterService";
-import DefaultService from "@evara-backend/core/src/models/patientDashboard/services/DefaultService";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import Patient from '@evara-backend/core/src/models/Patients';
+import MasterService from '@evara-backend/core/src/models/patientDashboard/services/MasterService';
+import DefaultService from '@evara-backend/core/src/models/patientDashboard/services/DefaultService';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -15,25 +15,25 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     if (event.pathParameters === null) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
     // Safely access the id property
-    const id = event.pathParameters["id"];
+    const id = event.pathParameters['id'];
     if (!id) {
-      throw new ErrorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, 'Id is not provided');
     }
 
     //Get all investigations
     const investigations = await MasterService.findById(id)
       .populate({
-        path: "service",
+        path: 'service',
         model: DefaultService.modelName,
       })
       .lean();
 
     // Return success response
-    return successResponse("Success", investigations);
+    return successResponse('Success', investigations);
   } catch (error) {
     return errorResponse(error);
   }

@@ -1,6 +1,6 @@
-import mongoose, { Document, Schema } from "mongoose";
-import { EGender } from "../investigation/MedicalTests";
-import { EProcedureType } from "./MedicalProcedure";
+import mongoose, { Document, Schema } from 'mongoose';
+import { EGender } from '../investigation/MedicalTests';
+import { EProcedureType } from './MedicalProcedure';
 
 interface IMasterProcedures extends Document {
   clinicId: string;
@@ -27,7 +27,7 @@ const MasterProcedureSchema: Schema = new Schema({
   procedure: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: "MedicalProcedures",
+    ref: 'MedicalProcedures',
   },
   name: { type: String, required: true, unique: true },
   gender: { type: String, required: true, enum: Object.values(EGender) },
@@ -40,8 +40,8 @@ const MasterProcedureSchema: Schema = new Schema({
 });
 
 const MasterProcedure = mongoose.model<IMasterProcedures>(
-  "MasterProcedures",
-  MasterProcedureSchema
+  'MasterProcedures',
+  MasterProcedureSchema,
 );
 
 export default MasterProcedure;

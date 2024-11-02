@@ -1,6 +1,6 @@
-import { Schema } from "mongoose";
-import { EPatientBillingServiceType } from "../../models/patientDashboard/Billings/PatientBilling";
-import SNSService from "../aws/sns";
+import { Schema } from 'mongoose';
+import { EPatientBillingServiceType } from '../../models/patientDashboard/Billings/PatientBilling';
+import SNSService from '../aws/sns';
 
 export const publishBillingServiceToSNS = async (
   patientCode: string,
@@ -17,10 +17,10 @@ export const publishBillingServiceToSNS = async (
   mrp?: number,
   expiryDate?: Date,
   vendor?: Schema.Types.ObjectId,
-  packSize?: number
+  packSize?: number,
 ) => {
   const messagePayload = {
-    action: "Add",
+    action: 'Add',
     data: {
       doctorId: doctorId,
       masterServiceId: masterServiceId,

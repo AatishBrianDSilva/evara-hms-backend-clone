@@ -1,16 +1,16 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
-import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
-import { InternalConsumption } from "@evara-backend/core/src/models/pharmacyDashboard/InternalConsumption";
-import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import { IPaginateOptions } from '@evara-backend/core/src/lib/types/pagination';
+import { DrugLocation } from '@evara-backend/core/src/models/pharmacyDashboard/DrugLocation';
+import { PharmacyStock } from '@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock';
+import { InternalConsumption } from '@evara-backend/core/src/models/pharmacyDashboard/InternalConsumption';
+import { DrugItem } from '@evara-backend/core/src/models/pharmacyDashboard/DrugItem';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -18,29 +18,35 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "10", paginate, sort: sortRaw, searchQuery = "" } = params;
+    const {
+      page = '1',
+      limit = '10',
+      paginate,
+      sort: sortRaw,
+      searchQuery = '',
+    } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
     const populate = [
       {
-        path: "items.item",
+        path: 'items.item',
         model: PharmacyStock.modelName,
         populate: [
           {
-            path: "item",
+            path: 'item',
             model: DrugItem.modelName,
           },
         ],
       },
       {
-        path: "items.transferFrom.location",
+        path: 'items.transferFrom.location',
         model: DrugLocation.modelName,
       },
     ];
@@ -63,20 +69,23 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       options.populate = populate;
 
       if (searchQuery) {
-        query.$or = [{ icNumber: new RegExp(searchQuery, "i") }];
+        query.$or = [{ icNumber: new RegExp(searchQuery, 'i') }];
       }
 
       const result = await InternalConsumption.paginate(query, options);
       const { records, pagination } = formatPaginationResult(result);
 
-      return successResponse("Success", {
+      return successResponse('Success', {
         records,
         pagination,
       });
     } else {
-      const data = await InternalConsumption.find(query).populate(populate).sort(sort).lean();
+      const data = await InternalConsumption.find(query)
+        .populate(populate)
+        .sort(sort)
+        .lean();
 
-      return successResponse("Success", data);
+      return successResponse('Success', data);
     }
   } catch (error) {
     return errorResponse(error);

@@ -1,6 +1,6 @@
-import mongoose, { Document, Schema } from "mongoose";
-import { EServiceTypes } from "./DefaultService";
-import { EGender } from "../investigation/MedicalTests";
+import mongoose, { Document, Schema } from 'mongoose';
+import { EServiceTypes } from './DefaultService';
+import { EGender } from '../investigation/MedicalTests';
 
 interface IMasterService extends Document {
   clinicId: string;
@@ -26,7 +26,7 @@ const MasterServiceSchema: Schema = new Schema({
   service: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: "DefaultService",
+    ref: 'DefaultService',
   },
   name: { type: String, required: true, unique: true },
   description: { type: String },
@@ -38,6 +38,9 @@ const MasterServiceSchema: Schema = new Schema({
   isPackageItem: { type: Boolean, default: false }, // Set default to false
 });
 
-const MasterService = mongoose.model<IMasterService>("MasterService", MasterServiceSchema);
+const MasterService = mongoose.model<IMasterService>(
+  'MasterService',
+  MasterServiceSchema,
+);
 
 export default MasterService;

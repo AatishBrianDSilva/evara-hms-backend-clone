@@ -1,13 +1,13 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Donor from "@evara-backend/core/models/mastersDashboard/local/Donor";
-import Case from "@evara-backend/core/models/Cases";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import Donor from '@evara-backend/core/models/mastersDashboard/local/Donor';
+import Case from '@evara-backend/core/models/Cases';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { S3KeepPermanently, parseS3Url } from 'src/files/_KeepPermanently';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -43,14 +43,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       if (s3UrlParts) {
         await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
       } else {
-        throw new ErrorMessage(400, "Invalid image URL");
+        throw new ErrorMessage(400, 'Invalid image URL');
       }
     }
 
     // Commit the transaction
 
     // Return success response
-    return successResponse("Donor added successfully");
+    return successResponse('Donor added successfully');
   } catch (error) {
     // Rollback the transaction
     return errorResponse(error);

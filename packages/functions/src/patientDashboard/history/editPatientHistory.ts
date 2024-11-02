@@ -1,10 +1,10 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Patient from "@evara-backend/core/src/models/Patients";
-import { PatientHistory } from "@evara-backend/core/models/patientDashboard/PatientHistory";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import Patient from '@evara-backend/core/src/models/Patients';
+import { PatientHistory } from '@evara-backend/core/models/patientDashboard/PatientHistory';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -14,17 +14,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     if (event.pathParameters === null) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
     // Safely access the id property
-    const id = event.pathParameters["id"];
+    const id = event.pathParameters['id'];
     if (!id) {
-      throw new ErrorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, 'Id is not provided');
     }
 
     if (!event.body) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     // Parse the body from the event
@@ -35,7 +35,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       patientId: id,
     }).lean();
     if (!patient) {
-      throw new ErrorMessage(404, "Patient not found");
+      throw new ErrorMessage(404, 'Patient not found');
     }
 
     // Retrieve existing history for updates
@@ -43,7 +43,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       patientId: patient._id,
     });
     if (!patientHistory) {
-      throw new ErrorMessage(404, "Patient history not found");
+      throw new ErrorMessage(404, 'Patient history not found');
     }
 
     // Update the patient history with new data
@@ -71,7 +71,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await patientHistory.save();
 
     // Return success response
-    return successResponse("Patient history updated successfully");
+    return successResponse('Patient history updated successfully');
   } catch (error) {
     return errorResponse(error);
   }

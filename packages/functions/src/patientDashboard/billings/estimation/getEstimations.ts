@@ -1,14 +1,14 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import { log } from "console";
-import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
-import { PatientBillingEstimation } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBillingEstimation";
-import { Document } from "mongoose";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import { IPaginateOptions } from '@evara-backend/core/src/lib/types/pagination';
+import { log } from 'console';
+import Doctors from '@evara-backend/core/src/models/mastersDashboard/Doctors';
+import { PatientBillingEstimation } from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBillingEstimation';
+import { Document } from 'mongoose';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 interface IPatientBillingEstimation extends Document {
   estimatedPrice: number;
@@ -17,7 +17,7 @@ interface IPatientBillingEstimation extends Document {
 
 const calculateEstimatedPriceWithoutTax = (
   estimatedPrice: number,
-  taxRate: number
+  taxRate: number,
 ): number => {
   return estimatedPrice / (1 + taxRate / 100);
 };
@@ -31,10 +31,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    console.log("params", params);
+    console.log('params', params);
     const {
-      page = "1",
-      limit = "10",
+      page = '1',
+      limit = '10',
       sort: sortRaw,
       status,
       patientCode,
@@ -44,12 +44,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const populate = [
       {
-        path: "doctorId",
+        path: 'doctorId',
         model: Doctors.modelName,
       },
     ];
 
-    const paginate = JSON.parse(params.paginate || "false");
+    const paginate = JSON.parse(params.paginate || 'false');
 
     const query: any = {};
     query.branchId = auth.branchId;
@@ -76,7 +76,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       options.populate = populate;
 
-      log("Query", query);
+      log('Query', query);
 
       // Fetching the appointments with pagination
       const result = await PatientBillingEstimation.paginate(query, options);
@@ -89,7 +89,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       //   return record;
       // });
 
-      return successResponse("Success", {
+      return successResponse('Success', {
         records: records,
         pagination,
       });
@@ -106,7 +106,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       //   return record;
       // });
 
-      return successResponse("Success", {
+      return successResponse('Success', {
         records: data,
       });
     }

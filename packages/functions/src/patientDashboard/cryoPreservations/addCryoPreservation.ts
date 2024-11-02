@@ -1,15 +1,15 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import PatientCryoPreservation from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/PatientCryoPreservation";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import MasterCryoPreservations from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/MasterCryoPreservations";
-import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
-import { publishBillingServiceToSNS } from "@evara-backend/core/src/lib/utils/publishBillingServiceToSNS";
-import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
-import { ObjectId } from "mongoose";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import PatientCryoPreservation from '@evara-backend/core/src/models/patientDashboard/cryoPreservation/PatientCryoPreservation';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import MasterCryoPreservations from '@evara-backend/core/src/models/patientDashboard/cryoPreservation/MasterCryoPreservations';
+import { EPatientBillingServiceType } from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling';
+import { publishBillingServiceToSNS } from '@evara-backend/core/src/lib/utils/publishBillingServiceToSNS';
+import { S3KeepPermanently, parseS3Url } from 'src/files/_KeepPermanently';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
+import { ObjectId } from 'mongoose';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -20,7 +20,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     if (event.body == null) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     // Parse the body from the event
@@ -33,7 +33,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const newCryoPreservation = await cryoPreservation.save();
 
       const masterCryoPreservation = await MasterCryoPreservations.findById(
-        cryoPreservation.cryo
+        cryoPreservation.cryo,
       ).lean();
 
       if (masterCryoPreservation) {
@@ -50,15 +50,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           masterCryoPreservation.cost,
           1,
           auth.clinicId,
-          auth.branchId
+          auth.branchId,
         );
       } else {
-        console.error("Master Cryo Preservation not found");
+        console.error('Master Cryo Preservation not found');
       }
     }
 
     // Return success response
-    return successResponse("Cryo Preservation created successfully");
+    return successResponse('Cryo Preservation created successfully');
   } catch (error) {
     return errorResponse(error);
   }

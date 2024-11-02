@@ -1,14 +1,14 @@
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { IDateRange } from "./summary";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import Patient from "@evara-backend/core/src/models/Patients";
-import Donor from "@evara-backend/core/src/models/mastersDashboard/local/Donor";
-import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
-import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { IDateRange } from './summary';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import Patient from '@evara-backend/core/src/models/Patients';
+import Donor from '@evara-backend/core/src/models/mastersDashboard/local/Donor';
+import { PurchaseOrder } from '@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder';
+import { PharmacyStock } from '@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -16,7 +16,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
     // Connect to MongoDB
     await connectMongoDb();
@@ -51,13 +51,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
       {
         $group: {
-          _id: "$status",
+          _id: '$status',
           count: { $sum: 1 },
           totalNetAmount: {
             $sum: {
               $cond: [
-                { $eq: ["$status", "Processed"] },
-                "$response.netAmount",
+                { $eq: ['$status', 'Processed'] },
+                '$response.netAmount',
                 0,
               ],
             },
@@ -67,17 +67,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       {
         $group: {
           _id: null,
-          totalPurchaseOrders: { $sum: "$count" },
+          totalPurchaseOrders: { $sum: '$count' },
           statuses: {
             $push: {
-              status: "$_id",
-              count: "$count",
+              status: '$_id',
+              count: '$count',
               processedAmount: {
-                $cond: [{ $eq: ["$_id", "Processed"] }, "$totalNetAmount", 0],
+                $cond: [{ $eq: ['$_id', 'Processed'] }, '$totalNetAmount', 0],
               },
             },
           },
-          totalProcessedAmount: { $sum: "$totalNetAmount" },
+          totalProcessedAmount: { $sum: '$totalNetAmount' },
         },
       },
       {
@@ -99,18 +99,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const criticalStocks = await PharmacyStock.aggregate([
       {
-        $unwind: "$batches",
+        $unwind: '$batches',
       },
       {
-        $unwind: "$batches.locations",
+        $unwind: '$batches.locations',
       },
       {
         $group: {
           _id: {
-            branchId: "$branchId",
-            item: "$item",
+            branchId: '$branchId',
+            item: '$item',
           },
-          totalQuantity: { $sum: "$batches.locations.quantity" },
+          totalQuantity: { $sum: '$batches.locations.quantity' },
         },
       },
       {
@@ -120,14 +120,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
       {
         $group: {
-          _id: "$_id.branchId",
+          _id: '$_id.branchId',
           criticalStockCount: { $sum: 1 },
         },
       },
       {
         $project: {
           _id: 0,
-          branchId: "$_id",
+          branchId: '$_id',
           criticalStockCount: 1,
         },
       },
@@ -142,7 +142,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     };
 
-    return successResponse("Success", response);
+    return successResponse('Success', response);
   } catch (error) {
     return errorResponse(error);
   }

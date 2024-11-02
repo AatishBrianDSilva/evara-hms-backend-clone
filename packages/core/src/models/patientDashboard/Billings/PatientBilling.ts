@@ -1,40 +1,40 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import paginate from "mongoose-paginate-v2";
-import { autoIncrementId } from "../../Counters";
-import { EServiceTypes } from "../services/DefaultService";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
+import { autoIncrementId } from '../../Counters';
+import { EServiceTypes } from '../services/DefaultService';
 
 const round = (num: number) => Math.round(num * 100) / 100;
 
 export enum EPaitentBillingPaymentType {
-  Payment = "Payment",
-  Refund = "Refund",
-  Advance = "Advance",
+  Payment = 'Payment',
+  Refund = 'Refund',
+  Advance = 'Advance',
 }
 
 export enum EPatientBillingStatus {
-  Pending = "Pending",
-  Advance = "Advance",
-  Refunded = "Refunded",
-  Paid = "Paid",
-  Archived = "Archived",
+  Pending = 'Pending',
+  Advance = 'Advance',
+  Refunded = 'Refunded',
+  Paid = 'Paid',
+  Archived = 'Archived',
 }
 
 export enum EPatientBillingServiceType {
-  Investigation = "Investigation",
-  Procedure = "Procedure",
-  Pharmacy = "Pharmacy",
-  Service = "Service",
-  CryoPreservation = "Cryo Preservation",
-  TreatmentCycle = "Treatment Cycle",
-  Package = "Package",
+  Investigation = 'Investigation',
+  Procedure = 'Procedure',
+  Pharmacy = 'Pharmacy',
+  Service = 'Service',
+  CryoPreservation = 'Cryo Preservation',
+  TreatmentCycle = 'Treatment Cycle',
+  Package = 'Package',
 }
 
 export enum EPaymentMethod {
-  Cash = "Cash",
-  CreditCard = "CreditCard",
-  BankTransfer = "BankTransfer",
-  Online = "Online",
-  UPI = "UPI",
+  Cash = 'Cash',
+  CreditCard = 'CreditCard',
+  BankTransfer = 'BankTransfer',
+  Online = 'Online',
+  UPI = 'UPI',
 }
 
 interface PaymentDetail {
@@ -121,9 +121,9 @@ const paymentDetailSchema = new Schema<PaymentDetail>({
 });
 
 const pharmacyDetailsSchema = new Schema<PharmacyDetails>({
-  stock: { type: mongoose.Schema.Types.ObjectId, ref: "PharmacyStock" },
+  stock: { type: mongoose.Schema.Types.ObjectId, ref: 'PharmacyStock' },
   batchNo: { type: String },
-  location: { type: mongoose.Schema.Types.ObjectId, ref: "DrugLocation" },
+  location: { type: mongoose.Schema.Types.ObjectId, ref: 'DrugLocation' },
 });
 
 const refundDetailSchema = new Schema<RefundDetail>({
@@ -147,7 +147,7 @@ const itemSchema = new Schema<Item>({
     enum: Object.values(EPatientBillingServiceType),
     required: true,
   },
-  doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "Doctors" },
+  doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctors' },
   quantity: { type: Number, required: true, min: 0 },
   mrpPerUnit: { type: Number, required: false, min: 0 },
   batchNo: { type: String, required: false },
@@ -195,36 +195,43 @@ const patientBillingSchema = new Schema<IPatientBilling>(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
-patientBillingSchema.virtual("subTotal").get(function (this: IPatientBilling) {
+patientBillingSchema.virtual('subTotal').get(function (this: IPatientBilling) {
   return round(this.amount + this.tax);
 });
 
-patientBillingSchema.virtual("grandTotal").get(function (this: IPatientBilling) {
+patientBillingSchema.virtual('grandTotal').get(function (
+  this: IPatientBilling,
+) {
   return round(this.subTotal - this.discount);
 });
 
-patientBillingSchema.virtual("totalPaid").get(function (this: IPatientBilling) {
+patientBillingSchema.virtual('totalPaid').get(function (this: IPatientBilling) {
   return round(
     this.payments
-      .filter((payment) => payment.type === EPaitentBillingPaymentType.Payment)
-      .reduce((acc, payment) => acc + payment.amount, 0)
+      .filter(payment => payment.type === EPaitentBillingPaymentType.Payment)
+      .reduce((acc, payment) => acc + payment.amount, 0),
   );
 });
 
-patientBillingSchema.virtual("totalPaymentAttempts").get(function (this: IPatientBilling) {
+patientBillingSchema.virtual('totalPaymentAttempts').get(function (
+  this: IPatientBilling,
+) {
   return this.payments.filter(
-    (payment) => payment.type === EPaitentBillingPaymentType.Payment
+    payment => payment.type === EPaitentBillingPaymentType.Payment,
   ).length;
 });
 
-patientBillingSchema.virtual("totalDues").get(function (this: IPatientBilling) {
+patientBillingSchema.virtual('totalDues').get(function (this: IPatientBilling) {
   return round(this.grandTotal - this.totalPaid);
 });
 
-patientBillingSchema.pre("save", autoIncrementId("PatientBilling", "billingId", "BL-"));
+patientBillingSchema.pre(
+  'save',
+  autoIncrementId('PatientBilling', 'billingId', 'BL-'),
+);
 
 patientBillingSchema.plugin(paginate);
 
@@ -233,4 +240,4 @@ interface PatientBillingDocument extends Document, IPatientBilling {}
 export const PatientBilling = mongoose.model<
   PatientBillingDocument,
   PaginateModel<PatientBillingDocument>
->("PatientBilling", patientBillingSchema);
+>('PatientBilling', patientBillingSchema);

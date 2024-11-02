@@ -1,32 +1,32 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import mongoose from "mongoose";
-import { log } from "console";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import mongoose from 'mongoose';
+import { log } from 'console';
 import CryoPreservations, {
   ECryoPreservationType,
-} from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/CryoPreservations";
-import PatientCryoPreservation from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/PatientCryoPreservation";
-import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
-import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
-import MasterCryoPreservations from "@evara-backend/core/models/patientDashboard/cryoPreservation/MasterCryoPreservations";
-import SNSService from "@evara-backend/core/lib/aws/sns";
+} from '@evara-backend/core/src/models/patientDashboard/cryoPreservation/CryoPreservations';
+import PatientCryoPreservation from '@evara-backend/core/src/models/patientDashboard/cryoPreservation/PatientCryoPreservation';
+import { S3KeepPermanently, parseS3Url } from 'src/files/_KeepPermanently';
+import Doctors from '@evara-backend/core/src/models/mastersDashboard/Doctors';
+import MasterCryoPreservations from '@evara-backend/core/models/patientDashboard/cryoPreservation/MasterCryoPreservations';
+import SNSService from '@evara-backend/core/lib/aws/sns';
 import {
   EBuckets,
   EDocumentTypes,
   EReportTemplateTypes,
   IReportData,
-} from "@evara-backend/core/lib/types/global";
+} from '@evara-backend/core/lib/types/global';
 import {
   generateSections,
   transformBloodTestsToKeyValuePairs,
-} from "@evara-backend/core/lib/utils/sanitizeReportData";
-import _ from "lodash";
-import Patient from "@evara-backend/core/models/Patients";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
-import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
+} from '@evara-backend/core/lib/utils/sanitizeReportData';
+import _ from 'lodash';
+import Patient from '@evara-backend/core/models/Patients';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
+import Branch from '@evara-backend/core/models/mastersDashboard/global/ClinicBranches';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -35,26 +35,26 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Extract authorization details
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     await connectMongoDb();
 
     if (!event.pathParameters) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
-    const id = event.pathParameters["id"];
+    const id = event.pathParameters['id'];
     if (!id) {
-      throw new ErrorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, 'Id is not provided');
     }
 
     if (!event.body) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     const body = JSON.parse(event.body);
-    log("body", body);
+    log('body', body);
     const updateData: any = {};
 
     if (body.date) {
@@ -70,10 +70,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     if (body.testType === ECryoPreservationType.Sperm) {
       updateData.details = body.details;
-      updateData.status = "Completed";
+      updateData.status = 'Completed';
     } else if (body.testType === ECryoPreservationType.Embryo) {
       updateData.details = body.details;
-      updateData.status = "Completed";
+      updateData.status = 'Completed';
     }
 
     if (body.details.files && body.details.files.length > 0) {
@@ -82,40 +82,44 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         if (s3UrlParts) {
           await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
         } else {
-          throw new ErrorMessage(400, "Invalid image URL");
+          throw new ErrorMessage(400, 'Invalid image URL');
         }
       }
     }
 
-    const cryopreservation = await PatientCryoPreservation.findByIdAndUpdate(id, updateData, {
-      new: true,
-    }).populate([
+    const cryopreservation = await PatientCryoPreservation.findByIdAndUpdate(
+      id,
+      updateData,
       {
-        path: "cryo",
+        new: true,
+      },
+    ).populate([
+      {
+        path: 'cryo',
         model: MasterCryoPreservations.modelName,
       },
       {
-        path: "doctor",
+        path: 'doctor',
         model: Doctors.modelName,
-        select: "firstName lastName",
+        select: 'firstName lastName',
       },
     ]);
 
     console.log(
-      "Cryo Preservation Updated successfully",
-      JSON.stringify(cryopreservation, null, 2)
+      'Cryo Preservation Updated successfully',
+      JSON.stringify(cryopreservation, null, 2),
     );
 
     // Fetch patient data
     const patient = await Patient.findById(cryopreservation.patient);
     if (!patient) {
-      throw new ErrorMessage(404, "Patient not found");
+      throw new ErrorMessage(404, 'Patient not found');
     }
 
-    console.log("patient data fetched", patient);
+    console.log('patient data fetched', patient);
 
     // Fetch spouse name based on partnerId
-    let spouseName = "N/A";
+    let spouseName = 'N/A';
     if (patient.partnerId) {
       const spouse = await Patient.findOne({ patientId: patient.partnerId }); // Fetch patient where patientId matches partnerId
       if (spouse) {
@@ -126,33 +130,33 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Log the branchId and clinicId extracted from the auth
     const branchId = auth.branchId;
     const clinicId = auth.clinicId;
-    console.log("Extracted Branch ID:", branchId);
-    console.log("Extracted Clinic ID:", clinicId);
+    console.log('Extracted Branch ID:', branchId);
+    console.log('Extracted Clinic ID:', clinicId);
 
     // Fetch the branch using the branchId and clinicId from the auth details
     const branch = await Branch.findOne({
-      code: new RegExp(`^${branchId.trim()}\\s*$`, "i"),
+      code: new RegExp(`^${branchId.trim()}\\s*$`, 'i'),
       clinicId: clinicId,
       isActive: true,
     }).lean();
 
     if (!branch) {
-      console.log("Branch not found");
-      throw new ErrorMessage(404, "Branch not found");
+      console.log('Branch not found');
+      throw new ErrorMessage(404, 'Branch not found');
     }
 
-    console.log("Branch found:", branch);
+    console.log('Branch found:', branch);
 
     // Generate Report if cryopreservation is completed
-    if (cryopreservation && cryopreservation.status === "Completed") {
+    if (cryopreservation && cryopreservation.status === 'Completed') {
       const report = processDataForReport(
         cryopreservation,
         patient,
         spouseName,
         branch,
-        body.actualName
+        body.actualName,
       );
-      console.log("Report Data: ", JSON.stringify(report, null, 2));
+      console.log('Report Data: ', JSON.stringify(report, null, 2));
 
       // Send to SNS
       await SNSService.publishMessage({
@@ -161,7 +165,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       });
     }
 
-    return successResponse("cryopreservation Updated successfully", cryopreservation);
+    return successResponse(
+      'cryopreservation Updated successfully',
+      cryopreservation,
+    );
   } catch (error) {
     return errorResponse(error);
   }
@@ -172,15 +179,16 @@ const processDataForReport = (
   patient: any,
   spouseName: string,
   branch: any,
-  actualName: any
+  actualName: any,
 ) => {
-  const reportName = actualName || data.result?.procedureName || "Default Procedure Name";
+  const reportName =
+    actualName || data.result?.procedureName || 'Default Procedure Name';
 
   const reportData: IReportData = {
     bucket: EBuckets.UserReports,
     documentType: EDocumentTypes.CryoPreservation,
     templateType: EReportTemplateTypes.Reports,
-    doctor: `${data.doctor?.firstName || ""} ${data.doctor?.lastName || ""}`,
+    doctor: `${data.doctor?.firstName || ''} ${data.doctor?.lastName || ''}`,
     patient: data.patient,
     clinic: data.clinicId,
     sections: [],
@@ -196,101 +204,108 @@ const processDataForReport = (
     gender: patient.gender,
     age: patient.age,
     spouseName: spouseName,
-    admissionDate: data.updatedAt ? new Date(data.updatedAt).toLocaleDateString("en-GB") : "N/A",
+    admissionDate: data.updatedAt
+      ? new Date(data.updatedAt).toLocaleDateString('en-GB')
+      : 'N/A',
   };
 
   reportData.sections.push({
     showTitle: true,
-    title: "Patient Details",
+    title: 'Patient Details',
     content: patientDetails,
   });
 
   // Extracting and processing files as uploaded images
-  if (patient.gender === "Female" && data.details.files && data.details.files.length > 0) {
+  if (
+    patient.gender === 'Female' &&
+    data.details.files &&
+    data.details.files.length > 0
+  ) {
     const uploadedImages = data.details.files.map((fileUrl, index) => ({
       label: `Image ${index + 1}`,
       src: fileUrl,
     }));
 
-    console.log("Uplodaed Images", uploadedImages);
+    console.log('Uplodaed Images', uploadedImages);
 
     reportData.sections.push({
       showTitle: true,
-      title: "Uploaded Images",
+      title: 'Uploaded Images',
       content: uploadedImages,
     });
   }
 
   // Function to extract only the time part from a datetime string
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
+    return new Date(dateString).toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
       hour12: true, // This ensures the time is in 12-hour format with AM/PM
     });
   };
 
   // Helper function to format date strings to dd/mm/yyyy
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-GB");
+    return new Date(dateString).toLocaleDateString('en-GB');
   };
 
   // Define which fields require only the time part
-  const timeSpecificFields = ["time"];
+  const timeSpecificFields = ['time'];
 
   // Extract all details from the result and remove the __v field
-  const { __v, files, sperm_wash_items, ...generalDetails } = data.details.details;
+  const { __v, files, sperm_wash_items, ...generalDetails } =
+    data.details.details;
 
   // Check if branch has a valid address and format it
-  let branchAddress = "Address not available";
+  let branchAddress = 'Address not available';
   if (branch && branch.address) {
     const { street, city, state, zip } = branch.address;
-    branchAddress = `${street ? street + ", " : ""}${city ? city + ", " : ""}${
-      state ? state + " - " : ""
-    }${zip || ""}`;
+    branchAddress = `${street ? street + ', ' : ''}${city ? city + ', ' : ''}${
+      state ? state + ' - ' : ''
+    }${zip || ''}`;
   }
 
   // Add Branch Address section
   const branchDetails = {
-    Branch: branch.branchName || "N/A",
+    Branch: branch.branchName || 'N/A',
     Address: branchAddress,
-    Phone: branch.phone || "N/A",
-    Email: branch.email || "N/A",
+    Phone: branch.phone || 'N/A',
+    Email: branch.email || 'N/A',
   };
 
   reportData.sections.push({
     showTitle: true,
-    title: "Branch Details",
+    title: 'Branch Details',
     content: branchDetails,
   });
 
   // Doctor-related fields to be replaced with their names
   const doctorFields = [
-    "surgeon",
-    "embryologistA",
-    "embryologistB",
-    "embryologist",
-    "doctor",
-    "anaesthetist",
-    "gynaecologist",
+    'surgeon',
+    'embryologistA',
+    'embryologistB',
+    'embryologist',
+    'doctor',
+    'anaesthetist',
+    'gynaecologist',
     // add other doctor-related fields here as needed
   ];
 
   // Replace doctor fields with their names in general details
   const modifiedGeneralDetails = { ...generalDetails };
-  doctorFields.forEach((field) => {
+  doctorFields.forEach(field => {
     if (
       modifiedGeneralDetails[field] &&
       modifiedGeneralDetails[field].firstName &&
       modifiedGeneralDetails[field].lastName
     ) {
-      modifiedGeneralDetails[
-        field
-      ] = `${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
+      modifiedGeneralDetails[field] =
+        `${modifiedGeneralDetails[field].firstName} ${modifiedGeneralDetails[field].lastName}`;
     } else if (modifiedGeneralDetails[field]) {
-      modifiedGeneralDetails[field] = `${modifiedGeneralDetails[field].firstName || ""} ${
-        modifiedGeneralDetails[field].lastName || ""
-      }`;
+      modifiedGeneralDetails[field] =
+        `${modifiedGeneralDetails[field].firstName || ''} ${
+          modifiedGeneralDetails[field].lastName || ''
+        }`;
     }
   });
 
@@ -298,9 +313,9 @@ const processDataForReport = (
   const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
   // Handle date and time formatting for all other fields
-  Object.keys(modifiedGeneralDetails).forEach((key) => {
+  Object.keys(modifiedGeneralDetails).forEach(key => {
     if (
-      typeof modifiedGeneralDetails[key] === "string" &&
+      typeof modifiedGeneralDetails[key] === 'string' &&
       iso8601Regex.test(modifiedGeneralDetails[key])
     ) {
       if (timeSpecificFields.includes(key)) {
@@ -315,12 +330,14 @@ const processDataForReport = (
 
   // Remove keys with empty string or null values
   const filteredGeneralDetails = Object.fromEntries(
-    Object.entries(modifiedGeneralDetails).filter(([key, value]) => value !== "" && value !== null)
+    Object.entries(modifiedGeneralDetails).filter(
+      ([key, value]) => value !== '' && value !== null,
+    ),
   );
 
   reportData.sections.push({
     showTitle: true,
-    title: "General Information",
+    title: 'General Information',
     content: filteredGeneralDetails,
   });
 
@@ -328,7 +345,7 @@ const processDataForReport = (
   if (sperm_wash_items && sperm_wash_items.length > 0) {
     const formattedSpermWashItems = sperm_wash_items.map((item, index) => {
       const formattedItem = {};
-      Object.keys(item).forEach((key) => {
+      Object.keys(item).forEach(key => {
         formattedItem[_.startCase(key)] = item[key];
       });
       return {
@@ -337,7 +354,7 @@ const processDataForReport = (
       };
     });
 
-    formattedSpermWashItems.forEach((section) => {
+    formattedSpermWashItems.forEach(section => {
       reportData.sections.push({
         showTitle: true,
         title: section.title,
@@ -349,7 +366,7 @@ const processDataForReport = (
   if (data.details.notes) {
     reportData.sections.push({
       showTitle: true,
-      title: "Notes",
+      title: 'Notes',
       content: {
         Notes: data.details.notes,
       },

@@ -1,6 +1,6 @@
-import _ from "lodash";
-import { format, isValid, parseISO } from "date-fns";
-import { ISection } from "../types/global";
+import _ from 'lodash';
+import { format, isValid, parseISO } from 'date-fns';
+import { ISection } from '../types/global';
 
 type InputObject = { [key: string]: any };
 
@@ -12,7 +12,7 @@ export const sanitizeReportInput = (input: InputObject): InputObject => {
   const formatDate = (date: string): string => {
     const parsedDate = parseISO(date);
     if (isValid(parsedDate)) {
-      return format(parsedDate, "dd/MM/yyyy h:mm a");
+      return format(parsedDate, 'dd/MM/yyyy h:mm a');
     }
     return date; // Return the original value if it's not a valid date
   };
@@ -24,9 +24,9 @@ export const sanitizeReportInput = (input: InputObject): InputObject => {
   const sanitizedObject: InputObject = {};
 
   _.forOwn(input, (value, key) => {
-    if (value !== "" && value !== null) {
+    if (value !== '' && value !== null) {
       const formattedKey = formatKey(key);
-      if (typeof value === "string" && isDate(value)) {
+      if (typeof value === 'string' && isDate(value)) {
         sanitizedObject[formattedKey] = formatDate(value);
       } else {
         sanitizedObject[formattedKey] = value;
@@ -48,7 +48,9 @@ export const sanitizeReportInput = (input: InputObject): InputObject => {
 //   }, {});
 // };
 
-export const transformBloodTestsToKeyValuePairs = (details: any[]): Record<string, string> => {
+export const transformBloodTestsToKeyValuePairs = (
+  details: any[],
+): Record<string, string> => {
   if (!Array.isArray(details)) {
     return {}; // Return an empty object if details is not an array
   }
@@ -56,7 +58,9 @@ export const transformBloodTestsToKeyValuePairs = (details: any[]): Record<strin
   return details.reduce((acc, detail) => {
     if (detail.component && detail.value !== undefined && detail.unit) {
       acc[detail.component] = `${detail.value} ${detail.unit} ${
-        detail.referenceRange ? `(Reference Range: ${detail.referenceRange})` : ""
+        detail.referenceRange
+          ? `(Reference Range: ${detail.referenceRange})`
+          : ''
       }`;
     }
     return acc;
@@ -67,10 +71,10 @@ export const generateSections = (input: InputObject): ISection[] => {
   const sections: ISection[] = [];
 
   _.forOwn(input, (value, key) => {
-    if (key === "doctor" && _.isObject(value)) {
+    if (key === 'doctor' && _.isObject(value)) {
       const doctorName = `${value.firstName} ${value.lastName}`;
-      const sectionTitle = "General Information";
-      let section = sections.find((section) => section.title === sectionTitle);
+      const sectionTitle = 'General Information';
+      let section = sections.find(section => section.title === sectionTitle);
 
       if (!section) {
         section = {
@@ -81,7 +85,7 @@ export const generateSections = (input: InputObject): ISection[] => {
         sections.push(section);
       }
 
-      section.content["Doctor"] = doctorName;
+      section.content['Doctor'] = doctorName;
     } else if (_.isObject(value) && !_.isArray(value)) {
       const sectionContent = sanitizeReportInput(value as InputObject);
       if (!_.isEmpty(sectionContent)) {
@@ -91,9 +95,9 @@ export const generateSections = (input: InputObject): ISection[] => {
           content: sectionContent,
         });
       }
-    } else if (!_.isObject(value) && value !== "") {
-      const sectionTitle = "General Information";
-      let section = sections.find((section) => section.title === sectionTitle);
+    } else if (!_.isObject(value) && value !== '') {
+      const sectionTitle = 'General Information';
+      let section = sections.find(section => section.title === sectionTitle);
 
       if (!section) {
         section = {
@@ -106,7 +110,7 @@ export const generateSections = (input: InputObject): ISection[] => {
 
       section.content[_.startCase(_.camelCase(key))] = sanitizeReportInput({
         value,
-      })["Value"];
+      })['Value'];
     }
   });
 

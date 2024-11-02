@@ -1,14 +1,14 @@
-import { SQSEvent, SQSHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import { SQSEvent, SQSHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
 
-import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
-import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle";
-import PatientInvestigation from "@evara-backend/core/src/models/patientDashboard/investigation/PatientInvestigation";
-import PatientCryoPreservation from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/PatientCryoPreservation";
-import PatientProcedures from "@evara-backend/core/src/models/patientDashboard/procedure/PatientProcedure";
-import PatientService from "@evara-backend/core/src/models/patientDashboard/services/PatientService";
-import PatientTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/PatientTreatmentCycle";
+import { EPatientBillingServiceType } from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling';
+import MasterTreatmentCycle from '@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle';
+import PatientInvestigation from '@evara-backend/core/src/models/patientDashboard/investigation/PatientInvestigation';
+import PatientCryoPreservation from '@evara-backend/core/src/models/patientDashboard/cryoPreservation/PatientCryoPreservation';
+import PatientProcedures from '@evara-backend/core/src/models/patientDashboard/procedure/PatientProcedure';
+import PatientService from '@evara-backend/core/src/models/patientDashboard/services/PatientService';
+import PatientTreatmentCycle from '@evara-backend/core/src/models/patientDashboard/treatmentCycle/PatientTreatmentCycle';
 
 interface IData {
   clinicId: string;
@@ -31,17 +31,17 @@ export const main: SQSHandler = async (event: SQSEvent) => {
     for (const message of event.Records) {
       const payload = JSON.parse(message.body);
 
-      console.log("Processing message", payload.Message);
+      console.log('Processing message', payload.Message);
 
       const data: IData = JSON.parse(payload.Message);
 
       await generateService(data);
 
       // Success processing message
-      console.log("Message processed successfully");
+      console.log('Message processed successfully');
     }
   } catch (error) {
-    console.error("Error processing SQS message", error);
+    console.error('Error processing SQS message', error);
     throw error; // Throwing error will cause the message to be re-queued and retried
   }
 };
@@ -102,19 +102,19 @@ const generateService = async (data: IData) => {
       await createTreatmentCycle(data);
       break;
     default:
-      throw new ErrorMessage(400, "Invalid service type: " + data.serviceType);
+      throw new ErrorMessage(400, 'Invalid service type: ' + data.serviceType);
   }
 };
 
 const createTreatmentCycle = async (data: IData) => {
   const masterTreatmentCycle = await MasterTreatmentCycle.findById(
-    data.masterServiceId
+    data.masterServiceId,
   )
-    .populate("treatmentCycle")
+    .populate('treatmentCycle')
     .lean();
 
   if (!masterTreatmentCycle) {
-    throw new ErrorMessage(404, "Default treatment cycle not found");
+    throw new ErrorMessage(404, 'Default treatment cycle not found');
   }
 
   const existingTreatmentCycle = await PatientTreatmentCycle.countDocuments({
@@ -131,30 +131,30 @@ const createTreatmentCycle = async (data: IData) => {
     caseId: data.caseId,
     doctor: data.doctorId,
     cycleNo: existingTreatmentCycle + 1,
-    protocols: defaultTreatmentCycle.protocols.map((protocol) => ({
+    protocols: defaultTreatmentCycle.protocols.map(protocol => ({
       name: protocol.name,
       category: protocol.category,
-      status: "Pending",
+      status: 'Pending',
       details: {},
     })),
-    checklists: defaultTreatmentCycle.checklists.map((checklist) => ({
+    checklists: defaultTreatmentCycle.checklists.map(checklist => ({
       name: checklist.name,
       category: checklist.category,
-      status: "Pending",
+      status: 'Pending',
       details: {},
     })),
-    reports: defaultTreatmentCycle.reports.map((report) => ({
+    reports: defaultTreatmentCycle.reports.map(report => ({
       name: report.name,
       reportType: report.reportType,
       category: report.category,
-      status: "Pending",
+      status: 'Pending',
       details: {},
     })),
-    metrics: defaultTreatmentCycle.metrics.map((metric) => ({
+    metrics: defaultTreatmentCycle.metrics.map(metric => ({
       name: metric.name,
       metricType: metric.metricType,
       category: metric.category,
-      status: "Pending",
+      status: 'Pending',
       details: {},
     })),
   };

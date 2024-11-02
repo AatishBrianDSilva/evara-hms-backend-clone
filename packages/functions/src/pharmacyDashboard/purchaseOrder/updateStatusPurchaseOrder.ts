@@ -1,12 +1,12 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
 import {
   EPurchaseOrderStatus,
   PurchaseOrder,
-} from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
+} from '@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder';
 
 // Handler function for updating a single tax rate
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -16,24 +16,24 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb(); // Connect to MongoDB
 
     if (!event.body) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
-    const owner = "Admin"; // This should be the user ID of the user making the request
+    const owner = 'Admin'; // This should be the user ID of the user making the request
 
     // Assuming the event body will contain the ID of the tax rate to be updated and the new values
     const { id, status } = JSON.parse(event.body);
 
     if (!status) {
-      throw new ErrorMessage(400, "Status is required for update");
+      throw new ErrorMessage(400, 'Status is required for update');
     }
 
     if (!Object.values(EPurchaseOrderStatus).includes(status)) {
-      throw new ErrorMessage(400, "Invalid status");
+      throw new ErrorMessage(400, 'Invalid status');
     }
 
     if (!id) {
-      throw new ErrorMessage(400, "ID is required for update");
+      throw new ErrorMessage(400, 'ID is required for update');
     }
 
     const updateData = {
@@ -49,14 +49,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
       {
         new: true, // Return the updated document
-      }
+      },
     );
 
     if (!updatedData) {
-      throw new ErrorMessage(404, "Data not found");
+      throw new ErrorMessage(404, 'Data not found');
     }
 
-    return successResponse("Status updated successfully", updatedData);
+    return successResponse('Status updated successfully', updatedData);
   } catch (error) {
     return errorResponse(error);
   }

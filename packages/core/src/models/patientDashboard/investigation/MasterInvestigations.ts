@@ -1,5 +1,5 @@
-import mongoose, { Document, Schema } from "mongoose";
-import { EGender, ETestType } from "./MedicalTests";
+import mongoose, { Document, Schema } from 'mongoose';
+import { EGender, ETestType } from './MedicalTests';
 
 interface IMasterInvestigation extends Document {
   clinicId: string;
@@ -25,7 +25,7 @@ const MasterInvestigationSchema: Schema = new Schema({
   test: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: "MedicalTests",
+    ref: 'MedicalTests',
   },
   name: { type: String, required: true, unique: true },
   gender: { type: String, required: true, enum: Object.values(EGender) },
@@ -38,8 +38,8 @@ const MasterInvestigationSchema: Schema = new Schema({
 });
 
 const MasterInvestigation = mongoose.model<IMasterInvestigation>(
-  "MasterInvestigations",
-  MasterInvestigationSchema
+  'MasterInvestigations',
+  MasterInvestigationSchema,
 );
 
 export default MasterInvestigation;

@@ -1,12 +1,12 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
-import ErrorMessage from "@evara-backend/core/lib/utils/ErrorMessage";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { PharmacyStock } from '@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import Branch from '@evara-backend/core/models/mastersDashboard/global/ClinicBranches';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
+import ErrorMessage from '@evara-backend/core/lib/utils/ErrorMessage';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -14,14 +14,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     await connectMongoDb();
 
     // Extract query string parameters for pagination and filtering
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "25", drugName = "", startDate, endDate } = params;
+    const {
+      page = '1',
+      limit = '25',
+      drugName = '',
+      startDate,
+      endDate,
+    } = params;
 
     // Calculate skip and limit for pagination
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
@@ -35,7 +41,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // console.log("Current Branch", branchId);
 
     if (drugName) {
-      matchCondition["drugItem.name"] = { $regex: new RegExp(drugName, "i") }; // Case-insensitive partial match
+      matchCondition['drugItem.name'] = { $regex: new RegExp(drugName, 'i') }; // Case-insensitive partial match
     }
 
     // Add date range filter on expiryDate while ignoring the time part
@@ -43,7 +49,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const startDateObj = startDate ? new Date(startDate) : null;
       const endDateObj = endDate ? new Date(endDate) : null;
 
-      matchCondition["batches.expiryDate"] = {
+      matchCondition['batches.expiryDate'] = {
         ...(startDateObj && {
           $gte: new Date(startDateObj.setUTCHours(0, 0, 0, 0)), // Start of the day (ignoring time)
         }),
@@ -57,49 +63,52 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const aggregationPipeline = [
       {
         $lookup: {
-          from: "drugitems", // DrugItem collection name
-          localField: "item",
-          foreignField: "_id",
-          as: "drugItem",
+          from: 'drugitems', // DrugItem collection name
+          localField: 'item',
+          foreignField: '_id',
+          as: 'drugItem',
         },
       },
       {
-        $unwind: { path: "$drugItem", preserveNullAndEmptyArrays: true },
+        $unwind: { path: '$drugItem', preserveNullAndEmptyArrays: true },
       },
       {
         $lookup: {
-          from: "drugcategories", // DrugCategory collection name
-          localField: "drugItem.category",
-          foreignField: "_id",
-          as: "drugCategory",
+          from: 'drugcategories', // DrugCategory collection name
+          localField: 'drugItem.category',
+          foreignField: '_id',
+          as: 'drugCategory',
         },
       },
       {
-        $unwind: { path: "$drugCategory", preserveNullAndEmptyArrays: true },
+        $unwind: { path: '$drugCategory', preserveNullAndEmptyArrays: true },
       },
       {
         $lookup: {
-          from: "drugvendors", // DrugVendor collection name
-          localField: "batches.vendor",
-          foreignField: "_id",
-          as: "vendorDetails",
+          from: 'drugvendors', // DrugVendor collection name
+          localField: 'batches.vendor',
+          foreignField: '_id',
+          as: 'vendorDetails',
         },
       },
       {
-        $unwind: { path: "$batches", preserveNullAndEmptyArrays: true }, // Unwind the batches array for each stock
+        $unwind: { path: '$batches', preserveNullAndEmptyArrays: true }, // Unwind the batches array for each stock
       },
       {
-        $unwind: { path: "$batches.locations", preserveNullAndEmptyArrays: true }, // Unwind the locations array for each batch
+        $unwind: {
+          path: '$batches.locations',
+          preserveNullAndEmptyArrays: true,
+        }, // Unwind the locations array for each batch
       },
       {
         $addFields: {
           totalQty: {
-            $sum: "$batches.locations.quantity", // Calculate total quantity for each document
+            $sum: '$batches.locations.quantity', // Calculate total quantity for each document
           },
           sumTotalValue: {
             $multiply: [
-              "$sellPrice",
-              { $sum: "$batches.locations.quantity" }, // Multiply sellPrice by total quantity of all locations
+              '$sellPrice',
+              { $sum: '$batches.locations.quantity' }, // Multiply sellPrice by total quantity of all locations
             ],
           },
         },
@@ -110,9 +119,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
             $arrayElemAt: [
               {
                 $filter: {
-                  input: "$vendorDetails",
-                  as: "vendor",
-                  cond: { $eq: ["$$vendor._id", "$batches.vendor"] },
+                  input: '$vendorDetails',
+                  as: 'vendor',
+                  cond: { $eq: ['$$vendor._id', '$batches.vendor'] },
                 },
               },
               0,
@@ -124,24 +133,34 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         $addFields: {
           serialNumber: {
             $add: [
-              { $multiply: [{ $subtract: [parseInt(page, 10), 1] }, parseInt(limit, 10)] },
-              { $add: ["$index", 1] },
+              {
+                $multiply: [
+                  { $subtract: [parseInt(page, 10), 1] },
+                  parseInt(limit, 10),
+                ],
+              },
+              { $add: ['$index', 1] },
             ],
           },
-          centre: { $concat: ["$clinicId", "$branchId"] },
-          invoiceNo: "$_id", // Assuming stock ID is used as invoice number
-          vendorName: { $ifNull: ["$vendorName.name", "N/A"] },
-          drugCategory: { $ifNull: ["$drugCategory.name", "N/A"] },
-          drugName: { $ifNull: ["$drugItem.name", "N/A"] },
-          batchNo: { $ifNull: ["$batches.batchNo", "N/A"] },
+          centre: { $concat: ['$clinicId', '$branchId'] },
+          invoiceNo: '$_id', // Assuming stock ID is used as invoice number
+          vendorName: { $ifNull: ['$vendorName.name', 'N/A'] },
+          drugCategory: { $ifNull: ['$drugCategory.name', 'N/A'] },
+          drugName: { $ifNull: ['$drugItem.name', 'N/A'] },
+          batchNo: { $ifNull: ['$batches.batchNo', 'N/A'] },
           expiryDate: {
             $cond: {
-              if: { $ne: ["$batches.expiryDate", null] },
-              then: { $dateToString: { format: "%Y-%m-%d", date: "$batches.expiryDate" } },
-              else: "N/A",
+              if: { $ne: ['$batches.expiryDate', null] },
+              then: {
+                $dateToString: {
+                  format: '%Y-%m-%d',
+                  date: '$batches.expiryDate',
+                },
+              },
+              else: 'N/A',
             },
           },
-          unitCost: { $ifNull: ["$sellPrice", 0] },
+          unitCost: { $ifNull: ['$sellPrice', 0] },
         },
       },
       {
@@ -190,11 +209,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       currentPage: parseInt(page, 10),
     });
 
-    console.log("Final Expiry Details Report with Pagination: ", paginatedResult);
+    console.log(
+      'Final Expiry Details Report with Pagination: ',
+      paginatedResult,
+    );
 
-    return successResponse("Expiry Details fetched successfully", paginatedResult);
+    return successResponse(
+      'Expiry Details fetched successfully',
+      paginatedResult,
+    );
   } catch (error) {
-    console.error("Error in expiryDetails API: ", error);
+    console.error('Error in expiryDetails API: ', error);
     return errorResponse(error);
   }
 };

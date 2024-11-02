@@ -8,7 +8,7 @@ export const formatToIndianCurrencyFormat = (value: number | string) => {
 
   const roundedValue = parseFloat(numericValue.toFixed(2));
 
-  return `₹ ${roundedValue.toLocaleString("en-IN", {
+  return `₹ ${roundedValue.toLocaleString('en-IN', {
     minimumFractionDigits: 2,
   })}`;
 };

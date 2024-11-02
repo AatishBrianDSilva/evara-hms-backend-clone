@@ -1,7 +1,7 @@
-import { SecretsManager, AWSError } from "aws-sdk";
+import { SecretsManager, AWSError } from 'aws-sdk';
 
 // Define the AWS region
-const region = "ap-south-1";
+const region = 'ap-south-1';
 
 // Create a Secrets Manager client
 const client = new SecretsManager({ region });
@@ -18,45 +18,45 @@ const getSecret = async (secretName: string): Promise<string> => {
       .getSecretValue({ SecretId: secretName })
       .promise();
 
-    if ("SecretString" in data) {
-      return data.SecretString || ""; // Return the secret string or an empty string if null.
-    } else if ("SecretBinary" in data) {
+    if ('SecretString' in data) {
+      return data.SecretString || ''; // Return the secret string or an empty string if null.
+    } else if ('SecretBinary' in data) {
       // If the secret is binary, decode it
       const decodedBinarySecret = Buffer.from(
         data.SecretBinary as string,
-        "base64"
-      ).toString("ascii");
+        'base64',
+      ).toString('ascii');
       return decodedBinarySecret;
     } else {
       throw new Error(
-        "Secret not found or is not accessible in the expected format."
+        'Secret not found or is not accessible in the expected format.',
       );
     }
   } catch (error) {
     const err = error as AWSError;
     // Customize error handling based on the error code
     switch (err.code) {
-      case "DecryptionFailureException":
+      case 'DecryptionFailureException':
         // Handle decryption failure
         throw new Error(
-          "Unable to decrypt the secret with the provided KMS key."
+          'Unable to decrypt the secret with the provided KMS key.',
         );
-      case "InternalServiceErrorException":
+      case 'InternalServiceErrorException':
         // Handle server-side errors
-        throw new Error("An internal service error occurred.");
-      case "InvalidParameterException":
+        throw new Error('An internal service error occurred.');
+      case 'InvalidParameterException':
         // Handle invalid parameters
-        throw new Error("Invalid parameters provided to Secrets Manager.");
-      case "InvalidRequestException":
+        throw new Error('Invalid parameters provided to Secrets Manager.');
+      case 'InvalidRequestException':
         // Handle invalid requests
-        throw new Error("Invalid request to Secrets Manager.");
-      case "ResourceNotFoundException":
+        throw new Error('Invalid request to Secrets Manager.');
+      case 'ResourceNotFoundException':
         // Handle missing secrets
-        throw new Error("Requested secret not found.");
-      case "AccessDeniedException":
+        throw new Error('Requested secret not found.');
+      case 'AccessDeniedException':
         // Handle access denial
         throw new Error(
-          "Access denied when attempting to retrieve the secret."
+          'Access denied when attempting to retrieve the secret.',
         );
       default:
         // Generic error handling

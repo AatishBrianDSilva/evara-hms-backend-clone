@@ -1,35 +1,35 @@
-import mongoose, { Document, Schema } from "mongoose";
-import { autoIncrementId } from "../../Counters";
-import { EGender } from "../investigation/MedicalTests";
+import mongoose, { Document, Schema } from 'mongoose';
+import { autoIncrementId } from '../../Counters';
+import { EGender } from '../investigation/MedicalTests';
 
 export enum ETreatmentCycleType {
-  IUI = "IUI",
-  OITI = "OITI",
-  IVFPlusFET = "IVFPlusFET",
-  IVFWithDonorEgg = "IVFWithDonorEgg",
-  ICSIWithDonorEgg = "ICSIWithDonorEgg",
-  IVFPlusFETNoGrowthHormone = "IVFPlusFETNoGrowthHormone",
+  IUI = 'IUI',
+  OITI = 'OITI',
+  IVFPlusFET = 'IVFPlusFET',
+  IVFWithDonorEgg = 'IVFWithDonorEgg',
+  ICSIWithDonorEgg = 'ICSIWithDonorEgg',
+  IVFPlusFETNoGrowthHormone = 'IVFPlusFETNoGrowthHormone',
 }
 
 export enum ETreatmentCycleReport {
-  IUIHReport = "IUIHReport",
-  IUIDReport = "IUIDReport",
-  OITIReport = "OITIReport",
-  OPUReport = "OPUReport",
-  EmbryoTransferReport = "EmbryoTransferReport",
-  IVFSummaryReport = "IVFSummaryReport",
+  IUIHReport = 'IUIHReport',
+  IUIDReport = 'IUIDReport',
+  OITIReport = 'OITIReport',
+  OPUReport = 'OPUReport',
+  EmbryoTransferReport = 'EmbryoTransferReport',
+  IVFSummaryReport = 'IVFSummaryReport',
 }
 
 export enum ETreatmentCycleMetric {
-  PregnancyOutcomeBetaHCGMetric = "PregnancyOutcomeBetaHCGMetric",
-  EmbryologyWorksheetMetric = "EmbryologyWorksheetMetric",
+  PregnancyOutcomeBetaHCGMetric = 'PregnancyOutcomeBetaHCGMetric',
+  EmbryologyWorksheetMetric = 'EmbryologyWorksheetMetric',
 }
 
 export enum ETreatmentCycleCategoryKey {
-  protocols = "protocols",
-  checklists = "checklists",
-  reports = "reports",
-  metrics = "metrics",
+  protocols = 'protocols',
+  checklists = 'checklists',
+  reports = 'reports',
+  metrics = 'metrics',
 }
 
 export interface IDefaultTreatmentCycle extends Document {
@@ -40,27 +40,27 @@ export interface IDefaultTreatmentCycle extends Document {
     {
       name: string;
       category: ETreatmentCycleCategoryKey;
-    }
+    },
   ];
   checklists: [
     {
       name: string;
       category: ETreatmentCycleCategoryKey;
-    }
+    },
   ];
   reports: [
     {
       name: string;
       reportType: ETreatmentCycleReport;
       category: ETreatmentCycleCategoryKey;
-    }
+    },
   ];
   metrics: [
     {
       name: string;
       metricType: ETreatmentCycleMetric;
       category: ETreatmentCycleCategoryKey;
-    }
+    },
   ];
   description: string;
   gender: EGender;
@@ -128,18 +128,18 @@ const DefaultTreatmentCycleSchema: Schema = new Schema<IDefaultTreatmentCycle>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Assume autoIncrementId is a function/middleware you've defined to auto-increment the testId
 DefaultTreatmentCycleSchema.pre(
-  "save",
-  autoIncrementId("DefaultTreatmentCycle", "cycleId", "TC-")
+  'save',
+  autoIncrementId('DefaultTreatmentCycle', 'cycleId', 'TC-'),
 );
 
 const DefaultTreatmentCycle = mongoose.model<IDefaultTreatmentCycle>(
-  "DefaultTreatmentCycle",
-  DefaultTreatmentCycleSchema
+  'DefaultTreatmentCycle',
+  DefaultTreatmentCycleSchema,
 );
 
 export default DefaultTreatmentCycle;

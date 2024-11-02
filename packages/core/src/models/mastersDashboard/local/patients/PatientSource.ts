@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
 interface patientSource {
   name: string;
@@ -12,12 +12,12 @@ const patientSourceSchema = new Schema<patientSource>(
     clinicId: { type: String, required: true },
     branchId: { type: String, required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const PatientSource = mongoose.model<patientSource>(
-  "PatientSource",
-  patientSourceSchema
+  'PatientSource',
+  patientSourceSchema,
 );
 
 export default PatientSource;

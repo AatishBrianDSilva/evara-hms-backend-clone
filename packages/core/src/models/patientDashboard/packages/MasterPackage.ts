@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Schema } from 'mongoose';
 
 interface IPackageItem {
   itemId: mongoose.Schema.Types.ObjectId;
@@ -15,7 +15,7 @@ interface IMasterPackage extends Document {
   total: number;
   validTill: Date;
   active: boolean;
-  gender: "male" | "female";
+  gender: 'male' | 'female';
   procedures: IPackageItem[];
   investigations: IPackageItem[];
   treatmentCycles: IPackageItem[];
@@ -25,7 +25,11 @@ interface IMasterPackage extends Document {
 
 // Schema for individual package items
 const PackageItemSchema: Schema = new Schema({
-  itemId: { type: mongoose.Schema.Types.ObjectId, required: true, refPath: "itemModel" },
+  itemId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    refPath: 'itemModel',
+  },
   name: { type: String, required: true },
   validTill: { type: Date, required: true },
   // isPackageItem: { type: Boolean, required: true }, // Commented out but can be reintroduced if needed
@@ -40,7 +44,7 @@ const MasterPackageSchema: Schema = new Schema(
     total: { type: Number, required: true, default: 0 },
     validTill: { type: Date, required: true },
     active: { type: Boolean, required: true, default: true },
-    gender: { type: String, required: true, enum: ["male", "female"] },
+    gender: { type: String, required: true, enum: ['male', 'female'] },
     procedures: [PackageItemSchema],
     investigations: [PackageItemSchema],
     treatmentCycles: [PackageItemSchema],
@@ -49,10 +53,13 @@ const MasterPackageSchema: Schema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Model for MasterPackage
-const MasterPackage = mongoose.model<IMasterPackage>("MasterPackage", MasterPackageSchema);
+const MasterPackage = mongoose.model<IMasterPackage>(
+  'MasterPackage',
+  MasterPackageSchema,
+);
 
 export default MasterPackage;

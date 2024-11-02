@@ -1,12 +1,12 @@
-import S3Service from "@evara-backend/core/src/lib/aws/s3";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import S3Service from '@evara-backend/core/src/lib/aws/s3';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
 
 export const S3KeepPermanently = async (bucket: string, key: string) => {
   try {
     const tags = [
       {
-        Key: "Permanent",
-        Value: "true",
+        Key: 'Permanent',
+        Value: 'true',
       },
     ];
 
@@ -15,7 +15,7 @@ export const S3KeepPermanently = async (bucket: string, key: string) => {
     await S3Service.putTag(bucket, key, tags);
   } catch (error) {
     console.error(error);
-    throw new ErrorMessage(500, "Error keeping file permanently");
+    throw new ErrorMessage(500, 'Error keeping file permanently');
   }
 };
 

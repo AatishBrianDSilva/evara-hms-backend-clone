@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model } from 'mongoose';
 
 export interface CountersData {
   _id: string;
@@ -10,12 +10,12 @@ const counterSchema = new Schema<CountersData>({
   seq: { type: Number, default: 0 },
 });
 
-const Counters = model<CountersData>("counters", counterSchema);
+const Counters = model<CountersData>('counters', counterSchema);
 
 export const autoIncrementId = (
   modelName: string,
   idField: string,
-  prefix: string = ""
+  prefix: string = '',
 ) => {
   return async function (this: any, next: (error?: any) => void) {
     if (!this.isNew && this[idField]) {
@@ -26,7 +26,7 @@ export const autoIncrementId = (
       const doc = await Counters.findOneAndUpdate(
         { _id: modelName },
         { $inc: { seq: 1 } },
-        { new: true, upsert: true, session: this.$session() }
+        { new: true, upsert: true, session: this.$session() },
       );
       if (doc) {
         if (prefix) {
@@ -36,7 +36,7 @@ export const autoIncrementId = (
         }
         next();
       } else {
-        throw new Error("Counter document not found");
+        throw new Error('Counter document not found');
       }
     } catch (error) {
       next(error); // Forward any errors to Mongoose's error handling
@@ -58,12 +58,12 @@ export const autoIncrementIdWithFieldPrefix = (
       const doc = await Counters.findOneAndUpdate(
         { _id: modelName },
         { $inc: { seq: 1 } },
-        { new: true, upsert: true, session: this.$session() }
+        { new: true, upsert: true, session: this.$session() },
       );
       if (doc) {
         if (fields.length > 0) {
-          let prefix = "";
-          fields.forEach((field) => {
+          let prefix = '';
+          fields.forEach(field => {
             prefix += this[field];
           });
           const id = `${prefix}-${doc.seq}`;
@@ -73,7 +73,7 @@ export const autoIncrementIdWithFieldPrefix = (
         }
         next();
       } else {
-        throw new Error("Counter document not found");
+        throw new Error('Counter document not found');
       }
     } catch (error) {
       next(error); // Forward any errors to Mongoose's error handling

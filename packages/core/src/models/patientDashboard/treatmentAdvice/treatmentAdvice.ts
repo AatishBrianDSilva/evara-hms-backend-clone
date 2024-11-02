@@ -1,5 +1,5 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
 interface ICallDetail {
   callDate: Date;
@@ -35,7 +35,7 @@ const TreatmentAdviceSchema: Schema = new Schema<ITreatmentAdvice>(
     callDetails: { type: [CallDetailSchema], required: true },
     patient: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Patient",
+      ref: 'Patient',
       required: true,
       index: true,
     },
@@ -43,8 +43,8 @@ const TreatmentAdviceSchema: Schema = new Schema<ITreatmentAdvice>(
     patientCode: { type: String, required: true, index: true },
   },
   {
-    timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  }
+    timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
+  },
 );
 
 TreatmentAdviceSchema.plugin(paginate);
@@ -54,6 +54,6 @@ interface TreatmentAdviceDocument extends Document, ITreatmentAdvice {}
 const TreatmentAdvices = mongoose.model<
   TreatmentAdviceDocument,
   PaginateModel<TreatmentAdviceDocument>
->("TreatmentAdvices", TreatmentAdviceSchema);
+>('TreatmentAdvices', TreatmentAdviceSchema);
 
 export default TreatmentAdvices;

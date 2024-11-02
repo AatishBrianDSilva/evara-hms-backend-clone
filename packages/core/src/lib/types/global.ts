@@ -1,34 +1,34 @@
-import { PatientData } from "../../models/Patients";
+import { PatientData } from '../../models/Patients';
 
 export enum EBuckets {
-  UserProfiles = "evara-hms-user-profiles",
-  UserReports = "evara-hms-user-reports",
-  PharmacyInvoices = "evara-hms-pharmacy-invoices",
-  UserIdentifications = "evara-hms-user-identifications",
+  UserProfiles = 'evara-hms-user-profiles',
+  UserReports = 'evara-hms-user-reports',
+  PharmacyInvoices = 'evara-hms-pharmacy-invoices',
+  UserIdentifications = 'evara-hms-user-identifications',
 }
 
 export enum EDocumentTypes {
-  Investigation = "Investigation",
-  Procedure = "Procedure",
-  CryoPreservation = "Cryo Preservation",
-  TreatmentCycle = "Treatment-Cycle",
-  MedicalHistory = "Medical-History",
-  Invoice = "Invoice",
-  Billing = "Billing",
-  BillingDiscount = "BillingDiscount",
-  Refund = "Refund",
-  PurchaseOrder = "PurchaseOrder",
-  PurchaseOrderProcessed = "PurchaseOrderProcessed",
+  Investigation = 'Investigation',
+  Procedure = 'Procedure',
+  CryoPreservation = 'Cryo Preservation',
+  TreatmentCycle = 'Treatment-Cycle',
+  MedicalHistory = 'Medical-History',
+  Invoice = 'Invoice',
+  Billing = 'Billing',
+  BillingDiscount = 'BillingDiscount',
+  Refund = 'Refund',
+  PurchaseOrder = 'PurchaseOrder',
+  PurchaseOrderProcessed = 'PurchaseOrderProcessed',
 }
 
 export enum EReportTemplateTypes {
-  Reports = "reports",
-  Invoices = "invoice",
-  Refund = "refund",
-  BillPharmacy = "billPharmacy",
-  BillOtherServices = "billOtherServices",
-  POInvoice = "POInvoice",
-  POInvoiceProcessed = "POInvoiceProcessed",
+  Reports = 'reports',
+  Invoices = 'invoice',
+  Refund = 'refund',
+  BillPharmacy = 'billPharmacy',
+  BillOtherServices = 'billOtherServices',
+  POInvoice = 'POInvoice',
+  POInvoiceProcessed = 'POInvoiceProcessed',
 }
 
 export interface ISection {

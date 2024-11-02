@@ -1,11 +1,11 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
-import ErrorMessage from "@evara-backend/core/lib/utils/ErrorMessage";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { PharmacyStock } from '@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
+import ErrorMessage from '@evara-backend/core/lib/utils/ErrorMessage';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -13,13 +13,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "25", drugName = "" } = params;
+    const { page = '1', limit = '25', drugName = '' } = params;
 
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
     const pageSize = parseInt(limit, 10);
@@ -30,86 +30,91 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     };
 
     if (drugName) {
-      matchCondition["drugItem.name"] = { $regex: new RegExp(drugName, "i") }; // Case-insensitive partial match
+      matchCondition['drugItem.name'] = { $regex: new RegExp(drugName, 'i') }; // Case-insensitive partial match
     }
 
     // Define location name mappings to specific categories
     const locationMapping = {
-      "Central Pharmacy": "Central",
-      "OPD Pharmacy": "OPD",
-      "OT Pharmacy": "OT",
-      "Recovery Pharmacy": "Recovery",
-      "IVF Pharmacy": "IVF",
-      "Emergency Pharmacy": "Returns",
-      "Internal Stock": "Internal",
-      "Staging Pharmacy": "Staging",
+      'Central Pharmacy': 'Central',
+      'OPD Pharmacy': 'OPD',
+      'OT Pharmacy': 'OT',
+      'Recovery Pharmacy': 'Recovery',
+      'IVF Pharmacy': 'IVF',
+      'Emergency Pharmacy': 'Returns',
+      'Internal Stock': 'Internal',
+      'Staging Pharmacy': 'Staging',
     };
 
     // Aggregation pipeline to fetch all required data
     const aggregationPipeline = [
       {
         $lookup: {
-          from: "drugitems", // DrugItem collection
-          localField: "item",
-          foreignField: "_id",
-          as: "drugItem",
+          from: 'drugitems', // DrugItem collection
+          localField: 'item',
+          foreignField: '_id',
+          as: 'drugItem',
         },
       },
       {
-        $unwind: { path: "$drugItem", preserveNullAndEmptyArrays: true },
+        $unwind: { path: '$drugItem', preserveNullAndEmptyArrays: true },
       },
       {
         $match: matchCondition, // Apply filtering for drug name
       },
       {
         $lookup: {
-          from: "drugcategories", // DrugCategory collection
-          localField: "drugItem.category",
-          foreignField: "_id",
-          as: "drugCategory",
+          from: 'drugcategories', // DrugCategory collection
+          localField: 'drugItem.category',
+          foreignField: '_id',
+          as: 'drugCategory',
         },
       },
       {
-        $unwind: { path: "$drugCategory", preserveNullAndEmptyArrays: true },
+        $unwind: { path: '$drugCategory', preserveNullAndEmptyArrays: true },
       },
       {
-        $unwind: { path: "$batches", preserveNullAndEmptyArrays: true }, // Unwind batches array
+        $unwind: { path: '$batches', preserveNullAndEmptyArrays: true }, // Unwind batches array
       },
       {
-        $unwind: { path: "$batches.locations", preserveNullAndEmptyArrays: true }, // Unwind locations array
+        $unwind: {
+          path: '$batches.locations',
+          preserveNullAndEmptyArrays: true,
+        }, // Unwind locations array
       },
       {
         $lookup: {
-          from: "druglocations", // DrugLocation collection
-          localField: "batches.locations.location",
-          foreignField: "_id",
-          as: "locationDetails",
+          from: 'druglocations', // DrugLocation collection
+          localField: 'batches.locations.location',
+          foreignField: '_id',
+          as: 'locationDetails',
         },
       },
       {
-        $unwind: { path: "$locationDetails", preserveNullAndEmptyArrays: true },
+        $unwind: { path: '$locationDetails', preserveNullAndEmptyArrays: true },
       },
       {
         $group: {
           _id: {
-            clinicId: "$clinicId",
-            branchId: "$branchId",
-            item: "$item",
-            batchId: "$batches._id",
+            clinicId: '$clinicId',
+            branchId: '$branchId',
+            item: '$item',
+            batchId: '$batches._id',
           },
-          drugCategory: { $first: "$drugCategory.name" },
-          drugName: { $first: "$drugItem.name" },
-          drugCode: { $first: "$drugItem.code" },
-          centre: { $first: { $concat: ["$clinicId", "$branchId"] } },
+          drugCategory: { $first: '$drugCategory.name' },
+          drugName: { $first: '$drugItem.name' },
+          drugCode: { $first: '$drugItem.code' },
+          centre: { $first: { $concat: ['$clinicId', '$branchId'] } },
 
-          totalQty: { $sum: "$batches.locations.quantity" }, // Sum total quantity across all locations
-          criticalCount: { $first: { $ifNull: ["$drugItem.criticalCount", 10] } }, // Set critical count to 10 if not specified
+          totalQty: { $sum: '$batches.locations.quantity' }, // Sum total quantity across all locations
+          criticalCount: {
+            $first: { $ifNull: ['$drugItem.criticalCount', 10] },
+          }, // Set critical count to 10 if not specified
           // Sum quantities by location
           Central: {
             $sum: {
               $cond: [
-                { $eq: ["$locationDetails.location", "Central Pharmacy"] },
-                "$batches.locations.quantity",
+                { $eq: ['$locationDetails.location', 'Central Pharmacy'] },
+                '$batches.locations.quantity',
                 0,
               ],
             },
@@ -117,8 +122,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           OPD: {
             $sum: {
               $cond: [
-                { $eq: ["$locationDetails.location", "OPD Pharmacy"] },
-                "$batches.locations.quantity",
+                { $eq: ['$locationDetails.location', 'OPD Pharmacy'] },
+                '$batches.locations.quantity',
                 0,
               ],
             },
@@ -126,8 +131,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           OT: {
             $sum: {
               $cond: [
-                { $eq: ["$locationDetails.location", "OT Pharmacy"] },
-                "$batches.locations.quantity",
+                { $eq: ['$locationDetails.location', 'OT Pharmacy'] },
+                '$batches.locations.quantity',
                 0,
               ],
             },
@@ -135,8 +140,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           Recovery: {
             $sum: {
               $cond: [
-                { $eq: ["$locationDetails.location", "Recovery Pharmacy"] },
-                "$batches.locations.quantity",
+                { $eq: ['$locationDetails.location', 'Recovery Pharmacy'] },
+                '$batches.locations.quantity',
                 0,
               ],
             },
@@ -144,8 +149,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           IVF: {
             $sum: {
               $cond: [
-                { $eq: ["$locationDetails.location", "IVF Pharmacy"] },
-                "$batches.locations.quantity",
+                { $eq: ['$locationDetails.location', 'IVF Pharmacy'] },
+                '$batches.locations.quantity',
                 0,
               ],
             },
@@ -153,8 +158,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           Returns: {
             $sum: {
               $cond: [
-                { $eq: ["$locationDetails.location", "Emergency Pharmacy"] },
-                "$batches.locations.quantity",
+                { $eq: ['$locationDetails.location', 'Emergency Pharmacy'] },
+                '$batches.locations.quantity',
                 0,
               ],
             },
@@ -162,8 +167,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           Internal: {
             $sum: {
               $cond: [
-                { $eq: ["$locationDetails.location", "Internal Stock"] },
-                "$batches.locations.quantity",
+                { $eq: ['$locationDetails.location', 'Internal Stock'] },
+                '$batches.locations.quantity',
                 0,
               ],
             },
@@ -171,8 +176,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           Staging: {
             $sum: {
               $cond: [
-                { $eq: ["$locationDetails.location", "Staging Pharmacy"] },
-                "$batches.locations.quantity",
+                { $eq: ['$locationDetails.location', 'Staging Pharmacy'] },
+                '$batches.locations.quantity',
                 0,
               ],
             },
@@ -183,21 +188,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
                 {
                   $not: {
                     $in: [
-                      "$locationDetails.location",
+                      '$locationDetails.location',
                       [
-                        "Central Pharmacy",
-                        "OPD Pharmacy",
-                        "OT Pharmacy",
-                        "Recovery Pharmacy",
-                        "IVF Pharmacy",
-                        "Emergency Pharmacy",
-                        "Internal Stock",
-                        "Staging Pharmacy",
+                        'Central Pharmacy',
+                        'OPD Pharmacy',
+                        'OT Pharmacy',
+                        'Recovery Pharmacy',
+                        'IVF Pharmacy',
+                        'Emergency Pharmacy',
+                        'Internal Stock',
+                        'Staging Pharmacy',
                       ],
                     ],
                   },
                 },
-                "$batches.locations.quantity",
+                '$batches.locations.quantity',
                 0,
               ],
             },
@@ -205,10 +210,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         },
       },
       {
-        $match: { $expr: { $lte: ["$totalQty", "$criticalCount"] } }, // Match items where total quantity is <= critical count
+        $match: { $expr: { $lte: ['$totalQty', '$criticalCount'] } }, // Match items where total quantity is <= critical count
       },
       {
-        $sort: { "drugItem.name": 1 }, // Sort by drug name for clarity
+        $sort: { 'drugItem.name': 1 }, // Sort by drug name for clarity
       },
       {
         $skip: skip,
@@ -223,17 +228,26 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Fetch total document count for pagination using match condition
     const totalDocs = await PharmacyStock.aggregate([
-      { $lookup: { from: "drugitems", localField: "item", foreignField: "_id", as: "drugItem" } },
-      { $unwind: "$drugItem" },
+      {
+        $lookup: {
+          from: 'drugitems',
+          localField: 'item',
+          foreignField: '_id',
+          as: 'drugItem',
+        },
+      },
+      { $unwind: '$drugItem' },
       { $match: matchCondition },
       {
         $group: {
-          _id: "$item",
-          totalQty: { $sum: "$batches.locations.quantity" },
-          criticalCount: { $first: { $ifNull: ["$drugItem.criticalCount", 10] } },
+          _id: '$item',
+          totalQty: { $sum: '$batches.locations.quantity' },
+          criticalCount: {
+            $first: { $ifNull: ['$drugItem.criticalCount', 10] },
+          },
         },
       },
-      { $match: { $expr: { $lte: ["$totalQty", "$criticalCount"] } } },
+      { $match: { $expr: { $lte: ['$totalQty', '$criticalCount'] } } },
     ]);
 
     const totalPages = Math.ceil(totalDocs.length / pageSize);
@@ -252,11 +266,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       currentPage: parseInt(page, 10),
     });
 
-    console.log("Critical Stock Report with Pagination: ", paginatedResult);
+    console.log('Critical Stock Report with Pagination: ', paginatedResult);
 
-    return successResponse("Critical Stock Report fetched successfully", paginatedResult);
+    return successResponse(
+      'Critical Stock Report fetched successfully',
+      paginatedResult,
+    );
   } catch (error) {
-    console.error("Error in getCriticalStocks API: ", error);
+    console.error('Error in getCriticalStocks API: ', error);
     return errorResponse(error);
   }
 };

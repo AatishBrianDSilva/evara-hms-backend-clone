@@ -1,13 +1,13 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { DrugLocation } from "@evara-backend/core/models/pharmacyDashboard/DrugLocation";
-import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { DrugLocation } from '@evara-backend/core/models/pharmacyDashboard/DrugLocation';
+import { IPaginateOptions } from '@evara-backend/core/src/lib/types/pagination';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -20,15 +20,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const params = event.queryStringParameters || {};
     const {
-      page = "1",
-      limit = "10",
+      page = '1',
+      limit = '10',
       sort: sortRaw,
-      searchQuery = "",
+      searchQuery = '',
     } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
-    const paginate = JSON.parse(params.paginate || "false");
+    const paginate = JSON.parse(params.paginate || 'false');
 
     if (paginate) {
       const options: IPaginateOptions = {
@@ -46,14 +46,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
 
       if (searchQuery) {
-        query.$or = [{ location: new RegExp(searchQuery, "i") }];
+        query.$or = [{ location: new RegExp(searchQuery, 'i') }];
       }
 
       // Fetching the appointments with pagination
       const result = await DrugLocation.paginate(query, options);
       const { records, pagination } = formatPaginationResult(result);
 
-      return successResponse("Success", {
+      return successResponse('Success', {
         records,
         pagination,
       });
@@ -65,7 +65,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         .sort(sort)
         .lean();
 
-      return successResponse("Success", {
+      return successResponse('Success', {
         records: drugLocations,
         pagination: {},
       });

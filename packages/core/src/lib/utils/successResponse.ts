@@ -1,16 +1,16 @@
-import { APIGatewayProxyResult } from "aws-lambda";
+import { APIGatewayProxyResult } from 'aws-lambda';
 
 const successResponse = (
   message: string,
-  data?: unknown
+  data?: unknown,
 ): APIGatewayProxyResult => {
   return {
     statusCode: 200,
     headers: {
-      "content-type": "application/json",
+      'content-type': 'application/json',
     },
     body: JSON.stringify({
-      status: "success",
+      status: 'success',
       message,
       data,
     }),

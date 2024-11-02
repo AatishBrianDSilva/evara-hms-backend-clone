@@ -1,12 +1,12 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import pagination from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import pagination from 'mongoose-paginate-v2';
 
 export interface IDrugType extends Document {
   clinicId: string;
   name: string;
   shortcode: string;
   notes?: string;
-  status?: "Active" | "Inactive";
+  status?: 'Active' | 'Inactive';
 }
 
 const drugTypeSchema = new Schema<IDrugType>(
@@ -28,26 +28,27 @@ const drugTypeSchema = new Schema<IDrugType>(
         validator: function (v: string) {
           return /^[A-Z]{3}$/.test(v); // Ensures the shortcode is exactly three uppercase letters long
         },
-        message: (props) => `${props.value} is not a valid three-letter shortcode!`,
+        message: props =>
+          `${props.value} is not a valid three-letter shortcode!`,
       },
     },
     notes: { type: String, required: false },
     status: {
       type: String,
-      enum: ["Active", "Inactive"],
-      default: "Active",
+      enum: ['Active', 'Inactive'],
+      default: 'Active',
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 drugTypeSchema.plugin(pagination);
 
 interface IDrugTypeDocument extends Document, IDrugType {}
 
-export const DrugType = mongoose.model<IDrugTypeDocument, PaginateModel<IDrugTypeDocument>>(
-  "DrugType",
-  drugTypeSchema
-);
+export const DrugType = mongoose.model<
+  IDrugTypeDocument,
+  PaginateModel<IDrugTypeDocument>
+>('DrugType', drugTypeSchema);

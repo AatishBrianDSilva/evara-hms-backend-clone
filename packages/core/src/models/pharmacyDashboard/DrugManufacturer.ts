@@ -1,5 +1,5 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import pagination from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import pagination from 'mongoose-paginate-v2';
 
 export interface IDrugManufacturer extends Document {
   clinicId: string;
@@ -24,7 +24,7 @@ export interface IDrugManufacturer extends Document {
     state: string;
     country: string;
   };
-  status: "Active" | "Inactive";
+  status: 'Active' | 'Inactive';
 }
 
 const drugManufacturerSchema = new Schema<IDrugManufacturer>(
@@ -41,12 +41,12 @@ const drugManufacturerSchema = new Schema<IDrugManufacturer>(
     category: [
       {
         type: Schema.Types.ObjectId,
-        ref: "DrugCategory",
+        ref: 'DrugCategory',
       },
     ],
     taxRate: {
       type: Schema.Types.ObjectId,
-      ref: "TaxRate",
+      ref: 'TaxRate',
     },
     cst: {
       type: String,
@@ -108,13 +108,13 @@ const drugManufacturerSchema = new Schema<IDrugManufacturer>(
     },
     status: {
       type: String,
-      enum: ["Active", "Inactive"],
-      default: "Active",
+      enum: ['Active', 'Inactive'],
+      default: 'Active',
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 drugManufacturerSchema.plugin(pagination);
@@ -124,4 +124,4 @@ interface IDrugManufacturerDocument extends Document, IDrugManufacturer {}
 export const DrugManufacturer = mongoose.model<
   IDrugManufacturerDocument,
   PaginateModel<IDrugManufacturerDocument>
->("DrugManufacturer", drugManufacturerSchema);
+>('DrugManufacturer', drugManufacturerSchema);

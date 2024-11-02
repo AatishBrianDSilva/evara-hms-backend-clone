@@ -1,25 +1,25 @@
-import mongoose, { Document, Mixed, Schema } from "mongoose";
-import { autoIncrementId } from "../../Counters";
+import mongoose, { Document, Mixed, Schema } from 'mongoose';
+import { autoIncrementId } from '../../Counters';
 
 export enum ETestType {
-  BloodTest = "BloodTest",
-  UltrasoundScan = "UltrasoundScan",
-  BaseLineFollicularMonitoring = "BaseLineFollicularMonitoring",
-  EndometrialAssessment = "EndometrialAssessment",
-  EarlyPregnancyScan = "EarlyPregnancyScan",
-  SemenAnalysis = "SemenAnalysis",
-  SpermDFI = "SpermDFI",
+  BloodTest = 'BloodTest',
+  UltrasoundScan = 'UltrasoundScan',
+  BaseLineFollicularMonitoring = 'BaseLineFollicularMonitoring',
+  EndometrialAssessment = 'EndometrialAssessment',
+  EarlyPregnancyScan = 'EarlyPregnancyScan',
+  SemenAnalysis = 'SemenAnalysis',
+  SpermDFI = 'SpermDFI',
 }
 
 export enum EGender {
-  Male = "male",
-  Female = "female",
-  Both = "both",
+  Male = 'male',
+  Female = 'female',
+  Both = 'both',
 }
 
 export enum EBloodTestComponentType {
-  Text = "text",
-  Select = "select",
+  Text = 'text',
+  Select = 'select',
 }
 
 interface BloodTestComponent {
@@ -62,13 +62,16 @@ const MedicalTestSchema: Schema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Assume autoIncrementId is a function/middleware you've defined to auto-increment the testId
-MedicalTestSchema.pre("save", autoIncrementId("MedicalTests", "testId", "T-"));
+MedicalTestSchema.pre('save', autoIncrementId('MedicalTests', 'testId', 'T-'));
 
-const MedicalTest = mongoose.model<IMedicalTest>("MedicalTests", MedicalTestSchema);
+const MedicalTest = mongoose.model<IMedicalTest>(
+  'MedicalTests',
+  MedicalTestSchema,
+);
 
 export default MedicalTest;
 

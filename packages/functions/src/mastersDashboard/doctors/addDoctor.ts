@@ -1,11 +1,11 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Doctors from "@evara-backend/core/models/mastersDashboard/Doctors";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import Doctors from '@evara-backend/core/models/mastersDashboard/Doctors';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -14,7 +14,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     await connectMongoDb();
@@ -39,7 +39,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const responseData = {
       doctorId: doctor._id,
     };
-    return successResponse("Doctor added successfully", responseData);
+    return successResponse('Doctor added successfully', responseData);
   } catch (error) {
     return errorResponse(error);
   }

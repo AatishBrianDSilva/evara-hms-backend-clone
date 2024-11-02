@@ -1,11 +1,11 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { PatientRefund } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientRefund";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
-import ErrorMessage from "@evara-backend/core/lib/utils/ErrorMessage";
-import Patient from "@evara-backend/core/models/Patients";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { PatientRefund } from '@evara-backend/core/src/models/patientDashboard/Billings/PatientRefund';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
+import ErrorMessage from '@evara-backend/core/lib/utils/ErrorMessage';
+import Patient from '@evara-backend/core/models/Patients';
 
 interface IPaginateOptions {
   page?: number;
@@ -15,17 +15,17 @@ interface IPaginateOptions {
 }
 
 const parseSearchQuery = (query: string) => {
-  const queryParts = query.split(" ");
+  const queryParts = query.split(' ');
   const parsedQuery = {
-    patientCode: "",
-    patientName: "",
+    patientCode: '',
+    patientName: '',
   };
 
-  queryParts.forEach((part) => {
-    if (part.startsWith("patientCode:")) {
-      parsedQuery.patientCode = part.split(":")[1];
-    } else if (part.startsWith("patientName:")) {
-      parsedQuery.patientName = part.split(":")[1];
+  queryParts.forEach(part => {
+    if (part.startsWith('patientCode:')) {
+      parsedQuery.patientCode = part.split(':')[1];
+    } else if (part.startsWith('patientName:')) {
+      parsedQuery.patientName = part.split(':')[1];
     }
   });
 
@@ -38,23 +38,23 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     await connectMongoDb();
-    console.log("MongoDB connection established for Refund Reports.");
+    console.log('MongoDB connection established for Refund Reports.');
 
     // Extract query parameters
     const params = event.queryStringParameters || {};
     const {
-      page = "1",
-      limit = "25",
-      paginate = "true", // Determines if pagination is applied
+      page = '1',
+      limit = '25',
+      paginate = 'true', // Determines if pagination is applied
       sort: sortRaw,
-      searchQuery = "",
+      searchQuery = '',
     } = params;
 
-    const isPaginationEnabled = paginate === "true" || paginate === "1";
+    const isPaginationEnabled = paginate === 'true' || paginate === '1';
 
     const pageNumber = isPaginationEnabled ? parseInt(page, 10) : undefined;
     const pageSize = isPaginationEnabled ? parseInt(limit, 10) : undefined;
@@ -68,7 +68,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     };
 
     if (patientCode) {
-      matchCondition.patientCode = { $regex: patientCode, $options: "i" };
+      matchCondition.patientCode = { $regex: patientCode, $options: 'i' };
     }
 
     if (patientName) {
@@ -77,21 +77,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         clinicId: auth.clinicId,
         branchId: auth.branchId,
         $or: [
-          { firstName: { $regex: patientName, $options: "i" } },
-          { lastName: { $regex: patientName, $options: "i" } },
+          { firstName: { $regex: patientName, $options: 'i' } },
+          { lastName: { $regex: patientName, $options: 'i' } },
         ],
-      }).select("patientId");
+      }).select('patientId');
 
-      const matchingPatientCodes = matchingPatients.map((p) => p.patientId);
+      const matchingPatientCodes = matchingPatients.map(p => p.patientId);
 
       if (matchingPatientCodes.length === 0) {
         // No matching patients, so no refunds will match
-        matchCondition.patientCode = "__NO_MATCH__"; // Ensures no results
+        matchCondition.patientCode = '__NO_MATCH__'; // Ensures no results
       } else {
         if (matchCondition.patientCode) {
           matchCondition.patientCode = {
             $regex: patientCode,
-            $options: "i",
+            $options: 'i',
             $in: matchingPatientCodes,
           };
         } else {
@@ -107,23 +107,29 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
       {
         $lookup: {
-          from: "patients", // Match with the 'Patient' collection
-          localField: "patientCode", // Field in PatientRefund to match
-          foreignField: "patientId", // Field in Patient to match
-          as: "patientDetails", // Output array of matched documents
+          from: 'patients', // Match with the 'Patient' collection
+          localField: 'patientCode', // Field in PatientRefund to match
+          foreignField: 'patientId', // Field in Patient to match
+          as: 'patientDetails', // Output array of matched documents
         },
       },
       {
-        $unwind: "$patientDetails", // Unwind the matched patient details
+        $unwind: '$patientDetails', // Unwind the matched patient details
       },
       {
         $project: {
           _id: 1,
           refundDetails: 1,
           patientCode: 1,
-          "patientDetails.firstName": 1, // Include firstName
-          "patientDetails.lastName": 1, // Include lastName
-          patientName: { $concat: ["$patientDetails.firstName", " ", "$patientDetails.lastName"] }, // Concatenate firstName and lastName
+          'patientDetails.firstName': 1, // Include firstName
+          'patientDetails.lastName': 1, // Include lastName
+          patientName: {
+            $concat: [
+              '$patientDetails.firstName',
+              ' ',
+              '$patientDetails.lastName',
+            ],
+          }, // Concatenate firstName and lastName
           createdAt: 1,
         },
       },
@@ -139,7 +145,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         },
         {
           $limit: pageSize,
-        }
+        },
       );
     }
 
@@ -158,7 +164,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         }
       : undefined;
 
-    console.log("Refunds retrieved successfully for branch:", auth.branchId);
+    console.log('Refunds retrieved successfully for branch:', auth.branchId);
 
     // Return the refund data with patient firstName, lastName, and patientName
     return successResponse({
@@ -166,7 +172,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       pagination,
     });
   } catch (error) {
-    console.error("Error occurred while fetching refunds:", error);
+    console.error('Error occurred while fetching refunds:', error);
     return errorResponse(error);
   }
 };

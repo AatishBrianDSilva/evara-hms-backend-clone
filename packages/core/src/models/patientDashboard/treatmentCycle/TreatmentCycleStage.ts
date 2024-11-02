@@ -1,4 +1,4 @@
-import mongoose, { Document } from "mongoose";
+import mongoose, { Document } from 'mongoose';
 
 interface ITreatmentCycleStage extends Document {
   name: string;
@@ -12,10 +12,10 @@ const TreatmentCycleStageSchema = new mongoose.Schema<ITreatmentCycleStage>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export const TreatmentCycleStage = mongoose.model<ITreatmentCycleStage>(
-  "TreatmentCycleStage",
-  TreatmentCycleStageSchema
+  'TreatmentCycleStage',
+  TreatmentCycleStageSchema,
 );

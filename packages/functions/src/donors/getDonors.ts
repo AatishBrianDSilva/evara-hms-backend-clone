@@ -1,12 +1,12 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
 
-import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import Donor from "@evara-backend/core/models/mastersDashboard/local/Donor";
+import { IPaginateOptions } from '@evara-backend/core/src/lib/types/pagination';
+import Donor from '@evara-backend/core/models/mastersDashboard/local/Donor';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -17,18 +17,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Extract query string parameters
     const params = event.queryStringParameters || {};
-    const isAdmin = JSON.parse(params.isAdmin || "false");
-    const isActive = JSON.parse(params.active || "false");
+    const isAdmin = JSON.parse(params.isAdmin || 'false');
+    const isActive = JSON.parse(params.active || 'false');
 
     const {
       startDate,
       endDate,
-      page = "1",
-      limit = "10",
-      searchQuery = "",
+      page = '1',
+      limit = '10',
+      searchQuery = '',
     } = params;
 
-    const paginate = JSON.parse(params.paginate || "false");
+    const paginate = JSON.parse(params.paginate || 'false');
 
     let query: any = {};
 
@@ -38,9 +38,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     if (searchQuery) {
       query.$or = [
-        { firstName: new RegExp(searchQuery, "i") },
-        { lastName: new RegExp(searchQuery, "i") },
-        { mobile: new RegExp(searchQuery, "i") },
+        { firstName: new RegExp(searchQuery, 'i') },
+        { lastName: new RegExp(searchQuery, 'i') },
+        { mobile: new RegExp(searchQuery, 'i') },
       ];
     }
 
@@ -71,14 +71,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const { records, pagination } = formatPaginationResult(result);
 
       // Return success response with pagination info
-      return successResponse("Donors fetched successfully", {
+      return successResponse('Donors fetched successfully', {
         records,
         pagination,
       });
     } else {
       const data = await Donor.find(query).lean();
 
-      return successResponse("Success", { records: data });
+      return successResponse('Success', { records: data });
     }
   } catch (error) {
     return errorResponse(error);

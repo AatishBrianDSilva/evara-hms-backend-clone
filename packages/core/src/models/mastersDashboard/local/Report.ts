@@ -1,5 +1,5 @@
-import mongoose, { Schema } from "mongoose";
-import { EPatientBillingServiceType } from "../../patientDashboard/Billings/PatientBilling";
+import mongoose, { Schema } from 'mongoose';
+import { EPatientBillingServiceType } from '../../patientDashboard/Billings/PatientBilling';
 
 interface report {
   category: EPatientBillingServiceType;
@@ -19,6 +19,6 @@ const reportSchema = new Schema<report>({
   notes: { type: String, required: true },
 });
 
-const Report = mongoose.model<report>("Report", reportSchema);
+const Report = mongoose.model<report>('Report', reportSchema);
 
 export default Report;

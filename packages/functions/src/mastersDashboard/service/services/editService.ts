@@ -1,11 +1,11 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { TaxRate } from "@evara-backend/core/models/pharmacyDashboard/TaxRate";
-import CryoPreservations from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/CryoPreservations";
-import MasterService from "@evara-backend/core/src/models/patientDashboard/services/MasterService";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { TaxRate } from '@evara-backend/core/models/pharmacyDashboard/TaxRate';
+import CryoPreservations from '@evara-backend/core/src/models/patientDashboard/cryoPreservation/CryoPreservations';
+import MasterService from '@evara-backend/core/src/models/patientDashboard/services/MasterService';
 
 // Handler function for updating a single tax rate
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -15,17 +15,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb(); // Connect to MongoDB
 
     if (!event.body) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     if (event.pathParameters === null) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
     // Safely access the id property
-    const id = event.pathParameters["id"];
+    const id = event.pathParameters['id'];
     if (!id) {
-      throw new ErrorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, 'Id is not provided');
     }
 
     // Assuming the event body will contain the ID of the tax rate to be updated and the new values
@@ -37,10 +37,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     });
 
     if (!updatedData) {
-      throw new ErrorMessage(404, "Tax rate not found");
+      throw new ErrorMessage(404, 'Tax rate not found');
     }
 
-    return successResponse("Data updated successfully", updatedData);
+    return successResponse('Data updated successfully', updatedData);
   } catch (error) {
     return errorResponse(error);
   }

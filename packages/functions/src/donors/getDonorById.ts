@@ -1,11 +1,11 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import Donor from "@evara-backend/core/models/mastersDashboard/local/Donor";
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import Donor from '@evara-backend/core/models/mastersDashboard/local/Donor';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -14,22 +14,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     if (event.pathParameters === null) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
     // Safely access the id property
-    const id = event.pathParameters["id"];
+    const id = event.pathParameters['id'];
     if (!id) {
-      throw new ErrorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, 'Id is not provided');
     }
 
     const donor = await Donor.findOne({ donorId: id });
 
     if (!donor) {
-      throw new ErrorMessage(404, "Donor not found");
+      throw new ErrorMessage(404, 'Donor not found');
     }
 
-    return successResponse("Donor fetched successfully", donor);
+    return successResponse('Donor fetched successfully', donor);
   } catch (error) {
     return errorResponse(error);
   }

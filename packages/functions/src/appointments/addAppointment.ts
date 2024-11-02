@@ -1,10 +1,10 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import Appointments from "@evara-backend/core/src/models/Appointments";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import Appointments from '@evara-backend/core/src/models/Appointments';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -26,7 +26,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     data.clinicId = auth?.clinicId;
     data.branchId = auth?.branchId;
 
-    console.log("data", data);
+    console.log('data', data);
 
     // Check if there is an existing appointment for the date and time
     const existingAppointment = await Appointments.findOne({
@@ -39,14 +39,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       // Return an error response if an appointment already exists
       throw new ErrorMessage(
         400,
-        "An appointment already exists for the specified date and time"
+        'An appointment already exists for the specified date and time',
       );
     }
 
     // Create a new doctor document
     const newAppointment = new Appointments(data);
 
-    console.log("newAppointment", newAppointment);
+    console.log('newAppointment', newAppointment);
 
     // Save the doctor to the database
     const appointment = await newAppointment.save();
@@ -55,7 +55,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const responseData = {
       appointmentId: appointment._id,
     };
-    return successResponse("Appointment created successfully", responseData);
+    return successResponse('Appointment created successfully', responseData);
   } catch (error) {
     return errorResponse(error);
   }

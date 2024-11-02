@@ -1,5 +1,5 @@
-import SQSService from "@evara-backend/core/src/lib/aws/sqs";
-import { S3Event, SQSMessageAttributes } from "aws-lambda";
+import SQSService from '@evara-backend/core/src/lib/aws/sqs';
+import { S3Event, SQSMessageAttributes } from 'aws-lambda';
 
 export const main = async (event: S3Event) => {
   const delaySeconds = 15 * 60;
@@ -7,7 +7,7 @@ export const main = async (event: S3Event) => {
 
   if (!queueUrl) {
     throw new Error(
-      "Environment variable 'S3_SCHEDULE_DELETE_QUEUE_URL' is not set."
+      "Environment variable 'S3_SCHEDULE_DELETE_QUEUE_URL' is not set.",
     );
   }
 

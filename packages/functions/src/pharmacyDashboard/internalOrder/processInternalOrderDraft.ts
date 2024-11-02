@@ -1,16 +1,16 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import mongoose from "mongoose";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import mongoose from 'mongoose';
 type ObjectId = mongoose.Types.ObjectId; // Using type alias for clarity
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 import {
   EInternalOrderStatus,
   InternalOrder,
-} from "@evara-backend/core/models/pharmacyDashboard/InternalOrder";
-import { PharmacyStock } from "@evara-backend/core/models/pharmacyDashboard/PharmacyStock";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+} from '@evara-backend/core/models/pharmacyDashboard/InternalOrder';
+import { PharmacyStock } from '@evara-backend/core/models/pharmacyDashboard/PharmacyStock';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -22,28 +22,28 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     if (event.pathParameters === null) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
-    const orderId = event.pathParameters["id"];
+    const orderId = event.pathParameters['id'];
     if (!orderId) {
-      throw new ErrorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, 'Id is not provided');
     }
 
     const order = await InternalOrder.findById(orderId).session(session);
     if (!order) {
-      throw new ErrorMessage(404, "Order not found");
+      throw new ErrorMessage(404, 'Order not found');
     }
 
     // Ensure the order is in a state that can be rejected
     if (![EInternalOrderStatus.Approved].includes(order.status)) {
       throw new ErrorMessage(
         400,
-        "Order cannot be process in its current state"
+        'Order cannot be process in its current state',
       );
     }
 
@@ -58,17 +58,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       // Adjust quantities from on hold to actual locations
       for (const usedBatch of batches) {
-        const batch = stock.batches.find(
-          (b) => b.batchNo === usedBatch.batchId
-        );
+        const batch = stock.batches.find(b => b.batchNo === usedBatch.batchId);
         if (!batch) {
           continue; // If no batch matches, skip to the next batch
         }
 
-        const toLocation = batch.locations.find((loc) =>
+        const toLocation = batch.locations.find(loc =>
           (loc.location as unknown as ObjectId).equals(
-            transferTo as unknown as ObjectId
-          )
+            transferTo as unknown as ObjectId,
+          ),
         );
         if (toLocation) {
           toLocation.quantity += usedBatch.deductedQuantity; // Update existing location
@@ -81,10 +79,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         }
 
         // Adjust the quantity on hold
-        const fromLocation = batch.locations.find((loc) =>
+        const fromLocation = batch.locations.find(loc =>
           (loc.location as unknown as ObjectId).equals(
-            transferFrom.location as unknown as ObjectId
-          )
+            transferFrom.location as unknown as ObjectId,
+          ),
         );
         if (fromLocation) {
           stock.quantityOnHold -= usedBatch.deductedQuantity; // Reduce quantity on hold
@@ -96,17 +94,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Set the order status to Processed
     order.status = EInternalOrderStatus.Processed;
-    order.authorizedBy = "Admin";
+    order.authorizedBy = 'Admin';
     await order.save({ session });
 
     await session.commitTransaction();
     session.endSession();
 
     return successResponse(
-      "Internal Order processed and quantities transfered successfully"
+      'Internal Order processed and quantities transfered successfully',
     );
   } catch (error) {
-    console.error("Error handling internal order processing:", error);
+    console.error('Error handling internal order processing:', error);
     await session.abortTransaction();
     session.endSession();
     return errorResponse(error);

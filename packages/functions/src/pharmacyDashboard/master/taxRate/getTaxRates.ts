@@ -1,12 +1,12 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { TaxRate } from "@evara-backend/core/models/pharmacyDashboard/TaxRate";
-import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { TaxRate } from '@evara-backend/core/models/pharmacyDashboard/TaxRate';
+import { IPaginateOptions } from '@evara-backend/core/src/lib/types/pagination';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -18,11 +18,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "10", sort: sortRaw, status = "" } = params;
+    const { page = '1', limit = '10', sort: sortRaw, status = '' } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
-    const paginate = JSON.parse(params.paginate || "false");
+    const paginate = JSON.parse(params.paginate || 'false');
 
     if (paginate) {
       const options: IPaginateOptions = {
@@ -35,8 +35,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         clinicId: auth.clinicId,
       };
 
-      if (status === "Active") {
-        query.status = { $nin: ["Inactive"] }; // Exclude "Inactive" records
+      if (status === 'Active') {
+        query.status = { $nin: ['Inactive'] }; // Exclude "Inactive" records
       }
 
       if (sort) {
@@ -47,7 +47,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const result = await TaxRate.paginate(query, options);
       const { records, pagination } = formatPaginationResult(result);
 
-      return successResponse("Success", {
+      return successResponse('Success', {
         records,
         pagination,
       });
@@ -57,14 +57,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
 
       // Apply status filter if "Active" is provided
-      if (status === "Active") {
-        query.status = { $nin: ["Inactive"] }; // Exclude "Inactive" records
+      if (status === 'Active') {
+        query.status = { $nin: ['Inactive'] }; // Exclude "Inactive" records
       }
 
       // Fetch tax rates without pagination
       const taxRates = await TaxRate.find(query).sort(sort).lean();
 
-      return successResponse("Success", { records: taxRates, pagination: {} });
+      return successResponse('Success', { records: taxRates, pagination: {} });
     }
   } catch (error) {
     return errorResponse(error);

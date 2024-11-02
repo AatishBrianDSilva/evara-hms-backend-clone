@@ -1,14 +1,14 @@
-import mongoose, { Document, Mixed, Schema } from "mongoose";
-import { autoIncrementId } from "../../Counters";
-import { EGender } from "../investigation/MedicalTests";
+import mongoose, { Document, Mixed, Schema } from 'mongoose';
+import { autoIncrementId } from '../../Counters';
+import { EGender } from '../investigation/MedicalTests';
 
 export enum EProcedureType {
-  Hysteroscopy = "Hysteroscopy",
-  Laparoscopy = "Laparoscopy",
-  TESA = "TESA",
-  TESE = "TESE",
-  PGT = "PGT",
-  ERA = "ERA",
+  Hysteroscopy = 'Hysteroscopy',
+  Laparoscopy = 'Laparoscopy',
+  TESA = 'TESA',
+  TESE = 'TESE',
+  PGT = 'PGT',
+  ERA = 'ERA',
 }
 
 interface IMedicalProcedure extends Document {
@@ -33,15 +33,18 @@ const MedicalProcedureSchema: Schema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Assume autoIncrementId is a function/middleware you've defined to auto-increment the testId
-MedicalProcedureSchema.pre("save", autoIncrementId("MedicalProcedures", "procedureId", "P-"));
+MedicalProcedureSchema.pre(
+  'save',
+  autoIncrementId('MedicalProcedures', 'procedureId', 'P-'),
+);
 
 const MedicalProcedure = mongoose.model<IMedicalProcedure>(
-  "MedicalProcedures",
-  MedicalProcedureSchema
+  'MedicalProcedures',
+  MedicalProcedureSchema,
 );
 
 export default MedicalProcedure;

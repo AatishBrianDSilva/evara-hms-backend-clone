@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
 const branchSchema = new Schema(
   {
@@ -17,9 +17,9 @@ const branchSchema = new Schema(
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const Branch = mongoose.model("ClinicBranches", branchSchema);
+const Branch = mongoose.model('ClinicBranches', branchSchema);
 
 export default Branch;

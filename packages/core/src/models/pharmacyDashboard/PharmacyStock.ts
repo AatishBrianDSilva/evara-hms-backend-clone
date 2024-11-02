@@ -1,5 +1,5 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import pagination from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import pagination from 'mongoose-paginate-v2';
 
 interface ILocationQuantity {
   location: Schema.Types.ObjectId;
@@ -10,7 +10,7 @@ const locationQuantitySchema = new Schema<ILocationQuantity>(
   {
     location: {
       type: Schema.Types.ObjectId,
-      ref: "DrugLocation",
+      ref: 'DrugLocation',
       required: true,
       index: true,
     },
@@ -22,7 +22,7 @@ const locationQuantitySchema = new Schema<ILocationQuantity>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export interface IBatchDetails {
@@ -45,7 +45,7 @@ const batchDetailsSchema = new Schema<IBatchDetails>(
     },
     vendor: {
       type: Schema.Types.ObjectId,
-      ref: "Vendor",
+      ref: 'Vendor',
       required: true,
     },
     packSize: {
@@ -56,7 +56,7 @@ const batchDetailsSchema = new Schema<IBatchDetails>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export interface IPharmacyStock extends Document {
@@ -81,7 +81,7 @@ const pharmacyStockSchema = new Schema<IPharmacyStock>(
     },
     item: {
       type: Schema.Types.ObjectId,
-      ref: "DrugItem",
+      ref: 'DrugItem',
       required: true,
     },
     sellPrice: {
@@ -100,16 +100,16 @@ const pharmacyStockSchema = new Schema<IPharmacyStock>(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 pharmacyStockSchema.index({ branchId: 1, item: 1 });
-pharmacyStockSchema.index({ "batches.batchNo": 1 });
-pharmacyStockSchema.index({ "batches.expiryDate": 1 });
-pharmacyStockSchema.index({ "batches.vendor": 1 });
+pharmacyStockSchema.index({ 'batches.batchNo': 1 });
+pharmacyStockSchema.index({ 'batches.expiryDate': 1 });
+pharmacyStockSchema.index({ 'batches.vendor': 1 });
 
 // Virtual for calculating total quantity
-pharmacyStockSchema.virtual("totalQuantity").get(function () {
+pharmacyStockSchema.virtual('totalQuantity').get(function () {
   return this.batches.reduce((total, batch) => {
     return (
       total +
@@ -127,4 +127,4 @@ interface IPharmacyStockDocument extends Document, IPharmacyStock {}
 export const PharmacyStock = mongoose.model<
   IPharmacyStockDocument,
   PaginateModel<IPharmacyStockDocument>
->("PharmacyStock", pharmacyStockSchema);
+>('PharmacyStock', pharmacyStockSchema);

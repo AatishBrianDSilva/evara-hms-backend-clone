@@ -1,13 +1,13 @@
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { IDateRange } from "./summary";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import Appointments from "@evara-backend/core/src/models/Appointments";
-import Patient from "@evara-backend/core/src/models/Patients";
-import Donor from "@evara-backend/core/src/models/mastersDashboard/local/Donor";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { IDateRange } from './summary';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import Appointments from '@evara-backend/core/src/models/Appointments';
+import Patient from '@evara-backend/core/src/models/Patients';
+import Donor from '@evara-backend/core/src/models/mastersDashboard/local/Donor';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -15,7 +15,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
     // Connect to MongoDB
     await connectMongoDb();
@@ -61,7 +61,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       patients: patients,
     };
 
-    return successResponse("Success", response);
+    return successResponse('Success', response);
   } catch (error) {
     return errorResponse(error);
   }

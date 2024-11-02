@@ -1,18 +1,18 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
-import { PharmacyInvoice } from "@evara-backend/core/models/pharmacyDashboard/PharmacyInvoice";
-import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
-import SNSService from "@evara-backend/core/lib/aws/sns";
-import { processPurchaseOrderProcessedReportData } from "./processPurchaseOrderProcessedReportData";
-import Branch from "@evara-backend/core/models/mastersDashboard/global/ClinicBranches";
-import { DrugVendor } from "@evara-backend/core/models/pharmacyDashboard/DrugVendor";
-import { DrugItem } from "@evara-backend/core/models/pharmacyDashboard/DrugItem";
-import { updateStockFromPurchaseOrder } from "../stocks/updateStockFromPurchaseOrder";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { PurchaseOrder } from '@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder';
+import { PharmacyInvoice } from '@evara-backend/core/models/pharmacyDashboard/PharmacyInvoice';
+import { S3KeepPermanently, parseS3Url } from 'src/files/_KeepPermanently';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
+import SNSService from '@evara-backend/core/lib/aws/sns';
+import { processPurchaseOrderProcessedReportData } from './processPurchaseOrderProcessedReportData';
+import Branch from '@evara-backend/core/models/mastersDashboard/global/ClinicBranches';
+import { DrugVendor } from '@evara-backend/core/models/pharmacyDashboard/DrugVendor';
+import { DrugItem } from '@evara-backend/core/models/pharmacyDashboard/DrugItem';
+import { updateStockFromPurchaseOrder } from '../stocks/updateStockFromPurchaseOrder';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -25,38 +25,38 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
   try {
     if (!event.body) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     const data = JSON.parse(event.body);
-    console.log("Parsed data:", JSON.stringify(data, null, 2));
+    console.log('Parsed data:', JSON.stringify(data, null, 2));
 
     data.branchId = auth.branchId;
     data.clinicId = auth.clinicId;
 
     const branch = await Branch.findOne({
-      code: new RegExp(`^${data.branchId.trim()}\\s*$`, "i"),
+      code: new RegExp(`^${data.branchId.trim()}\\s*$`, 'i'),
       clinicId: data.clinicId,
       isActive: true,
       $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
     }).lean();
 
     if (!branch) {
-      throw new ErrorMessage(404, "Branch not found");
+      throw new ErrorMessage(404, 'Branch not found');
     }
-    console.log("Branch found:", branch);
+    console.log('Branch found:', branch);
 
     // Fetch the vendor details using the vendor ID
     const vendorDetails = await DrugVendor.findById(data.vendor).lean();
     if (!vendorDetails) {
-      throw new ErrorMessage(404, "Vendor not found");
+      throw new ErrorMessage(404, 'Vendor not found');
     }
-    console.log("Vendor details:", vendorDetails);
+    console.log('Vendor details:', vendorDetails);
 
     const { id, ...updateData } = JSON.parse(event.body);
 
     if (!id) {
-      throw new ErrorMessage(400, "ID is required for update");
+      throw new ErrorMessage(400, 'ID is required for update');
     }
 
     console.log(`Updating purchase order with ID: ${id}`);
@@ -64,20 +64,23 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const purchaseOrder = await PurchaseOrder.findById(id);
     if (!purchaseOrder) {
-      throw new ErrorMessage(404, "Purchase order not found");
+      throw new ErrorMessage(404, 'Purchase order not found');
     }
-    console.log("Purchase order found:", JSON.stringify(purchaseOrder));
+    console.log('Purchase order found:', JSON.stringify(purchaseOrder));
 
     // Handle invoice file uploads
     const invoiceFileUrls = [];
-    if (updateData.response?.invoice && updateData.response?.invoice.length > 0) {
+    if (
+      updateData.response?.invoice &&
+      updateData.response?.invoice.length > 0
+    ) {
       for (let i = 0; i < updateData.response.invoice.length; i++) {
         if (updateData.response.invoice[i].length > 0) {
           const s3UrlParts = parseS3Url(updateData.response.invoice[i]);
 
           if (s3UrlParts) {
             await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
-            const invoicePart = s3UrlParts.key.split("/");
+            const invoicePart = s3UrlParts.key.split('/');
             invoiceFileUrls.push(updateData.response.invoice[i]);
 
             const pharmacyInvoice = new PharmacyInvoice({
@@ -89,10 +92,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               key: s3UrlParts.key,
               invoiceNumber: updateData.invoiceNumber || undefined,
             });
-            console.log(`Saving Pharmacy Invoice: ${JSON.stringify(pharmacyInvoice)}`);
+            console.log(
+              `Saving Pharmacy Invoice: ${JSON.stringify(pharmacyInvoice)}`,
+            );
             await pharmacyInvoice.save();
           } else {
-            throw new ErrorMessage(400, "Invalid image URL");
+            throw new ErrorMessage(400, 'Invalid image URL');
           }
         }
       }
@@ -103,7 +108,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       items: [],
       invoiceNumber: updateData.invoiceNumber,
       invoiceFileUrl: invoiceFileUrls,
-      status: "ProcessedWithoutUpdating",
+      status: 'ProcessedWithoutUpdating',
       invoice: invoiceFileUrls, // Ensure the invoice file URLs are added to the invoice field
     };
 
@@ -113,10 +118,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     let responseSubTotal = 0;
     let responseTotalTax = 0;
 
-    console.log("Processing items in the request...");
+    console.log('Processing items in the request...');
     // Process each item in the request
     updateData.request.items.forEach((item, index) => {
-      console.log(`Processing request item ${index + 1}/${updateData.request.items.length}`);
+      console.log(
+        `Processing request item ${index + 1}/${updateData.request.items.length}`,
+      );
       console.log(`Request item data: ${JSON.stringify(item)}`);
 
       const packsRequired = item.packsRequired; // Total packs required
@@ -139,7 +146,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       if (fulfilledPacks > 0) {
         // Use the correct index to access batchNo and expiryDate from updateData.response.items
         const responseItem = updateData.response.items.find(
-          (resItem) => resItem.item === item.item
+          resItem => resItem.item === item.item,
         );
 
         newResponse.items.push({
@@ -157,12 +164,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
           batchNo: responseItem ? responseItem.batchNo : item.batchNo, // Correctly mapped batchNo
           expiryDate: responseItem ? responseItem.expiryDate : item.expiryDate, // Correctly mapped expiryDate
-          status: "ProcessedWithoutUpdating",
+          status: 'ProcessedWithoutUpdating',
         });
         console.log(
           `Added to Response Items: ${JSON.stringify(
-            newResponse.items[newResponse.items.length - 1]
-          )}`
+            newResponse.items[newResponse.items.length - 1],
+          )}`,
         );
       }
 
@@ -192,9 +199,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           batchNo: item.batchNo,
           expiryDate: item.expiryDate,
           discount: item.discount,
-          status: "Pending",
+          status: 'Pending',
         });
-        console.log(`Unfulfilled item added with remaining packs: ${remainingPacks}`);
+        console.log(
+          `Unfulfilled item added with remaining packs: ${remainingPacks}`,
+        );
       }
     });
 
@@ -206,29 +215,37 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     let responseDiscountAmount = 0;
 
     if (updateData.request.discount) {
-      requestDiscountAmount = (requestSubTotal * updateData.request.discount) / 100;
+      requestDiscountAmount =
+        (requestSubTotal * updateData.request.discount) / 100;
     }
 
     if (updateData.response.discount) {
-      responseDiscountAmount = (responseSubTotal * updateData.response.discount) / 100;
+      responseDiscountAmount =
+        (responseSubTotal * updateData.response.discount) / 100;
     }
-    console.log("Response subtotal", responseSubTotal);
-    console.log("Response discount", updateData.response.discount);
+    console.log('Response subtotal', responseSubTotal);
+    console.log('Response discount', updateData.response.discount);
 
     const requestOtherCharges = updateData.request.otherCharges || 0;
     const responseOtherCharges = updateData.response.otherCharges || 0;
 
     const requestNetAmount =
-      requestSubTotal - requestDiscountAmount + requestTotalTax + requestOtherCharges;
+      requestSubTotal -
+      requestDiscountAmount +
+      requestTotalTax +
+      requestOtherCharges;
     const responseNetAmount =
-      responseSubTotal - responseDiscountAmount + responseTotalTax + responseOtherCharges;
+      responseSubTotal -
+      responseDiscountAmount +
+      responseTotalTax +
+      responseOtherCharges;
 
-    console.log("Response subtotal", responseSubTotal);
-    console.log("Response discount", responseDiscountAmount);
+    console.log('Response subtotal', responseSubTotal);
+    console.log('Response discount', responseDiscountAmount);
 
-    console.log("Response tax", responseTotalTax);
+    console.log('Response tax', responseTotalTax);
 
-    console.log("Response other charges", responseOtherCharges);
+    console.log('Response other charges', responseOtherCharges);
 
     console.log(`Request Net Amount: ${requestNetAmount}`);
     console.log(`Response Net Amount: ${responseNetAmount}`);
@@ -256,17 +273,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Save the updated purchase order
     const updatedData = await purchaseOrder.save();
-    console.log("Purchase order updated successfully.");
+    console.log('Purchase order updated successfully.');
 
     // Fetch the item names for the updated response
-    const itemIds = newResponse.items.map((item) => item.item);
+    const itemIds = newResponse.items.map(item => item.item);
     const drugItems = await DrugItem.find({ _id: { $in: itemIds } }).lean();
 
-    const updatedItemsWithNames = newResponse.items.map((item) => {
-      const drugItem = drugItems.find((di) => di._id.toString() === item.item.toString());
+    const updatedItemsWithNames = newResponse.items.map(item => {
+      const drugItem = drugItems.find(
+        di => di._id.toString() === item.item.toString(),
+      );
       return {
         ...item,
-        name: drugItem ? drugItem.name : "Unknown Item", // Add item name to the response
+        name: drugItem ? drugItem.name : 'Unknown Item', // Add item name to the response
       };
     });
 
@@ -278,10 +297,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       data.clinicId,
       newResponse,
       branch,
-      vendorDetails
+      vendorDetails,
     );
 
-    console.log("Report data", reportData);
+    console.log('Report data', reportData);
 
     await SNSService.publishMessage({
       Message: JSON.stringify(reportData),
@@ -290,16 +309,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Update stock from purchase order after saving the purchase order
     await updateStockFromPurchaseOrder(purchaseOrder._id, session);
-    console.log("Stock updated from purchase order successfully.");
+    console.log('Stock updated from purchase order successfully.');
 
     await session.commitTransaction();
     session.endSession();
 
-    return successResponse("Purchase order updated successfully", updatedData);
+    return successResponse('Purchase order updated successfully', updatedData);
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    console.error("Error updating purchase order:", error);
+    console.error('Error updating purchase order:', error);
     return errorResponse(error);
   }
 };

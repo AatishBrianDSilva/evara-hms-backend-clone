@@ -1,17 +1,17 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import { log } from "console";
-import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
-import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
-import { InternalOrder } from "@evara-backend/core/src/models/pharmacyDashboard/InternalOrder";
-import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import { IPaginateOptions } from '@evara-backend/core/src/lib/types/pagination';
+import { log } from 'console';
+import { DrugLocation } from '@evara-backend/core/src/models/pharmacyDashboard/DrugLocation';
+import { PharmacyStock } from '@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock';
+import { InternalOrder } from '@evara-backend/core/src/models/pharmacyDashboard/InternalOrder';
+import { DrugItem } from '@evara-backend/core/src/models/pharmacyDashboard/DrugItem';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -20,40 +20,40 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
     const {
-      page = "1",
-      limit = "10",
+      page = '1',
+      limit = '10',
       paginate,
       sort: sortRaw,
       status,
-      searchQuery = "",
+      searchQuery = '',
     } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
     const populate = [
       {
-        path: "items.item",
+        path: 'items.item',
         model: PharmacyStock.modelName,
         populate: [
           {
-            path: "item",
+            path: 'item',
             model: DrugItem.modelName,
           },
         ],
       },
       {
-        path: "items.transferFrom.location",
+        path: 'items.transferFrom.location',
         model: DrugLocation.modelName,
       },
       {
-        path: "items.transferTo",
+        path: 'items.transferTo',
         model: DrugLocation.modelName,
       },
     ];
@@ -79,17 +79,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       options.populate = populate;
 
-      log("Query", query);
+      log('Query', query);
 
       if (searchQuery) {
-        query.$or = [{ ioNumber: new RegExp(searchQuery, "i") }];
+        query.$or = [{ ioNumber: new RegExp(searchQuery, 'i') }];
       }
 
       // Fetching the appointments with pagination
       const result = await InternalOrder.paginate(query, options);
       const { records, pagination } = formatPaginationResult(result);
 
-      return successResponse("Success", {
+      return successResponse('Success', {
         records,
         pagination,
       });
@@ -99,7 +99,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         .sort(sort)
         .lean();
 
-      return successResponse("Success", data);
+      return successResponse('Success', data);
     }
   } catch (error) {
     return errorResponse(error);

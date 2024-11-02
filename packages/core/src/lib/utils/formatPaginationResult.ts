@@ -1,5 +1,5 @@
-import { PaginateResult } from "mongoose";
-import { IPagination } from "../types/pagination";
+import { PaginateResult } from 'mongoose';
+import { IPagination } from '../types/pagination';
 
 function formatPaginationResult<T>(result: PaginateResult<T>): {
   records: T[];
@@ -19,8 +19,8 @@ function formatPaginationResult<T>(result: PaginateResult<T>): {
 
   // Return the formatted records and pagination details
   return {
-    records: result.docs.map((record) =>
-      record.toJSON ? record.toJSON() : record
+    records: result.docs.map(record =>
+      record.toJSON ? record.toJSON() : record,
     ),
     pagination,
   };

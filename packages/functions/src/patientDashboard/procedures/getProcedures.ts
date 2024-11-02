@@ -1,17 +1,17 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import mongoose from "mongoose";
-import Patient from "@evara-backend/core/src/models/Patients";
-import MasterProcedure from "@evara-backend/core/src/models/patientDashboard/procedure/MasterProcedure";
-import MedicalProcedure from "@evara-backend/core/src/models/patientDashboard/procedure/MedicalProcedure";
-import PatientProcedures from "@evara-backend/core/src/models/patientDashboard/procedure/PatientProcedure";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { IPaginateOptions } from '@evara-backend/core/src/lib/types/pagination';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import Doctors from '@evara-backend/core/src/models/mastersDashboard/Doctors';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import mongoose from 'mongoose';
+import Patient from '@evara-backend/core/src/models/Patients';
+import MasterProcedure from '@evara-backend/core/src/models/patientDashboard/procedure/MasterProcedure';
+import MedicalProcedure from '@evara-backend/core/src/models/patientDashboard/procedure/MedicalProcedure';
+import PatientProcedures from '@evara-backend/core/src/models/patientDashboard/procedure/PatientProcedure';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -24,7 +24,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Extract query string parameters
     const params = event.queryStringParameters || {};
     // console.log("Params", params);
-    const { startDate, endDate, page = "1", limit = "10", ...filters } = params;
+    const { startDate, endDate, page = '1', limit = '10', ...filters } = params;
 
     // Construct the query object
     let query: any = {
@@ -58,15 +58,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     //Add populate fields
     options.populate = [
       {
-        path: "doctor",
-        select: "firstName lastName desgination",
+        path: 'doctor',
+        select: 'firstName lastName desgination',
         model: Doctors.modelName,
       },
       {
-        path: "procedure",
+        path: 'procedure',
         model: MasterProcedure.modelName,
         populate: {
-          path: "procedure",
+          path: 'procedure',
           model: MedicalProcedure.modelName,
         },
       },
@@ -85,7 +85,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }).lean();
 
     if (!patient) {
-      throw new ErrorMessage(404, "Patient not found");
+      throw new ErrorMessage(404, 'Patient not found');
     }
 
     if (filters.date) {
@@ -103,22 +103,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
     }
 
-    console.log("Options", options);
-    console.log("Query", query);
+    console.log('Options', options);
+    console.log('Query', query);
 
     // Filtering by specific ID
     if (filters.procedureId) {
       query._id = new mongoose.Types.ObjectId(filters.procedureId);
     }
 
-    const paginate = JSON.parse(params.paginate || "false");
+    const paginate = JSON.parse(params.paginate || 'false');
 
     if (paginate) {
       // Fetching the appointments with pagination
       const result = await PatientProcedures.paginate(query, options);
       const { records, pagination } = formatPaginationResult(result);
 
-      return successResponse("Success", {
+      return successResponse('Success', {
         records,
         pagination,
       });
@@ -126,7 +126,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       // Fetching the appointments without pagination
       const records = await PatientProcedures.find(query).lean();
 
-      return successResponse("Success", { records: records, pagination: {} });
+      return successResponse('Success', { records: records, pagination: {} });
     }
   } catch (error) {
     return errorResponse(error);

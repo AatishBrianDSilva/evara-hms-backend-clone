@@ -1,13 +1,13 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Patient from "@evara-backend/core/models/Patients";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import Patient from '@evara-backend/core/models/Patients';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
 
-import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { IPaginateOptions } from '@evara-backend/core/src/lib/types/pagination';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -23,9 +23,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const {
       startDate,
       endDate,
-      page = "1",
-      limit = "10",
-      searchQuery = "",
+      page = '1',
+      limit = '10',
+      searchQuery = '',
     } = params;
 
     // Construct the query object
@@ -48,14 +48,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Add search conditions
     if (searchQuery) {
       query.$or = [
-        { patientId: new RegExp(searchQuery, "i") },
-        { firstName: new RegExp(searchQuery, "i") },
-        { lastName: new RegExp(searchQuery, "i") },
-        { mobile: new RegExp(searchQuery, "i") },
+        { patientId: new RegExp(searchQuery, 'i') },
+        { firstName: new RegExp(searchQuery, 'i') },
+        { lastName: new RegExp(searchQuery, 'i') },
+        { mobile: new RegExp(searchQuery, 'i') },
       ];
     }
 
-    const paginate = JSON.parse(params.paginate || "false");
+    const paginate = JSON.parse(params.paginate || 'false');
 
     if (paginate) {
       // Pagination options
@@ -76,14 +76,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       // console.log("Pagination: ", pagination);
 
       // Return success response with pagination info
-      return successResponse("Patients fetched successfully", {
+      return successResponse('Patients fetched successfully', {
         records,
         pagination,
       });
     } else {
       const data = await Patient.find(query).lean();
 
-      return successResponse("Success", { records: data });
+      return successResponse('Success', { records: data });
     }
   } catch (error) {
     return errorResponse(error);

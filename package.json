@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "sst dev ",
     "build": "sst build ",
+    "format": "prettier --write \"packages/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "deploy": "sst deploy ",
     "remove": "sst remove ",
     "console": "sst console ",
     "typecheck": "tsc --noEmit",
-    "generate-docs": "npx @redocly/cli build-docs docs/api-schema.yaml --config docs/redocly.yaml -o docs/index.html"
+    "generate-docs": "npx @redocly/cli build-docs docs/api-schema.yaml --config docs/redocly.yaml -o docs/index.html",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@sparticuz/chromium": "^123.0.1",
@@ -18,6 +20,9 @@
     "@types/lodash": "^4.17.4",
     "aws-cdk-lib": "2.124.0",
     "constructs": "10.3.0",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
     "sst": "^2.40.6",
     "typescript": "^5.3.3"
   },

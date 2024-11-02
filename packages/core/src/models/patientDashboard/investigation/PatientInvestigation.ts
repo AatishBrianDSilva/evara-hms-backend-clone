@@ -1,5 +1,5 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
 interface IInvestigationResult extends Document {
   testName: string;
@@ -18,8 +18,8 @@ const InvestigationResultSchema: Schema = new Schema<IInvestigationResult>(
     notes: String,
   },
   {
-    timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  }
+    timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
+  },
 );
 
 interface IPatientInvestigation extends Document {
@@ -42,37 +42,39 @@ const PatientInvestigationSchema: Schema = new Schema(
     caseId: { type: String, index: true },
     patient: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Patient",
+      ref: 'Patient',
       required: true,
       index: true,
     },
     patientCode: { type: String, required: true },
     doctor: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "doctors",
+      ref: 'doctors',
     },
     investigation: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "MasterInvestigations",
+      ref: 'MasterInvestigations',
       required: true,
     },
     result: InvestigationResultSchema,
     date: { type: Date, default: Date.now },
-    status: { type: String, required: true, default: "Scheduled" },
+    status: { type: String, required: true, default: 'Scheduled' },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 PatientInvestigationSchema.plugin(paginate);
 
-export interface PatientInvestigationDocument extends Document, IPatientInvestigation {}
+export interface PatientInvestigationDocument
+  extends Document,
+    IPatientInvestigation {}
 
 const PatientInvestigation = mongoose.model<
   PatientInvestigationDocument,
   PaginateModel<PatientInvestigationDocument>
->("PatientInvestigations", PatientInvestigationSchema);
+>('PatientInvestigations', PatientInvestigationSchema);
 
 export default PatientInvestigation;
 
@@ -201,28 +203,29 @@ interface IEndometrialAssessmentDetails extends Document {
       ET: number;
       medications?: string;
       remarks?: string;
-    }
+    },
   ];
   impression: string;
   doctorName: string;
   doctorRemarks: string;
 }
-export const EndometrialAssessmentDetailsSchema = new Schema<IEndometrialAssessmentDetails>({
-  indication: { type: String, required: true },
-  lmpDate: { type: Date, required: true },
-  assessement: [
-    {
-      date: { type: Date, required: true },
-      day: { type: Number, required: true },
-      ET: { type: Number, required: true },
-      medications: String,
-      remarks: String,
-    },
-  ],
-  impression: { type: String, required: true },
-  doctorName: { type: String, required: true },
-  doctorRemarks: { type: String, required: true },
-});
+export const EndometrialAssessmentDetailsSchema =
+  new Schema<IEndometrialAssessmentDetails>({
+    indication: { type: String, required: true },
+    lmpDate: { type: Date, required: true },
+    assessement: [
+      {
+        date: { type: Date, required: true },
+        day: { type: Number, required: true },
+        ET: { type: Number, required: true },
+        medications: String,
+        remarks: String,
+      },
+    ],
+    impression: { type: String, required: true },
+    doctorName: { type: String, required: true },
+    doctorRemarks: { type: String, required: true },
+  });
 
 //5. Early Pregnancy Scan
 interface IEarlyPregnancyScanDetails extends Document {
@@ -256,34 +259,35 @@ interface IEarlyPregnancyScanDetails extends Document {
   impression: string;
   doctorName: string;
 }
-export const EarlyPregnancyScanDetailsSchema = new Schema<IEarlyPregnancyScanDetails>({
-  scanType: { type: String, required: true },
-  lmpDate: { type: Date, required: true },
-  embryoTransferDate: { type: Date, required: true },
-  requestedDate: { type: Date, required: true },
-  dateOfScan: { type: Date, required: true },
-  dateOfConception: { type: Date, required: true },
-  EDDByLMP: { type: String, required: true },
-  EDDByScan: { type: String, required: true },
-  LMPGestationalAge: { type: String, required: true },
-  modeOfConception: { type: String, required: true },
-  menstualCycle: { type: String, required: true },
-  bloodGroup: { type: String, required: true },
-  bmi: { type: String, required: true },
-  obstetricHistory: { type: String, required: true },
-  routeOfScan: { type: String, required: true },
-  machineModel: { type: String, required: true },
-  view: { type: String, required: true },
-  pregnancySite: { type: String, required: true },
-  gestationalSac: { type: String, required: true },
-  yolkSac: { type: String, required: true },
-  fetalPole: { type: String, required: true },
-  CRL: { type: String, required: true },
-  cardiacActivity: { type: String, required: true },
-  cervicalLength: { type: String, required: true },
-  rightOvary: { type: String, required: true },
-  leftOvary: { type: String, required: true },
-  earlyOutcome: { type: String, required: true },
-  impression: { type: String, required: true },
-  doctorName: { type: String, required: true },
-});
+export const EarlyPregnancyScanDetailsSchema =
+  new Schema<IEarlyPregnancyScanDetails>({
+    scanType: { type: String, required: true },
+    lmpDate: { type: Date, required: true },
+    embryoTransferDate: { type: Date, required: true },
+    requestedDate: { type: Date, required: true },
+    dateOfScan: { type: Date, required: true },
+    dateOfConception: { type: Date, required: true },
+    EDDByLMP: { type: String, required: true },
+    EDDByScan: { type: String, required: true },
+    LMPGestationalAge: { type: String, required: true },
+    modeOfConception: { type: String, required: true },
+    menstualCycle: { type: String, required: true },
+    bloodGroup: { type: String, required: true },
+    bmi: { type: String, required: true },
+    obstetricHistory: { type: String, required: true },
+    routeOfScan: { type: String, required: true },
+    machineModel: { type: String, required: true },
+    view: { type: String, required: true },
+    pregnancySite: { type: String, required: true },
+    gestationalSac: { type: String, required: true },
+    yolkSac: { type: String, required: true },
+    fetalPole: { type: String, required: true },
+    CRL: { type: String, required: true },
+    cardiacActivity: { type: String, required: true },
+    cervicalLength: { type: String, required: true },
+    rightOvary: { type: String, required: true },
+    leftOvary: { type: String, required: true },
+    earlyOutcome: { type: String, required: true },
+    impression: { type: String, required: true },
+    doctorName: { type: String, required: true },
+  });

@@ -1,20 +1,20 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
 import {
   EPatientBillingEstimationStatus,
   PatientBillingEstimation,
-} from "@evara-backend/core/models/patientDashboard/Billings/PatientBillingEstimation";
+} from '@evara-backend/core/models/patientDashboard/Billings/PatientBillingEstimation';
 import {
   EPatientBillingStatus,
   PatientBilling,
-} from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
-import SNSService from "@evara-backend/core/src/lib/aws/sns";
-import Patient from "@evara-backend/core/src/models/Patients";
-import Cases from "@evara-backend/core/src/models/Cases";
+} from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
+import SNSService from '@evara-backend/core/src/lib/aws/sns';
+import Patient from '@evara-backend/core/src/models/Patients';
+import Cases from '@evara-backend/core/src/models/Cases';
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -27,7 +27,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
   try {
     if (event.body == null) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     const { estimations } = JSON.parse(event.body);
@@ -39,12 +39,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Group estimations by service type
     for (const estimationId of estimations) {
-      const estimation = await PatientBillingEstimation.findById(
-        estimationId
-      ).lean();
+      const estimation =
+        await PatientBillingEstimation.findById(estimationId).lean();
 
       if (!estimation) {
-        throw new ErrorMessage(404, "Estimation not found");
+        throw new ErrorMessage(404, 'Estimation not found');
       }
 
       const serviceType = estimation.serviceType;
@@ -117,13 +116,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           PatientBillingEstimation.findByIdAndUpdate(
             estimation._id,
             { status: EPatientBillingEstimationStatus.Inactive },
-            { session: session }
-          )
-        )
+            { session: session },
+          ),
+        ),
       );
     }
 
-    console.log("Automate service generation", automateServiceGeneration);
+    console.log('Automate service generation', automateServiceGeneration);
 
     const patient = await Patient.findOne({ patientId: patientCode }).lean();
     const cases = await Cases.findOne({ patientId: patient?.patientId });
@@ -146,7 +145,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     await session.commitTransaction();
-    return successResponse("Billing generated successfully");
+    return successResponse('Billing generated successfully');
   } catch (error) {
     await session.abortTransaction();
     return errorResponse(error);

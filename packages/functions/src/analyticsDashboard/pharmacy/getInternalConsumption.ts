@@ -1,11 +1,11 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { InternalConsumption } from "@evara-backend/core/src/models/pharmacyDashboard/InternalConsumption";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
-import ErrorMessage from "@evara-backend/core/lib/utils/ErrorMessage";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { InternalConsumption } from '@evara-backend/core/src/models/pharmacyDashboard/InternalConsumption';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
+import ErrorMessage from '@evara-backend/core/lib/utils/ErrorMessage';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -13,20 +13,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
     const {
-      page = "1",
-      limit = "25",
+      page = '1',
+      limit = '25',
       saleStartDate, // Start date for filtering
       saleEndDate, // End date for filtering
     } = params;
 
-    console.log("Params", params);
+    console.log('Params', params);
 
     // Calculate skip and limit for pagination
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
@@ -48,68 +48,71 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     // Log the match condition for debugging
-    console.log("Match Condition for Date Filtering: ", matchCondition);
+    console.log('Match Condition for Date Filtering: ', matchCondition);
 
     // Aggregation pipeline for internal consumption report
     const aggregationPipeline = [
       { $match: matchCondition }, // Apply date filter if provided
-      { $unwind: "$items" },
-      { $unwind: "$items.batches" },
+      { $unwind: '$items' },
+      { $unwind: '$items.batches' },
       {
         $lookup: {
-          from: "pharmacystocks", // Collection name for PharmacyStock
-          localField: "items.item",
-          foreignField: "_id",
-          as: "pharmacyStock",
+          from: 'pharmacystocks', // Collection name for PharmacyStock
+          localField: 'items.item',
+          foreignField: '_id',
+          as: 'pharmacyStock',
         },
       },
-      { $unwind: { path: "$pharmacyStock", preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$pharmacyStock', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
-          from: "drugitems", // Collection name for DrugItem
-          localField: "pharmacyStock.item",
-          foreignField: "_id",
-          as: "drugItem",
+          from: 'drugitems', // Collection name for DrugItem
+          localField: 'pharmacyStock.item',
+          foreignField: '_id',
+          as: 'drugItem',
         },
       },
-      { $unwind: { path: "$drugItem", preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$drugItem', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
-          from: "drugcategories", // Collection name for DrugCategory
-          localField: "drugItem.category",
-          foreignField: "_id",
-          as: "category",
+          from: 'drugcategories', // Collection name for DrugCategory
+          localField: 'drugItem.category',
+          foreignField: '_id',
+          as: 'category',
         },
       },
-      { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
-          from: "druglocations", // Collection name for DrugLocation
-          localField: "items.transferFrom.location",
-          foreignField: "_id",
-          as: "location",
+          from: 'druglocations', // Collection name for DrugLocation
+          localField: 'items.transferFrom.location',
+          foreignField: '_id',
+          as: 'location',
         },
       },
-      { $unwind: { path: "$location", preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$location', preserveNullAndEmptyArrays: true } },
       {
         $addFields: {
-          centre: { $concat: ["$clinicId", "$branchId"] },
-          pharmacyDrugName: "$drugItem.name",
-          pharmacyDrugCode: "$drugItem.code",
-          locationName: "$location.location",
-          locationCode: { $ifNull: ["$location._id", "N/A"] },
-          category: { $ifNull: ["$category.name", "N/A"] },
-          categoryCode: { $ifNull: ["$category._id", "N/A"] },
-          quantity: "$items.batches.deductedQuantity",
-          unitCost: "$pharmacyStock.sellPrice",
+          centre: { $concat: ['$clinicId', '$branchId'] },
+          pharmacyDrugName: '$drugItem.name',
+          pharmacyDrugCode: '$drugItem.code',
+          locationName: '$location.location',
+          locationCode: { $ifNull: ['$location._id', 'N/A'] },
+          category: { $ifNull: ['$category.name', 'N/A'] },
+          categoryCode: { $ifNull: ['$category._id', 'N/A'] },
+          quantity: '$items.batches.deductedQuantity',
+          unitCost: '$pharmacyStock.sellPrice',
           totalCost: {
-            $multiply: ["$items.batches.deductedQuantity", "$pharmacyStock.sellPrice"],
+            $multiply: [
+              '$items.batches.deductedQuantity',
+              '$pharmacyStock.sellPrice',
+            ],
           },
           tax: 0, // Assuming tax is 0 for now
           totalTax: 0, // Assuming total tax is 0 for now
-          allocDate: "$date",
-          addedBy: "$createdBy",
-          remarks: { $ifNull: ["$items.notes", "N/A"] },
+          allocDate: '$date',
+          addedBy: '$createdBy',
+          remarks: { $ifNull: ['$items.notes', 'N/A'] },
         },
       },
       {
@@ -141,7 +144,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // console.log("Aggregation Pipeline: ", JSON.stringify(aggregationPipeline, null, 2));
 
     // Fetch aggregated internal consumption data
-    const internalConsumptionReport = await InternalConsumption.aggregate(aggregationPipeline);
+    const internalConsumptionReport =
+      await InternalConsumption.aggregate(aggregationPipeline);
 
     // Log the report data for debugging
     // console.log("Internal Consumption Report Data: ", internalConsumptionReport);
@@ -167,10 +171,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Log the final result for debugging
     // console.log("Final Internal Consumption Report with Pagination: ", paginatedResult);
 
-    return successResponse("Internal Consumption Report fetched successfully", paginatedResult);
+    return successResponse(
+      'Internal Consumption Report fetched successfully',
+      paginatedResult,
+    );
   } catch (error) {
     // Log the error details for debugging
-    console.error("Error in internalConsumptionReport API: ", error);
+    console.error('Error in internalConsumptionReport API: ', error);
     return errorResponse(error);
   }
 };

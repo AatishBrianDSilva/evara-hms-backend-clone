@@ -1,29 +1,29 @@
 import {
   decodeToken,
   verifyToken,
-} from "@evara-backend/core/src/lib/utils/auth";
-import { EUserRole } from "@evara-backend/core/src/models/User";
+} from '@evara-backend/core/src/lib/utils/auth';
+import { EUserRole } from '@evara-backend/core/src/models/User';
 import {
   APIGatewayTokenAuthorizerEvent,
   APIGatewayAuthorizerResult,
-} from "aws-lambda";
+} from 'aws-lambda';
 
 export const main = async (
-  event: APIGatewayTokenAuthorizerEvent
+  event: APIGatewayTokenAuthorizerEvent,
 ): Promise<APIGatewayAuthorizerResult> => {
-  const token = event.authorizationToken.replace("Bearer ", "");
+  const token = event.authorizationToken.replace('Bearer ', '');
 
   // console.log("Method ARN", event.methodArn);
 
   try {
     const verified = await verifyToken(token);
     if (!verified) {
-      throw new Error("Verification failed");
+      throw new Error('Verification failed');
     }
 
     const decoded = decodeToken(token);
     if (!decoded || !decoded.role) {
-      throw new Error("Invalid token or missing role information");
+      throw new Error('Invalid token or missing role information');
     }
 
     const principalId = decoded.sub;
@@ -39,9 +39,9 @@ export const main = async (
       role: decoded.role,
     });
   } catch (error) {
-    console.log("Roles");
-    console.error("Authorization failed:", error);
-    return generatePolicy("user", "Deny", event.methodArn);
+    console.log('Roles');
+    console.error('Authorization failed:', error);
+    return generatePolicy('user', 'Deny', event.methodArn);
   }
 };
 
@@ -49,15 +49,15 @@ function generatePolicy(
   principalId: string,
   effect: string,
   resource: string,
-  data?: Record<string, string>
+  data?: Record<string, string>,
 ): APIGatewayAuthorizerResult {
   return {
     principalId,
     policyDocument: {
-      Version: "2012-10-17",
+      Version: '2012-10-17',
       Statement: [
         {
-          Action: "execute-api:Invoke",
+          Action: 'execute-api:Invoke',
           Effect: effect,
           Resource: resource,
         },
@@ -65,10 +65,10 @@ function generatePolicy(
     },
     context: {
       userId: principalId,
-      branchId: data?.branchId || "",
-      clinicId: data?.clinicId || "",
-      username: data?.username || "",
-      role: data?.role || "",
+      branchId: data?.branchId || '',
+      clinicId: data?.clinicId || '',
+      username: data?.username || '',
+      role: data?.role || '',
     },
   };
 }
@@ -77,10 +77,10 @@ function getPolicyEffect(role: EUserRole, resource: string): string {
   // Extract the permissions for the role and resource
   const rolePermissions = extractRolePermissions(role, resource);
 
-  if (rolePermissions.includes("allow")) {
-    return "Allow";
+  if (rolePermissions.includes('allow')) {
+    return 'Allow';
   }
-  return "Deny";
+  return 'Deny';
 }
 
 function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
@@ -184,7 +184,7 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
       PUT: [EUserRole.Admin, EUserRole.Doctor, EUserRole.Nurse],
       DELETE: [EUserRole.Admin],
     },
-    "cryo-preservations": {
+    'cryo-preservations': {
       GET: [
         EUserRole.Admin,
         EUserRole.Billing,
@@ -197,7 +197,7 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
       PUT: [EUserRole.Admin, EUserRole.Doctor, EUserRole.Nurse],
       DELETE: [EUserRole.Admin],
     },
-    "treatment-cycles": {
+    'treatment-cycles': {
       GET: [
         EUserRole.Admin,
         EUserRole.Billing,
@@ -302,7 +302,7 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
       DELETE: [EUserRole.Admin],
     },
     // PharmacyAPIStack
-    "pharmacy-dashboard": {
+    'pharmacy-dashboard': {
       GET: allRoles,
       POST: [EUserRole.Admin, EUserRole.Billing, EUserRole.PharmacyManager],
       PUT: [EUserRole.Admin, EUserRole.Billing, EUserRole.PharmacyManager],
@@ -311,7 +311,7 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
     },
   };
 
-  const baseResource = resourcePath.split("/")[0];
+  const baseResource = resourcePath.split('/')[0];
   // console.log("Base resource", baseResource);
 
   const allowedRoles = permissions[baseResource]?.[httpMethod] || [
@@ -319,16 +319,16 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
   ];
   // console.log("Allowed roles", allowedRoles);
 
-  return allowedRoles.includes(role) ? ["allow"] : ["deny"];
+  return allowedRoles.includes(role) ? ['allow'] : ['deny'];
 }
 
 function parseMethodArn(methodArn: string) {
-  const parts = methodArn.split(":");
+  const parts = methodArn.split(':');
   const apiGatewayArnPart = parts[5];
-  const apiDetails = apiGatewayArnPart.split("/");
+  const apiDetails = apiGatewayArnPart.split('/');
 
   return {
     httpMethod: apiDetails[2],
-    resourcePath: apiDetails.slice(3).join("/"), // Joins all remaining parts which could be multi-level paths
+    resourcePath: apiDetails.slice(3).join('/'), // Joins all remaining parts which could be multi-level paths
   };
 }

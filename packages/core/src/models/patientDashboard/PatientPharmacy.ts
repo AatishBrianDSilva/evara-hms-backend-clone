@@ -1,6 +1,6 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import pagination from "mongoose-paginate-v2";
-import Patient from "../Patients";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import pagination from 'mongoose-paginate-v2';
+import Patient from '../Patients';
 
 interface IPatientPharmacy extends Document {
   patient: string;
@@ -27,22 +27,22 @@ interface IPatientPharmacy extends Document {
 const detailsSchema = new Schema({
   location: {
     type: Schema.Types.ObjectId,
-    ref: "DrugLocation",
+    ref: 'DrugLocation',
     required: true,
   },
   quantity: { type: Number, required: true, min: 1 },
   batchNumber: { type: String, required: true },
   expiryDate: { type: Date, required: true }, // Added expiry date
-  vendor: { type: Schema.Types.ObjectId, ref: "DrugVendor", required: true }, // Added vendor
+  vendor: { type: Schema.Types.ObjectId, ref: 'DrugVendor', required: true }, // Added vendor
   mrp: { type: Number, required: true }, // Added MRP
   packSize: { type: Number, required: true }, // Added pack size
-  itemId: { type: Schema.Types.ObjectId, ref: "DrugItem", required: false }, // Added itemId
+  itemId: { type: Schema.Types.ObjectId, ref: 'DrugItem', required: false }, // Added itemId
 });
 
 const itemSchema = new Schema({
   stock: {
     type: Schema.Types.ObjectId,
-    ref: "PharmacyStock",
+    ref: 'PharmacyStock',
     required: true,
   },
   details: [detailsSchema],
@@ -54,7 +54,7 @@ const patientPharmacySchema = new Schema(
     branchId: { type: String, required: true, index: true },
     clinicId: { type: String, required: true, index: true },
     item: itemSchema,
-    doctor: { type: Schema.Types.ObjectId, ref: "Doctor", required: true },
+    doctor: { type: Schema.Types.ObjectId, ref: 'Doctor', required: true },
     date: { type: Date, required: true },
     allocatedBy: { type: String, required: true },
   },
@@ -62,26 +62,26 @@ const patientPharmacySchema = new Schema(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
-patientPharmacySchema.virtual("totalQuantity").get(function () {
+patientPharmacySchema.virtual('totalQuantity').get(function () {
   // This function calculates the sum of all quantities in each location detail
   return this.item?.details.reduce((acc, curr) => acc + curr.quantity, 0);
 });
 
 // Virtual field to populate patient data
-patientPharmacySchema.virtual("patientData", {
-  ref: "Patient",
-  localField: "patient",
-  foreignField: "patientId",
+patientPharmacySchema.virtual('patientData', {
+  ref: 'Patient',
+  localField: 'patient',
+  foreignField: 'patientId',
   justOne: true,
 });
 
 patientPharmacySchema.plugin(pagination);
 
-patientPharmacySchema.index({ "item.stock": 1 });
-patientPharmacySchema.index({ "item.details.location": 1 });
+patientPharmacySchema.index({ 'item.stock': 1 });
+patientPharmacySchema.index({ 'item.details.location': 1 });
 patientPharmacySchema.index({ doctor: 1 });
 patientPharmacySchema.index({ patient: 1 });
 
@@ -90,4 +90,4 @@ export interface IPatientPharmacyModel extends Document, IPatientPharmacy {}
 export const PatientPharmacy = mongoose.model<
   IPatientPharmacyModel,
   PaginateModel<IPatientPharmacyModel>
->("PatientPharmacy", patientPharmacySchema);
+>('PatientPharmacy', patientPharmacySchema);

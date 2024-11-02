@@ -1,13 +1,13 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import PatientService from "@evara-backend/core/src/models/patientDashboard/services/PatientService";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import MasterService from "@evara-backend/core/src/models/patientDashboard/services/MasterService";
-import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
-import { publishBillingServiceToSNS } from "@evara-backend/core/src/lib/utils/publishBillingServiceToSNS";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import PatientService from '@evara-backend/core/src/models/patientDashboard/services/PatientService';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import MasterService from '@evara-backend/core/src/models/patientDashboard/services/MasterService';
+import { EPatientBillingServiceType } from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling';
+import { publishBillingServiceToSNS } from '@evara-backend/core/src/lib/utils/publishBillingServiceToSNS';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -19,7 +19,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     if (event.body == null) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     // Parse the body from the event
@@ -29,7 +29,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     data.clinicId = auth.clinicId;
     data.branchId = auth.branchId;
 
-    console.log("Data: ", data);
+    console.log('Data: ', data);
 
     for (let i = 0; i < data.length; i++) {
       data[i].clinicId = auth.clinicId;
@@ -38,7 +38,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const newService = await service.save();
 
       const masterService = await MasterService.findById(
-        newService.service
+        newService.service,
       ).lean();
 
       if (masterService) {
@@ -55,15 +55,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           masterService.cost,
           1,
           auth.clinicId,
-          auth.branchId
+          auth.branchId,
         );
       } else {
-        console.error("Master Service not found");
+        console.error('Master Service not found');
       }
     }
 
     // Return success response
-    return successResponse("service(s) created successfully");
+    return successResponse('service(s) created successfully');
   } catch (error) {
     return errorResponse(error);
   }

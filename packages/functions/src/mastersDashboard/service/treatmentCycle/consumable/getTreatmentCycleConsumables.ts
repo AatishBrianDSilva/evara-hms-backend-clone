@@ -1,18 +1,18 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Patient from "@evara-backend/core/src/models/Patients";
-import DefaultTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/DefaultTreatmentCycle";
-import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle";
-import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
-import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
-import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
-import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
-import { TreatmentCycleConsumable } from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/TreatmentCycleConsumable";
-import { TreatmentCycleStage } from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/TreatmentCycleStage";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import Patient from '@evara-backend/core/src/models/Patients';
+import DefaultTreatmentCycle from '@evara-backend/core/src/models/patientDashboard/treatmentCycle/DefaultTreatmentCycle';
+import MasterTreatmentCycle from '@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle';
+import { PharmacyStock } from '@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock';
+import { DrugItem } from '@evara-backend/core/src/models/pharmacyDashboard/DrugItem';
+import { DrugCategory } from '@evara-backend/core/src/models/pharmacyDashboard/DrugCategory';
+import { DrugType } from '@evara-backend/core/src/models/pharmacyDashboard/DrugType';
+import { TreatmentCycleConsumable } from '@evara-backend/core/src/models/patientDashboard/treatmentCycle/TreatmentCycleConsumable';
+import { TreatmentCycleStage } from '@evara-backend/core/src/models/patientDashboard/treatmentCycle/TreatmentCycleStage';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -27,21 +27,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     };
 
     // Check if the user is an admin
-    const isAdmin = event.queryStringParameters?.isAdmin === "true";
+    const isAdmin = event.queryStringParameters?.isAdmin === 'true';
 
     if (!isAdmin) {
       // Standard user, apply gender filter
       query.active = true;
-      query.gender = { $in: ["both"] };
+      query.gender = { $in: ['both'] };
 
       const patientId = event.queryStringParameters?.patientId;
       if (patientId) {
         const patient = await Patient.findOne({ patientId }).lean();
         if (!patient) {
-          throw new ErrorMessage(404, "Patient not found");
+          throw new ErrorMessage(404, 'Patient not found');
         }
         query.gender = {
-          $in: [patient.gender.toLowerCase(), "both"],
+          $in: [patient.gender.toLowerCase(), 'both'],
         };
       }
     }
@@ -52,23 +52,23 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       //   model: MasterTreatmentCycle.modelName,
       // },
       {
-        path: "stage",
+        path: 'stage',
         model: TreatmentCycleStage.modelName,
       },
       {
-        path: "pharmacyStock",
+        path: 'pharmacyStock',
         model: PharmacyStock.modelName,
         populate: [
           {
-            path: "item",
+            path: 'item',
             model: DrugItem.modelName,
             populate: [
               {
-                path: "category",
+                path: 'category',
                 model: DrugCategory.modelName,
               },
               {
-                path: "type",
+                path: 'type',
                 model: DrugType.modelName,
               },
             ],
@@ -83,7 +83,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       .lean();
 
     // Return success response
-    return successResponse("Success", treatmentCycles);
+    return successResponse('Success', treatmentCycles);
   } catch (error) {
     return errorResponse(error);
   }

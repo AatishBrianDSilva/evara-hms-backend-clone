@@ -1,11 +1,11 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import bcrypt from "bcryptjs";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import { User } from "@evara-backend/core/src/models/User";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import bcrypt from 'bcryptjs';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import { User } from '@evara-backend/core/src/models/User';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -15,11 +15,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Connect to MongoDB
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     if (event.body == null) {
-      throw new ErrorMessage(400, "Update data is required");
+      throw new ErrorMessage(400, 'Update data is required');
     }
 
     // Parse the body from the event
@@ -27,7 +27,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Validate required fields
     if (!data.userId) {
-      throw new ErrorMessage(400, "User ID is required");
+      throw new ErrorMessage(400, 'User ID is required');
     }
 
     const updateFields: Partial<{
@@ -39,7 +39,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (data.username) {
       const existingUser = await User.findOne({ username: data.username });
       if (existingUser && existingUser._id.toString() !== data.userId) {
-        throw new ErrorMessage(409, "Username already exists");
+        throw new ErrorMessage(409, 'Username already exists');
       }
       updateFields.username = data.username;
     }
@@ -47,7 +47,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (data.email) {
       const existingUser = await User.findOne({ email: data.email });
       if (existingUser && existingUser._id.toString() !== data.userId) {
-        throw new ErrorMessage(409, "Email already exists");
+        throw new ErrorMessage(409, 'Email already exists');
       }
       updateFields.email = data.email;
     }
@@ -62,11 +62,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     if (!updatedUser) {
-      throw new ErrorMessage(404, "Data not updated");
+      throw new ErrorMessage(404, 'Data not updated');
     }
 
     const responseData = {
@@ -77,7 +77,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       phone: updatedUser.phone,
     };
 
-    return successResponse("User updated successfully", responseData);
+    return successResponse('User updated successfully', responseData);
   } catch (error) {
     return errorResponse(error);
   }

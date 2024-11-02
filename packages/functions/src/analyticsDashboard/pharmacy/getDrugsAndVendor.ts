@@ -1,11 +1,11 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
-import ErrorMessage from "@evara-backend/core/lib/utils/ErrorMessage";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { DrugItem } from '@evara-backend/core/src/models/pharmacyDashboard/DrugItem';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
+import ErrorMessage from '@evara-backend/core/lib/utils/ErrorMessage';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -13,14 +13,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     await connectMongoDb();
 
     // Extract query string parameters for pagination and filtering
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "25", drugName = "" } = params;
+    const { page = '1', limit = '25', drugName = '' } = params;
 
     // Calculate skip and limit for pagination
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
@@ -32,7 +32,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     };
 
     if (drugName) {
-      matchCondition.name = { $regex: new RegExp(drugName, "i") }; // Case-insensitive partial match
+      matchCondition.name = { $regex: new RegExp(drugName, 'i') }; // Case-insensitive partial match
     }
 
     // Aggregation pipeline
@@ -42,123 +42,134 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
       {
         $lookup: {
-          from: "drugtypes", // Collection name for DrugType
-          localField: "type",
-          foreignField: "_id",
-          as: "drugType",
+          from: 'drugtypes', // Collection name for DrugType
+          localField: 'type',
+          foreignField: '_id',
+          as: 'drugType',
         },
       },
       {
         $lookup: {
-          from: "drugcategories", // Collection name for DrugCategory
-          localField: "category",
-          foreignField: "_id",
-          as: "drugCategory",
+          from: 'drugcategories', // Collection name for DrugCategory
+          localField: 'category',
+          foreignField: '_id',
+          as: 'drugCategory',
         },
       },
       {
         $lookup: {
-          from: "drugmanufacturers", // Collection name for DrugManufacturer
-          localField: "manufacturer",
-          foreignField: "_id",
-          as: "drugManufacturer",
+          from: 'drugmanufacturers', // Collection name for DrugManufacturer
+          localField: 'manufacturer',
+          foreignField: '_id',
+          as: 'drugManufacturer',
         },
       },
       {
         $lookup: {
-          from: "pharmacystocks", // Collection name for PharmacyStock
-          localField: "_id",
-          foreignField: "item",
-          as: "pharmacyStock",
+          from: 'pharmacystocks', // Collection name for PharmacyStock
+          localField: '_id',
+          foreignField: 'item',
+          as: 'pharmacyStock',
         },
       },
       {
         $addFields: {
           drugCategory: {
             $cond: {
-              if: { $eq: [{ $arrayElemAt: ["$drugCategory.name", 0] }, null] },
-              then: "N/A",
-              else: { $arrayElemAt: ["$drugCategory.name", 0] },
+              if: { $eq: [{ $arrayElemAt: ['$drugCategory.name', 0] }, null] },
+              then: 'N/A',
+              else: { $arrayElemAt: ['$drugCategory.name', 0] },
             },
           },
           categoryCode: {
             $cond: {
-              if: { $eq: [{ $arrayElemAt: ["$drugCategory._id", 0] }, null] },
-              then: "N/A",
-              else: { $arrayElemAt: ["$drugCategory._id", 0] },
+              if: { $eq: [{ $arrayElemAt: ['$drugCategory._id', 0] }, null] },
+              then: 'N/A',
+              else: { $arrayElemAt: ['$drugCategory._id', 0] },
             },
           },
           drugType: {
             $cond: {
-              if: { $eq: [{ $arrayElemAt: ["$drugType.name", 0] }, null] },
-              then: "N/A",
-              else: { $arrayElemAt: ["$drugType.name", 0] },
+              if: { $eq: [{ $arrayElemAt: ['$drugType.name', 0] }, null] },
+              then: 'N/A',
+              else: { $arrayElemAt: ['$drugType.name', 0] },
             },
           },
           typeCode: {
             $cond: {
-              if: { $eq: [{ $arrayElemAt: ["$drugType._id", 0] }, null] },
-              then: "N/A",
-              else: { $arrayElemAt: ["$drugType._id", 0] },
+              if: { $eq: [{ $arrayElemAt: ['$drugType._id', 0] }, null] },
+              then: 'N/A',
+              else: { $arrayElemAt: ['$drugType._id', 0] },
             },
           },
           drugCompany: {
             $cond: {
-              if: { $eq: [{ $arrayElemAt: ["$drugManufacturer.name", 0] }, null] },
-              then: "N/A",
-              else: { $arrayElemAt: ["$drugManufacturer.name", 0] },
+              if: {
+                $eq: [{ $arrayElemAt: ['$drugManufacturer.name', 0] }, null],
+              },
+              then: 'N/A',
+              else: { $arrayElemAt: ['$drugManufacturer.name', 0] },
             },
           },
           companyCode: {
             $cond: {
-              if: { $eq: [{ $arrayElemAt: ["$drugManufacturer.tin", 0] }, null] },
-              then: "N/A",
-              else: { $arrayElemAt: ["$drugManufacturer.tin", 0] },
+              if: {
+                $eq: [{ $arrayElemAt: ['$drugManufacturer.tin', 0] }, null],
+              },
+              then: 'N/A',
+              else: { $arrayElemAt: ['$drugManufacturer.tin', 0] },
             },
           },
           drugName: {
             $cond: {
-              if: { $or: [{ $eq: ["$name", ""] }, { $eq: ["$name", null] }] },
-              then: "N/A",
-              else: "$name",
+              if: { $or: [{ $eq: ['$name', ''] }, { $eq: ['$name', null] }] },
+              then: 'N/A',
+              else: '$name',
             },
           },
           genericName: {
             $cond: {
-              if: { $or: [{ $eq: ["$genericName", ""] }, { $eq: ["$genericName", null] }] },
-              then: "N/A",
-              else: "$genericName",
+              if: {
+                $or: [
+                  { $eq: ['$genericName', ''] },
+                  { $eq: ['$genericName', null] },
+                ],
+              },
+              then: 'N/A',
+              else: '$genericName',
             },
           },
           drugCode: {
             $cond: {
-              if: { $or: [{ $eq: ["$code", ""] }, { $eq: ["$code", null] }] },
-              then: "N/A",
-              else: "$code",
+              if: { $or: [{ $eq: ['$code', ''] }, { $eq: ['$code', null] }] },
+              then: 'N/A',
+              else: '$code',
             },
           },
           hsnCode: {
             $cond: {
-              if: { $or: [{ $eq: ["$hsnCode", ""] }, { $eq: ["$hsnCode", null] }] },
-              then: "N/A",
-              else: "$hsnCode",
+              if: {
+                $or: [{ $eq: ['$hsnCode', ''] }, { $eq: ['$hsnCode', null] }],
+              },
+              then: 'N/A',
+              else: '$hsnCode',
             },
           },
-          qtyPerPack: { $ifNull: ["$packSize", 0] },
+          qtyPerPack: { $ifNull: ['$packSize', 0] },
           // Updated units calculation to sum quantities correctly
           units: {
             $ifNull: [
               {
                 $sum: {
                   $map: {
-                    input: "$pharmacyStock.batches",
-                    as: "batch",
+                    input: '$pharmacyStock.batches',
+                    as: 'batch',
                     in: {
                       $sum: {
                         $map: {
-                          input: "$$batch.locations",
-                          as: "location",
-                          in: "$$location.quantity", // Sum quantity at each location
+                          input: '$$batch.locations',
+                          as: 'location',
+                          in: '$$location.quantity', // Sum quantity at each location
                         },
                       },
                     },
@@ -170,12 +181,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           },
           tax: {
             $cond: {
-              if: { $or: [{ $eq: ["$taxRate", ""] }, { $eq: ["$taxRate", null] }] },
-              then: "N/A",
-              else: "$taxRate",
+              if: {
+                $or: [{ $eq: ['$taxRate', ''] }, { $eq: ['$taxRate', null] }],
+              },
+              then: 'N/A',
+              else: '$taxRate',
             },
           },
-          updatedAt: { $ifNull: [{ $arrayElemAt: ["$pharmacyStock.updatedAt", 0] }, new Date(0)] }, // Set to epoch date if null
+          updatedAt: {
+            $ifNull: [
+              { $arrayElemAt: ['$pharmacyStock.updatedAt', 0] },
+              new Date(0),
+            ],
+          }, // Set to epoch date if null
         },
       },
       {
@@ -222,11 +240,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     });
 
     // Log the final result for debugging
-    console.log("Final Drug Vendor Report with Pagination: ", paginatedResult);
+    console.log('Final Drug Vendor Report with Pagination: ', paginatedResult);
 
-    return successResponse("Drug Vendor Report fetched successfully", paginatedResult);
+    return successResponse(
+      'Drug Vendor Report fetched successfully',
+      paginatedResult,
+    );
   } catch (error) {
-    console.error("Error in Drug Vendor Report API: ", error);
+    console.error('Error in Drug Vendor Report API: ', error);
     return errorResponse(error);
   }
 };

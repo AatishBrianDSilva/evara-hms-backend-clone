@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
 interface appointmentSource {
   name: string;
@@ -14,12 +14,12 @@ const appointmentSourceSchema = new Schema<appointmentSource>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const AppointmentSource = mongoose.model<appointmentSource>(
-  "AppointmentSource",
-  appointmentSourceSchema
+  'AppointmentSource',
+  appointmentSourceSchema,
 );
 
 export default AppointmentSource;

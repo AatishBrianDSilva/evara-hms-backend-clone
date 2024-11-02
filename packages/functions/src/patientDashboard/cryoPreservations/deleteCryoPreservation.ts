@@ -1,12 +1,12 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import PatientCryoPreservation from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/PatientCryoPreservation";
-import SNSService from "@evara-backend/core/src/lib/aws/sns";
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import PatientCryoPreservation from '@evara-backend/core/src/models/patientDashboard/cryoPreservation/PatientCryoPreservation';
+import SNSService from '@evara-backend/core/src/lib/aws/sns';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -15,22 +15,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     if (event.pathParameters === null) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
     // Safely access the id property
-    const id = event.pathParameters["id"];
+    const id = event.pathParameters['id'];
     if (!id) {
-      throw new ErrorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, 'Id is not provided');
     }
 
-    const cryoPreservation = await PatientCryoPreservation.findByIdAndDelete(
-      id
-    );
+    const cryoPreservation =
+      await PatientCryoPreservation.findByIdAndDelete(id);
 
     if (cryoPreservation) {
       const messagePayload = {
-        action: "Delete",
+        action: 'Delete',
         data: {
           serviceId: cryoPreservation._id,
         },
@@ -41,12 +40,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         TopicArn: process.env.BILLING_ESTIMATION_TOPIC_ARN,
       });
     } else {
-      console.error("cryoPreservation not found");
+      console.error('cryoPreservation not found');
     }
 
     return successResponse(
-      "cryoPreservation Updated successfully",
-      cryoPreservation
+      'cryoPreservation Updated successfully',
+      cryoPreservation,
     );
   } catch (error) {
     return errorResponse(error);

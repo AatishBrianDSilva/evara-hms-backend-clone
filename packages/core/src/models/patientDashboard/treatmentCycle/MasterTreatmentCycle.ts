@@ -1,6 +1,9 @@
-import mongoose, { Document, Schema } from "mongoose";
-import { ETreatmentCycleType, IDefaultTreatmentCycle } from "./DefaultTreatmentCycle";
-import { EGender } from "../investigation/MedicalTests";
+import mongoose, { Document, Schema } from 'mongoose';
+import {
+  ETreatmentCycleType,
+  IDefaultTreatmentCycle,
+} from './DefaultTreatmentCycle';
+import { EGender } from '../investigation/MedicalTests';
 
 interface IMasterTreatmentCycle extends Document {
   clinicId: string;
@@ -26,7 +29,7 @@ const MasterTreatmentCycleSchema: Schema = new Schema({
   treatmentCycle: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: "DefaultTreatmentCycle",
+    ref: 'DefaultTreatmentCycle',
   },
   name: { type: String, required: true, unique: true },
   gender: { type: String, required: true, enum: Object.values(EGender) },
@@ -39,8 +42,8 @@ const MasterTreatmentCycleSchema: Schema = new Schema({
 });
 
 const MasterTreatmentCycle = mongoose.model<IMasterTreatmentCycle>(
-  "MasterTreatmentCycle",
-  MasterTreatmentCycleSchema
+  'MasterTreatmentCycle',
+  MasterTreatmentCycleSchema,
 );
 
 export default MasterTreatmentCycle;

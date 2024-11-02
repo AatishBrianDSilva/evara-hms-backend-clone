@@ -1,8 +1,8 @@
-import { S3, AWSError } from "aws-sdk";
+import { S3, AWSError } from 'aws-sdk';
 
 // Instantiate the S3 object with your desired region.
 const s3 = new S3({
-  region: "ap-south-1",
+  region: 'ap-south-1',
 });
 
 // Define a class to handle interactions with S3.
@@ -27,7 +27,7 @@ class S3Service {
 
       // Ensure the object body is defined.
       if (data.Body) {
-        return data.Body.toString("base64");
+        return data.Body.toString('base64');
       }
     } catch (err) {
       const e = err as AWSError;
@@ -37,7 +37,7 @@ class S3Service {
   }
 
   static async upload(
-    params: S3.PutObjectRequest
+    params: S3.PutObjectRequest,
   ): Promise<S3.ManagedUpload.SendData> {
     try {
       const data = await s3.upload(params).promise();
@@ -81,7 +81,7 @@ class S3Service {
   static async putTag(
     bucket: string,
     objectKey: string,
-    tags: S3.TagSet
+    tags: S3.TagSet,
   ): Promise<void> {
     try {
       const params: S3.PutObjectTaggingRequest = {
@@ -134,8 +134,8 @@ class S3Service {
     bucket: string,
     objectKey: string,
     expires: number = 600,
-    operation: "putObject" | "getObject" = "getObject",
-    filePublic = false
+    operation: 'putObject' | 'getObject' = 'getObject',
+    filePublic = false,
   ): Promise<string> {
     try {
       const params: any = {
@@ -145,7 +145,7 @@ class S3Service {
       };
 
       if (filePublic) {
-        params["ACL"] = "public-read";
+        params['ACL'] = 'public-read';
       }
 
       const res = await s3.getSignedUrlPromise(operation, params);

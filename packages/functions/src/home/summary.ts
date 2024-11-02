@@ -1,14 +1,14 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import Appointments from "@evara-backend/core/src/models/Appointments";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
-import PatientTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/PatientTreatmentCycle";
-import { PatientBilling } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
-import { PatientRefund } from "@evara-backend/core/models/patientDashboard/Billings/PatientRefund";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import Appointments from '@evara-backend/core/src/models/Appointments';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
+import PatientTreatmentCycle from '@evara-backend/core/src/models/patientDashboard/treatmentCycle/PatientTreatmentCycle';
+import { PatientBilling } from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling';
+import { PatientRefund } from '@evara-backend/core/models/patientDashboard/Billings/PatientRefund';
 
 export interface IDateRange {
   startDate: Date;
@@ -21,7 +21,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
     // Connect to MongoDB
     await connectMongoDb();
@@ -29,7 +29,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Extract query string parameters
     const params = event.queryStringParameters || {};
     const { startDate, endDate } = params;
-    console.log("New Params", params);
+    console.log('New Params', params);
 
     const dateRange: IDateRange = {
       startDate: new Date(),
@@ -51,7 +51,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         getPharmacySummary(dateRange, auth.clinicId!, auth.branchId!),
       ]);
 
-    return successResponse("Success", {
+    return successResponse('Success', {
       appointment: appointmentData,
       treatment: treatmentData,
       billing: billingData,
@@ -65,13 +65,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 const getAppointmentSummary = async (
   dateRange: IDateRange,
   clinicId: string,
-  branchId: string
+  branchId: string,
 ) => {
   const statusMap = {
-    Scheduled: { color: "info", label: "Scheduled" },
-    Reported: { color: "warning", label: "Reported" },
-    Completed: { color: "success", label: "Completed" },
-    Cancelled: { color: "error", label: "Cancelled" },
+    Scheduled: { color: 'info', label: 'Scheduled' },
+    Reported: { color: 'warning', label: 'Reported' },
+    Completed: { color: 'success', label: 'Completed' },
+    Cancelled: { color: 'error', label: 'Cancelled' },
   };
 
   const data = await Appointments.aggregate([
@@ -87,7 +87,7 @@ const getAppointmentSummary = async (
     },
     {
       $group: {
-        _id: "$status",
+        _id: '$status',
         count: { $sum: 1 },
       },
     },
@@ -96,19 +96,19 @@ const getAppointmentSummary = async (
         _id: null,
         statuses: {
           $push: {
-            status: "$_id",
-            count: "$count",
+            status: '$_id',
+            count: '$count',
           },
         },
-        total: { $sum: "$count" },
+        total: { $sum: '$count' },
       },
     },
   ]);
 
   const dataResult = data.length > 0 ? data[0] : { statuses: [], total: 0 };
 
-  const badges = Object.keys(statusMap).map((status) => {
-    const found = dataResult.statuses.find((d) => d.status === status);
+  const badges = Object.keys(statusMap).map(status => {
+    const found = dataResult.statuses.find(d => d.status === status);
     return {
       color: statusMap[status].color,
       count: found ? found.count : 0,
@@ -126,13 +126,13 @@ const getAppointmentSummary = async (
 
 const getTreatmentsSummary = async (
   dateRange: IDateRange,
-  clinicId: string
+  clinicId: string,
 ) => {
   const statusMap = {
-    Scheduled: { color: "info", label: "Scheduled" },
-    "In-Progress": { color: "warning", label: "In-Progress" },
-    Completed: { color: "success", label: "Completed" },
-    Pending: { color: "error", label: "Pending" },
+    Scheduled: { color: 'info', label: 'Scheduled' },
+    'In-Progress': { color: 'warning', label: 'In-Progress' },
+    Completed: { color: 'success', label: 'Completed' },
+    Pending: { color: 'error', label: 'Pending' },
   };
 
   const data = await PatientTreatmentCycle.aggregate([
@@ -147,7 +147,7 @@ const getTreatmentsSummary = async (
     },
     {
       $group: {
-        _id: "$status",
+        _id: '$status',
         count: { $sum: 1 },
       },
     },
@@ -156,19 +156,19 @@ const getTreatmentsSummary = async (
         _id: null,
         statuses: {
           $push: {
-            status: "$_id",
-            count: "$count",
+            status: '$_id',
+            count: '$count',
           },
         },
-        total: { $sum: "$count" },
+        total: { $sum: '$count' },
       },
     },
   ]);
 
   const dataResult = data.length > 0 ? data[0] : { statuses: [], total: 0 };
 
-  const badges = Object.keys(statusMap).map((status) => {
-    const found = dataResult.statuses.find((d) => d.status === status);
+  const badges = Object.keys(statusMap).map(status => {
+    const found = dataResult.statuses.find(d => d.status === status);
     return {
       color: statusMap[status].color,
       count: found ? found.count : 0,
@@ -436,22 +436,22 @@ const getTreatmentsSummary = async (
 const getBillingsSummary = async (
   dateRange: IDateRange,
   clinicId: string,
-  branchId: string
+  branchId: string,
 ) => {
   // Initialize status and payment method maps
   const statusMap = {
-    Paid: { color: "success", label: "Paid" },
-    Unpaid: { color: "warning", label: "Pending" },
-    Discount: { color: "primary", label: "Discount" },
-    Refunded: { color: "error", label: "Refunded" },
+    Paid: { color: 'success', label: 'Paid' },
+    Unpaid: { color: 'warning', label: 'Pending' },
+    Discount: { color: 'primary', label: 'Discount' },
+    Refunded: { color: 'error', label: 'Refunded' },
   };
 
   const paymentMethodColorMap = {
-    Cash: "info",
-    UPI: "warning",
-    Online: "success",
-    CreditCard: "error",
-    BankTransfer: "info",
+    Cash: 'info',
+    UPI: 'warning',
+    Online: 'success',
+    CreditCard: 'error',
+    BankTransfer: 'info',
   };
 
   // Initialize methods object
@@ -474,16 +474,16 @@ const getBillingsSummary = async (
   const paymentsData = await PatientBilling.find({
     clinicId,
     branchId,
-    "payments.paymentDate": {
+    'payments.paymentDate': {
       $gte: dateRange.startDate,
       $lte: dateRange.endDate,
     },
-  }).select("payments");
+  }).select('payments');
 
   const paymentsInRange = [];
-  paymentsData.forEach((bill) => {
+  paymentsData.forEach(bill => {
     const payments = bill.payments || [];
-    payments.forEach((payment) => {
+    payments.forEach(payment => {
       if (
         payment.paymentDate >= dateRange.startDate &&
         payment.paymentDate <= dateRange.endDate
@@ -509,14 +509,14 @@ const getBillingsSummary = async (
   const refundsData = await PatientRefund.find({
     clinicId,
     branchId,
-    "refundDetails.refundDate": {
+    'refundDetails.refundDate': {
       $gte: dateRange.startDate,
       $lte: dateRange.endDate,
     },
-  }).select("refundDetails");
+  }).select('refundDetails');
 
-  console.log("Refunds Data:", refundsData);
-  refundsData.forEach((refund) => {
+  console.log('Refunds Data:', refundsData);
+  refundsData.forEach(refund => {
     const detail = refund.refundDetails;
     if (
       detail.refundDate >= dateRange.startDate &&
@@ -537,7 +537,7 @@ const getBillingsSummary = async (
   });
 
   // Step 3: Calculate net amounts per method
-  Object.keys(methods).forEach((method) => {
+  Object.keys(methods).forEach(method => {
     methods[method].netAmount =
       methods[method].totalPaid - methods[method].totalRefunded;
   });
@@ -546,29 +546,29 @@ const getBillingsSummary = async (
   const pendingBills = await PatientBilling.find({
     clinicId,
     branchId,
-    status: "Pending",
+    status: 'Pending',
     createdAt: {
       $gte: dateRange.startDate,
       $lte: dateRange.endDate,
     },
-  }).select("amount discount payments");
+  }).select('amount discount payments');
 
   totalBills = pendingBills.length;
 
-  pendingBills.forEach((bill) => {
+  pendingBills.forEach(bill => {
     const totalDue = bill.amount - (bill.discount || 0);
     totalDiscount += bill.discount || 0;
     const totalPaidForBill = (bill.payments || []).reduce(
       (sum, payment) => sum + payment.amount,
-      0
+      0,
     );
     const pendingAmount = totalDue - totalPaidForBill;
     totalPending += pendingAmount;
   });
 
   // Step 5: Prepare payment badges
-  const paymentBadges = Object.keys(methods).map((method) => ({
-    color: paymentMethodColorMap[method] || "primary",
+  const paymentBadges = Object.keys(methods).map(method => ({
+    color: paymentMethodColorMap[method] || 'primary',
     count: methods[method].netAmount.toFixed(2),
     label: method,
   }));
@@ -608,7 +608,7 @@ const getBillingsSummary = async (
     totalPending: totalPending.toFixed(2),
   };
 
-  console.log("Response:", response);
+  console.log('Response:', response);
 
   return response;
 };
@@ -616,15 +616,15 @@ const getBillingsSummary = async (
 const getPharmacySummary = async (
   dateRange: IDateRange,
   clinicId: string,
-  branchId: string
+  branchId: string,
 ) => {
   const data = await PatientBilling.aggregate([
     {
       $match: {
         clinicId,
         branchId,
-        billType: "Pharmacy", // Only include Pharmacy bills
-        status: "Paid", // Only include paid bills
+        billType: 'Pharmacy', // Only include Pharmacy bills
+        status: 'Paid', // Only include paid bills
         createdAt: {
           $gte: dateRange.startDate,
           $lte: dateRange.endDate,
@@ -639,11 +639,11 @@ const getPharmacySummary = async (
             $subtract: [
               {
                 $add: [
-                  { $ifNull: ["$amount", 0] }, // Ensure amount exists
-                  { $ifNull: ["$tax", 0] }, // Ensure tax exists
+                  { $ifNull: ['$amount', 0] }, // Ensure amount exists
+                  { $ifNull: ['$tax', 0] }, // Ensure tax exists
                 ],
               },
-              { $ifNull: ["$discount", 0] }, // Ensure discount exists
+              { $ifNull: ['$discount', 0] }, // Ensure discount exists
             ],
           },
         },
@@ -652,11 +652,11 @@ const getPharmacySummary = async (
             $cond: [
               {
                 $and: [
-                  { $gte: ["$refundDetails.refundDate", dateRange.startDate] },
-                  { $lte: ["$refundDetails.refundDate", dateRange.endDate] },
+                  { $gte: ['$refundDetails.refundDate', dateRange.startDate] },
+                  { $lte: ['$refundDetails.refundDate', dateRange.endDate] },
                 ],
               },
-              { $ifNull: ["$totalRefunded", 0] },
+              { $ifNull: ['$totalRefunded', 0] },
               0,
             ],
           },
@@ -669,7 +669,7 @@ const getPharmacySummary = async (
   const totalAmount =
     data.length > 0
       ? parseFloat(
-          (data[0].totalAmountSum - data[0].totalRefundedSum).toFixed(2)
+          (data[0].totalAmountSum - data[0].totalRefundedSum).toFixed(2),
         )
       : 0;
 

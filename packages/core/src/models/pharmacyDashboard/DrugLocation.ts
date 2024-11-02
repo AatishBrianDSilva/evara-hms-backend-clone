@@ -1,6 +1,6 @@
-import { log } from "console";
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import paginate from "mongoose-paginate-v2";
+import { log } from 'console';
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
 export interface IDrugLocation extends Document {
   branchId: string;
@@ -8,7 +8,7 @@ export interface IDrugLocation extends Document {
   location: string;
   main: boolean;
   notes: string;
-  status?: "Active" | "Inactive";
+  status?: 'Active' | 'Inactive';
 }
 
 const drugLocationSchema = new Schema<IDrugLocation>(
@@ -36,19 +36,19 @@ const drugLocationSchema = new Schema<IDrugLocation>(
     notes: { type: String, required: false },
     status: {
       type: String,
-      enum: ["Active", "Inactive"],
-      default: "Active",
+      enum: ['Active', 'Inactive'],
+      default: 'Active',
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 drugLocationSchema.index({ branchId: 1, location: 1 }, { unique: true });
 drugLocationSchema.plugin(paginate);
 
-drugLocationSchema.pre<IDrugLocation>("save", async function (next) {
+drugLocationSchema.pre<IDrugLocation>('save', async function (next) {
   const existsAnyMain = await DrugLocation.findOne({
     branchId: this.branchId,
     main: true,
@@ -59,7 +59,7 @@ drugLocationSchema.pre<IDrugLocation>("save", async function (next) {
       // Ensure this is the only main
       await DrugLocation.updateMany(
         { branchId: this.branchId, _id: { $ne: this._id } },
-        { $set: { main: false } }
+        { $set: { main: false } },
       );
     }
   } else if (!existsAnyMain || existsAnyMain._id.equals(this._id)) {
@@ -69,7 +69,7 @@ drugLocationSchema.pre<IDrugLocation>("save", async function (next) {
   next();
 });
 
-drugLocationSchema.pre("findOneAndUpdate", async function (next) {
+drugLocationSchema.pre('findOneAndUpdate', async function (next) {
   const update = this.getUpdate();
   const docToUpdate = await this.model.findOne(this.getQuery());
 
@@ -80,13 +80,13 @@ drugLocationSchema.pre("findOneAndUpdate", async function (next) {
       main: true,
     });
     if (count === 1) {
-      throw new Error("At least one main location must be set.");
+      throw new Error('At least one main location must be set.');
     }
   } else if (update?.main) {
     // If setting this as main, unset others
     await DrugLocation.updateMany(
       { branchId: docToUpdate.branchId, _id: { $ne: docToUpdate._id } },
-      { $set: { main: false } }
+      { $set: { main: false } },
     );
   }
   next();
@@ -97,4 +97,4 @@ export interface IDrugLocationDocument extends IDrugLocation, Document {}
 export const DrugLocation = mongoose.model<
   IDrugLocationDocument,
   PaginateModel<IDrugLocationDocument>
->("DrugLocation", drugLocationSchema);
+>('DrugLocation', drugLocationSchema);

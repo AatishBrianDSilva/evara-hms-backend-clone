@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
 interface notesTreatmentAdvice {
   name: string;
@@ -14,12 +14,12 @@ const notesTreatmentAdviceSchema = new Schema<notesTreatmentAdvice>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const NotesTreatmentAdvice = mongoose.model<notesTreatmentAdvice>(
-  "NotesTreatmentAdvice",
-  notesTreatmentAdviceSchema
+  'NotesTreatmentAdvice',
+  notesTreatmentAdviceSchema,
 );
 
 export default NotesTreatmentAdvice;

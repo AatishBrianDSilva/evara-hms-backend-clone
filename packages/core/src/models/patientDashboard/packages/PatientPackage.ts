@@ -1,5 +1,5 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
 interface IPackageResult extends Document {
   packageName: string;
@@ -18,8 +18,8 @@ const PackageResultSchema: Schema<IPackageResult> = new Schema<IPackageResult>(
     notes: String,
   },
   {
-    timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  }
+    timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
+  },
 );
 
 interface IPatientPackage extends Document {
@@ -43,28 +43,28 @@ const PatientPackageSchema: Schema<IPatientPackage> = new Schema(
     caseId: { type: String, index: true },
     patient: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Patient",
+      ref: 'Patient',
       required: true,
       index: true,
     },
     patientCode: { type: String, required: true },
     package: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "MasterPackage",
+      ref: 'MasterPackage',
       required: true,
     },
     doctor: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Doctor",
+      ref: 'Doctor',
       required: true,
     },
     result: PackageResultSchema,
     dateAssigned: { type: Date, default: Date.now },
-    status: { type: String, required: true, default: "Assigned" },
+    status: { type: String, required: true, default: 'Assigned' },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 PatientPackageSchema.plugin(paginate);
@@ -74,6 +74,6 @@ interface PatientPackageDocument extends Document, IPatientPackage {}
 const PatientPackage = mongoose.model<
   PatientPackageDocument,
   PaginateModel<PatientPackageDocument>
->("PatientPackages", PatientPackageSchema);
+>('PatientPackages', PatientPackageSchema);
 
 export default PatientPackage;

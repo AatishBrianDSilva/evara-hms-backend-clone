@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent } from 'aws-lambda';
 
 interface LambdaAuthorizer {
   branchId: string;
@@ -9,7 +9,7 @@ interface LambdaAuthorizer {
 }
 
 export const extractAuthorizerDetails = (
-  event: APIGatewayProxyEvent
+  event: APIGatewayProxyEvent,
 ): LambdaAuthorizer => {
   try {
     const authorizer = event.requestContext.authorizer as {
@@ -18,7 +18,7 @@ export const extractAuthorizerDetails = (
     const { branchId, clinicId, userId, username, role } = authorizer.lambda;
     return { branchId, clinicId, userId, username, role };
   } catch (error) {
-    console.error("Error extracting authorizer details:", error);
-    throw new Error("Error extracting authorizer details");
+    console.error('Error extracting authorizer details:', error);
+    throw new Error('Error extracting authorizer details');
   }
 };

@@ -1,10 +1,10 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import { EPatientBillingServiceType } from "./PatientBilling";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import { EPatientBillingServiceType } from './PatientBilling';
+import paginate from 'mongoose-paginate-v2';
 
 export enum EPatientBillingEstimationStatus {
-  Active = "Active",
-  Inactive = "Inactive",
+  Active = 'Active',
+  Inactive = 'Inactive',
 }
 
 interface IPatientBillingEstimation extends Document {
@@ -23,7 +23,7 @@ interface IPatientBillingEstimation extends Document {
   estimatedUnitPrice: number;
   estimatedPrice: number;
   estimatedTotal: number;
-  status: "Active" | "Inactive";
+  status: 'Active' | 'Inactive';
 }
 
 const patientBillingEstimationSchema = new Schema<IPatientBillingEstimation>(
@@ -31,7 +31,7 @@ const patientBillingEstimationSchema = new Schema<IPatientBillingEstimation>(
     clinicId: { type: String, required: true, index: true },
     branchId: { type: String, required: true, index: true },
     patientCode: { type: String, required: true, index: true },
-    doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "doctors" },
+    doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'doctors' },
     masterServiceId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
@@ -51,7 +51,7 @@ const patientBillingEstimationSchema = new Schema<IPatientBillingEstimation>(
     quantity: {
       type: Number,
       required: true,
-      min: [1, "Quantity must be at least 1"],
+      min: [1, 'Quantity must be at least 1'],
     },
     taxRate: { type: Number },
     cost: { type: Number, required: true, min: 0 },
@@ -68,14 +68,16 @@ const patientBillingEstimationSchema = new Schema<IPatientBillingEstimation>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 patientBillingEstimationSchema.plugin(paginate);
 
-interface PatientBillingEstimationDocument extends Document, IPatientBillingEstimation {}
+interface PatientBillingEstimationDocument
+  extends Document,
+    IPatientBillingEstimation {}
 
 export const PatientBillingEstimation = mongoose.model<
   PatientBillingEstimationDocument,
   PaginateModel<PatientBillingEstimationDocument>
->("PatientBillingEstimation", patientBillingEstimationSchema);
+>('PatientBillingEstimation', patientBillingEstimationSchema);

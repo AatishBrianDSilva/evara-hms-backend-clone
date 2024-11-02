@@ -1,6 +1,6 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import { autoIncrementId } from "../Counters";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import { autoIncrementId } from '../Counters';
+import paginate from 'mongoose-paginate-v2';
 
 export interface IPharmacyInvoice extends Document {
   clinicId: string;
@@ -22,7 +22,7 @@ const pharmacyInvoiceSchema = new Schema(
     key: { type: String, required: true },
     invoiceNumber: { type: String, required: false },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 pharmacyInvoiceSchema.plugin(paginate);
@@ -32,4 +32,4 @@ export interface IPharmacyInvoiceDocument extends Document, IPharmacyInvoice {}
 export const PharmacyInvoice = mongoose.model<
   IPharmacyInvoiceDocument,
   PaginateModel<IPharmacyInvoiceDocument>
->("PharmacyInvoice", pharmacyInvoiceSchema);
+>('PharmacyInvoice', pharmacyInvoiceSchema);

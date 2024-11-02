@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
 interface IReferralDoctor {
   clinicId: string;
@@ -18,12 +18,12 @@ const referralDoctorSchema = new Schema<IReferralDoctor>(
     city: { type: String },
     speaciality: { type: String },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const ReferralDoctor = mongoose.model<IReferralDoctor>(
-  "ReferralDoctor",
-  referralDoctorSchema
+  'ReferralDoctor',
+  referralDoctorSchema,
 );
 
 export default ReferralDoctor;

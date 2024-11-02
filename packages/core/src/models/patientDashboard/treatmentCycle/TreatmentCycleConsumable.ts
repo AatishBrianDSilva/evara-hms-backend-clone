@@ -1,4 +1,4 @@
-import mongoose, { Document } from "mongoose";
+import mongoose, { Document } from 'mongoose';
 
 interface ITreatmentCycleConsumable extends Document {
   clinicId: string;
@@ -14,12 +14,12 @@ const TreatmentCycleConsumableSchema =
       clinicId: { type: String, required: true, index: true },
       pharmacyStock: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "PharmacyStock",
+        ref: 'PharmacyStock',
         required: true,
       },
       stage: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "TreatmentCycleStage",
+        ref: 'TreatmentCycleStage',
         required: true,
       },
       treatment: {
@@ -35,11 +35,11 @@ const TreatmentCycleConsumableSchema =
     },
     {
       timestamps: true,
-    }
+    },
   );
 
 export const TreatmentCycleConsumable =
   mongoose.model<ITreatmentCycleConsumable>(
-    "TreatmentCycleConsumable",
-    TreatmentCycleConsumableSchema
+    'TreatmentCycleConsumable',
+    TreatmentCycleConsumableSchema,
   );

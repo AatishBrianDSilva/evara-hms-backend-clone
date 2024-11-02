@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 let cachedDb: typeof mongoose | null = null;
 const uri: string = process.env.MONGO_URI as string;
@@ -7,9 +7,9 @@ export async function connectMongoDb() {
     return Promise.resolve(cachedDb);
   }
 
-  return mongoose.connect(uri, { connectTimeoutMS: 5000 }).then((db) => {
+  return mongoose.connect(uri, { connectTimeoutMS: 5000 }).then(db => {
     cachedDb = db;
-    console.log("New MongoDB Connection made");
+    console.log('New MongoDB Connection made');
     return cachedDb;
   });
 }

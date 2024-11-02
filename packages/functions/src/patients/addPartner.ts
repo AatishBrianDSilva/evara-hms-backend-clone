@@ -1,13 +1,13 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Patients from "@evara-backend/core/models/Patients";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import Cases from "@evara-backend/core/models/Cases";
-import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import Patients from '@evara-backend/core/models/Patients';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import Cases from '@evara-backend/core/models/Cases';
+import { S3KeepPermanently, parseS3Url } from 'src/files/_KeepPermanently';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -20,16 +20,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     // Connect to MongoDB
     if (event.pathParameters === null) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
     if (event.body == null) {
-      throw new ErrorMessage(400, "Partner data is required");
+      throw new ErrorMessage(400, 'Partner data is required');
     }
 
-    const id = event.pathParameters["id"];
+    const id = event.pathParameters['id'];
     if (!id) {
-      throw new ErrorMessage(400, "Patient Id is not provided");
+      throw new ErrorMessage(400, 'Patient Id is not provided');
     }
 
     session.startTransaction();
@@ -45,7 +45,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     console.log(data.partnerId);
 
-    console.log("Data", data);
+    console.log('Data', data);
 
     // Create a new patient document
     const newPartner = new Patients(data);
@@ -55,7 +55,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       if (s3UrlParts) {
         await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
       } else {
-        throw new ErrorMessage(400, "Invalid image URL");
+        throw new ErrorMessage(400, 'Invalid image URL');
       }
     }
 
@@ -66,17 +66,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const updatedCase = await Cases.findOneAndUpdate(
       { patientId: id },
       { $set: { partnerId: patient.patientId } },
-      { new: true, session }
+      { new: true, session },
     ).lean();
 
     // Update the partnerId in the patient document
     const updatedPatient = await Patients.findOneAndUpdate(
       { patientId: id },
       { $set: { partnerId: patient.patientId } },
-      { new: true, session }
+      { new: true, session },
     ).lean();
 
-    console.log("Patient partner", updatedPatient?.partnerId);
+    console.log('Patient partner', updatedPatient?.partnerId);
 
     // Commit the transaction
     await session.commitTransaction();
@@ -86,7 +86,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       patientId: patient.patientId,
       case: updatedCase,
     };
-    return successResponse("Patient added successfully", responseData);
+    return successResponse('Patient added successfully', responseData);
   } catch (error) {
     // Rollback the transaction
     await session.abortTransaction();

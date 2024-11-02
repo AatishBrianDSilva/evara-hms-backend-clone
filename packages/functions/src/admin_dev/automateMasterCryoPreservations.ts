@@ -1,9 +1,9 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import CryoPreservations from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/CryoPreservations";
-import MasterCryoPreservations from "@evara-backend/core/src/models/patientDashboard/cryoPreservation/MasterCryoPreservations";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import CryoPreservations from '@evara-backend/core/src/models/patientDashboard/cryoPreservation/CryoPreservations';
+import MasterCryoPreservations from '@evara-backend/core/src/models/patientDashboard/cryoPreservation/MasterCryoPreservations';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -13,7 +13,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const CryoPreservation = await CryoPreservations.find();
 
     const cryoPreservations = await Promise.all(
-      CryoPreservation.map(async (cryoPreservation) => {
+      CryoPreservation.map(async cryoPreservation => {
         const investigation = new MasterCryoPreservations({
           cryoPreservation: cryoPreservation._id,
           cryoPreservationType: cryoPreservation.cryoPreservationType,
@@ -25,13 +25,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         });
 
         return await investigation.save();
-      })
+      }),
     );
 
     // Return success response with all created cryoPreservations
     return successResponse(
       `${cryoPreservations.length} CryoPreservations created successfully`,
-      cryoPreservations
+      cryoPreservations,
     );
   } catch (error) {
     // Handle any errors that occur during the operation

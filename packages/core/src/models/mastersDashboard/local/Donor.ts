@@ -1,6 +1,6 @@
-import mongoose, { Document, PaginateModel, Types } from "mongoose";
-import paginate from "mongoose-paginate-v2";
-import { autoIncrementId } from "../../Counters";
+import mongoose, { Document, PaginateModel, Types } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
+import { autoIncrementId } from '../../Counters';
 
 interface DonorData extends Document {
   clinicId: string;
@@ -54,7 +54,7 @@ interface DonorData extends Document {
   insuranceAmountEligible?: string;
   image?: mongoose.Schema.Types.Mixed;
   remarks?: string;
-  status: "active" | "inactive";
+  status: 'active' | 'inactive';
   caseId?: string;
 }
 
@@ -82,7 +82,7 @@ export const patientSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      match: [/.+\@.+\..+/, "Invalid email format"],
+      match: [/.+\@.+\..+/, 'Invalid email format'],
     },
     dependentType: { type: String },
     dependentName: { type: String },
@@ -115,25 +115,25 @@ export const patientSchema = new mongoose.Schema(
     insuranceAmountEligible: { type: String },
     image: { type: String },
     remarks: { type: String },
-    status: { type: String, enum: ["active", "inactive"], default: "active" },
+    status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   },
   {
     timestamps: true,
     strict: false,
-  }
+  },
 );
 
 patientSchema.index({ clinicId: 1, branchId: 1, donorId: 1 }, { unique: true });
 
-patientSchema.pre("save", autoIncrementId("donors", "donorId", "DN-"));
+patientSchema.pre('save', autoIncrementId('donors', 'donorId', 'DN-'));
 
 patientSchema.plugin(paginate);
 
 interface DonorDocument extends mongoose.Document, DonorData {}
 
 const Donor = mongoose.model<DonorDocument, PaginateModel<DonorDocument>>(
-  "donors",
-  patientSchema
+  'donors',
+  patientSchema,
 );
 
 export default Donor;

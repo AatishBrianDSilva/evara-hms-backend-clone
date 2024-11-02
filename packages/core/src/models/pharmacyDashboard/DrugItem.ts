@@ -1,18 +1,18 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import { autoIncrementId } from "../Counters";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import { autoIncrementId } from '../Counters';
+import paginate from 'mongoose-paginate-v2';
 
 export enum EDrugClass {
-  ScheduleH1 = "Schedule H1",
-  Gas = "Gas",
-  ScheduleH = "Schedule H",
-  ScheduleX = "Schedule X",
-  General = "General",
-  ScheduleH2 = "Schedule H2",
-  ScheduleII = "Schedule II",
-  Surgical = "Surgical",
-  IVF = "IVF",
-  ScheduleG = "Schedule G",
+  ScheduleH1 = 'Schedule H1',
+  Gas = 'Gas',
+  ScheduleH = 'Schedule H',
+  ScheduleX = 'Schedule X',
+  General = 'General',
+  ScheduleH2 = 'Schedule H2',
+  ScheduleII = 'Schedule II',
+  Surgical = 'Surgical',
+  IVF = 'IVF',
+  ScheduleG = 'Schedule G',
 }
 
 export interface IDrugItem extends Document {
@@ -30,7 +30,7 @@ export interface IDrugItem extends Document {
   taxRate: Schema.Types.ObjectId;
   manufacturer: Schema.Types.ObjectId;
   criticalCount?: number;
-  status: "Active" | "Inactive";
+  status: 'Active' | 'Inactive';
 }
 
 const drugItemSchema = new Schema<IDrugItem>(
@@ -62,12 +62,12 @@ const drugItemSchema = new Schema<IDrugItem>(
     },
     category: {
       type: Schema.Types.ObjectId,
-      ref: "DrugCategory",
+      ref: 'DrugCategory',
       // required: true,
     },
     type: {
       type: Schema.Types.ObjectId,
-      ref: "DrugType",
+      ref: 'DrugType',
     },
     packSize: {
       type: Number,
@@ -75,7 +75,7 @@ const drugItemSchema = new Schema<IDrugItem>(
     },
     taxRate: {
       type: Schema.Types.ObjectId,
-      ref: "TaxRate",
+      ref: 'TaxRate',
       // required: true,
     },
     mrp: {
@@ -88,7 +88,7 @@ const drugItemSchema = new Schema<IDrugItem>(
     },
     manufacturer: {
       type: Schema.Types.ObjectId,
-      ref: "DrugManufacturer",
+      ref: 'DrugManufacturer',
       // required: true,
     },
     criticalCount: {
@@ -97,24 +97,24 @@ const drugItemSchema = new Schema<IDrugItem>(
     },
     status: {
       type: String,
-      enum: ["Active", "Inactive"],
-      default: "Active",
+      enum: ['Active', 'Inactive'],
+      default: 'Active',
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 drugItemSchema.index({ name: 1 });
 
-drugItemSchema.pre("save", autoIncrementId("drugItems", "code", "DI-"));
+drugItemSchema.pre('save', autoIncrementId('drugItems', 'code', 'DI-'));
 
 drugItemSchema.plugin(paginate);
 
 interface IDrugItemDocument extends Document, IDrugItem {}
 
-export const DrugItem = mongoose.model<IDrugItemDocument, PaginateModel<IDrugItemDocument>>(
-  "DrugItem",
-  drugItemSchema
-);
+export const DrugItem = mongoose.model<
+  IDrugItemDocument,
+  PaginateModel<IDrugItemDocument>
+>('DrugItem', drugItemSchema);

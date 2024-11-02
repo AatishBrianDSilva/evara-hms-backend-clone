@@ -1,12 +1,12 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import { IPaginateOptions } from '@evara-backend/core/src/lib/types/pagination';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import Doctors from '@evara-backend/core/src/models/mastersDashboard/Doctors';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -14,24 +14,24 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    console.log("Params", params);
+    console.log('Params', params);
     const {
       startDate,
       endDate,
-      page = "1",
-      limit = "10",
-      searchQuery = "",
+      page = '1',
+      limit = '10',
+      searchQuery = '',
     } = params;
 
-    const isGlobal = JSON.parse(params.isGlobal || "false");
-    const isAdmin = JSON.parse(params.isAdmin || "false");
-    const status = params.status || "active";
+    const isGlobal = JSON.parse(params.isGlobal || 'false');
+    const isAdmin = JSON.parse(params.isAdmin || 'false');
+    const status = params.status || 'active';
 
     let query: any = { clinicId: auth.clinicId };
 
@@ -56,14 +56,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     if (searchQuery) {
       query.$or = [
-        { firstName: new RegExp(searchQuery, "i") },
-        { lastName: new RegExp(searchQuery, "i") },
-        { mobile: new RegExp(searchQuery, "i") },
-        { speciality: new RegExp(searchQuery, "i") },
+        { firstName: new RegExp(searchQuery, 'i') },
+        { lastName: new RegExp(searchQuery, 'i') },
+        { mobile: new RegExp(searchQuery, 'i') },
+        { speciality: new RegExp(searchQuery, 'i') },
       ];
     }
 
-    const paginate = JSON.parse(params.paginate || "false");
+    const paginate = JSON.parse(params.paginate || 'false');
 
     // Fetching the doctors with or without pagination
     if (paginate) {
@@ -79,17 +79,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const { records, pagination } = formatPaginationResult(result);
 
       // Return success response with pagination info
-      return successResponse("Doctors fetched successfully", {
+      return successResponse('Doctors fetched successfully', {
         records,
         pagination,
       });
     } else {
       // Fetching all doctors without pagination
-      console.log("Query", query);
+      console.log('Query', query);
       const doctors = await Doctors.find(query).lean();
 
       // Return success response without pagination info
-      return successResponse("Doctors fetched successfully", {
+      return successResponse('Doctors fetched successfully', {
         records: doctors,
       });
     }

@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
 interface appointmentReason {
   name: string;
@@ -14,12 +14,12 @@ const appointmentReasonSchema = new Schema<appointmentReason>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const AppointmentReason = mongoose.model<appointmentReason>(
-  "AppointmentReason",
-  appointmentReasonSchema
+  'AppointmentReason',
+  appointmentReasonSchema,
 );
 
 export default AppointmentReason;

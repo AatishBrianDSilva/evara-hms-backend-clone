@@ -1,11 +1,11 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import { User } from "@evara-backend/core/src/models/User";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
-import Branch from "@evara-backend/core/src/models/mastersDashboard/global/ClinicBranches";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import { User } from '@evara-backend/core/src/models/User';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
+import Branch from '@evara-backend/core/src/models/mastersDashboard/global/ClinicBranches';
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -16,21 +16,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Connect to MongoDB
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     if (event.pathParameters === null) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
     // Safely access the id property
-    const id = event.pathParameters["id"];
+    const id = event.pathParameters['id'];
     if (!id) {
-      throw new ErrorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, 'Id is not provided');
     }
 
     if (!event.body) {
-      throw new ErrorMessage(400, "Branch data is required");
+      throw new ErrorMessage(400, 'Branch data is required');
     }
 
     // Parse the body from the event
@@ -40,7 +40,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const existingBranch = await Branch.findById(id);
 
     if (!existingBranch) {
-      throw new ErrorMessage(404, "Branch not found or unauthorized");
+      throw new ErrorMessage(404, 'Branch not found or unauthorized');
     }
 
     // Prevent duplicate branch code in the same clinic
@@ -51,7 +51,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       });
 
       if (duplicateBranch) {
-        throw new ErrorMessage(409, "Branch code already exists");
+        throw new ErrorMessage(409, 'Branch code already exists');
       }
     }
 
@@ -69,14 +69,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const updatedBranch = await Branch.findByIdAndUpdate(
       id,
       { $set: updateFields },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedBranch) {
-      throw new ErrorMessage(404, "Data not updated");
+      throw new ErrorMessage(404, 'Data not updated');
     }
 
-    return successResponse("Branch updated successfully", updatedBranch);
+    return successResponse('Branch updated successfully', updatedBranch);
   } catch (error) {
     return errorResponse(error);
   }

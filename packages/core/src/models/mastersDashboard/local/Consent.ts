@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
 interface consent {
   name: string;
@@ -20,9 +20,9 @@ const consentSchema = new Schema<consent>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Consent = mongoose.model<consent>("Consent", consentSchema);
+const Consent = mongoose.model<consent>('Consent', consentSchema);
 
 export default Consent;

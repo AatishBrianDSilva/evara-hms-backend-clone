@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Schema } from 'mongoose';
 
 // Define the interface for PatientRefund document
 interface IPatientRefund extends Document {
@@ -29,7 +29,11 @@ interface IPatientRefund extends Document {
 // Define the schema for PatientRefund
 const patientRefundSchema = new Schema<IPatientRefund>(
   {
-    billingId: { type: Schema.Types.ObjectId, ref: "PatientBilling", required: true },
+    billingId: {
+      type: Schema.Types.ObjectId,
+      ref: 'PatientBilling',
+      required: true,
+    },
     patientCode: { type: String, required: true },
     refundDetails: {
       refundAmount: { type: Number, required: true },
@@ -58,8 +62,11 @@ const patientRefundSchema = new Schema<IPatientRefund>(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 // Create the PatientRefund model
-export const PatientRefund = mongoose.model<IPatientRefund>("PatientRefund", patientRefundSchema);
+export const PatientRefund = mongoose.model<IPatientRefund>(
+  'PatientRefund',
+  patientRefundSchema,
+);

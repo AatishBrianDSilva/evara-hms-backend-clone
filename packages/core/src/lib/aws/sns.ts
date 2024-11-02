@@ -1,7 +1,7 @@
-import { SNS } from "aws-sdk";
+import { SNS } from 'aws-sdk';
 
 const sns = new SNS({
-  region: "ap-south-1",
+  region: 'ap-south-1',
 });
 
 class SNSService {

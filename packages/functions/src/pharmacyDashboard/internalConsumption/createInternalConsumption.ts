@@ -1,15 +1,15 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import mongoose from "mongoose";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import mongoose from 'mongoose';
 type ObjectId = mongoose.Types.ObjectId;
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import { InternalConsumption } from "@evara-backend/core/models/pharmacyDashboard/InternalConsumption";
-import { PharmacyStock } from "@evara-backend/core/models/pharmacyDashboard/PharmacyStock";
-import { User } from "@evara-backend/core/models/User"; // Import the User model
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import { InternalConsumption } from '@evara-backend/core/models/pharmacyDashboard/InternalConsumption';
+import { PharmacyStock } from '@evara-backend/core/models/pharmacyDashboard/PharmacyStock';
+import { User } from '@evara-backend/core/models/User'; // Import the User model
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -22,21 +22,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     if (!event.body) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     const { items, date } = JSON.parse(event.body);
-    console.log("Items:", items);
+    console.log('Items:', items);
 
     const branchId = auth.branchId;
     const clinicId = auth.clinicId;
 
     if (!items || !items.length) {
-      throw new ErrorMessage(400, "Items are required in the consumption");
+      throw new ErrorMessage(400, 'Items are required in the consumption');
     }
 
     // Process each item in the consumption request
@@ -49,14 +49,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           branchId,
           clinicId,
           _id: stockItem,
-          "batches.locations.location": transferFrom.location,
+          'batches.locations.location': transferFrom.location,
         },
         null,
-        { session }
+        { session },
       ).exec();
 
       if (!stock) {
-        throw new ErrorMessage(404, "Item not found in stock");
+        throw new ErrorMessage(404, 'Item not found in stock');
       }
 
       let remainingQuantity = quantity;
@@ -65,7 +65,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       // Deduct the quantity from the batches and locations
       for (let batch of stock.batches) {
         for (let location of batch.locations) {
-          if ((location.location as unknown as ObjectId).equals(transferFrom.location)) {
+          if (
+            (location.location as unknown as ObjectId).equals(
+              transferFrom.location,
+            )
+          ) {
             if (location.quantity >= remainingQuantity) {
               // If location has enough quantity, deduct and break
               location.quantity -= remainingQuantity;
@@ -93,7 +97,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       if (remainingQuantity > 0) {
         throw new ErrorMessage(
           400,
-          "Insufficient stock across all batches at the specified location."
+          'Insufficient stock across all batches at the specified location.',
         );
       }
 
@@ -105,7 +109,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Fetch the user's name
     const user = await User.findById(auth.userId).exec();
     if (!user) {
-      throw new ErrorMessage(404, "User not found");
+      throw new ErrorMessage(404, 'User not found');
     }
 
     // Create internal consumption
@@ -123,9 +127,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await session.commitTransaction();
     session.endSession();
 
-    return successResponse("Internal Consumption added and Stock updated successfully");
+    return successResponse(
+      'Internal Consumption added and Stock updated successfully',
+    );
   } catch (error) {
-    console.error("Error handling internal consumption:", error);
+    console.error('Error handling internal consumption:', error);
     await session.abortTransaction();
     session.endSession();
     return errorResponse(error);

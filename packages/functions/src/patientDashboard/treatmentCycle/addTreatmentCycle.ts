@@ -1,14 +1,14 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import PatientTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/PatientTreatmentCycle";
-import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle";
-import { log } from "console";
-import { publishBillingServiceToSNS } from "@evara-backend/core/src/lib/utils/publishBillingServiceToSNS";
-import { EPatientBillingServiceType } from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import PatientTreatmentCycle from '@evara-backend/core/src/models/patientDashboard/treatmentCycle/PatientTreatmentCycle';
+import MasterTreatmentCycle from '@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle';
+import { log } from 'console';
+import { publishBillingServiceToSNS } from '@evara-backend/core/src/lib/utils/publishBillingServiceToSNS';
+import { EPatientBillingServiceType } from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -19,7 +19,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     if (event.body == null) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     // Parse the body from the event
@@ -29,51 +29,55 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     data.clinicId = auth?.clinicId;
     data.branchId = auth?.branchId;
 
-    console.log("Data: ", data);
+    console.log('Data: ', data);
 
     for (let i = 0; i < data.length; i++) {
-      const masterTreatmentCycle = await MasterTreatmentCycle.findById(data[i].cycle)
-        .populate("treatmentCycle")
+      const masterTreatmentCycle = await MasterTreatmentCycle.findById(
+        data[i].cycle,
+      )
+        .populate('treatmentCycle')
         .lean();
 
       if (!masterTreatmentCycle) {
-        throw new ErrorMessage(404, "Default treatment cycle not found");
+        throw new ErrorMessage(404, 'Default treatment cycle not found');
       }
 
-      const existingTreatmentCycle = await PatientTreatmentCycle.countDocuments({
-        cycle: masterTreatmentCycle._id,
-      });
-      log("Existing Treatment Cycle: ", existingTreatmentCycle);
+      const existingTreatmentCycle = await PatientTreatmentCycle.countDocuments(
+        {
+          cycle: masterTreatmentCycle._id,
+        },
+      );
+      log('Existing Treatment Cycle: ', existingTreatmentCycle);
 
       const defaultTreatmentCycle = masterTreatmentCycle.treatmentCycle;
 
       const newTreatmentCycle = {
         ...data[i],
         cycleNo: existingTreatmentCycle + 1,
-        protocols: defaultTreatmentCycle.protocols.map((protocol) => ({
+        protocols: defaultTreatmentCycle.protocols.map(protocol => ({
           name: protocol.name,
           category: protocol.category,
-          status: "Pending",
+          status: 'Pending',
           details: {},
         })),
-        checklists: defaultTreatmentCycle.checklists.map((checklist) => ({
+        checklists: defaultTreatmentCycle.checklists.map(checklist => ({
           name: checklist.name,
           category: checklist.category,
-          status: "Pending",
+          status: 'Pending',
           details: {},
         })),
-        reports: defaultTreatmentCycle.reports.map((report) => ({
+        reports: defaultTreatmentCycle.reports.map(report => ({
           name: report.name,
           reportType: report.reportType,
           category: report.category,
-          status: "Pending",
+          status: 'Pending',
           details: {},
         })),
-        metrics: defaultTreatmentCycle.metrics.map((metric) => ({
+        metrics: defaultTreatmentCycle.metrics.map(metric => ({
           name: metric.name,
           metricType: metric.metricType,
           category: metric.category,
-          status: "Pending",
+          status: 'Pending',
           details: {},
         })),
         clinicId: auth.clinicId,
@@ -97,15 +101,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           masterTreatmentCycle.cost,
           1,
           auth.clinicId,
-          auth.branchId
+          auth.branchId,
         );
       } else {
-        console.error("Master Treatment Cycle not found");
+        console.error('Master Treatment Cycle not found');
       }
     }
 
     // Return success response
-    return successResponse("Treatment Cycle created successfully");
+    return successResponse('Treatment Cycle created successfully');
   } catch (error) {
     return errorResponse(error);
   }

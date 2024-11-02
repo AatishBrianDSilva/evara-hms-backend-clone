@@ -1,23 +1,23 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import { autoIncrementId } from "../Counters";
-import paginate from "mongoose-paginate-v2";
-import { PoNumberCounter } from "./PONumberCounter";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import { autoIncrementId } from '../Counters';
+import paginate from 'mongoose-paginate-v2';
+import { PoNumberCounter } from './PONumberCounter';
 
 export enum EPurchaseOrderStatus {
-  Draft = "Draft",
-  Approved = "Approved",
-  Rejected = "Rejected",
-  Ordered = "Ordered",
-  PartiallyProcessed = "PartiallyProcessed",
-  Processed = "Processed",
+  Draft = 'Draft',
+  Approved = 'Approved',
+  Rejected = 'Rejected',
+  Ordered = 'Ordered',
+  PartiallyProcessed = 'PartiallyProcessed',
+  Processed = 'Processed',
 }
 
 export enum EItemStatus {
-  Processed = "Processed",
-  PartiallyProcessed = "PartiallyProcessed",
-  Pending = "Pending",
-  NewlyProcessed = "NewlyProcessed",
-  ProcessedWithoutUpdating = "ProcessedWithoutUpdating",
+  Processed = 'Processed',
+  PartiallyProcessed = 'PartiallyProcessed',
+  Pending = 'Pending',
+  NewlyProcessed = 'NewlyProcessed',
+  ProcessedWithoutUpdating = 'ProcessedWithoutUpdating',
 }
 
 export interface IPurchaseOrderRequest {
@@ -101,7 +101,7 @@ export interface IPurchaseOrder extends Document {
 }
 
 const itemSchema = new Schema({
-  item: { type: Schema.Types.ObjectId, ref: "DrugItem", required: true },
+  item: { type: Schema.Types.ObjectId, ref: 'DrugItem', required: true },
   packSize: { type: Number, required: true, min: 0 },
   batchNo: { type: String, required: false },
   expiryDate: { type: Date, required: false },
@@ -135,7 +135,7 @@ const purchaseOrderSchema = new Schema(
     branchId: { type: String, required: true, index: true },
     poNumber: { type: String, unique: true, index: true },
     date: { type: Date, required: true },
-    vendor: { type: Schema.Types.ObjectId, ref: "DrugVendor", required: true },
+    vendor: { type: Schema.Types.ObjectId, ref: 'DrugVendor', required: true },
     request: {
       items: [itemSchema],
       netAmount: { type: Number, required: true, min: 0 },
@@ -151,7 +151,7 @@ const purchaseOrderSchema = new Schema(
     authorizedBy: { type: String, required: false },
     branch: {
       type: Schema.Types.ObjectId,
-      ref: "ClinicBranches",
+      ref: 'ClinicBranches',
       required: true,
     },
     status: {
@@ -179,7 +179,7 @@ const purchaseOrderSchema = new Schema(
       key: { type: String, required: false },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 purchaseOrderSchema.index({ vendor: 1, date: -1 });
@@ -187,24 +187,33 @@ purchaseOrderSchema.index({ status: 1 });
 purchaseOrderSchema.index({ createdBy: 1, authorizedBy: 1 });
 purchaseOrderSchema.index({ branchId: 1, date: -1 });
 
-purchaseOrderSchema.pre("validate", function (next) {
+purchaseOrderSchema.pre('validate', function (next) {
   if (this.status === EPurchaseOrderStatus.Approved && !this.authorizedBy) {
-    this.invalidate("authorizedBy", "authorizedBy is required when the status is Approved");
-  } else if (this.status === EPurchaseOrderStatus.Rejected && !this.authorizedBy) {
-    this.invalidate("authorizedBy", "authorizedBy is required when the status is Rejected");
+    this.invalidate(
+      'authorizedBy',
+      'authorizedBy is required when the status is Approved',
+    );
+  } else if (
+    this.status === EPurchaseOrderStatus.Rejected &&
+    !this.authorizedBy
+  ) {
+    this.invalidate(
+      'authorizedBy',
+      'authorizedBy is required when the status is Rejected',
+    );
   }
   next();
 });
 
 // purchaseOrderSchema.pre("save", autoIncrementId("purchaseOrder", "poNumber", "PO-"));
 
-purchaseOrderSchema.pre("save", async function (next) {
+purchaseOrderSchema.pre('save', async function (next) {
   const purchaseOrder = this as IPurchaseOrderDocument;
 
   // Only generate the PO number if the document is new
   if (purchaseOrder.isNew) {
     const currentDate = new Date();
-    const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Get current month
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // Get current month
     const year = currentDate.getFullYear(); // Get current year
     const monthYear = `${month}-${year}`; // Format: "09-2024"
 
@@ -214,11 +223,11 @@ purchaseOrderSchema.pre("save", async function (next) {
     const counter = await PoNumberCounter.findOneAndUpdate(
       { branchId, monthYear },
       { $inc: { sequence: 1 } }, // Increment the sequence
-      { new: true, upsert: true } // Create if doesn't exist
+      { new: true, upsert: true }, // Create if doesn't exist
     );
 
     // Generate the PO number in the format: KL/09-2024/001
-    const sequence = String(counter.sequence).padStart(3, "0"); // Zero-pad the sequence
+    const sequence = String(counter.sequence).padStart(3, '0'); // Zero-pad the sequence
     purchaseOrder.poNumber = `${branchId}/${monthYear}/${sequence}`;
   }
 
@@ -232,4 +241,4 @@ export interface IPurchaseOrderDocument extends Document, IPurchaseOrder {}
 export const PurchaseOrder = mongoose.model<
   IPurchaseOrderDocument,
   PaginateModel<IPurchaseOrderDocument>
->("PurchaseOrder", purchaseOrderSchema);
+>('PurchaseOrder', purchaseOrderSchema);

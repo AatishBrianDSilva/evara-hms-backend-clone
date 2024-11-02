@@ -1,45 +1,45 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import MasterPackage from "@evara-backend/core/src/models/patientDashboard/packages/MasterPackage";
-import MasterProcedures from "@evara-backend/core/src/models/patientDashboard/procedure/MasterProcedure";
-import MasterInvestigation from "@evara-backend/core/models/patientDashboard/investigation/MasterInvestigations";
-import MasterCryoPreservations from "@evara-backend/core/models/patientDashboard/cryoPreservation/MasterCryoPreservations";
-import MasterService from "@evara-backend/core/models/patientDashboard/services/MasterService";
-import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
-import ErrorMessage from "@evara-backend/core/lib/utils/ErrorMessage";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import MasterPackage from '@evara-backend/core/src/models/patientDashboard/packages/MasterPackage';
+import MasterProcedures from '@evara-backend/core/src/models/patientDashboard/procedure/MasterProcedure';
+import MasterInvestigation from '@evara-backend/core/models/patientDashboard/investigation/MasterInvestigations';
+import MasterCryoPreservations from '@evara-backend/core/models/patientDashboard/cryoPreservation/MasterCryoPreservations';
+import MasterService from '@evara-backend/core/models/patientDashboard/services/MasterService';
+import MasterTreatmentCycle from '@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
+import ErrorMessage from '@evara-backend/core/lib/utils/ErrorMessage';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
-  console.log("Received event:", JSON.stringify(event, null, 2));
+  console.log('Received event:', JSON.stringify(event, null, 2));
 
   const auth = extractAuthorizerDetails(event);
-  console.log("Extracted auth details:", auth);
+  console.log('Extracted auth details:', auth);
 
   try {
     // Connect to MongoDB
-    console.log("Connecting to MongoDB...");
+    console.log('Connecting to MongoDB...');
     await connectMongoDb();
-    console.log("Connected to MongoDB");
+    console.log('Connected to MongoDB');
 
     if (!event.body) {
-      console.log("Error: No data provided in the request body");
-      throw new ErrorMessage(400, "Data is required");
+      console.log('Error: No data provided in the request body');
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     // Parse the body from the event
-    console.log("Parsing request body...");
+    console.log('Parsing request body...');
     const data = JSON.parse(event.body);
-    console.log("Parsed data:", data);
+    console.log('Parsed data:', data);
 
     // Add the clinicId from the authorization details
     data.clinicId = auth.clinicId;
-    console.log("Updated data with clinicId:", data.clinicId);
+    console.log('Updated data with clinicId:', data.clinicId);
 
-    console.log("Incoming procedure data:", data.procedures);
+    console.log('Incoming procedure data:', data.procedures);
 
     // Initialize package data
     const packageData = {
@@ -59,8 +59,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     };
 
     // Function to save a master procedure
-    const saveMasterProcedure = async (item) => {
-      console.log("Adding procedure to MasterProcedures:", item.name);
+    const saveMasterProcedure = async item => {
+      console.log('Adding procedure to MasterProcedures:', item.name);
 
       const procedure = new MasterProcedures({
         clinicId: data.clinicId,
@@ -74,16 +74,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         cost: 0,
       });
 
-      console.log("Procedure object before saving:", procedure);
+      console.log('Procedure object before saving:', procedure);
 
       const savedProcedure = await procedure.save();
-      console.log("MasterProcedure saved:", savedProcedure);
+      console.log('MasterProcedure saved:', savedProcedure);
       return savedProcedure._id;
     };
 
     // Function to save a master investigation
-    const saveMasterInvestigation = async (item) => {
-      console.log("Adding investigation to MasterInvestigation:", item.name);
+    const saveMasterInvestigation = async item => {
+      console.log('Adding investigation to MasterInvestigation:', item.name);
       const investigation = new MasterInvestigation({
         clinicId: data.clinicId,
         name: item.name,
@@ -96,13 +96,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         cost: 0,
       });
       const savedInvestigation = await investigation.save();
-      console.log("MasterInvestigation saved:", savedInvestigation);
+      console.log('MasterInvestigation saved:', savedInvestigation);
       return savedInvestigation._id;
     };
 
     // Function to save a master cryo preservation
-    const saveMasterCryoPreservation = async (item) => {
-      console.log("Adding cryo preservation to MasterCryoPreservations:", item.name);
+    const saveMasterCryoPreservation = async item => {
+      console.log(
+        'Adding cryo preservation to MasterCryoPreservations:',
+        item.name,
+      );
       const cryoPreservation = new MasterCryoPreservations({
         clinicId: data.clinicId,
         name: item.name,
@@ -115,13 +118,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         cost: 0,
       });
       const savedCryoPreservation = await cryoPreservation.save();
-      console.log("MasterCryoPreservation saved:", savedCryoPreservation);
+      console.log('MasterCryoPreservation saved:', savedCryoPreservation);
       return savedCryoPreservation._id;
     };
 
     // Function to save a master service
-    const saveMasterService = async (item) => {
-      console.log("Adding service to MasterService:", item.name);
+    const saveMasterService = async item => {
+      console.log('Adding service to MasterService:', item.name);
       const service = new MasterService({
         clinicId: data.clinicId,
         name: item.name,
@@ -134,13 +137,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         cost: 0,
       });
       const savedService = await service.save();
-      console.log("MasterService saved:", savedService);
+      console.log('MasterService saved:', savedService);
       return savedService._id;
     };
 
     // Function to save a master treatment cycle
-    const saveMasterTreatmentCycle = async (item) => {
-      console.log("Adding treatment cycle to MasterTreatmentCycle:", item.name);
+    const saveMasterTreatmentCycle = async item => {
+      console.log('Adding treatment cycle to MasterTreatmentCycle:', item.name);
       const treatmentCycle = new MasterTreatmentCycle({
         clinicId: data.clinicId,
         name: item.name,
@@ -153,7 +156,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         cost: 0,
       });
       const savedTreatmentCycle = await treatmentCycle.save();
-      console.log("MasterTreatmentCycle saved:", savedTreatmentCycle);
+      console.log('MasterTreatmentCycle saved:', savedTreatmentCycle);
       return savedTreatmentCycle._id;
     };
 
@@ -170,7 +173,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const savedInvestigationId = await saveMasterInvestigation(item);
       // Update the package data with the newly generated _id
       item.investigation = savedInvestigationId;
-      packageData.investigations.push({ ...item, itemId: savedInvestigationId });
+      packageData.investigations.push({
+        ...item,
+        itemId: savedInvestigationId,
+      });
     }
 
     // Saving cryo preservations
@@ -178,7 +184,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const savedCryoPreservationId = await saveMasterCryoPreservation(item);
       // Update the package data with the newly generated _id
       item.cryoPreservation = savedCryoPreservationId;
-      packageData.cryoPreservations.push({ ...item, itemId: savedCryoPreservationId });
+      packageData.cryoPreservations.push({
+        ...item,
+        itemId: savedCryoPreservationId,
+      });
     }
 
     // Saving services
@@ -194,19 +203,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const savedTreatmentCycleId = await saveMasterTreatmentCycle(item);
       // Update the package data with the newly generated _id
       item.cycle = savedTreatmentCycleId;
-      packageData.treatmentCycles.push({ ...item, itemId: savedTreatmentCycleId });
+      packageData.treatmentCycles.push({
+        ...item,
+        itemId: savedTreatmentCycleId,
+      });
     }
 
     // Create and save the master package
-    console.log("Creating new MasterPackage with updated data:", packageData);
+    console.log('Creating new MasterPackage with updated data:', packageData);
     const newPackage = new MasterPackage(packageData);
     const savedPackage = await newPackage.save();
-    console.log("New package created successfully:", savedPackage);
+    console.log('New package created successfully:', savedPackage);
 
     // Return success response
-    return successResponse("Package created successfully", savedPackage);
+    return successResponse('Package created successfully', savedPackage);
   } catch (error) {
-    console.log("Error occurred during package creation:", error);
+    console.log('Error occurred during package creation:', error);
     return errorResponse(error);
   }
 };

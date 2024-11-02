@@ -1,21 +1,21 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import formatPaginationResult from "@evara-backend/core/src/lib/utils/formatPaginationResult";
-import { IPaginateOptions } from "@evara-backend/core/src/lib/types/pagination";
-import { log } from "console";
-import Doctors from "@evara-backend/core/src/models/mastersDashboard/Doctors";
-import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
-import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
-import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
-import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
-import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
-import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
-import { PatientPharmacy } from "@evara-backend/core/src/models/patientDashboard/PatientPharmacy";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
+import { IPaginateOptions } from '@evara-backend/core/src/lib/types/pagination';
+import { log } from 'console';
+import Doctors from '@evara-backend/core/src/models/mastersDashboard/Doctors';
+import { PharmacyStock } from '@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock';
+import { DrugLocation } from '@evara-backend/core/src/models/pharmacyDashboard/DrugLocation';
+import { DrugItem } from '@evara-backend/core/src/models/pharmacyDashboard/DrugItem';
+import { DrugCategory } from '@evara-backend/core/src/models/pharmacyDashboard/DrugCategory';
+import { DrugType } from '@evara-backend/core/src/models/pharmacyDashboard/DrugType';
+import { DrugVendor } from '@evara-backend/core/src/models/pharmacyDashboard/DrugVendor';
+import { PatientPharmacy } from '@evara-backend/core/src/models/patientDashboard/PatientPharmacy';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
 
 // Handler function
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -24,71 +24,71 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     await connectMongoDb();
 
     // Extract patientCode from the query parameters
     if (event.pathParameters === null) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
     // Safely access the id property
-    const id = event.pathParameters["patientId"];
+    const id = event.pathParameters['patientId'];
     if (!id) {
-      throw new ErrorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, 'Id is not provided');
     }
 
     const params = event.queryStringParameters || {};
-    const { page = "1", limit = "10", sort: sortRaw, status } = params;
+    const { page = '1', limit = '10', sort: sortRaw, status } = params;
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
     const populate = [
       {
-        path: "item.stock",
+        path: 'item.stock',
         model: PharmacyStock.modelName,
         populate: [
           {
-            path: "item",
+            path: 'item',
             model: DrugItem.modelName,
             populate: [
               {
-                path: "category",
+                path: 'category',
                 model: DrugCategory.modelName,
               },
               {
-                path: "type",
+                path: 'type',
                 model: DrugType.modelName,
               },
             ],
           },
           {
-            path: "batches.locations.location",
+            path: 'batches.locations.location',
             model: DrugLocation.modelName,
           },
           {
-            path: "batches.vendor",
+            path: 'batches.vendor',
             model: DrugVendor.modelName,
           },
           {
-            path: "batches.vendor.location",
+            path: 'batches.vendor.location',
             model: DrugLocation.modelName,
           },
         ],
       },
       {
-        path: "doctor",
+        path: 'doctor',
         model: Doctors.modelName,
       },
       {
-        path: "item.details.location",
+        path: 'item.details.location',
         model: DrugLocation.modelName,
       },
     ];
 
-    const paginate = JSON.parse(params.paginate || "false");
+    const paginate = JSON.parse(params.paginate || 'false');
 
     const query: any = {};
     query.branchId = auth.branchId;
@@ -112,7 +112,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       query.patient = id;
 
-      log("Patient Pharmacy Query", query);
+      log('Patient Pharmacy Query', query);
 
       // Fetching the appointments with pagination
       // const result = await PatientPharmacy.paginate(query, options);
@@ -126,7 +126,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       //   patient: patientCode,
       // }));
 
-      return successResponse("Success", {
+      return successResponse('Success', {
         records: records,
         pagination,
       });
@@ -141,7 +141,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       //   patient: query.id,
       // }));
 
-      return successResponse("Success", {
+      return successResponse('Success', {
         records: data,
       });
     }

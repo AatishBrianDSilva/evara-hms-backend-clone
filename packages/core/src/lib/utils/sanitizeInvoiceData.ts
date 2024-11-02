@@ -1,6 +1,6 @@
-import _ from "lodash";
-import { format, isValid, parseISO } from "date-fns";
-import { ISection } from "../types/global";
+import _ from 'lodash';
+import { format, isValid, parseISO } from 'date-fns';
+import { ISection } from '../types/global';
 
 type InputObject = { [key: string]: any };
 
@@ -13,7 +13,7 @@ export const sanitizeInvoiceData = (input: ISection[]): ISection[] => {
     const sanitizedContent: InputObject = {};
 
     _.forOwn(content, (value, key) => {
-      if (value !== "" && value !== null) {
+      if (value !== '' && value !== null) {
         const formattedKey = formatKey(key);
 
         sanitizedContent[formattedKey] = value;
@@ -23,7 +23,7 @@ export const sanitizeInvoiceData = (input: ISection[]): ISection[] => {
     return sanitizedContent;
   };
 
-  const sanitizedSections: ISection[] = input.map((section) => {
+  const sanitizedSections: ISection[] = input.map(section => {
     const { title, showTitle, isBillDetails, content } = section || [];
     return {
       title,

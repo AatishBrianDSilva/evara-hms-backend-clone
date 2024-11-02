@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IPoNumberCounter extends Document {
   branchId: string;
@@ -13,6 +13,6 @@ const poNumberCounterSchema = new Schema({
 });
 
 export const PoNumberCounter = mongoose.model<IPoNumberCounter>(
-  "PoNumberCounter",
-  poNumberCounterSchema
+  'PoNumberCounter',
+  poNumberCounterSchema,
 );

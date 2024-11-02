@@ -1,18 +1,18 @@
-import { IPurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
+import { IPurchaseOrder } from '@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder';
 import {
   EBuckets,
   EDocumentTypes,
   EReportTemplateTypes,
   IReportData,
-} from "@evara-backend/core/lib/types/global";
-import _ from "lodash";
+} from '@evara-backend/core/lib/types/global';
+import _ from 'lodash';
 
 export const processPurchaseOrderProcessedReportData = (
   purchaseOrder: IPurchaseOrder,
   clinicId: string,
   response: any, // Response data passed here
   branch: any, // Pass branch data here
-  vendor: any // Vendor passed here
+  vendor: any, // Vendor passed here
 ): IReportData => {
   const reportData: IReportData = {
     bucket: EBuckets.PharmacyInvoices,
@@ -23,18 +23,18 @@ export const processPurchaseOrderProcessedReportData = (
     sections: [],
     reportId: purchaseOrder.poNumber,
     clinic: clinicId,
-    doctor: "", // No doctor for purchase orders
+    doctor: '', // No doctor for purchase orders
   };
 
   // Add Purchase Order Details Section with Response Data
   reportData.sections.push({
     showTitle: true,
-    title: "Purchase Order Details",
+    title: 'Purchase Order Details',
     content: {
-      "PO Number": purchaseOrder.poNumber,
-      "Invoice Number": response.invoiceNumber || "N/A",
-      "Net Amount": response.netAmount || "N/A",
-      Date: new Date(purchaseOrder.createdAt).toLocaleDateString("en-GB"),
+      'PO Number': purchaseOrder.poNumber,
+      'Invoice Number': response.invoiceNumber || 'N/A',
+      'Net Amount': response.netAmount || 'N/A',
+      Date: new Date(purchaseOrder.createdAt).toLocaleDateString('en-GB'),
     },
   });
 
@@ -66,17 +66,17 @@ export const processPurchaseOrderProcessedReportData = (
     // Accumulate total amount
     totalAmount += total;
 
-    console.log("Item at process report", item);
+    console.log('Item at process report', item);
 
     return {
-      Item: item.name || "N/A",
-      "Batch No.": item.batchNo || "N/A",
-      "Expiry Date": item.expiryDate
-        ? new Date(item.expiryDate).toLocaleDateString("en-GB")
-        : "N/A",
+      Item: item.name || 'N/A',
+      'Batch No.': item.batchNo || 'N/A',
+      'Expiry Date': item.expiryDate
+        ? new Date(item.expiryDate).toLocaleDateString('en-GB')
+        : 'N/A',
       Quantity: noOfPacks,
       FreeQuantity: freeQuantity, // Include free quantity
-      "Rate (Per Pack)": buyPrice.toFixed(2),
+      'Rate (Per Pack)': buyPrice.toFixed(2),
       Amount: amount.toFixed(2),
       Discount: `${discountPercent}%`,
       GST: `${taxPercent}%`,
@@ -86,42 +86,42 @@ export const processPurchaseOrderProcessedReportData = (
 
   reportData.sections.push({
     showTitle: true,
-    title: "Processed Items",
+    title: 'Processed Items',
     content: responseItems,
   });
 
   // Add Branch and Vendor Address Section
   const branchAddress = branch?.address
-    ? `${branch.branchName}, ${branch.address.street || ""}, ${branch.address.city || ""}, ${
-        branch.address.state || ""
-      } - ${branch.address.zip || ""}`
-    : "Branch address not available";
+    ? `${branch.branchName}, ${branch.address.street || ''}, ${branch.address.city || ''}, ${
+        branch.address.state || ''
+      } - ${branch.address.zip || ''}`
+    : 'Branch address not available';
 
   const vendorAddress = vendor.address
     ? `${vendor.name}, ${vendor.address.addressLine1}, ${vendor.address.city}, ${
         vendor.address.state
-      } - ${vendor.address.pincode}, TIN: ${vendor.tin || "N/A"}`
-    : "Vendor address not available";
+      } - ${vendor.address.pincode}, TIN: ${vendor.tin || 'N/A'}`
+    : 'Vendor address not available';
 
   reportData.sections.push({
     showTitle: true,
-    title: "Address Information",
+    title: 'Address Information',
     content: {
-      "Branch Address": branchAddress,
-      "Vendor Address": vendorAddress,
+      'Branch Address': branchAddress,
+      'Vendor Address': vendorAddress,
     },
   });
 
   // Additional Details Section
   reportData.sections.push({
     showTitle: true,
-    title: "Additional Details",
+    title: 'Additional Details',
     content: {
-      Subtotal: response.subTotal || "N/A",
-      Discount: response.discount || "N/A",
-      "Other Charges": response.otherCharges || "N/A",
-      "Total Amount": totalAmount.toFixed(2), // Use the accumulated total amount
-      TotalTax: response.tax || "N/A",
+      Subtotal: response.subTotal || 'N/A',
+      Discount: response.discount || 'N/A',
+      'Other Charges': response.otherCharges || 'N/A',
+      'Total Amount': totalAmount.toFixed(2), // Use the accumulated total amount
+      TotalTax: response.tax || 'N/A',
     },
   });
 

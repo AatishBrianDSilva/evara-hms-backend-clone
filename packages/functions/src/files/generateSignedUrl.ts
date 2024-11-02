@@ -1,19 +1,19 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import S3Service from "@evara-backend/core/src/lib/aws/s3";
+import S3Service from '@evara-backend/core/src/lib/aws/s3';
 import {
   EDocumentTypes,
   EBuckets,
-} from "@evara-backend/core/src/lib/types/global";
+} from '@evara-backend/core/src/lib/types/global';
 
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     if (!event.body) {
-      throw new ErrorMessage(400, "No data provided");
+      throw new ErrorMessage(400, 'No data provided');
     }
 
     const {
@@ -30,15 +30,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (!bucket || !userId || !operation) {
       throw new ErrorMessage(
         400,
-        "Missing parameters: 'bucket', 'userId', and 'operation' are required"
+        "Missing parameters: 'bucket', 'userId', and 'operation' are required",
       );
     }
 
-    const validOperations = ["putObject", "getObject"];
+    const validOperations = ['putObject', 'getObject'];
     if (!validOperations.includes(operation)) {
       throw new ErrorMessage(
         400,
-        "Invalid operation. Use 'putObject' or 'getObject'."
+        "Invalid operation. Use 'putObject' or 'getObject'.",
       );
     }
 
@@ -57,10 +57,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       fileName,
       isImage,
       documentType,
-      reportId
+      reportId,
     );
 
-    console.log("Key,", key);
+    console.log('Key,', key);
 
     const region = process.env.REGION;
     const stage = process.env.STAGE;
@@ -69,7 +69,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     const bucketName =
-      stage === "prod" ? `${bucket}-${stage}` : `${bucket}-devs`;
+      stage === 'prod' ? `${bucket}-${stage}` : `${bucket}-devs`;
 
     const filePublic = isImage === true || bucket === EBuckets.PharmacyInvoices;
 
@@ -87,14 +87,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       key,
       expires,
       operation,
-      filePublic
+      filePublic,
     );
 
     console.log(`Presigned URL generated for ${operation} operation`);
 
     console.log(`URL: ${url}`);
 
-    return successResponse("Presigned URL generated successfully", {
+    return successResponse('Presigned URL generated successfully', {
       url,
       bucketName,
       key,
@@ -111,7 +111,7 @@ function generateObjectKey(
   fileName: string,
   isImage: boolean,
   documentType?: EDocumentTypes,
-  reportId?: string
+  reportId?: string,
 ): string {
   switch (bucket) {
     case EBuckets.UserProfiles:
@@ -121,7 +121,7 @@ function generateObjectKey(
     case EBuckets.UserReports:
       if (!documentType || !reportId) {
         throw new Error(
-          "Document type and reportId is required for user-reports bucket."
+          'Document type and reportId is required for user-reports bucket.',
         );
       }
 
@@ -134,10 +134,10 @@ function generateObjectKey(
 
     case EBuckets.PharmacyInvoices:
       if (!documentType) {
-        throw new Error("Document type is required for user-invoices bucket.");
+        throw new Error('Document type is required for user-invoices bucket.');
       }
       return `${userId}/${documentType}/uploaded/${fileName}`;
     default:
-      throw new Error("Invalid bucket name.");
+      throw new Error('Invalid bucket name.');
   }
 }

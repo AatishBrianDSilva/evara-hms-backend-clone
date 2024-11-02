@@ -1,12 +1,12 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Patient from "@evara-backend/core/src/models/Patients";
-import MasterService from "@evara-backend/core/src/models/patientDashboard/services/MasterService";
-import DefaultService from "@evara-backend/core/src/models/patientDashboard/services/DefaultService";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import Patient from '@evara-backend/core/src/models/Patients';
+import MasterService from '@evara-backend/core/src/models/patientDashboard/services/MasterService';
+import DefaultService from '@evara-backend/core/src/models/patientDashboard/services/DefaultService';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -22,12 +22,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     };
 
     const params = event.queryStringParameters || {};
-    const { searchQuery = "" } = params;
+    const { searchQuery = '' } = params;
 
     query.active = true;
 
     if (searchQuery) {
-      query.$or = [{ name: new RegExp(searchQuery, "i") }];
+      query.$or = [{ name: new RegExp(searchQuery, 'i') }];
     }
 
     const patientId = event.queryStringParameters?.patientId;
@@ -35,7 +35,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     if (patientId) {
       const patient = await Patient.findOne({ patientId }).lean();
       if (!patient) {
-        throw new ErrorMessage(404, "Patient not found");
+        throw new ErrorMessage(404, 'Patient not found');
       }
     }
 
@@ -46,14 +46,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     //Get all investigations
     const investigations = await MasterService.find(query)
       .populate({
-        path: "service",
+        path: 'service',
         model: DefaultService.modelName,
       })
       .sort({ serviceType: 1 })
       .lean();
 
     // Return success response
-    return successResponse("Success", investigations);
+    return successResponse('Success', investigations);
   } catch (error) {
     return errorResponse(error);
   }

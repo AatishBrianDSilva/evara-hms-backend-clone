@@ -1,5 +1,5 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
 interface ICryoPreservationDetails extends Document {
   cryoPreservationName: string;
@@ -19,8 +19,8 @@ const ICryoPreservationDetailsSchema: Schema =
       notes: String,
     },
     {
-      timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-    }
+      timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
+    },
   );
 
 interface IPatientCryoPreservation extends Document {
@@ -44,27 +44,27 @@ const PatientCryoPreservationSchema: Schema =
       caseId: { type: String, index: true },
       patient: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Patient",
+        ref: 'Patient',
         required: true,
         index: true,
       },
       patientCode: { type: String, required: true },
       doctor: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "doctors",
+        ref: 'doctors',
       },
       cryo: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "MasterProcedures",
+        ref: 'MasterProcedures',
         required: true,
       },
       details: ICryoPreservationDetailsSchema,
       date: { type: Date, default: Date.now },
-      status: { type: String, required: true, default: "Scheduled" },
+      status: { type: String, required: true, default: 'Scheduled' },
     },
     {
       timestamps: true,
-    }
+    },
   );
 
 PatientCryoPreservationSchema.plugin(paginate);
@@ -76,6 +76,6 @@ interface PatientCryoPreservationDocument
 const PatientCryoPreservation = mongoose.model<
   PatientCryoPreservationDocument,
   PaginateModel<PatientCryoPreservationDocument>
->("PatientCryoPreservation", PatientCryoPreservationSchema);
+>('PatientCryoPreservation', PatientCryoPreservationSchema);
 
 export default PatientCryoPreservation;

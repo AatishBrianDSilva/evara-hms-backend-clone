@@ -1,14 +1,14 @@
-import mongoose, { CallbackError } from "mongoose";
-import bcrypt from "bcryptjs";
+import mongoose, { CallbackError } from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 export enum EUserRole {
-  Admin = "admin",
-  Reception = "reception",
-  Nurse = "nurse",
-  Doctor = "doctor",
-  Pharmacist = "pharmacist",
-  PharmacyManager = "pharmacy-manager",
-  Billing = "billing",
+  Admin = 'admin',
+  Reception = 'reception',
+  Nurse = 'nurse',
+  Doctor = 'doctor',
+  Pharmacist = 'pharmacist',
+  PharmacyManager = 'pharmacy-manager',
+  Billing = 'billing',
 }
 
 export interface IUser {
@@ -42,9 +42,9 @@ const userSchema = new mongoose.Schema<IUser>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 userSchema.index({ clinicId: 1, branchId: 1 });
 
-export const User = mongoose.model<IUser>("User", userSchema);
+export const User = mongoose.model<IUser>('User', userSchema);

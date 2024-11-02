@@ -1,13 +1,13 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
 import {
   PatientBilling,
   IPatientBilling,
-} from "@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling";
-import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
+} from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling';
+import { S3KeepPermanently, parseS3Url } from 'src/files/_KeepPermanently';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -16,16 +16,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     if (!event.pathParameters) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
-    const id = event.pathParameters["id"];
+    const id = event.pathParameters['id'];
     if (!id) {
-      throw new ErrorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, 'Id is not provided');
     }
 
     if (!event.body) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     const {
@@ -34,28 +34,26 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       updates: Partial<
         Pick<
           IPatientBilling,
-          "discount" | "discountReason" | "discountFile" | "discountType"
+          'discount' | 'discountReason' | 'discountFile' | 'discountType'
         >
       >;
     } = JSON.parse(event.body);
 
-    console.log("Updates", updates);
+    console.log('Updates', updates);
 
     const updateKeys = Object.keys(updates);
     const allowedUpdates = [
-      "discount",
-      "discountReason",
-      "discountFile",
-      "discountType",
+      'discount',
+      'discountReason',
+      'discountFile',
+      'discountType',
     ];
-    const isValidUpdate = updateKeys.every((key) =>
-      allowedUpdates.includes(key)
-    );
+    const isValidUpdate = updateKeys.every(key => allowedUpdates.includes(key));
 
     if (!isValidUpdate) {
       throw new ErrorMessage(
         4000,
-        "Invalid update fields. Only 'discount', 'discountReason', 'discountFile', 'discountType' can be updated."
+        "Invalid update fields. Only 'discount', 'discountReason', 'discountFile', 'discountType' can be updated.",
       );
     }
 
@@ -66,29 +64,29 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const billing = await PatientBilling.findById(id);
     if (!billing) {
-      throw new ErrorMessage(404, "Billing document not found");
+      throw new ErrorMessage(404, 'Billing document not found');
     }
 
-    if (discountType === "percentage") {
+    if (discountType === 'percentage') {
       discountInPercentage = Number(discountValue);
       discountInAmount = Number(
-        (billing.subTotal * (discountInPercentage / 100)).toFixed(2)
+        (billing.subTotal * (discountInPercentage / 100)).toFixed(2),
       );
-    } else if (discountType === "amount") {
+    } else if (discountType === 'amount') {
       discountInAmount = Number(discountValue);
       discountInPercentage = Number(
-        ((discountInAmount / billing.subTotal) * 100).toFixed(2)
+        ((discountInAmount / billing.subTotal) * 100).toFixed(2),
       );
     }
 
-    console.log("discountInAmount", discountInAmount);
-    console.log("discountInPercentage", discountInPercentage);
+    console.log('discountInAmount', discountInAmount);
+    console.log('discountInPercentage', discountInPercentage);
 
     // Remove the rounding to whole numbers
     // discountInAmount = Math.round(discountInAmount);
     // discountInPercentage = Math.round(discountInPercentage);
 
-    console.log("After rounding", discountInAmount, discountInPercentage);
+    console.log('After rounding', discountInAmount, discountInPercentage);
 
     const updatedBilling = await PatientBilling.findByIdAndUpdate(
       id,
@@ -100,25 +98,25 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           discountFile: updates.discountFile,
         },
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedBilling) {
-      throw new ErrorMessage(404, "Failed to update billing document");
+      throw new ErrorMessage(404, 'Failed to update billing document');
     }
 
-    if (updates.discountFile && updates.discountFile.startsWith("https://")) {
+    if (updates.discountFile && updates.discountFile.startsWith('https://')) {
       const s3UrlParts = parseS3Url(updates.discountFile);
       if (s3UrlParts) {
         await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
       }
     }
 
-    return successResponse("Billing updated successfully", {
+    return successResponse('Billing updated successfully', {
       updatedBilling,
     });
   } catch (error) {
-    console.error("Error updating billing:", error);
+    console.error('Error updating billing:', error);
     return errorResponse(error);
   }
 };

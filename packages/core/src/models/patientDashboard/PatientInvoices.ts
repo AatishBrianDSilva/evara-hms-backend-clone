@@ -1,5 +1,5 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
 interface PatientInvoices extends Document {
   clinicId: string;
@@ -20,7 +20,7 @@ const PatientInvoicesSchema = new Schema(
     doctor: { type: String },
     patient: {
       type: Schema.Types.ObjectId,
-      ref: "patients",
+      ref: 'patients',
       required: true,
       index: true,
     },
@@ -32,7 +32,7 @@ const PatientInvoicesSchema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 PatientInvoicesSchema.index({ clinicId: 1, branchId: 1 });
@@ -45,6 +45,6 @@ export interface PatientInvoicesDocument extends Document, PatientInvoices {}
 const PatientInvoices = mongoose.model<
   PatientInvoicesDocument,
   PaginateModel<PatientInvoicesDocument>
->("patientInvoices", PatientInvoicesSchema);
+>('patientInvoices', PatientInvoicesSchema);
 
 export default PatientInvoices;

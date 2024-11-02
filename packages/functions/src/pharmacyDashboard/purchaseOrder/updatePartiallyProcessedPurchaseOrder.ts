@@ -1,13 +1,13 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { PurchaseOrder } from "@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder";
-import { PharmacyInvoice } from "@evara-backend/core/models/pharmacyDashboard/PharmacyInvoice";
-import { S3KeepPermanently, parseS3Url } from "src/files/_KeepPermanently";
-import { extractAuthorizerDetails } from "@evara-backend/core/lib/utils/extractAuthorizerDetails";
-import { updateStockFromPurchaseOrder } from "../stocks/updateStockFromPurchaseOrder";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { PurchaseOrder } from '@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder';
+import { PharmacyInvoice } from '@evara-backend/core/models/pharmacyDashboard/PharmacyInvoice';
+import { S3KeepPermanently, parseS3Url } from 'src/files/_KeepPermanently';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
+import { updateStockFromPurchaseOrder } from '../stocks/updateStockFromPurchaseOrder';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -20,13 +20,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
   try {
     if (!event.body) {
-      throw new ErrorMessage(400, "Data is required");
+      throw new ErrorMessage(400, 'Data is required');
     }
 
     const { id, ...updateData } = JSON.parse(event.body);
 
     if (!id) {
-      throw new ErrorMessage(400, "ID is required for update");
+      throw new ErrorMessage(400, 'ID is required for update');
     }
 
     console.log(`Updating purchase order with ID: ${id}`);
@@ -34,20 +34,23 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const purchaseOrder = await PurchaseOrder.findById(id).session(session); // Use session for the query
     if (!purchaseOrder) {
-      throw new ErrorMessage(404, "Purchase order not found");
+      throw new ErrorMessage(404, 'Purchase order not found');
     }
-    console.log("Purchase order found:", JSON.stringify(purchaseOrder));
+    console.log('Purchase order found:', JSON.stringify(purchaseOrder));
 
     // Handle invoice file uploads
     const invoiceFileUrls = [];
-    if (updateData.response?.invoice && updateData.response?.invoice.length > 0) {
+    if (
+      updateData.response?.invoice &&
+      updateData.response?.invoice.length > 0
+    ) {
       for (let i = 0; i < updateData.response.invoice.length; i++) {
         if (updateData.response.invoice[i].length > 0) {
           const s3UrlParts = parseS3Url(updateData.response.invoice[i]);
 
           if (s3UrlParts) {
             await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
-            const invoicePart = s3UrlParts.key.split("/");
+            const invoicePart = s3UrlParts.key.split('/');
             invoiceFileUrls.push(updateData.response.invoice[i]);
 
             const pharmacyInvoice = new PharmacyInvoice({
@@ -59,10 +62,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               key: s3UrlParts.key,
               invoiceNumber: updateData.invoiceNumber || undefined,
             });
-            console.log(`Saving Pharmacy Invoice: ${JSON.stringify(pharmacyInvoice)}`);
+            console.log(
+              `Saving Pharmacy Invoice: ${JSON.stringify(pharmacyInvoice)}`,
+            );
             await pharmacyInvoice.save({ session }); // Save using session
           } else {
-            throw new ErrorMessage(400, "Invalid image URL");
+            throw new ErrorMessage(400, 'Invalid image URL');
           }
         }
       }
@@ -73,7 +78,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       items: [],
       invoiceNumber: updateData.invoiceNumber,
       invoiceFileUrl: invoiceFileUrls,
-      status: "ProcessedWithoutUpdating",
+      status: 'ProcessedWithoutUpdating',
       invoice: invoiceFileUrls, // Ensure the invoice file URLs are added to the invoice field
     };
 
@@ -83,25 +88,29 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     let responseSubTotal = 0;
     let responseTotalTax = 0;
 
-    console.log("Processing items in the request...");
+    console.log('Processing items in the request...');
 
     // Extract batchNo and expiryDate before processing items
     const batchDetails = {};
-    updateData.response.items.forEach((responseItem) => {
+    updateData.response.items.forEach(responseItem => {
       if (responseItem && responseItem.item) {
         const itemId = responseItem.item._id || responseItem.item;
         batchDetails[itemId] = {
           batchNo: responseItem.batchNo,
-          expiryDate: responseItem.expiryDate ? new Date(responseItem.expiryDate) : null, // Ensure expiryDate is a Date object or null
+          expiryDate: responseItem.expiryDate
+            ? new Date(responseItem.expiryDate)
+            : null, // Ensure expiryDate is a Date object or null
         };
       }
     });
 
-    console.log("Batch Details:", batchDetails);
+    console.log('Batch Details:', batchDetails);
 
     // Process each item in the request
     updateData.request.items.forEach((item, index) => {
-      console.log(`Processing request item ${index + 1}/${updateData.request.items.length}`);
+      console.log(
+        `Processing request item ${index + 1}/${updateData.request.items.length}`,
+      );
       console.log(`Request item data: ${JSON.stringify(item)}`);
 
       const packsRequired = item.packsRequired; // Total packs required
@@ -135,15 +144,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           freeQuantity: item.freeQuantity || 0,
           noOfPacks: fulfilledPacks,
           packsRequired: item.packsRequired,
-          batchNo: batchInfo.batchNo || "Unknown", // Add batchNo
+          batchNo: batchInfo.batchNo || 'Unknown', // Add batchNo
           expiryDate: batchInfo.expiryDate || null, // Add expiryDate
-          status: "ProcessedWithoutUpdating",
+          status: 'ProcessedWithoutUpdating',
           discount: discount, // Ensure discount is included in the response item
         });
         console.log(
           `Added to Response Items: ${JSON.stringify(
-            newResponse.items[newResponse.items.length - 1]
-          )}`
+            newResponse.items[newResponse.items.length - 1],
+          )}`,
         );
       }
 
@@ -170,12 +179,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           freeQuantity: item.freeQuantity || 0,
           noOfPacks: remainingPacks,
           packsRequired: item.packsRequired,
-          batchNo: item.batchNo || "Unknown",
+          batchNo: item.batchNo || 'Unknown',
           expiryDate: item.expiryDate ? new Date(item.expiryDate) : null, // Ensure expiryDate is a Date object or null
-          status: "Pending",
+          status: 'Pending',
           discount: discount, // Add discount field for pending items
         });
-        console.log(`Unfulfilled item added with remaining packs: ${remainingPacks}`);
+        console.log(
+          `Unfulfilled item added with remaining packs: ${remainingPacks}`,
+        );
       }
     });
 
@@ -187,20 +198,28 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     let responseDiscountAmount = 0;
 
     if (updateData.request.discount) {
-      requestDiscountAmount = (requestSubTotal * updateData.request.discount) / 100;
+      requestDiscountAmount =
+        (requestSubTotal * updateData.request.discount) / 100;
     }
 
     if (updateData.response.discount) {
-      responseDiscountAmount = (responseSubTotal * updateData.response.discount) / 100;
+      responseDiscountAmount =
+        (responseSubTotal * updateData.response.discount) / 100;
     }
 
     const requestOtherCharges = updateData.request.otherCharges || 0;
     const responseOtherCharges = updateData.response.otherCharges || 0;
 
     const requestNetAmount =
-      requestSubTotal - requestDiscountAmount + requestTotalTax + requestOtherCharges;
+      requestSubTotal -
+      requestDiscountAmount +
+      requestTotalTax +
+      requestOtherCharges;
     const responseNetAmount =
-      responseSubTotal - responseDiscountAmount + responseTotalTax + responseOtherCharges;
+      responseSubTotal -
+      responseDiscountAmount +
+      responseTotalTax +
+      responseOtherCharges;
 
     console.log(`Request Net Amount: ${requestNetAmount}`);
     console.log(`Response Net Amount: ${responseNetAmount}`);
@@ -228,20 +247,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Save the updated purchase order
     const updatedData = await purchaseOrder.save({ session }); // Save using session
-    console.log("Purchase order updated successfully.");
+    console.log('Purchase order updated successfully.');
 
     // Update stock from purchase order after saving the purchase order
     await updateStockFromPurchaseOrder(purchaseOrder._id, session);
-    console.log("Stock updated from purchase order successfully.");
+    console.log('Stock updated from purchase order successfully.');
 
     await session.commitTransaction(); // Commit the transaction
     session.endSession(); // End the session
 
-    return successResponse("Purchase order updated successfully", updatedData);
+    return successResponse('Purchase order updated successfully', updatedData);
   } catch (error) {
     await session.abortTransaction(); // Abort the transaction on error
     session.endSession(); // End the session
-    console.error("Error updating purchase order:", error);
+    console.error('Error updating purchase order:', error);
     return errorResponse(error);
   }
 };

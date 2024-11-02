@@ -1,17 +1,17 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import ErrorMessage from "@evara-backend/core/src/lib/utils/ErrorMessage";
-import { DrugItem } from "@evara-backend/core/src/models/pharmacyDashboard/DrugItem";
-import { DrugVendor } from "@evara-backend/core/src/models/pharmacyDashboard/DrugVendor";
-import { PharmacyStock } from "@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock";
-import { DrugLocation } from "@evara-backend/core/src/models/pharmacyDashboard/DrugLocation";
-import { DrugCategory } from "@evara-backend/core/src/models/pharmacyDashboard/DrugCategory";
-import { DrugType } from "@evara-backend/core/src/models/pharmacyDashboard/DrugType";
-import { extractAuthorizerDetails } from "@evara-backend/core/src/lib/utils/extractAuthorizerDetails";
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import { DrugItem } from '@evara-backend/core/src/models/pharmacyDashboard/DrugItem';
+import { DrugVendor } from '@evara-backend/core/src/models/pharmacyDashboard/DrugVendor';
+import { PharmacyStock } from '@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock';
+import { DrugLocation } from '@evara-backend/core/src/models/pharmacyDashboard/DrugLocation';
+import { DrugCategory } from '@evara-backend/core/src/models/pharmacyDashboard/DrugCategory';
+import { DrugType } from '@evara-backend/core/src/models/pharmacyDashboard/DrugType';
+import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -19,46 +19,46 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
     if (!auth) {
-      throw new ErrorMessage(401, "Unauthorized");
+      throw new ErrorMessage(401, 'Unauthorized');
     }
 
     await connectMongoDb();
 
     if (event.pathParameters === null) {
-      throw new ErrorMessage(400, "Path parameters are null");
+      throw new ErrorMessage(400, 'Path parameters are null');
     }
 
     // Safely access the id property
-    const id = event.pathParameters["id"];
+    const id = event.pathParameters['id'];
     if (!id) {
-      throw new ErrorMessage(400, "Id is not provided");
+      throw new ErrorMessage(400, 'Id is not provided');
     }
 
     const populate = [
       {
-        path: "item",
+        path: 'item',
         model: DrugItem.modelName,
         populate: [
           {
-            path: "category",
+            path: 'category',
             model: DrugCategory.modelName,
           },
           {
-            path: "type",
+            path: 'type',
             model: DrugType.modelName,
           },
         ],
       },
       {
-        path: "batches.locations.location",
+        path: 'batches.locations.location',
         model: DrugLocation.modelName,
       },
       {
-        path: "batches.vendor",
+        path: 'batches.vendor',
         model: DrugVendor.modelName,
       },
       {
-        path: "batches.vendor.location",
+        path: 'batches.vendor.location',
         model: DrugLocation.modelName,
       },
     ];
@@ -66,10 +66,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const data = await PharmacyStock.findById(id).populate(populate).lean();
 
     if (!data) {
-      throw new ErrorMessage(404, "Not found");
+      throw new ErrorMessage(404, 'Not found');
     }
 
-    return successResponse("Fetched successfully", data);
+    return successResponse('Fetched successfully', data);
   } catch (error) {
     return errorResponse(error);
   }

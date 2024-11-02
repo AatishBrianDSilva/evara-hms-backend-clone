@@ -1,12 +1,12 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import { autoIncrementId } from "../Counters";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import { autoIncrementId } from '../Counters';
+import paginate from 'mongoose-paginate-v2';
 
 export enum EInternalOrderStatus {
-  Draft = "Draft",
-  Approved = "Approved",
-  Rejected = "Rejected",
-  Processed = "Processed",
+  Draft = 'Draft',
+  Approved = 'Approved',
+  Rejected = 'Rejected',
+  Processed = 'Processed',
 }
 
 export interface IInternalOrderBatchDetail extends Document {
@@ -41,20 +41,20 @@ export interface IInternalOrder extends Document {
 }
 
 const itemSchema = new Schema({
-  item: { type: Schema.Types.ObjectId, ref: "PharmacyStock", required: true },
+  item: { type: Schema.Types.ObjectId, ref: 'PharmacyStock', required: true },
   quantity: { type: Number, required: true, min: 1 },
   batches: [internalOrderBatchDetailSchema],
   transferFrom: {
     location: {
       type: Schema.Types.ObjectId,
-      ref: "DrugLocation",
+      ref: 'DrugLocation',
       required: true,
     },
     quantity: { type: Number, required: true },
   },
   transferTo: {
     type: Schema.Types.ObjectId,
-    ref: "DrugLocation",
+    ref: 'DrugLocation',
     required: true,
   },
   notes: { type: String, required: false },
@@ -76,33 +76,33 @@ const internalOrderSchema = new Schema(
       default: EInternalOrderStatus.Draft,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 internalOrderSchema.index({ status: 1 });
 internalOrderSchema.index({ createdBy: 1, approvedBy: 1 });
 
-internalOrderSchema.pre("validate", function (next) {
+internalOrderSchema.pre('validate', function (next) {
   if (this.status === EInternalOrderStatus.Approved && !this.authorizedBy) {
     this.invalidate(
-      "authorizedBy",
-      "authorizedBy is required when the status is Approved"
+      'authorizedBy',
+      'authorizedBy is required when the status is Approved',
     );
   } else if (
     this.status === EInternalOrderStatus.Rejected &&
     !this.authorizedBy
   ) {
     this.invalidate(
-      "authorizedBy",
-      "rejectedBy is required when the status is Rejected"
+      'authorizedBy',
+      'rejectedBy is required when the status is Rejected',
     );
   }
   next();
 });
 
 internalOrderSchema.pre(
-  "save",
-  autoIncrementId("internalOrder", "ioNumber", "IO-")
+  'save',
+  autoIncrementId('internalOrder', 'ioNumber', 'IO-'),
 );
 
 internalOrderSchema.plugin(paginate);
@@ -112,4 +112,4 @@ export interface IInternalOrderDocument extends Document, IInternalOrder {}
 export const InternalOrder = mongoose.model<
   IInternalOrderDocument,
   PaginateModel<IInternalOrderDocument>
->("InternalOrder", internalOrderSchema);
+>('InternalOrder', internalOrderSchema);

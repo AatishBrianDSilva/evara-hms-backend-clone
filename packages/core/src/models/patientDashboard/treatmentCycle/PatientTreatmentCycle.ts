@@ -1,9 +1,9 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Schema } from 'mongoose';
 import {
   ETreatmentCycleCategoryKey,
   ETreatmentCycleMetric,
   ETreatmentCycleReport,
-} from "./DefaultTreatmentCycle";
+} from './DefaultTreatmentCycle';
 
 interface IPatientTreatmentCycle extends Document {
   clinicId: string;
@@ -18,14 +18,14 @@ interface IPatientTreatmentCycle extends Document {
       name: string;
       status: string;
       details: mongoose.Schema.Types.Mixed;
-    }
+    },
   ];
   checklists: [
     {
       name: string;
       status: string;
       details: mongoose.Schema.Types.Mixed;
-    }
+    },
   ];
   reports: [
     {
@@ -33,7 +33,7 @@ interface IPatientTreatmentCycle extends Document {
       reportType: ETreatmentCycleReport;
       status: string;
       details: mongoose.Schema.Types.Mixed;
-    }
+    },
   ];
   metrics: [
     {
@@ -41,7 +41,7 @@ interface IPatientTreatmentCycle extends Document {
       metricType: ETreatmentCycleMetric;
       status: string;
       details: mongoose.Schema.Types.Mixed;
-    }
+    },
   ];
   files: [string];
   status: string;
@@ -57,24 +57,24 @@ const PatientTreatmentCycleSchema: Schema = new Schema<IPatientTreatmentCycle>(
     cycleNo: { type: Number, required: true },
     patient: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Patient",
+      ref: 'Patient',
       required: true,
       index: true,
     },
     patientCode: { type: String, required: true },
     doctor: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "doctors",
+      ref: 'doctors',
     },
     cycle: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "MasterTreatmentCycle",
+      ref: 'MasterTreatmentCycle',
       required: true,
     },
     protocols: [
       {
         name: { type: String, required: true },
-        status: { type: String, required: true, default: "Pending" },
+        status: { type: String, required: true, default: 'Pending' },
         category: {
           type: String,
           required: true,
@@ -86,7 +86,7 @@ const PatientTreatmentCycleSchema: Schema = new Schema<IPatientTreatmentCycle>(
     checklists: [
       {
         name: { type: String, required: true },
-        status: { type: String, required: true, default: "Pending" },
+        status: { type: String, required: true, default: 'Pending' },
         category: {
           type: String,
           required: true,
@@ -103,7 +103,7 @@ const PatientTreatmentCycleSchema: Schema = new Schema<IPatientTreatmentCycle>(
           required: true,
           enum: Object.values(ETreatmentCycleReport),
         },
-        status: { type: String, required: true, default: "Pending" },
+        status: { type: String, required: true, default: 'Pending' },
         category: {
           type: String,
           required: true,
@@ -120,7 +120,7 @@ const PatientTreatmentCycleSchema: Schema = new Schema<IPatientTreatmentCycle>(
           required: true,
           enum: Object.values(ETreatmentCycleMetric),
         },
-        status: { type: String, required: true, default: "Pending" },
+        status: { type: String, required: true, default: 'Pending' },
         category: {
           type: String,
           required: true,
@@ -131,16 +131,16 @@ const PatientTreatmentCycleSchema: Schema = new Schema<IPatientTreatmentCycle>(
     ],
     files: [{ type: String }],
     date: { type: Date, required: true, default: Date.now },
-    status: { type: String, required: true, default: "Scheduled" },
+    status: { type: String, required: true, default: 'Scheduled' },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const PatientTreatmentCycle = mongoose.model<IPatientTreatmentCycle>(
-  "PatientTreatmentCycle",
-  PatientTreatmentCycleSchema
+  'PatientTreatmentCycle',
+  PatientTreatmentCycleSchema,
 );
 
 export default PatientTreatmentCycle;

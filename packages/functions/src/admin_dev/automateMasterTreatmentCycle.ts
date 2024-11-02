@@ -1,9 +1,9 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import errorResponse from "@evara-backend/core/src/lib/utils/errorResponse";
-import successResponse from "@evara-backend/core/src/lib/utils/successResponse";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import DefaultTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/DefaultTreatmentCycle";
-import MasterTreatmentCycle from "@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
+import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import DefaultTreatmentCycle from '@evara-backend/core/src/models/patientDashboard/treatmentCycle/DefaultTreatmentCycle';
+import MasterTreatmentCycle from '@evara-backend/core/src/models/patientDashboard/treatmentCycle/MasterTreatmentCycle';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -13,7 +13,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const defaultTreatmentCycles = await DefaultTreatmentCycle.find().lean();
 
     const treatmentCycles = await Promise.all(
-      defaultTreatmentCycles.map(async (defaultTreatmentCycle) => {
+      defaultTreatmentCycles.map(async defaultTreatmentCycle => {
         const masterTreatmentCycle = new MasterTreatmentCycle({
           treatmentCycle: defaultTreatmentCycle._id,
           cycleType: defaultTreatmentCycle.cycleType,
@@ -25,13 +25,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         });
 
         return await masterTreatmentCycle.save();
-      })
+      }),
     );
 
     // Return success response with all created treatmentCycles
     return successResponse(
       `${treatmentCycles.length} TreatmentCycles created successfully`,
-      treatmentCycles
+      treatmentCycles,
     );
   } catch (error) {
     // Handle any errors that occur during the operation

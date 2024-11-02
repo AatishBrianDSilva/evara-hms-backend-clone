@@ -1,5 +1,5 @@
-import mongoose, { Document, PaginateModel, Schema } from "mongoose";
-import paginate from "mongoose-paginate-v2";
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
 interface IPatientService extends Document {
   clinicId: string;
@@ -19,25 +19,25 @@ const PatientServiceSchema: Schema = new Schema(
     caseId: { type: String, index: true },
     patient: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Patient",
+      ref: 'Patient',
       required: true,
       index: true,
     },
     patientCode: { type: String, required: true },
     doctor: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "doctors",
+      ref: 'doctors',
     },
     service: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "MasterService",
+      ref: 'MasterService',
       required: true,
     },
     date: { type: Date, default: Date.now },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 PatientServiceSchema.plugin(paginate);
@@ -47,6 +47,6 @@ interface PatientServiceDocument extends Document, IPatientService {}
 const PatientService = mongoose.model<
   PatientServiceDocument,
   PaginateModel<PatientServiceDocument>
->("PatientService", PatientServiceSchema);
+>('PatientService', PatientServiceSchema);
 
 export default PatientService;

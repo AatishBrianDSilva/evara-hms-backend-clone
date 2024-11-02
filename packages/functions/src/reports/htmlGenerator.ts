@@ -1,102 +1,108 @@
-import * as fs from "fs";
-import * as path from "path";
-import * as Handlebars from "handlebars";
-import { SNSHandler } from "aws-lambda";
-import * as SQS from "aws-sdk/clients/sqs";
-import { formatToIndianCurrencyFormat } from "@evara-backend/core/src/lib/utils/formatToIndianCurrencyFormat"; // Adjust the path accordingly
+import * as fs from 'fs';
+import * as path from 'path';
+import * as Handlebars from 'handlebars';
+import { SNSHandler } from 'aws-lambda';
+import * as SQS from 'aws-sdk/clients/sqs';
+import { formatToIndianCurrencyFormat } from '@evara-backend/core/src/lib/utils/formatToIndianCurrencyFormat'; // Adjust the path accordingly
 
 import {
   EDocumentTypes,
   IPDFGeneratorMessage,
   IReportData,
-} from "@evara-backend/core/src/lib/types/global";
-import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";
-import Patient from "@evara-backend/core/src/models/Patients";
-import Clinic from "@evara-backend/core/src/models/mastersDashboard/Clinic";
-import SQSService from "@evara-backend/core/src/lib/aws/sqs";
-import axios from "axios";
+} from '@evara-backend/core/src/lib/types/global';
+import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
+import Patient from '@evara-backend/core/src/models/Patients';
+import Clinic from '@evara-backend/core/src/models/mastersDashboard/Clinic';
+import SQSService from '@evara-backend/core/src/lib/aws/sqs';
+import axios from 'axios';
 
-const TEMPLATE_PATH = path.resolve(__dirname, "../../../core/src/templates");
+const TEMPLATE_PATH = path.resolve(__dirname, '../../../core/src/templates');
 
 async function getBase64ImageFromUrl(imageUrl: string): Promise<string> {
-  const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
-  const buffer = Buffer.from(response.data, "binary");
-  const base64Image = buffer.toString("base64");
+  const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+  const buffer = Buffer.from(response.data, 'binary');
+  const base64Image = buffer.toString('base64');
   return `data:image/png;base64,${base64Image}`;
 }
 
 const getHtmlTemplate = async (templateType: string): Promise<string> => {
   const templatePath = path.join(TEMPLATE_PATH, `${templateType}.handlebars`);
-  console.log("Path", templatePath);
-  return fs.promises.readFile(templatePath, "utf8");
+  console.log('Path', templatePath);
+  return fs.promises.readFile(templatePath, 'utf8');
 };
 
 const generateHtml = (template: string, data: any): string => {
-  Handlebars.registerHelper("formatCurrency", (value) => {
+  Handlebars.registerHelper('formatCurrency', value => {
     return formatToIndianCurrencyFormat(value);
   });
 
-  Handlebars.registerHelper("properCase", (str) => {
-    if (typeof str !== "string") return str;
+  Handlebars.registerHelper('properCase', str => {
+    if (typeof str !== 'string') return str;
 
-    str = str.replace(/([a-z])([A-Z])/g, "$1 $2");
+    str = str.replace(/([a-z])([A-Z])/g, '$1 $2');
 
-    return str.replace(/\b\w/g, (char) => char.toUpperCase());
+    return str.replace(/\b\w/g, char => char.toUpperCase());
   });
 
-  Handlebars.registerHelper("capitalizeFirst", (str) => {
-    if (typeof str !== "string") return str;
+  Handlebars.registerHelper('capitalizeFirst', str => {
+    if (typeof str !== 'string') return str;
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   });
 
-  Handlebars.registerHelper("lt", function (a, b) {
+  Handlebars.registerHelper('lt', function (a, b) {
     return a < b;
   });
 
-  Handlebars.registerHelper("gte", function (a, b) {
+  Handlebars.registerHelper('gte', function (a, b) {
     return a >= b;
   });
 
-  Handlebars.registerHelper("getSectionByTitle", function (sections, title, options) {
-    if (!Array.isArray(sections)) {
+  Handlebars.registerHelper(
+    'getSectionByTitle',
+    function (sections, title, options) {
+      if (!Array.isArray(sections)) {
+        return options.inverse(this);
+      }
+
+      const section = sections.find(section => section.title === title);
+
+      if (section) {
+        return options.fn(section);
+      }
+
       return options.inverse(this);
-    }
+    },
+  );
 
-    const section = sections.find((section) => section.title === title);
-
-    if (section) {
-      return options.fn(section);
-    }
-
-    return options.inverse(this);
-  });
-
-  Handlebars.registerHelper("inc", function (value) {
+  Handlebars.registerHelper('inc', function (value) {
     return parseInt(value) + 1;
   });
 
-  Handlebars.registerHelper("getValue", function (object, key) {
+  Handlebars.registerHelper('getValue', function (object, key) {
     return object ? object[key] : null;
   });
 
-  Handlebars.registerHelper("startsWith", function (str, prefix) {
-    if (typeof str !== "string") {
+  Handlebars.registerHelper('startsWith', function (str, prefix) {
+    if (typeof str !== 'string') {
       str = String(str);
     }
     return str.startsWith(prefix);
   });
 
-  Handlebars.registerHelper("capitalizeFirst", function (str) {
-    if (typeof str !== "string") return str;
+  Handlebars.registerHelper('capitalizeFirst', function (str) {
+    if (typeof str !== 'string') return str;
     return str.charAt(0).toUpperCase() + str.slice(1);
   });
 
-  Handlebars.registerHelper("showIfContainsTitle", function (title, substring, options) {
-    if (typeof title === "string" && title.includes(substring)) {
-      return options.fn(this); // Render the block if title contains the substring
-    }
-    return options.inverse(this); // Otherwise, render the inverse block
-  });
+  Handlebars.registerHelper(
+    'showIfContainsTitle',
+    function (title, substring, options) {
+      if (typeof title === 'string' && title.includes(substring)) {
+        return options.fn(this); // Render the block if title contains the substring
+      }
+      return options.inverse(this); // Otherwise, render the inverse block
+    },
+  );
 
   const compiledTemplate = Handlebars.compile(template);
   return compiledTemplate(data);
@@ -105,22 +111,29 @@ const generateHeaderHtml = (
   header: any,
   styles: any,
   sections: any,
-  documentType: string
+  documentType: string,
 ): string => {
-  if (documentType === "PurchaseOrder" || documentType === "PurchaseOrderProcessed") {
+  if (
+    documentType === 'PurchaseOrder' ||
+    documentType === 'PurchaseOrderProcessed'
+  ) {
     // Extract PO number and date from "Purchase Order Details" section
     const poDetailsSection = sections.find(
-      (section: any) => section.title === "Purchase Order Details"
+      (section: any) => section.title === 'Purchase Order Details',
     );
-    const poNumber = poDetailsSection?.content["PO Number"] || "N/A";
-    const poDate = poDetailsSection?.content["Date"] || "N/A";
+    const poNumber = poDetailsSection?.content['PO Number'] || 'N/A';
+    const poDate = poDetailsSection?.content['Date'] || 'N/A';
 
     // Extract vendor and branch addresses
-    const addressSection = sections.find((section: any) => section.title === "Address Information");
+    const addressSection = sections.find(
+      (section: any) => section.title === 'Address Information',
+    );
     const vendorAddress =
-      addressSection?.content["Vendor Address"] || "Vendor address not available";
+      addressSection?.content['Vendor Address'] ||
+      'Vendor address not available';
     const branchAddress =
-      addressSection?.content["Branch Address"] || "Branch address not available";
+      addressSection?.content['Branch Address'] ||
+      'Branch address not available';
 
     return `
       <!-- Header with Logo, PO Number & Date -->
@@ -145,8 +158,12 @@ const generateHeaderHtml = (
   }
 
   // Default header for other document types
-  const branchSection = sections.find((section: any) => section.title === "Branch Details");
-  const branchAddress = branchSection ? branchSection.content.Address : "Address not available";
+  const branchSection = sections.find(
+    (section: any) => section.title === 'Branch Details',
+  );
+  const branchAddress = branchSection
+    ? branchSection.content.Address
+    : 'Address not available';
 
   return `
     <header style="display: flex; justify-content: space-between; align-items: flex-start; width: 94%; padding: 20px 0; box-sizing: border-box; margin-left: auto; margin-right: auto;">
@@ -165,12 +182,12 @@ const generateHeaderHtml = (
 
 const generateFooterHtml = (): string => {
   const currentDate = new Date()
-    .toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
+    .toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
     })
-    .replace(/ /g, "-");
+    .replace(/ /g, '-');
 
   return `
     <footer style="width: 94%; padding: 10px 0; font-size: 18px; color: grey; text-align: center; border-top: 2px solid #288BDB; margin-left: auto; margin-right: auto;">
@@ -197,7 +214,7 @@ export const main: SNSHandler = async (event, _context) => {
 
       const data: IReportData = JSON.parse(rawData);
 
-      console.log("SNS Message", JSON.stringify(data, null, 2));
+      console.log('SNS Message', JSON.stringify(data, null, 2));
 
       let clinic = null;
       let patient = null;
@@ -210,40 +227,42 @@ export const main: SNSHandler = async (event, _context) => {
       ) {
         clinic = await Clinic.findOne({ code: data.clinic }).lean();
         if (!clinic) {
-          console.error("Clinic not found");
+          console.error('Clinic not found');
           return;
         }
 
         addressData = {
           vendorAddress:
             data.sections
-              .find((section) => section.title === "Address Information")
-              ?.content["Vendor Address"]?.replace(/,\s*TIN:\s*N\/A$/, "") ||
-            "Vendor address not available",
+              .find(section => section.title === 'Address Information')
+              ?.content['Vendor Address']?.replace(/,\s*TIN:\s*N\/A$/, '') ||
+            'Vendor address not available',
           branchAddress:
-            data.sections.find((section) => section.title === "Address Information")?.content[
-              "Branch Address"
-            ] || "Branch address not available",
+            data.sections.find(
+              section => section.title === 'Address Information',
+            )?.content['Branch Address'] || 'Branch address not available',
         };
       } else {
         patient = await Patient.findById(data.patient).lean();
         if (!patient) {
-          console.error("Patient not found");
+          console.error('Patient not found');
           return;
         }
 
         clinic = await Clinic.findOne({ code: data.clinic }).lean();
         if (!clinic) {
-          console.error("Clinic not found");
+          console.error('Clinic not found');
           return;
         }
 
-        console.log("Sections Array:", JSON.stringify(data.sections, null, 2));
+        console.log('Sections Array:', JSON.stringify(data.sections, null, 2));
 
-        const branchSection = data.sections.find((section) => section.title === "Branch Details");
+        const branchSection = data.sections.find(
+          section => section.title === 'Branch Details',
+        );
         const branchAddress = branchSection
           ? branchSection.content.Address
-          : "Address not available";
+          : 'Address not available';
 
         addressData = {
           branchAddress: branchAddress, // Use branch details from sections
@@ -251,7 +270,7 @@ export const main: SNSHandler = async (event, _context) => {
       }
 
       const logoUrl =
-        "https://evara-hms-clinics-devs.s3.ap-south-1.amazonaws.com/Evara+new+logo+1.1.png";
+        'https://evara-hms-clinics-devs.s3.ap-south-1.amazonaws.com/Evara+new+logo+1.1.png';
 
       const logo = await getBase64ImageFromUrl(logoUrl);
 
@@ -259,13 +278,13 @@ export const main: SNSHandler = async (event, _context) => {
         logo: logo,
         clinicName: clinic?.name,
         clinicAddress: `${clinic?.headOfficeAddress?.street}, ${clinic?.headOfficeAddress?.city}, ${clinic?.headOfficeAddress?.state}, ${clinic?.headOfficeAddress?.pincode}`,
-        patientName: patient?.firstName + " " + patient?.lastName,
+        patientName: patient?.firstName + ' ' + patient?.lastName,
         patientId: patient?.patientId || patient?._id,
         doctorName: data.doctor,
         reportName: data.reportName,
       };
 
-      console.log("Data details", data.details);
+      console.log('Data details', data.details);
 
       // Extract and convert uploaded images to base64
       const uploadedImages = [];
@@ -287,8 +306,8 @@ export const main: SNSHandler = async (event, _context) => {
         uploadedImages, // Add the images to the template data
 
         styles: {
-          primaryColor: "#FF5C00",
-          secondaryColor: "#10535E",
+          primaryColor: '#FF5C00',
+          secondaryColor: '#10535E',
         },
       };
 
@@ -299,11 +318,12 @@ export const main: SNSHandler = async (event, _context) => {
         templateData.header,
         templateData.styles,
         templateData.sections,
-        data.documentType
+        data.documentType,
       );
 
       const footerHtml = generateFooterHtml(templateData.styles);
-      const htmlContentWithBorders = generateHtmlWithContentBorders(htmlContent);
+      const htmlContentWithBorders =
+        generateHtmlWithContentBorders(htmlContent);
 
       const key = patient
         ? `${patient._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`
@@ -311,7 +331,9 @@ export const main: SNSHandler = async (event, _context) => {
 
       const queueUrl = process.env.REPORT_PDF_GENERATION_QUEUE_URL;
       if (!queueUrl) {
-        throw new Error("Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set.");
+        throw new Error(
+          "Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set.",
+        );
       }
 
       const pdfGeneratorMessage: IPDFGeneratorMessage = {

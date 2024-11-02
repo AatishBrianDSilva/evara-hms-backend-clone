@@ -1,10 +1,10 @@
-import mongoose, { Document, Mixed, Schema } from "mongoose";
-import { autoIncrementId } from "../../Counters";
-import { EGender } from "../investigation/MedicalTests";
+import mongoose, { Document, Mixed, Schema } from 'mongoose';
+import { autoIncrementId } from '../../Counters';
+import { EGender } from '../investigation/MedicalTests';
 
 export enum ECryoPreservationType {
-  Embryo = "Embryo",
-  Sperm = "Sperm",
+  Embryo = 'Embryo',
+  Sperm = 'Sperm',
 }
 
 interface ICryoPreservations extends Document {
@@ -29,18 +29,18 @@ const CryoPreservationSchema: Schema = new Schema<ICryoPreservations>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Assume autoIncrementId is a function/middleware you've defined to auto-increment the testId
 CryoPreservationSchema.pre(
-  "save",
-  autoIncrementId("CryoPreservations", "cryoPreservationId", "CP-")
+  'save',
+  autoIncrementId('CryoPreservations', 'cryoPreservationId', 'CP-'),
 );
 
 const CryoPreservations = mongoose.model<ICryoPreservations>(
-  "CryoPreservations",
-  CryoPreservationSchema
+  'CryoPreservations',
+  CryoPreservationSchema,
 );
 
 export default CryoPreservations;

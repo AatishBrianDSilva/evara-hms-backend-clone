@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
 interface patientIdType {
   name: string;
@@ -16,12 +16,12 @@ const patientIdTypeSchema = new Schema<patientIdType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const PatientIdType = mongoose.model<patientIdType>(
-  "PatientIdType",
-  patientIdTypeSchema
+  'PatientIdType',
+  patientIdTypeSchema,
 );
 
 export default PatientIdType;
