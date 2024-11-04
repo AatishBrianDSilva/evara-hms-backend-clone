@@ -13,27 +13,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const id = event.pathParameters?.id;
     if (!id) {
-      console.error('No refund ID provided.');
-      // TODO: Handle this error more gracefully
-      // return errorResponse(new Error("Refund ID is required"), 400);
       throw new ErrorMessage(400, 'Refund ID is required');
     }
 
     await connectMongoDb();
-    console.log('MongoDB connection established.');
 
     const refund = await PatientRefund.findById(id);
     if (!refund) {
-      console.error(`Refund not found for ID: ${id}`);
       // return errorResponse(new Error("Refund not found"), 404);
       throw new ErrorMessage(404, 'Refund not found');
     }
 
-    console.log('Refund retrieved successfully.');
-
-    return successResponse(refund);
+    return successResponse('Refund retrieved successfully.', refund);
   } catch (error) {
-    console.error('Error occurred while fetching the refund:', error);
     return errorResponse(error);
   }
 };

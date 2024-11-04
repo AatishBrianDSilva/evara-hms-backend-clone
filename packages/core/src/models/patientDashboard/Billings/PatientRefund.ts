@@ -1,4 +1,5 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
 // Define the interface for PatientRefund document
 interface IPatientRefund extends Document {
@@ -65,8 +66,11 @@ const patientRefundSchema = new Schema<IPatientRefund>(
   },
 );
 
-// Create the PatientRefund model
-export const PatientRefund = mongoose.model<IPatientRefund>(
-  'PatientRefund',
-  patientRefundSchema,
-);
+patientRefundSchema.plugin(paginate);
+
+interface PatientRefundDocument extends Document, IPatientRefund {}
+
+export const PatientRefund = mongoose.model<
+  PatientRefundDocument,
+  PaginateModel<PatientRefundDocument>
+>('PatientRefund', patientRefundSchema);
