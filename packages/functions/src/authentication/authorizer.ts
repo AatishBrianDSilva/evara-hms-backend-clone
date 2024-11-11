@@ -58,7 +58,7 @@ function generatePolicy(
       Statement: [
         {
           Action: 'execute-api:Invoke',
-          Effect: effect,
+          Effect: effect as any,
           Resource: resource,
         },
       ],
@@ -308,6 +308,9 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
       PUT: [EUserRole.Admin, EUserRole.Billing, EUserRole.PharmacyManager],
       PATCH: [EUserRole.Admin, EUserRole.Billing, EUserRole.PharmacyManager],
       DELETE: [EUserRole.Admin, EUserRole.Billing, EUserRole.PharmacyManager],
+    },
+    analytics: {
+      GET: [EUserRole.Admin],
     },
   };
 

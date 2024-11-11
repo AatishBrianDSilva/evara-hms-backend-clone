@@ -549,6 +549,22 @@ export function MainStack({ stack }: StackContext) {
         'packages/functions/src/analyticsDashboard/pharmacy/getPharmacyReport.main',
       'GET /analytics/pharmacy/purchase-order-report':
         'packages/functions/src/analyticsDashboard/pharmacy/getPurchaseOrderReport.main',
+
+      // Treatments-Testing
+      'GET /analytics/treatments-testing/investigation-reports':
+        'packages/functions/src/analyticsDashboard/treatmentsTesting/getInvestigationReports.main',
+      'GET /analytics/treatments-testing/procedure-reports':
+        'packages/functions/src/analyticsDashboard/treatmentsTesting/getProcedureReports.main',
+      'GET /analytics/treatments-testing/cryo-preservation-reports':
+        'packages/functions/src/analyticsDashboard/treatmentsTesting/getCryoPreservationReports.main',
+      'GET /analytics/treatments-testing/treatment-cycle-reports':
+        'packages/functions/src/analyticsDashboard/treatmentsTesting/getTreatmentCycleReports.main',
+      'GET /analytics/treatments-testing/service-reports':
+        'packages/functions/src/analyticsDashboard/treatmentsTesting/getServiceReports.main',
+      'GET /analytics/treatments-testing/patient-package-reports':
+        'packages/functions/src/analyticsDashboard/treatmentsTesting/getPatientPackageReports.main',
+      'GET /analytics/treatments-testing/master-package-reports':
+        'packages/functions/src/analyticsDashboard/treatmentsTesting/getMasterPackageReports.main',
     },
   });
 
