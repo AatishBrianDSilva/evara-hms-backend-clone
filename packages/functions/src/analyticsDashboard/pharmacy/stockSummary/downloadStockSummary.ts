@@ -14,7 +14,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const { search = '', allData = 'false' } = params;
+    const { page = '1', limit = '25', search = '', allData = 'false' } = params;
+
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
 
     const fetchAllData = allData === 'true';
 
@@ -24,6 +27,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       branchId: auth.branchId,
       search,
       fetchAllData,
+      page: pageNumber,
+      limit: limitNumber,
     });
 
     // Add Sl.no to each record
