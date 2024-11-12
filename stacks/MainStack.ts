@@ -540,7 +540,9 @@ export function MainStack({ stack }: StackContext) {
       'GET /analytics/pharmacy/internal-consumption':
         'packages/functions/src/analyticsDashboard/pharmacy/getInternalConsumption.main',
       'GET /analytics/pharmacy/stock-summary':
-        'packages/functions/src/analyticsDashboard/pharmacy/getStockSummary.main',
+        'packages/functions/src/analyticsDashboard/pharmacy/stockSummary/getStockSummary.main',
+      'GET /analytics/pharmacy/stock-summary/download':
+        'packages/functions/src/analyticsDashboard/pharmacy/stockSummary/downloadStockSummary.main',
       'GET /analytics/pharmacy/patient-return':
         'packages/functions/src/analyticsDashboard/pharmacy/getPatientReturn.main',
       'GET /analytics/pharmacy/critical-stocks':
