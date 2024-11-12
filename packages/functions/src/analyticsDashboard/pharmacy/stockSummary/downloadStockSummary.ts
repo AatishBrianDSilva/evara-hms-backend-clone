@@ -31,9 +31,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       limit: limitNumber,
     });
 
+    // Calculate the starting serial number based on the page and limit
+    const startSlNo = (pageNumber - 1) * limitNumber + 1;
+
     // Add Sl.no to each record
     records.forEach((record: any, index: number) => {
-      record['SlNo'] = index + 1;
+      record['SlNo'] = startSlNo + index;
     });
 
     // Define the fields for the CSV
