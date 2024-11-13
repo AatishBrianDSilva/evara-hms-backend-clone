@@ -94,6 +94,11 @@ const generateHtml = (template: string, data: any): string => {
     return str.charAt(0).toUpperCase() + str.slice(1);
   });
 
+  Handlebars.registerHelper('toUpperCase', function (str) {
+    if (typeof str !== 'string') return str;
+    return str.toUpperCase();
+  });
+
   Handlebars.registerHelper(
     'showIfContainsTitle',
     function (title, substring, options) {
@@ -166,14 +171,14 @@ const generateHeaderHtml = (
     : 'Address not available';
 
   return `
-    <header style="display: flex; justify-content: space-between; align-items: flex-start; width: 94%; padding: 20px 0; box-sizing: border-box; margin-left: auto; margin-right: auto;">
+    <header style="display: flex; justify-content: space-between; align-items: flex-start; width: 94%; padding: 15px 0; box-sizing: border-box; margin-left: auto; margin-right: auto;">
       <div style="width: 140px; height: 67px; padding-top: 10px;">
         <img src="${header.logo}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
       </div>
       <div style="flex-grow: 1; text-align: center;">
-        <h1 style="margin: 0; font-size: 16px; text-decoration: underline; background: #5C5C5C; color: white; padding: 5px;">Bill of Supply & Tax Invoice</h1>
-        <p style="margin: 10px 0 0 0; font-size: 20px; font-weight: bold; text-transform: uppercase;">Evara Health Pvt Ltd</p>
-        <p style="margin: 0; font-size: 20px; font-weight: bold; text-transform: uppercase;">EVARA FERTILITY</p>
+        <h1 style="margin: 0; font-size: 14px; text-decoration: underline; background: #5C5C5C; color: white; padding: 5px;">Bill of Supply & Tax Invoice</h1>
+        <p style="margin: 10px 0 0 0; font-size: 18px; font-weight: bold; text-transform: uppercase;">Evara Health Pvt Ltd</p>
+        <p style="margin: 0; font-size: 18px; font-weight: bold; text-transform: uppercase;">EVARA FERTILITY</p>
       </div>
       <div style="width: 140px;"></div>
     </header>
@@ -190,7 +195,7 @@ const generateFooterHtml = (): string => {
     .replace(/ /g, '-');
 
   return `
-    <footer style="width: 94%; padding: 10px 0; font-size: 18px; color: grey; text-align: center; border-top: 2px solid #288BDB; margin-left: auto; margin-right: auto;">
+    <footer style="width: 94%; padding: 10px 0; font-size: 16px; color: grey; text-align: center; border-top: 2px solid #288BDB; margin-left: auto; margin-right: auto;">
       Bill generated on ${currentDate} - evarahealth.in
     </footer>
   `;

@@ -328,6 +328,15 @@ const processDataForReport = (
       isBillDetails: false,
       content: summaryContent,
     },
+    {
+      title: 'License',
+      showTitle: false,
+      isBillDetails: false,
+      content: {
+        GSTIN: '09AAHCE9017B1ZS',
+        'Drug Licence No': 'UP78210004082, UP78210004083',
+      },
+    },
   ];
 
   console.log('Report Data', reportData);
