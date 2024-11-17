@@ -1,0 +1,67 @@
+name: CI/CD Pipeline
+
+# Trigger the workflow on pushes to development and main branches
+on:
+  push:
+    branches:
+      - development
+      - main
+
+jobs:
+  # Job for deploying to staging (development branch)
+  deploy-staging:
+    if: github.ref == 'refs/heads/development' # Condition to run this job only on development branch
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write # Required for OIDC
+      contents: read
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Configure AWS credentials for staging using OIDC
+      - name: Configure AWS Credentials for Staging
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::908027393057:role/EvaraGitHubActionsDeployRole
+          aws-region: us-east-1
+
+      # Step 3: Install dependencies
+      - name: Install Dependencies
+        run: npm install
+
+      # Step 4: Deploy to staging
+      - name: Deploy to Staging
+        run: npm run deploy -- --stage dev
+
+  # Job for deploying to production (main branch)
+  deploy-production:
+    if: github.ref == 'refs/heads/main' # Condition to run this job only on main branch
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write # Required for OIDC
+      contents: read
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Configure AWS credentials for production using OIDC
+      - name: Configure AWS Credentials for Production
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::908027393057:role/EvaraGitHubActionsDeployRole
+          aws-region: us-east-1
+
+      # Step 3: Install dependencies
+      - name: Install Dependencies
+        run: npm install
+
+      # Step 4: Deploy to production
+      - name: Deploy to Production
+        run: npm run deploy -- --stage prod
