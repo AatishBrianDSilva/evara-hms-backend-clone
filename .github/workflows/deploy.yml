@@ -27,7 +27,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::908027393057:role/EvaraGitHubActionsDeployRole
-          aws-region: us-east-1
+          aws-region: ap-south-1
 
       # Step 3: Install dependencies
       - name: Install Dependencies
@@ -56,7 +56,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::908027393057:role/EvaraGitHubActionsDeployRole
-          aws-region: us-east-1
+          aws-region: ap-south-1
 
       # Step 3: Install dependencies
       - name: Install Dependencies
