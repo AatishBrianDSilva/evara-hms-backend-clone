@@ -248,8 +248,16 @@ const processDataForReport = (
     ? billItems[0].serviceType
     : 'Multiple Services';
 
-  const billDate = format(billing.createdAt, 'dd/MM/yyyy');
-  const billTime = format(billing.createdAt, 'h:mm a');
+  const billDate = new Date(billing.createdAt).toLocaleDateString('en-In', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+  const billTime = new Date(billing.createdAt).toLocaleTimeString('en-In', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
 
   const patientDetails = {
     patientName: `${patientData.patientData.firstName} ${patientData.patientData.lastName}`,
@@ -339,7 +347,6 @@ const processDataForReport = (
     },
   ];
 
-  console.log('Report Data', reportData);
   reportData.reportName = `Invoice ${billing.billingId}`;
   reportData.sections = sanitizeInvoiceData(sections);
 
