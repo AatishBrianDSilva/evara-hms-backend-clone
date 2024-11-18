@@ -39,7 +39,7 @@ export const MastersApiStack = ({ stack }: StackContext) => {
       'packages/functions/src/mastersDashboard/global/branch/getBranches.main',
     'GET /master/branch/active': {
       function:
-        'packages/functions/src/mastersDashboard/global/branch/getActiveBranches.main',
+        'packages/functions/src/mastersDashboard/global/branch/getActiveBranches.main ',
       authorizer: 'none',
     },
 
