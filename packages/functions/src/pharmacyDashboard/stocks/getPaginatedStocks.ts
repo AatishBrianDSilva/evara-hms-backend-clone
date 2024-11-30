@@ -15,7 +15,7 @@ import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extr
 import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
 
 // Utility function to parse the combined search query
-const parseSearchQuery = query => {
+const parseSearchQuery = (query: string) => {
   const searchTermMatch = query.match(/searchTerm:(.*?)(\s|$)/);
   const locationMatch = query.match(/location:(.*?)(\s|$)/);
 
@@ -44,9 +44,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       status,
       searchQuery = '', // The combined search query
     } = params;
-
-    log('Received query parameters:', params);
-    log('Parsed limit value:', limit);
 
     const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
 
@@ -85,6 +82,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const query: any = {};
     query.branchId = auth.branchId;
     query.clinicId = auth.clinicId;
+
+    // **New Filter: Exclude stocks with total quantity 0**
+    query['batches.locations.quantity'] = { $gt: 0 };
 
     if (status) {
       query.status = status;
@@ -155,40 +155,62 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-// Function to format records with additional fields
-const formatPaginateRecords = records =>
-  records.map(record => {
-    // Calculate the latest expiry date
-    const latestExpiryDate = record.batches.reduce((latest, batch) => {
-      const batchDate = new Date(batch.expiryDate);
-      return latest > batchDate ? latest : batchDate;
-    }, new Date(0)); // Assumes batches is not empty
+// * Function to format records with additional fields and exclude zero-quantity batches
 
-    // Aggregate all locations into a single string
-    const locationNames = record.batches.flatMap(batch =>
-      batch.locations.map(loc => loc.location.location),
-    ); // Flatten all location names into one array
+const formatPaginateRecords = (records: any[]) =>
+  records
+    .map(record => {
+      // Filter out batches where all locations have quantity 0
+      const filteredBatches = record.batches.filter(batch =>
+        batch.locations.some(loc => loc.quantity > 0),
+      );
 
-    const uniqueLocations = Array.from(new Set(locationNames)); // Convert Set to Array to get unique values
+      // If no batches left after filtering, exclude this record
+      if (filteredBatches.length === 0) {
+        return null;
+      }
 
-    const uniqueLocationCount = uniqueLocations.length; // Count of unique locations
+      // Calculate the latest expiry date from the filtered batches
+      const latestExpiryDate = filteredBatches.reduce((latest, batch) => {
+        const batchDate = new Date(batch.expiryDate);
+        return latest > batchDate ? latest : batchDate;
+      }, new Date(0)); // Initialize with epoch
 
-    const uniqueLocationString = uniqueLocations.join(', '); // Concatenate all unique location names
+      // Aggregate all unique location names from the filtered batches
+      const locationNames = filteredBatches.flatMap(batch =>
+        batch.locations.map(loc => loc.location.location),
+      );
 
-    // Calculate MRP per item
-    const packSize = record.item?.packSize || 1; // Default to 1 if packSize is not defined
-    const mrpPerItem = parseFloat((record.sellPrice / packSize).toFixed(2)); // Ensure float value with two decimal precision
+      const uniqueLocations = Array.from(new Set(locationNames));
+      const uniqueLocationCount = uniqueLocations.length;
+      const uniqueLocationString = uniqueLocations.join(', ');
 
-    // Return the new record with additional fields
-    return {
-      ...record,
-      latestExpiryDate: latestExpiryDate.toISOString(), // Convert to ISO string or use another format
-      locations: uniqueLocationCount,
-      batchesCount: record.batches.length,
-      locationNames: uniqueLocationString, // New field for concatenated locations
-      mrpPerItem, // MRP per individual item
-    };
-  });
+      // Calculate MRP per item
+      const packSize = record.item?.packSize || 1;
+      const mrpPerItem = parseFloat((record.sellPrice / packSize).toFixed(2));
+
+      // Calculate total quantity based on filtered batches
+      const totalQuantity = filteredBatches.reduce((total, batch) => {
+        return (
+          total +
+          batch.locations.reduce((sum, loc) => {
+            return sum + loc.quantity;
+          }, 0)
+        );
+      }, 0);
+
+      return {
+        ...record, // Convert Mongoose Document to plain object
+        batches: filteredBatches, // Update batches to filtered batches
+        latestExpiryDate: latestExpiryDate.toISOString(),
+        locations: uniqueLocationCount,
+        batchesCount: filteredBatches.length,
+        locationNames: uniqueLocationString,
+        mrpPerItem,
+        totalQuantity, // Update totalQuantity based on filtered data
+      };
+    })
+    .filter(record => record !== null); // Remove records that have no batches after filtering
 
 // import { APIGatewayProxyHandler } from "aws-lambda";
 // import { connectMongoDb } from "@evara-backend/core/src/lib/db/mongodb";

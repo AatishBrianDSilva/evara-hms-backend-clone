@@ -9,6 +9,8 @@ export enum EUserRole {
   Pharmacist = 'pharmacist',
   PharmacyManager = 'pharmacy-manager',
   Billing = 'billing',
+  Embryologist = 'embryologist',
+  CenterManager = 'center-manager',
 }
 
 export interface IUser {

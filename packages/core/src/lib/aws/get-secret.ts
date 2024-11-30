@@ -10,7 +10,7 @@ const client = new SecretsManager({ region });
  * Fetches a secret from AWS Secrets Manager.
  * @param secretName The name of the secret to retrieve.
  * @returns The secret as a string.
- * @throws Error if there is any issue in fetching the secret.
+ * @throws Error if there is any issue in fetching the secret
  */
 const getSecret = async (secretName: string): Promise<string> => {
   try {

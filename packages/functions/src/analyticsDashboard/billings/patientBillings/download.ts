@@ -1,9 +1,11 @@
+// downloadPatientBillings.ts
+
 import { APIGatewayProxyHandler } from 'aws-lambda';
-import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
 import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 import { AsyncParser } from '@json2csv/node';
-import { fetchStockData } from './__fetchStockData';
+import { fetchPatientBillingsData } from './__patientBillings';
+import { formatToIndianCurrencyFormat } from '@evara-backend/core/lib/utils/formatToIndianCurrencyFormat';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -11,24 +13,36 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const auth = extractAuthorizerDetails(event);
 
-    await connectMongoDb();
-
     const params = event.queryStringParameters || {};
-    const { page = '1', limit = '25', search = '', allData = 'false' } = params;
+    const {
+      page = '1',
+      limit = '10',
+      status,
+      paymentMethod,
+      searchQuery = '',
+      startDate,
+      endDate,
+      billType,
+      allData = 'false',
+    } = params;
 
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
-
     const fetchAllData = allData === 'true';
 
     // Fetch data using the reusable function
-    const { records } = await fetchStockData({
+    const { records } = await fetchPatientBillingsData({
       clinicId: auth.clinicId,
       branchId: auth.branchId,
-      search,
-      fetchAllData,
       page: pageNumber,
       limit: limitNumber,
+      status,
+      paymentMethod,
+      searchQuery,
+      startDate,
+      endDate,
+      billType,
+      fetchAllData,
     });
 
     // Prepare data for CSV
@@ -53,18 +67,41 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Define the fields for the CSV
     const fields = [
       { label: 'Sl.no', value: 'SlNo' },
-      { label: 'Drug Category', value: 'drugCategory' },
-      { label: 'Drug Name', value: 'drugName' },
-      { label: 'Drug Code', value: 'drugCode' },
-      { label: 'Central', value: 'Central' },
-      { label: 'OPD', value: 'OPD' },
-      { label: 'OT', value: 'OT' },
-      { label: 'Recovery', value: 'Recovery' },
-      { label: 'IVF', value: 'IVF' },
-      { label: 'Returns', value: 'Returns' },
-      { label: 'Internal', value: 'Internal' },
-      { label: 'Total Quantity', value: 'totalQuantity' },
-      { label: 'Quantity On Hold', value: 'quantityOnHold' },
+      {
+        label: 'Date',
+        value: (row: any) =>
+          new Date(row.createdAt).toLocaleDateString('en-IN'),
+      },
+      { label: 'Billing ID', value: 'billingId' },
+      { label: 'Patient Code', value: 'patientCode' },
+      { label: 'Patient Name', value: 'patientName' },
+      { label: 'Case ID', value: 'caseId' },
+      { label: 'Status', value: 'status' },
+      { label: 'Bill Type', value: 'billType' },
+      {
+        label: 'Amount',
+        value: (row: any) => formatToIndianCurrencyFormat(row.amount),
+      },
+      {
+        label: 'Tax',
+        value: (row: any) => formatToIndianCurrencyFormat(row.tax),
+      },
+      {
+        label: 'Discount',
+        value: (row: any) => formatToIndianCurrencyFormat(row.discount),
+      },
+      {
+        label: 'Sub Total',
+        value: (row: any) => formatToIndianCurrencyFormat(row.subTotal),
+      },
+      {
+        label: 'Total Paid',
+        value: (row: any) => formatToIndianCurrencyFormat(row.totalPaid),
+      },
+      {
+        label: 'Total Dues',
+        value: (row: any) => formatToIndianCurrencyFormat(row.totalDues),
+      },
     ];
 
     // Generate CSV using @json2csv/node
@@ -77,14 +114,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       statusCode: 200,
       headers: {
         'Content-Type': 'text/csv',
-        'Content-Disposition': `attachment; filename="stock_report.csv"`,
+        'Content-Disposition': `attachment; filename="patient_billings_report.csv"`,
         'Access-Control-Allow-Origin': '*', // Add CORS header if needed
       },
       isBase64Encoded: true,
       body: Buffer.from(csv).toString('base64'),
     };
   } catch (error) {
-    console.error('Error in stockReport CSV API: ', error);
+    console.error('Error in patientBillings CSV API: ', error);
     return errorResponse(error);
   }
 };

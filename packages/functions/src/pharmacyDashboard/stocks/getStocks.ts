@@ -69,6 +69,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     query.branchId = auth.branchId;
     query.clinicId = auth.clinicId;
 
+    // **New Filter: Exclude stocks with total quantity 0**
+    query['batches.locations.quantity'] = { $gt: 0 };
+
     if (status) {
       query.status = status;
     }

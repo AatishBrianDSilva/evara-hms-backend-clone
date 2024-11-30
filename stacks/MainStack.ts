@@ -523,8 +523,10 @@ export function MainStack({ stack }: StackContext) {
 
       //Analytics Dashboard
       //Billings
-      'GET /analytics/billings':
+      'GET /analytics/billings/patient-billings':
         'packages/functions/src/analyticsDashboard/billings/patientBillings/get.main',
+      'GET /analytics/billings/patient-billings/download':
+        'packages/functions/src/analyticsDashboard/billings/patientBillings/download.main',
       'GET /analytics/refundReports':
         'packages/functions/src/analyticsDashboard/billings/getRefundReports.main',
       'GET /analytics/billings/revenue-breakup':
