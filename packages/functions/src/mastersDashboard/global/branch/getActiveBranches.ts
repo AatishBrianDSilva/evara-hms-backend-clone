@@ -28,6 +28,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       return {
         branchId: branch.code,
         branchName: branch.code.trim() === 'KN' ? 'Kanpur' : branch.branchName,
+        city: branch.address?.city,
       };
     });
 
