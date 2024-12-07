@@ -22,9 +22,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Parse the body from the event
     const data = JSON.parse(event.body);
 
-    // TODO: Remove clinicId and branchId after adding authentication
     data.clinicId = auth?.clinicId;
-    // data.branchId = auth?.branchId;
+    data.branchId = auth?.branchId;
+
+    const nameExists = await MasterInvestigation.findOne({
+      name: data.name,
+      clinicId: data.clinicId,
+      branchId: data.branchId,
+    });
+
+    if (nameExists) {
+      throw new ErrorMessage(
+        400,
+        'Investigation with this name already exists',
+      );
+    }
 
     // Create a new Master Investigation
     const investigation = new MasterInvestigation(data);

@@ -10,6 +10,7 @@ interface IPackageItem {
 // Interface for the MasterPackage document
 interface IMasterPackage extends Document {
   clinicId: string;
+  branchId: string;
   name: string;
   cost: number;
   total: number;
@@ -39,7 +40,8 @@ const PackageItemSchema: Schema = new Schema({
 const MasterPackageSchema: Schema = new Schema(
   {
     clinicId: { type: String, required: true, index: true },
-    name: { type: String, required: true, unique: true },
+    branchId: { type: String, required: true, index: true },
+    name: { type: String, required: true },
     cost: { type: Number, required: true },
     total: { type: Number, required: true, default: 0 },
     validTill: { type: Date, required: true },

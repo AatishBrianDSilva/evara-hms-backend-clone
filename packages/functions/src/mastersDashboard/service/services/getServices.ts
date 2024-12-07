@@ -19,6 +19,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const query: any = {
       clinicId: auth.clinicId,
+      branchId: auth.branchId,
     };
 
     const params = event.queryStringParameters || {};

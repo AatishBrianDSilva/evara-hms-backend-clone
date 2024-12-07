@@ -24,7 +24,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // TODO: Remove clinicId and branchId after adding authentication
     data.clinicId = auth.clinicId;
-    // data.branchId = auth.branchId;
+    data.branchId = auth.branchId;
+
+    const nameExists = await MasterProcedures.findOne({
+      name: data.name,
+      clinicId: data.clinicId,
+      branchId: data.branchId,
+    });
+
+    if (nameExists) {
+      throw new ErrorMessage(400, 'Procedure name already exists');
+    }
 
     // Create a new Master Investigation
     const procedure = new MasterProcedures(data);

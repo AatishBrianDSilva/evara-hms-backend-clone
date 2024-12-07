@@ -28,6 +28,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const query = {
       clinicId: auth.clinicId,
+      branchId: auth.branchId,
       active: true,
       gender: {
         $in: ['both'],

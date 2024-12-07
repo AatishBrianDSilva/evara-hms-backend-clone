@@ -14,32 +14,22 @@ import ErrorMessage from '@evara-backend/core/lib/utils/ErrorMessage';
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
-  console.log('Received event:', JSON.stringify(event, null, 2));
-
   const auth = extractAuthorizerDetails(event);
-  console.log('Extracted auth details:', auth);
 
   try {
     // Connect to MongoDB
-    console.log('Connecting to MongoDB...');
     await connectMongoDb();
-    console.log('Connected to MongoDB');
 
     if (!event.body) {
-      console.log('Error: No data provided in the request body');
       throw new ErrorMessage(400, 'Data is required');
     }
 
     // Parse the body from the event
-    console.log('Parsing request body...');
     const data = JSON.parse(event.body);
-    console.log('Parsed data:', data);
 
     // Add the clinicId from the authorization details
     data.clinicId = auth.clinicId;
-    console.log('Updated data with clinicId:', data.clinicId);
-
-    console.log('Incoming procedure data:', data.procedures);
+    data.branchId = auth.branchId;
 
     // Initialize package data
     const packageData = {
@@ -49,6 +39,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       validTill: data.validTill,
       active: data.active,
       clinicId: data.clinicId,
+      branchId: data.branchId,
       gender: data.gender,
 
       procedures: [],
@@ -59,11 +50,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     };
 
     // Function to save a master procedure
-    const saveMasterProcedure = async item => {
-      console.log('Adding procedure to MasterProcedures:', item.name);
-
+    const saveMasterProcedure = async (item: any) => {
       const procedure = new MasterProcedures({
         clinicId: data.clinicId,
+        branchId: data.branchId,
         name: item.name,
         procedureType: item.procedureType,
         gender: item.gender,
@@ -74,18 +64,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         cost: 0,
       });
 
-      console.log('Procedure object before saving:', procedure);
-
       const savedProcedure = await procedure.save();
-      console.log('MasterProcedure saved:', savedProcedure);
       return savedProcedure._id;
     };
 
     // Function to save a master investigation
-    const saveMasterInvestigation = async item => {
-      console.log('Adding investigation to MasterInvestigation:', item.name);
+    const saveMasterInvestigation = async (item: any) => {
       const investigation = new MasterInvestigation({
         clinicId: data.clinicId,
+        branchId: data.branchId,
         name: item.name,
         testType: item.testType,
         gender: item.gender,
@@ -96,18 +83,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         cost: 0,
       });
       const savedInvestigation = await investigation.save();
-      console.log('MasterInvestigation saved:', savedInvestigation);
       return savedInvestigation._id;
     };
 
     // Function to save a master cryo preservation
-    const saveMasterCryoPreservation = async item => {
-      console.log(
-        'Adding cryo preservation to MasterCryoPreservations:',
-        item.name,
-      );
+    const saveMasterCryoPreservation = async (item: any) => {
       const cryoPreservation = new MasterCryoPreservations({
         clinicId: data.clinicId,
+        branchId: data.branchId,
         name: item.name,
         cryoPreservationType: item.cryoPreservationType,
         gender: item.gender,
@@ -118,15 +101,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         cost: 0,
       });
       const savedCryoPreservation = await cryoPreservation.save();
-      console.log('MasterCryoPreservation saved:', savedCryoPreservation);
       return savedCryoPreservation._id;
     };
 
     // Function to save a master service
-    const saveMasterService = async item => {
-      console.log('Adding service to MasterService:', item.name);
+    const saveMasterService = async (item: any) => {
       const service = new MasterService({
         clinicId: data.clinicId,
+        branchId: data.branchId,
         name: item.name,
         serviceType: item.serviceType,
         gender: item.gender,
@@ -137,15 +119,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         cost: 0,
       });
       const savedService = await service.save();
-      console.log('MasterService saved:', savedService);
       return savedService._id;
     };
 
     // Function to save a master treatment cycle
-    const saveMasterTreatmentCycle = async item => {
-      console.log('Adding treatment cycle to MasterTreatmentCycle:', item.name);
+    const saveMasterTreatmentCycle = async (item: any) => {
       const treatmentCycle = new MasterTreatmentCycle({
         clinicId: data.clinicId,
+        branchId: data.branchId,
         name: item.name,
         cycleType: item.cycleType,
         gender: item.gender,
@@ -156,7 +137,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         cost: 0,
       });
       const savedTreatmentCycle = await treatmentCycle.save();
-      console.log('MasterTreatmentCycle saved:', savedTreatmentCycle);
       return savedTreatmentCycle._id;
     };
 

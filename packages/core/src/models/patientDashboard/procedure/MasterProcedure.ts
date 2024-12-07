@@ -4,6 +4,7 @@ import { EProcedureType } from './MedicalProcedure';
 
 interface IMasterProcedures extends Document {
   clinicId: string;
+  branchId: string;
   procedureType: EProcedureType;
   procedure: mongoose.Schema.Types.ObjectId;
   gender: EGender;
@@ -19,6 +20,7 @@ interface IMasterProcedures extends Document {
 
 const MasterProcedureSchema: Schema = new Schema({
   clinicId: { type: String, required: true, index: true },
+  branchId: { type: String, required: true, index: true },
   procedureType: {
     type: String,
     required: true,
@@ -29,7 +31,7 @@ const MasterProcedureSchema: Schema = new Schema({
     required: true,
     ref: 'MedicalProcedures',
   },
-  name: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
   gender: { type: String, required: true, enum: Object.values(EGender) },
   description: { type: String },
   cost: { type: Number, required: true },

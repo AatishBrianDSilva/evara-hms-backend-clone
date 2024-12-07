@@ -23,7 +23,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     let query: any = {};
 
     query.clinicId = auth.clinicId;
-    // query.branchId = auth.branchId;
+    query.branchId = auth.branchId;
 
     if (searchQuery) {
       query.$or = [{ name: new RegExp(searchQuery, 'i') }];
