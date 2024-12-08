@@ -31,6 +31,7 @@ export interface IBatchDetails {
   vendor: Schema.Types.ObjectId;
   packSize: number;
   locations: ILocationQuantity[];
+  sellPrice : number;
 }
 
 const batchDetailsSchema = new Schema<IBatchDetails>(
@@ -53,11 +54,19 @@ const batchDetailsSchema = new Schema<IBatchDetails>(
       required: true,
     },
     locations: [locationQuantitySchema],
+    //TODO : Remove Required false flag after discussing management of older data
+    sellPrice: {
+      type: Number,
+      required: false, // Optional for backward compatibility
+    },
   },
+
+  
   {
     timestamps: true,
   },
 );
+
 
 export interface IPharmacyStock extends Document {
   clinicId: string;
@@ -84,9 +93,11 @@ const pharmacyStockSchema = new Schema<IPharmacyStock>(
       ref: 'DrugItem',
       required: true,
     },
+    //TODO : Remove this sell Price
+
     sellPrice: {
       type: Number,
-      required: true,
+      required: false,
       default: 0,
     },
     batches: [batchDetailsSchema],
