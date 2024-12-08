@@ -120,92 +120,107 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     console.log('Processing items in the request...');
     // Process each item in the request
-    updateData.request.items.forEach((item, index) => {
+ // Maintain a map to track processed response items
+const processedResponseItems = {};
+
+updateData.request.items.forEach((item, index) => {
+  console.log(
+    `Processing request item ${index + 1}/${updateData.request.items.length}`,
+  );
+  console.log(`Request item data: ${JSON.stringify(item)}`);
+
+  const packsRequired = item.packsRequired; // Total packs required
+  const fulfilledPacks = item.noOfPacks || 0; // Fulfilled packs
+
+  // Calculate the MRP and Tax for the fulfilled packs
+  const itemMRP = (item.buyPrice || 0) * fulfilledPacks;
+  const discountAmount = itemMRP * ((item.discount || 0) / 100);
+
+  // Calculate actual subtotal after applying discount
+  const actualSubTotal = itemMRP - discountAmount;
+
+  // Calculate tax for the fulfilled packs (after discount is applied)
+  const itemTax = (actualSubTotal * (item.tax || 0)) / 100;
+
+  // Update response totals
+  responseSubTotal += actualSubTotal;
+  responseTotalTax += itemTax;
+
+  if (fulfilledPacks > 0) {
+    // Sequentially match an unprocessed response item
+    const responseItemIndex = (processedResponseItems[item.item] || 0);
+    const responseItem = updateData.response.items.filter(resItem => resItem.item === item.item)[responseItemIndex];
+
+    if (responseItem) {
+      // Increment the index for this item in the processed map
+      processedResponseItems[item.item] = (processedResponseItems[item.item] || 0) + 1;
+
+      // Push new response item with mapped fields
+      newResponse.items.push({
+        item: item.item,
+        packSize: item.packSize,
+        quantity: fulfilledPacks * (item.packSize || 1),
+        mrp: itemMRP,
+        mrpPerPack: item.mrpPerPack || 0,
+        buyPrice: item.buyPrice || 0,
+        tax: item.tax || 0,
+        freeQuantity: item.freeQuantity || 0,
+        noOfPacks: fulfilledPacks,
+        packsRequired: item.packsRequired,
+        discount: responseItem.discount || item.discount,
+        batchNo: responseItem.batchNo || 'N/A',
+        expiryDate: responseItem.expiryDate || null,
+        status: 'ProcessedWithoutUpdating',
+      });
+
       console.log(
-        `Processing request item ${index + 1}/${updateData.request.items.length}`,
+        `Added to Response Items: ${JSON.stringify(
+          newResponse.items[newResponse.items.length - 1],
+        )}`,
       );
-      console.log(`Request item data: ${JSON.stringify(item)}`);
+    } else {
+      console.error(
+        `No matching response item found for request item: ${JSON.stringify(
+          item,
+        )}`,
+      );
+    }
+  }
 
-      const packsRequired = item.packsRequired; // Total packs required
-      const fulfilledPacks = item.noOfPacks || 0; // Fulfilled packs
+  // Calculate remaining packs after fulfilling the current batch
+  const remainingPacks = packsRequired - fulfilledPacks;
+  console.log(`Remaining packs after fulfilling: ${remainingPacks}`);
 
-      // Calculate the MRP and Tax for the fulfilled packs
-      const itemMRP = (item.buyPrice || 0) * fulfilledPacks;
-      const discountAmount = itemMRP * ((item.discount || 0) / 100);
+  // If there are remaining packs, update newRequestItems with the remaining quantity
+  if (remainingPacks > 0) {
+    const remainingItemMRP = (item.buyPrice || 0) * remainingPacks;
+    const remainingItemTax = (remainingItemMRP * (item.tax || 0)) / 100;
 
-      // Calculate actual subtotal after applying discount
-      const actualSubTotal = itemMRP - discountAmount;
+    requestSubTotal += remainingItemMRP;
+    requestTotalTax += remainingItemTax;
 
-      // Calculate tax for the fulfilled packs (after discount is applied)
-      const itemTax = (actualSubTotal * (item.tax || 0)) / 100;
-
-      // Update response totals
-      responseSubTotal += actualSubTotal;
-      responseTotalTax += itemTax;
-
-      if (fulfilledPacks > 0) {
-        // Use the correct index to access batchNo and expiryDate from updateData.response.items
-        const responseItem = updateData.response.items.find(
-          resItem => resItem.item === item.item,
-        );
-
-        newResponse.items.push({
-          item: item.item,
-          packSize: item.packSize,
-          quantity: fulfilledPacks * (item.packSize || 1),
-          mrp: itemMRP,
-          mrpPerPack: item.mrpPerPack || 0,
-          buyPrice: item.buyPrice || 0,
-          tax: item.tax || 0,
-          freeQuantity: item.freeQuantity || 0,
-          noOfPacks: fulfilledPacks,
-          packsRequired: item.packsRequired,
-          discount: responseItem ? responseItem.discount : item.discount, // Correctly mapped batchNo
-
-          batchNo: responseItem ? responseItem.batchNo : item.batchNo, // Correctly mapped batchNo
-          expiryDate: responseItem ? responseItem.expiryDate : item.expiryDate, // Correctly mapped expiryDate
-          status: 'ProcessedWithoutUpdating',
-        });
-        console.log(
-          `Added to Response Items: ${JSON.stringify(
-            newResponse.items[newResponse.items.length - 1],
-          )}`,
-        );
-      }
-
-      // Calculate remaining packs after fulfilling the current batch
-      const remainingPacks = packsRequired - fulfilledPacks;
-      console.log(`Remaining packs after fulfilling: ${remainingPacks}`);
-
-      // If there are remaining packs, update newRequestItems with the remaining quantity
-      if (remainingPacks > 0) {
-        const remainingItemMRP = (item.buyPrice || 0) * remainingPacks;
-        const remainingItemTax = (remainingItemMRP * (item.tax || 0)) / 100;
-
-        requestSubTotal += remainingItemMRP;
-        requestTotalTax += remainingItemTax;
-
-        newRequestItems.push({
-          item: item.item,
-          packSize: item.packSize,
-          quantity: remainingPacks * (item.packSize || 1),
-          mrp: remainingItemMRP,
-          mrpPerPack: item.mrpPerPack || 0,
-          buyPrice: item.buyPrice || 0,
-          tax: item.tax || 0,
-          freeQuantity: item.freeQuantity || 0,
-          noOfPacks: remainingPacks,
-          packsRequired: item.packsRequired,
-          batchNo: item.batchNo,
-          expiryDate: item.expiryDate,
-          discount: item.discount,
-          status: 'Pending',
-        });
-        console.log(
-          `Unfulfilled item added with remaining packs: ${remainingPacks}`,
-        );
-      }
+    newRequestItems.push({
+      item: item.item,
+      packSize: item.packSize,
+      quantity: remainingPacks * (item.packSize || 1),
+      mrp: remainingItemMRP,
+      mrpPerPack: item.mrpPerPack || 0,
+      buyPrice: item.buyPrice || 0,
+      tax: item.tax || 0,
+      freeQuantity: item.freeQuantity || 0,
+      noOfPacks: remainingPacks,
+      packsRequired: item.packsRequired,
+      batchNo: null,
+      expiryDate: null,
+      discount: item.discount,
+      status: 'Pending',
     });
+
+    console.log(
+      `Unfulfilled item added with remaining packs: ${remainingPacks}`,
+    );
+  }
+});
 
     console.log(`New Request Items: ${JSON.stringify(newRequestItems)}`);
     console.log(`New Response Items: ${JSON.stringify(newResponse)}`);
