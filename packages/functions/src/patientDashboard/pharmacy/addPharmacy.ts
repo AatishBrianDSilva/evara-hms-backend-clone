@@ -77,7 +77,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       await stock.save({ session });
 
-      const sellPrice = batch.sellPrice;
+      const sellPrice = batch.sellPrice || stock.sellPrice;
+//TODO: remove fallback
+
 
       console.log("Sell price", sellPrice)
 
