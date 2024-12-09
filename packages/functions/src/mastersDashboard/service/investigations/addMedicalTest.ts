@@ -36,7 +36,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const { components, ...rest } = data;
 
     // Validate and format components
-    const formattedComponents = (components || []).map(comp => ({
+    const formattedComponents = (components || []).map((comp: any) => ({
       componentName: comp.componentName,
       componentType: comp.componentType || EBloodTestComponentType.Text, // Default to 'text' if componentType is missing
       options: comp.options || [], // Default to an empty array if options are not provided

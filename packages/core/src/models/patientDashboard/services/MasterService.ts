@@ -4,6 +4,7 @@ import { EGender } from '../investigation/MedicalTests';
 
 interface IMasterService extends Document {
   clinicId: string;
+  branchId: string;
   serviceType: EServiceTypes;
   service: mongoose.Schema.Types.ObjectId;
   name: string;
@@ -18,6 +19,7 @@ interface IMasterService extends Document {
 
 const MasterServiceSchema: Schema = new Schema({
   clinicId: { type: String, required: true, index: true },
+  branchId: { type: String, required: true, index: true },
   serviceType: {
     type: String,
     required: true,
@@ -28,7 +30,7 @@ const MasterServiceSchema: Schema = new Schema({
     required: true,
     ref: 'DefaultService',
   },
-  name: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
   description: { type: String },
   gender: { type: String, required: true, enum: Object.values(EGender) },
   cost: { type: Number, required: true },

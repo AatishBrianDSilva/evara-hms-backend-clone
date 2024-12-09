@@ -4,6 +4,7 @@ import { ECryoPreservationType } from './CryoPreservations';
 
 interface IMasterCryoPreservations extends Document {
   clinicId: string;
+  branchId: string;
   cryoPreservationType: ECryoPreservationType;
   cryoPreservation: mongoose.Schema.Types.ObjectId;
   gender: EGender;
@@ -19,6 +20,7 @@ interface IMasterCryoPreservations extends Document {
 const MasterCryoPreservationsSchema: Schema =
   new Schema<IMasterCryoPreservations>({
     clinicId: { type: String, required: true, index: true },
+    branchId: { type: String, required: true, index: true },
     cryoPreservationType: {
       type: String,
       required: true,
@@ -29,7 +31,7 @@ const MasterCryoPreservationsSchema: Schema =
       required: true,
       ref: 'CryoPreservations',
     },
-    name: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
     gender: { type: String, required: true, enum: Object.values(EGender) },
     description: { type: String },
     cost: { type: Number, required: true },
