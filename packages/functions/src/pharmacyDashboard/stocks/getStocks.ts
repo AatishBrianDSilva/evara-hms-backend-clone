@@ -115,6 +115,7 @@ const formatRecords = (records: IPharmacyStock[]) => {
           locationQuantities[locationId].batches.push({
             batchNo: batch.batchNo,
             quantity: loc.quantity,
+            sellPrice: batch.sellPrice,
           });
         }
 

@@ -102,9 +102,11 @@ const addEstimation = async (data: any) => {
     console.log('Service found', service);
     console.log('Service Item', service.item.taxRate);
 
-    const sellPrice = service.sellPrice;
+    const sellPrice = data.serviceCost ||service.sellPrice;
     const tax = service.item?.taxRate?.taxRate || 0;
     const packSize = service.item.packSize || 1;
+
+    console.log("SellPrice", sellPrice)
 
     const mrpPerUnit = sellPrice / packSize;
 
