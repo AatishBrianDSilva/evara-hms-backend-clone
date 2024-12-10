@@ -90,21 +90,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     console.log('Processing items in the request...');
 
-    // Extract batchNo and expiryDate before processing items
-    const batchDetails = {};
-    updateData.response.items.forEach(responseItem => {
-      if (responseItem && responseItem.item) {
-        const itemId = responseItem.item._id || responseItem.item;
-        batchDetails[itemId] = {
-          batchNo: responseItem.batchNo,
-          expiryDate: responseItem.expiryDate
-            ? new Date(responseItem.expiryDate)
-            : null, // Ensure expiryDate is a Date object or null
-        };
-      }
-    });
-
-    console.log('Batch Details:', batchDetails);
+    // Maintain a map to track processed response items
+    const processedResponseItems = {};
 
     // Process each item in the request
     updateData.request.items.forEach((item, index) => {
@@ -131,29 +118,46 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       responseTotalTax += itemTax;
 
       if (fulfilledPacks > 0) {
-        // Use pre-extracted batchNo and expiryDate for the new response
-        const batchInfo = batchDetails[item.item] || {};
-        newResponse.items.push({
-          item: item.item,
-          packSize: item.packSize,
-          quantity: fulfilledPacks * (item.packSize || 1),
-          mrp: itemMRP,
-          mrpPerPack: item.mrpPerPack || 0,
-          buyPrice: item.buyPrice || 0,
-          tax: item.tax || 0,
-          freeQuantity: item.freeQuantity || 0,
-          noOfPacks: fulfilledPacks,
-          packsRequired: item.packsRequired,
-          batchNo: batchInfo.batchNo || 'Unknown', // Add batchNo
-          expiryDate: batchInfo.expiryDate || null, // Add expiryDate
-          status: 'ProcessedWithoutUpdating',
-          discount: discount, // Ensure discount is included in the response item
-        });
-        console.log(
-          `Added to Response Items: ${JSON.stringify(
-            newResponse.items[newResponse.items.length - 1],
-          )}`,
-        );
+        // Sequentially match an unprocessed response item
+        const responseItemIndex = processedResponseItems[item.item] || 0;
+        const responseItem = updateData.response.items.filter(
+          resItem => resItem.item === item.item,
+        )[responseItemIndex];
+
+        if (responseItem) {
+          // Increment the index for this item in the processed map
+          processedResponseItems[item.item] =
+            (processedResponseItems[item.item] || 0) + 1;
+
+          // Push new response item with mapped fields
+          newResponse.items.push({
+            item: item.item,
+            packSize: item.packSize,
+            quantity: fulfilledPacks * (item.packSize || 1),
+            mrp: itemMRP,
+            mrpPerPack: item.mrpPerPack || 0,
+            buyPrice: item.buyPrice || 0,
+            tax: item.tax || 0,
+            freeQuantity: item.freeQuantity || 0,
+            noOfPacks: fulfilledPacks,
+            packsRequired: item.packsRequired,
+            batchNo: responseItem.batchNo || 'Unknown',
+            expiryDate: responseItem.expiryDate || null,
+            status: 'ProcessedWithoutUpdating',
+            discount: discount,
+          });
+          console.log(
+            `Added to Response Items: ${JSON.stringify(
+              newResponse.items[newResponse.items.length - 1],
+            )}`,
+          );
+        } else {
+          console.error(
+            `No matching response item found for request item: ${JSON.stringify(
+              item,
+            )}`,
+          );
+        }
       }
 
       // Calculate remaining packs after fulfilling the current batch
@@ -180,9 +184,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           noOfPacks: remainingPacks,
           packsRequired: item.packsRequired,
           batchNo: item.batchNo || 'Unknown',
-          expiryDate: item.expiryDate ? new Date(item.expiryDate) : null, // Ensure expiryDate is a Date object or null
+          expiryDate: item.expiryDate ? new Date(item.expiryDate) : null,
           status: 'Pending',
-          discount: discount, // Add discount field for pending items
+          discount: discount,
         });
         console.log(
           `Unfulfilled item added with remaining packs: ${remainingPacks}`,
@@ -192,6 +196,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     console.log(`New Request Items: ${JSON.stringify(newRequestItems)}`);
     console.log(`New Response Items: ${JSON.stringify(newResponse)}`);
+
+    // Further logic for totals and saving remains unchanged
 
     // Calculate totals for request and response
     let requestDiscountAmount = 0;
