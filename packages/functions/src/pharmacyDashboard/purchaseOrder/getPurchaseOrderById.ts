@@ -62,11 +62,34 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Check if `newAddress` field is present
     const isDifferentAddress = !!data.newAddress;
 
+
+    // Calculate aggregated values for all responses
+    const allResponsesNetAmount = data.responses?.reduce(
+      (sum, response) => sum + (response.netAmount || 0),
+      0
+    );
+    const allResponsesSubTotal = data.responses?.reduce(
+      (sum, response) => sum + (response.subTotal || 0),
+      0
+    );
+    const allResponsesTax = data.responses?.reduce(
+      (sum, response) => sum + (response.tax || 0),
+      0
+    );
+    const allResponsesOtherCharges = data.responses?.reduce(
+      (sum, response) => sum + (response.otherCharges || 0),
+      0
+    );
+
     // Add the `isDifferentAddress` boolean and `newAddress` fields to the response
     const response = {
       ...data,
       isDifferentAddress,
       newAddress: isDifferentAddress ? data.newAddress : null,
+      allResponsesNetAmount,
+      allResponsesSubTotal,
+      allResponsesTax,
+      allResponsesOtherCharges,
     };
 
     return successResponse('Fetched successfully', response);

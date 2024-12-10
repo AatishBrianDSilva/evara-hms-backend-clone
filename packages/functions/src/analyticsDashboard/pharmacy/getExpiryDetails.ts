@@ -102,15 +102,26 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
       {
         $addFields: {
+          batchSellPrice: {
+            $ifNull: ['$batches.sellPrice', '$sellPrice'], // Use batch-level sellPrice or fallback to old sellPrice
+          }, // TODO: Ensure batch-level sellPrice fallback mechanism is consistent
           totalQty: {
             $sum: '$batches.locations.quantity', // Calculate total quantity for each document
           },
+        },
+      },
+
+      {
+        $addFields: {
           sumTotalValue: {
             $multiply: [
-              '$sellPrice',
-              { $sum: '$batches.locations.quantity' }, // Multiply sellPrice by total quantity of all locations
+              '$batchSellPrice',
+              { $sum: '$batches.locations.quantity' }, // Multiply batchSellPrice by total quantity
             ],
-          },
+          }, // TODO: Verify batchSellPrice usage and fallback logic
+          unitCost: {
+            $ifNull: ['$batches.sellPrice', '$sellPrice'], // Use batch-level sellPrice if available
+          }, // TODO: Use batch-level sellPrice as unit cost
         },
       },
       {
@@ -160,7 +171,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               else: 'N/A',
             },
           },
-          unitCost: { $ifNull: ['$sellPrice', 0] },
         },
       },
       {
