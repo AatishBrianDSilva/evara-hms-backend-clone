@@ -104,7 +104,6 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
         EUserRole.Doctor,
         EUserRole.Nurse,
         EUserRole.Reception,
-        EUserRole.Embryologist,
         EUserRole.CenterManager,
       ],
       PUT: [
@@ -113,7 +112,6 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
         EUserRole.Nurse,
         EUserRole.Reception,
         EUserRole.CenterManager,
-        EUserRole.Embryologist,
       ],
       DELETE: [EUserRole.Admin, EUserRole.CenterManager],
     },
@@ -159,7 +157,16 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
         EUserRole.CenterManager,
         EUserRole.Embryologist,
       ],
-      POST: allRoles,
+      POST: [
+        EUserRole.Admin,
+        EUserRole.Billing,
+        EUserRole.Doctor,
+        EUserRole.Nurse,
+        EUserRole.Billing,
+        EUserRole.PharmacyManager,
+        EUserRole.CenterManager,
+        EUserRole.Embryologist,
+      ],
       PUT: [
         EUserRole.Admin,
         EUserRole.Doctor,
@@ -177,7 +184,6 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
         EUserRole.Nurse,
         EUserRole.Reception,
         EUserRole.Billing,
-
         EUserRole.CenterManager,
       ],
       PUT: [
@@ -199,7 +205,6 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
         EUserRole.Billing,
         EUserRole.PharmacyManager,
         EUserRole.Embryologist,
-
         EUserRole.CenterManager,
       ],
       POST: [
@@ -312,6 +317,7 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
         EUserRole.Billing,
         EUserRole.PharmacyManager,
         EUserRole.CenterManager,
+        EUserRole.Embryologist,
       ],
       PUT: [
         EUserRole.Admin,
@@ -320,6 +326,7 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
         EUserRole.Billing,
         EUserRole.PharmacyManager,
         EUserRole.CenterManager,
+        EUserRole.Embryologist,
       ],
       DELETE: [EUserRole.Admin, EUserRole.CenterManager],
     },
@@ -330,14 +337,12 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
         EUserRole.Doctor,
         EUserRole.Nurse,
         EUserRole.CenterManager,
-        EUserRole.Embryologist,
       ],
       PUT: [
         EUserRole.Admin,
         EUserRole.Doctor,
         EUserRole.Nurse,
         EUserRole.CenterManager,
-        EUserRole.Embryologist,
       ],
       DELETE: [EUserRole.Admin, EUserRole.CenterManager],
     },
@@ -348,12 +353,14 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
         EUserRole.Doctor,
         EUserRole.Nurse,
         EUserRole.CenterManager,
+        EUserRole.Embryologist,
       ],
       PUT: [
         EUserRole.Admin,
         EUserRole.Doctor,
         EUserRole.Nurse,
         EUserRole.CenterManager,
+        EUserRole.Embryologist,
       ],
       DELETE: [EUserRole.Admin, EUserRole.CenterManager],
     },
