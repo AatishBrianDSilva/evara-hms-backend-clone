@@ -72,7 +72,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       // Deduct quantity for the selected location
       locationQuantity.quantity -= item.quantity;
 
+      console.log('Batch', batch);
+      console.log('Stock', stock);
+
       await stock.save({ session });
+
+      const sellPrice = batch?.sellPrice;
+
+      console.log('Sell price', sellPrice);
 
       // Create and save PatientPharmacy entry
       const newPatientPharmacy = new PatientPharmacy({
@@ -87,7 +94,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               quantity: item.quantity,
               batchNumber: item.batchNumber,
               packSize: batch.packSize,
-              mrp: stock.sellPrice,
+              mrp: sellPrice,
               vendor: batch.vendor,
               expiryDate: batch.expiryDate,
               itemId: itemId,
@@ -98,6 +105,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         date: data.date,
         allocatedBy: 'User 1',
       });
+
+      console.log('New pharmacy item', newPatientPharmacy);
 
       const newPharmacy = await newPatientPharmacy.save({ session });
 
@@ -135,6 +144,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       if (pharmacyStock) {
         const serviceName = pharmacyStock.item?.name;
 
+        // Log the data being sent to SNS
+        console.log('Data to be published to SNS:', {
+          patient: newPharmacy.patient,
+          doctor: newPharmacy.doctor,
+          stockId: pharmacyStock._id,
+          pharmacyId: newPharmacy._id,
+          serviceType: EPatientBillingServiceType.Pharmacy,
+          serviceName: serviceName,
+          sellPrice: sellPrice,
+          quantity: newPharmacy.totalQuantity,
+          clinicId: auth.clinicId,
+          branchId: auth.branchId,
+          itemId: itemId,
+        });
+
         // Publish to SNS
         await publishBillingServiceToSNS(
           newPharmacy.patient,
@@ -143,7 +167,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           newPharmacy._id as any,
           EPatientBillingServiceType.Pharmacy,
           serviceName,
-          pharmacyStock.sellPrice,
+          sellPrice,
           newPharmacy.totalQuantity,
           auth.clinicId,
           auth.branchId,

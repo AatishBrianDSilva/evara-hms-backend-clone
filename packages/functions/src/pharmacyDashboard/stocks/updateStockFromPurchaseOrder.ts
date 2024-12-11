@@ -95,6 +95,10 @@ export const updateStockFromPurchaseOrder = async (
                 quantity: totalQuantity,
               });
             }
+
+            // Update sellPrice at batch level
+            batch.sellPrice = item.mrpPerPack;
+
           } else {
             log(`Adding new batch for item ${item.item}`);
             existingStock.batches.push({
@@ -102,6 +106,8 @@ export const updateStockFromPurchaseOrder = async (
               expiryDate: item.expiryDate,
               vendor: purchaseOrder.vendor,
               packSize: item.packSize,
+              sellPrice: item.mrpPerPack, // Add sellPrice for the new batch
+
               locations: [
                 {
                   location: mainLocation._id,
@@ -110,7 +116,7 @@ export const updateStockFromPurchaseOrder = async (
               ],
             });
           }
-          existingStock.sellPrice = item.mrpPerPack;
+          // existingStock.sellPrice = item.mrpPerPack;
           await existingStock.save({ session });
           log(`Stock updated for item ${item.item}`);
         } else {
@@ -125,6 +131,8 @@ export const updateStockFromPurchaseOrder = async (
                 expiryDate: item.expiryDate,
                 vendor: purchaseOrder.vendor,
                 packSize: item.packSize,
+                sellPrice: item.mrpPerPack, // Add sellPrice for the new batch
+
                 locations: [
                   {
                     location: mainLocation._id,
@@ -133,7 +141,7 @@ export const updateStockFromPurchaseOrder = async (
                 ],
               },
             ],
-            sellPrice: item.mrpPerPack,
+            // sellPrice: item.mrpPerPack,
           });
 
           await newStock.save({ session });

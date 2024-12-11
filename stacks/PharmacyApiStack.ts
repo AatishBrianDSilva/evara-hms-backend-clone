@@ -114,6 +114,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       'packages/functions/src/pharmacyDashboard/stocks/getStockById.main',
     'GET /pharmacy-dashboard/stocks/location/{id}':
       'packages/functions/src/pharmacyDashboard/stocks/getStocksByLocation.main',
+    'GET /pharmacy-dashboard/batchesForStocks':
+      'packages/functions/src/pharmacyDashboard/stocks/getBatchesForStocks.main',
 
     // Purchase Orders
     'POST /pharmacy-dashboard/purchase-order/add':

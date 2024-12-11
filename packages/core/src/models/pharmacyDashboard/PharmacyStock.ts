@@ -31,6 +31,7 @@ export interface IBatchDetails {
   vendor: Schema.Types.ObjectId;
   packSize: number;
   locations: ILocationQuantity[];
+  sellPrice: number;
 }
 
 const batchDetailsSchema = new Schema<IBatchDetails>(
@@ -53,7 +54,12 @@ const batchDetailsSchema = new Schema<IBatchDetails>(
       required: true,
     },
     locations: [locationQuantitySchema],
+    sellPrice: {
+      type: Number,
+      required: false,
+    },
   },
+
   {
     timestamps: true,
   },
@@ -63,7 +69,6 @@ export interface IPharmacyStock extends Document {
   clinicId: string;
   branchId: string;
   item: Schema.Types.ObjectId;
-  sellPrice: number;
   batches: IBatchDetails[];
   quantityOnHold: number;
   totalQuantity: number;
@@ -83,11 +88,6 @@ const pharmacyStockSchema = new Schema<IPharmacyStock>(
       type: Schema.Types.ObjectId,
       ref: 'DrugItem',
       required: true,
-    },
-    sellPrice: {
-      type: Number,
-      required: true,
-      default: 0,
     },
     batches: [batchDetailsSchema],
     quantityOnHold: {
