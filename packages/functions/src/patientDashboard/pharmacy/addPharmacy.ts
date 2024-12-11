@@ -72,16 +72,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       // Deduct quantity for the selected location
       locationQuantity.quantity -= item.quantity;
 
-      console.log("Batch", batch)
-      console.log("Stock", stock)
+      console.log('Batch', batch);
+      console.log('Stock', stock);
 
       await stock.save({ session });
 
-      const sellPrice = batch.sellPrice || stock.sellPrice;
-//TODO: remove fallback
+      const sellPrice = batch?.sellPrice;
 
-
-      console.log("Sell price", sellPrice)
+      console.log('Sell price', sellPrice);
 
       // Create and save PatientPharmacy entry
       const newPatientPharmacy = new PatientPharmacy({
@@ -108,7 +106,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         allocatedBy: 'User 1',
       });
 
-      console.log("New pharmacy item", newPatientPharmacy)
+      console.log('New pharmacy item', newPatientPharmacy);
 
       const newPharmacy = await newPatientPharmacy.save({ session });
 
@@ -146,20 +144,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       if (pharmacyStock) {
         const serviceName = pharmacyStock.item?.name;
 
-         // Log the data being sent to SNS
-  console.log('Data to be published to SNS:', {
-    patient: newPharmacy.patient,
-    doctor: newPharmacy.doctor,
-    stockId: pharmacyStock._id,
-    pharmacyId: newPharmacy._id,
-    serviceType: EPatientBillingServiceType.Pharmacy,
-    serviceName: serviceName,
-    sellPrice: sellPrice,
-    quantity: newPharmacy.totalQuantity,
-    clinicId: auth.clinicId,
-    branchId: auth.branchId,
-    itemId: itemId,
-  });
+        // Log the data being sent to SNS
+        console.log('Data to be published to SNS:', {
+          patient: newPharmacy.patient,
+          doctor: newPharmacy.doctor,
+          stockId: pharmacyStock._id,
+          pharmacyId: newPharmacy._id,
+          serviceType: EPatientBillingServiceType.Pharmacy,
+          serviceName: serviceName,
+          sellPrice: sellPrice,
+          quantity: newPharmacy.totalQuantity,
+          clinicId: auth.clinicId,
+          branchId: auth.branchId,
+          itemId: itemId,
+        });
 
         // Publish to SNS
         await publishBillingServiceToSNS(
