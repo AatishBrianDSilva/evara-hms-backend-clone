@@ -6,11 +6,6 @@ import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
 import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
 import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
-import {
-  generateSections,
-  sanitizeReportInput,
-  transformBloodTestsToKeyValuePairs,
-} from '@evara-backend/core/src/lib/utils/sanitizeReportData';
 import PatientInvestigation from '@evara-backend/core/src/models/patientDashboard/investigation/PatientInvestigation';
 import mongoose from 'mongoose';
 import { ETestType } from '@evara-backend/core/src/models/patientDashboard/investigation/MedicalTests';
@@ -74,10 +69,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       }
     } else if (body.testType === ETestType.UltrasoundScan) {
       updateData.result = body.result;
-      updateData.status = 'Completed';
     } else if (body.testType === ETestType.SemenAnalysis) {
       updateData.result = body.result;
-      updateData.status = 'Completed';
     }
 
     if (body.result?.files && body.result?.files.length > 0) {
@@ -116,65 +109,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       JSON.stringify(investigation, null, 2),
     );
 
-    investigation.status = 'Completed';
-    await investigation.save();
-
-    // Fetch patient data
-    const patient = await Patient.findById(investigation.patient);
-    if (!patient) {
-      throw new ErrorMessage(404, 'Patient not found');
+    if (!investigation) {
+      throw new ErrorMessage(500, 'Something went wrong');
     }
 
-    console.log('patient data fetched', patient);
-
-    // Fetch spouse name based on partnerId
-    let spouseName = 'N/A';
-    if (patient.partnerId) {
-      const spouse = await Patient.findOne({ patientId: patient.partnerId }); // Fetch patient where patientId matches partnerId
-      if (spouse) {
-        spouseName = `${spouse.firstName} ${spouse.lastName}`; // Combine first name and last name of spouse
-      }
-    }
-
-    console.log('spouse name fetched', spouseName);
-
-    // Log the branchId and clinicId extracted from the auth
-    const branchId = auth.branchId;
-    const clinicId = auth.clinicId;
-    console.log('Extracted Branch ID:', branchId);
-    console.log('Extracted Clinic ID:', clinicId);
-
-    // Fetch the branch using the branchId and clinicId from the auth details
-    const branch = await Branch.findOne({
-      code: new RegExp(`^${branchId.trim()}\\s*$`, 'i'),
-      clinicId: clinicId,
-      isActive: true,
-    }).lean();
-
-    if (!branch) {
-      console.log('Branch not found');
-      throw new ErrorMessage(404, 'Branch not found');
-    }
-
-    console.log('Branch found:', branch);
-
-    // Generate Report if investigation is completed
-    if (investigation) {
-      const report = processDataForReport(
-        investigation,
-        patient,
-        spouseName,
-        branch,
-        body.actualName,
-      );
-      console.log('Report Data: ', JSON.stringify(report, null, 2));
-
-      // Send to SNS
-      await SNSService.publishMessage({
-        Message: JSON.stringify(report),
-        TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
-      });
-    }
+    await handleReportGeneration(investigation, auth, body);
 
     return successResponse('Investigation Updated successfully', investigation);
   } catch (error) {
@@ -324,4 +263,65 @@ const processDataForReport = (
   }
 
   return reportData;
+};
+
+const handleReportGeneration = async (
+  investigation: any,
+  auth: any,
+  body: any,
+) => {
+  // Fetch patient data
+  const patient = await Patient.findById(investigation.patient);
+  if (!patient) {
+    throw new ErrorMessage(404, 'Patient not found');
+  }
+
+  console.log('patient data fetched', patient);
+
+  // Fetch spouse name based on partnerId
+  let spouseName = 'N/A';
+  if (patient.partnerId) {
+    const spouse = await Patient.findOne({ patientId: patient.partnerId }); // Fetch patient where patientId matches partnerId
+    if (spouse) {
+      spouseName = `${spouse.firstName} ${spouse.lastName}`; // Combine first name and last name of spouse
+    }
+  }
+
+  console.log('spouse name fetched', spouseName);
+
+  // Log the branchId and clinicId extracted from the auth
+  const branchId = auth.branchId;
+  const clinicId = auth.clinicId;
+
+  // Fetch the branch using the branchId and clinicId from the auth details
+  const branch = await Branch.findOne({
+    code: new RegExp(`^${branchId.trim()}\\s*$`, 'i'),
+    clinicId: clinicId,
+    isActive: true,
+  }).lean();
+
+  if (!branch) {
+    console.log('Branch not found');
+    throw new ErrorMessage(404, 'Branch not found');
+  }
+
+  console.log('Branch found:', branch);
+
+  // Generate Report if investigation is completed
+  if (investigation.status === 'Completed') {
+    const report = processDataForReport(
+      investigation,
+      patient,
+      spouseName,
+      branch,
+      body.actualName,
+    );
+    console.log('Report Data: ', JSON.stringify(report, null, 2));
+
+    // Send to SNS
+    await SNSService.publishMessage({
+      Message: JSON.stringify(report),
+      TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
+    });
+  }
 };
