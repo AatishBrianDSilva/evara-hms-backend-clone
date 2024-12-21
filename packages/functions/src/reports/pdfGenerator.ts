@@ -22,7 +22,6 @@ const convertHtmlToPdf = async (
   footer: string,
 ): Promise<Buffer> => {
   const STAGE = process.env.STAGE;
-  console.log('STAGE', STAGE);
 
   let browser: Browser;
   if (STAGE === 'ratan') {
@@ -53,15 +52,13 @@ const convertHtmlToPdf = async (
   }
 
   const page = await browser.newPage();
-  console.log('New browser page created');
   await page.setContent(html, { waitUntil: 'networkidle0' });
-  console.log('HTML content set for PDF generation');
 
   const pdf = await page.pdf({
     format: 'A4',
     margin: {
-      top: '120px',
-      bottom: '100px',
+      top: '160px',
+      bottom: '120px',
       left: '25px',
       right: '25px',
     },
@@ -78,13 +75,9 @@ const convertHtmlToPdf = async (
 export const main: SQSHandler = async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
   try {
-    console.log('Starting main handler');
     await connectMongoDb();
-    console.log('MongoDB connection established');
 
     for (const record of event.Records) {
-      console.log('Processing SQS record:', record);
-
       const {
         htmlContent,
         bucket,

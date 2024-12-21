@@ -7,6 +7,7 @@ import { formatToIndianCurrencyFormat } from '@evara-backend/core/src/lib/utils/
 
 import {
   EDocumentTypes,
+  EReportTemplateTypes,
   IPDFGeneratorMessage,
   IReportData,
 } from '@evara-backend/core/src/lib/types/global';
@@ -15,8 +16,16 @@ import Patient from '@evara-backend/core/src/models/Patients';
 import Clinic from '@evara-backend/core/src/models/mastersDashboard/Clinic';
 import SQSService from '@evara-backend/core/src/lib/aws/sqs';
 import axios from 'axios';
-
+import Branch from '@evara-backend/core/models/mastersDashboard/global/ClinicBranches';
+import { differenceInYears } from 'date-fns';
+import {
+  formatDateIST,
+  formatTimeIST,
+} from '@evara-backend/core/src/lib/utils/formatDateIST';
 const TEMPLATE_PATH = path.resolve(__dirname, '../../../core/src/templates');
+
+const logoUrl =
+  'https://evara-hms-clinics-devs.s3.ap-south-1.amazonaws.com/Evara+new+logo+1.1.png';
 
 async function getBase64ImageFromUrl(imageUrl: string): Promise<string> {
   const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
@@ -36,12 +45,16 @@ const generateHtml = (template: string, data: any): string => {
     return formatToIndianCurrencyFormat(value);
   });
 
+  Handlebars.registerHelper('formatDateIST', formatDateIST);
+
+  Handlebars.registerHelper('formatTimeIST', formatTimeIST);
+
   Handlebars.registerHelper('properCase', str => {
     if (typeof str !== 'string') return str;
 
     str = str.replace(/([a-z])([A-Z])/g, '$1 $2');
 
-    return str.replace(/\b\w/g, char => char.toUpperCase());
+    return str.replace(/\b\w/g, (char: string) => char.toUpperCase());
   });
 
   Handlebars.registerHelper('capitalizeFirst', str => {
@@ -112,6 +125,7 @@ const generateHtml = (template: string, data: any): string => {
   const compiledTemplate = Handlebars.compile(template);
   return compiledTemplate(data);
 };
+
 const generateHeaderHtml = (
   header: any,
   styles: any,
@@ -209,6 +223,67 @@ const generateHtmlWithContentBorders = (bodyHtml: string): string => {
   `;
 };
 
+const generateHeaderHtmlV2 = (
+  header: any,
+  documentType: EDocumentTypes,
+): string => {
+  switch (documentType) {
+    case EDocumentTypes.Investigation:
+    case EDocumentTypes.Procedure:
+    case EDocumentTypes.CryoPreservation:
+    case EDocumentTypes.TreatmentCycle:
+    case EDocumentTypes.MedicalHistory:
+      return `
+      <header style="display: flex; justify-content: space-between; align-items: flex-start; width: 94%; padding: 15px 0; box-sizing: border-box; margin-left: auto; margin-right: auto;">
+        <div style="width: 140px; height: 67px; padding-top: 10px;">
+          <img src="${header.logo}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
+        </div>
+        <div style="flex-grow: 1; text-align: center;">
+          <p style="margin: 10px 0 0 0; font-size: 18px; font-weight: bold;">Evara Fertility & IVF Centre</p>
+          <p style="margin: 0; font-size: 14px">(A Unit of Evara Health Private Limited)</p>
+          <p style="margin: 0; font-size: 14px">${header.branchName}</p>
+          <p style="margin: 0; font-size: 14px">${header.branchAddress}</p>
+        </div>
+        <div style="width: 140px;"></div>
+      </header>
+    `;
+    case EDocumentTypes.PurchaseOrder:
+    case EDocumentTypes.PurchaseOrderProcessed:
+    case EDocumentTypes.Invoice:
+      return `
+      <header style="display: flex; justify-content: space-between; align-items: flex-start; width: 94%; padding: 15px 0; box-sizing: border-box; margin-left: auto; margin-right: auto;">
+        <div style="width: 140px; height: 67px; padding-top: 10px;">
+          <img src="${header.logo}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
+        </div>
+        <div style="flex-grow: 1; text-align: center;">
+          <h1 style="margin: 0; font-size: 14px; text-decoration: underline; background: #5C5C5C; color: white; padding: 5px;">Bill of Supply & Tax Invoice</h1>
+          <p style="margin: 10px 0 0 0; font-size: 18px; font-weight: bold;">Evara Fertility & IVF Centre</p>
+          <p style="margin: 0; font-size: 14px">(A Unit of Evara Health Private Limited)</p>
+          <p style="margin: 0; font-size: 14px">${header.branchName}</p>
+          <p style="margin: 0; font-size: 14px">${header.branchAddress}</p>
+        </div>
+        <div style="width: 140px;"></div>
+      </header>
+    `;
+    default:
+      return `
+      <header style="display: flex; justify-content: space-between; align-items: flex-start; width: 94%; padding: 15px 0; box-sizing: border-box; margin-left: auto; margin-right: auto;">
+        <div style="width: 140px; height: 67px; padding-top: 10px;">
+          <img src="${header.logo}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
+        </div>
+        <div style="flex-grow: 1; text-align: center;">
+          <h1 style="margin: 0; font-size: 14px; text-decoration: underline; background: #5C5C5C; color: white; padding: 5px;">Bill of Supply & Tax Invoice</h1>
+          <p style="margin: 10px 0 0 0; font-size: 18px; font-weight: bold;">Evara Fertility & IVF Centre</p>
+          <p style="margin: 0; font-size: 14px">(A Unit of Evara Health Private Limited)</p>
+          <p style="margin: 0; font-size: 14px">${header.branchName}</p>
+          <p style="margin: 0; font-size: 14px">${header.branchAddress}</p>
+        </div>
+        <div style="width: 140px;"></div>
+      </header>
+    `;
+  }
+};
+
 export const main: SNSHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
@@ -220,6 +295,14 @@ export const main: SNSHandler = async (event, _context) => {
       const data: IReportData = JSON.parse(rawData);
 
       console.log('SNS Message', JSON.stringify(data, null, 2));
+
+      if (
+        data.documentType === EDocumentTypes.Investigation &&
+        data.templateType === EReportTemplateTypes.SemenAnalysis
+      ) {
+        await generateSemenAnalysisReport(data);
+        continue;
+      }
 
       let clinic = null;
       let patient = null;
@@ -273,9 +356,6 @@ export const main: SNSHandler = async (event, _context) => {
           branchAddress: branchAddress, // Use branch details from sections
         };
       }
-
-      const logoUrl =
-        'https://evara-hms-clinics-devs.s3.ap-south-1.amazonaws.com/Evara+new+logo+1.1.png';
 
       const logo = await getBase64ImageFromUrl(logoUrl);
 
@@ -334,13 +414,6 @@ export const main: SNSHandler = async (event, _context) => {
         ? `${patient._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`
         : `${clinic._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`;
 
-      const queueUrl = process.env.REPORT_PDF_GENERATION_QUEUE_URL;
-      if (!queueUrl) {
-        throw new Error(
-          "Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set.",
-        );
-      }
-
       const pdfGeneratorMessage: IPDFGeneratorMessage = {
         headerHtml,
         footerHtml,
@@ -354,14 +427,111 @@ export const main: SNSHandler = async (event, _context) => {
         source_report_id: data.reportId,
       };
 
-      const sqsParams: SQS.SendMessageRequest = {
-        QueueUrl: queueUrl,
-        MessageBody: JSON.stringify(pdfGeneratorMessage),
-      };
-
-      await SQSService.sendMessage(sqsParams);
+      await sendMessageToQueue(pdfGeneratorMessage);
     }
   } catch (error) {
     console.error(error);
   }
+};
+
+const sendMessageToQueue = async (message: IPDFGeneratorMessage) => {
+  const queueUrl = process.env.REPORT_PDF_GENERATION_QUEUE_URL;
+  if (!queueUrl) {
+    throw new Error(
+      "Environment variable 'REPORT_PDF_GENERATION_QUEUE_URL' is not set.",
+    );
+  }
+  const sqsParams: SQS.SendMessageRequest = {
+    QueueUrl: queueUrl,
+    MessageBody: JSON.stringify(message),
+  };
+
+  await SQSService.sendMessage(sqsParams);
+};
+
+const generateSemenAnalysisReport = async (data: IReportData) => {
+  console.log('Semen Analysis Report Generation');
+
+  const logo = await getBase64ImageFromUrl(logoUrl);
+
+  const patient = await Patient.findById(data.patient).lean();
+  if (!patient) {
+    console.error('Patient not found');
+    return;
+  }
+
+  // Fetch spouse name based on partnerId
+  let spouseName = 'N/A';
+  if (patient.partnerId) {
+    const spouse = await Patient.findOne({ patientId: patient.partnerId }); // Fetch patient where patientId matches partnerId
+    if (spouse) {
+      spouseName = `${spouse.firstName} ${spouse.lastName}`; // Combine first name and last name of spouse
+    }
+  }
+
+  const clinic = await Clinic.findOne({ code: data.clinic }).lean();
+  if (!clinic) {
+    console.error('Clinic not found');
+    return;
+  }
+
+  const branch = await Branch.findOne({ code: data.branch }).lean();
+  if (!branch) {
+    console.error('Branch not found');
+    return;
+  }
+
+  const branchAddress = branch?.address
+    ? `${branch?.address?.street}, ${branch?.address?.city}, ${branch?.address?.state}, ${branch?.address?.zip}`
+    : 'Address not available';
+
+  const header = {
+    logo: logo,
+    clinicName: clinic?.name,
+    branchName: branch?.branchName,
+    branchAddress: branchAddress,
+    doctorName: data.doctor,
+    reportName: data.reportName,
+  };
+
+  const template = await getHtmlTemplate(data.templateType);
+
+  const headerHtml = generateHeaderHtmlV2(header, data.documentType);
+
+  const footerHtml = generateFooterHtml();
+
+  const templateData = {
+    patientData: {
+      name: patient?.firstName + ' ' + patient?.lastName,
+      id: patient?.patientId || patient?._id,
+      age: patient?.dob ? differenceInYears(new Date(), patient?.dob) : 'N/A',
+      gender: patient?.gender,
+      admissionDate: formatDateIST(patient?.createdAt, 'dd-MM-yyyy'),
+      spouseName: spouseName,
+    },
+    semenAnalysisData: data.result?.details,
+    styles: {
+      primaryColor: '#FF5C00',
+      secondaryColor: '#10535E',
+    },
+  };
+
+  const htmlContent = generateHtml(template, templateData);
+
+  const key = `${patient._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`;
+
+  const pdfGeneratorMessage: IPDFGeneratorMessage = {
+    headerHtml,
+    footerHtml,
+    htmlContent: htmlContent,
+    bucket: data.bucket,
+    key: key,
+    patient: data.patient,
+    doctor: data.doctor,
+    category: data.documentType,
+    reportName: data.reportName,
+    source_report_id: data.reportId,
+  };
+
+  await sendMessageToQueue(pdfGeneratorMessage);
 };
