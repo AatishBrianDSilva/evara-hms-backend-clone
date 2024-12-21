@@ -8,7 +8,9 @@ import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
 import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
 import PatientInvestigation from '@evara-backend/core/src/models/patientDashboard/investigation/PatientInvestigation';
 import mongoose from 'mongoose';
-import { ETestType } from '@evara-backend/core/src/models/patientDashboard/investigation/MedicalTests';
+import MedicalTest, {
+  ETestType,
+} from '@evara-backend/core/src/models/patientDashboard/investigation/MedicalTests';
 import { S3KeepPermanently, parseS3Url } from '../../files/_KeepPermanently';
 import Doctors from '@evara-backend/core/src/models/mastersDashboard/Doctors';
 import MasterInvestigation from '@evara-backend/core/src/models/patientDashboard/investigation/MasterInvestigations';
@@ -96,6 +98,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       {
         path: 'investigation',
         model: MasterInvestigation.modelName,
+        populate: {
+          path: 'test',
+          model: MedicalTest.modelName,
+        },
       },
       {
         path: 'doctor',
@@ -104,16 +110,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     ]);
 
-    console.log(
-      'Investigation Updated successfully',
-      JSON.stringify(investigation, null, 2),
-    );
+    // console.log(
+    //   'Investigation Updated successfully',
+    //   JSON.stringify(investigation, null, 2),
+    // );
 
     if (!investigation) {
       throw new ErrorMessage(500, 'Something went wrong');
     }
 
-    await handleReportGeneration(investigation, auth, body);
+    if (investigation.status === 'Completed') {
+      await handleReportGeneration(investigation, auth, body);
+    }
 
     return successResponse('Investigation Updated successfully', investigation);
   } catch (error) {
@@ -138,6 +146,7 @@ const processDataForReport = (
     doctor: `${data.doctor?.firstName || ''} ${data.doctor?.lastName || ''}`,
     patient: data.patient,
     clinic: data.clinicId,
+    branch: data.branch,
     sections: [],
     reportName,
     fileName: _.kebabCase(reportName),
@@ -276,8 +285,6 @@ const handleReportGeneration = async (
     throw new ErrorMessage(404, 'Patient not found');
   }
 
-  console.log('patient data fetched', patient);
-
   // Fetch spouse name based on partnerId
   let spouseName = 'N/A';
   if (patient.partnerId) {
@@ -286,8 +293,6 @@ const handleReportGeneration = async (
       spouseName = `${spouse.firstName} ${spouse.lastName}`; // Combine first name and last name of spouse
     }
   }
-
-  console.log('spouse name fetched', spouseName);
 
   // Log the branchId and clinicId extracted from the auth
   const branchId = auth.branchId;
@@ -305,23 +310,44 @@ const handleReportGeneration = async (
     throw new ErrorMessage(404, 'Branch not found');
   }
 
-  console.log('Branch found:', branch);
+  let report: any;
 
-  // Generate Report if investigation is completed
-  if (investigation.status === 'Completed') {
-    const report = processDataForReport(
+  if (investigation.investigation.test.testType === ETestType.SemenAnalysis) {
+    report = processDataForSemenAnalysisReport(investigation, branch);
+  } else {
+    console.log('Other Report Generation');
+    report = processDataForReport(
       investigation,
       patient,
       spouseName,
       branch,
       body.actualName,
     );
-    console.log('Report Data: ', JSON.stringify(report, null, 2));
-
-    // Send to SNS
-    await SNSService.publishMessage({
-      Message: JSON.stringify(report),
-      TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
-    });
   }
+
+  // Send to SNS
+  await SNSService.publishMessage({
+    Message: JSON.stringify(report),
+    TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
+  });
+};
+
+const processDataForSemenAnalysisReport = (investigation: any, branch: any) => {
+  console.log('Semen Analysis Report Generation');
+  const report: IReportData = {
+    bucket: EBuckets.UserReports,
+    documentType: EDocumentTypes.Investigation,
+    templateType: EReportTemplateTypes.SemenAnalysis,
+    doctor: `${investigation.doctor?.firstName || ''} ${investigation.doctor?.lastName || ''}`,
+    patient: investigation.patient,
+    clinic: investigation.clinicId,
+    branch: branch.code,
+    sections: [],
+    reportName: 'Semen Analysis Report',
+    fileName: 'semen-analysis',
+    reportId: investigation._id,
+    result: investigation.result,
+  };
+
+  return report;
 };

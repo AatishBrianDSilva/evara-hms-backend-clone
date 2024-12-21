@@ -1,17 +1,20 @@
-<html lang="en">
+<html lang='en'>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <style>
-      body { font-family: Arial, sans-serif; } .thin-divider { border-bottom-width: 1px; } main {
-      padding: 10mm; display: flex; flex-direction: column; flex-grow: 1; } .section {
-      margin-bottom: 20px; } .section-title { font-size: 1.5em; margin-bottom: 10px; color:
-      {{styles.primaryColor}}; } .section-content { font-size: 1em; } .key-value { display: flex;
-      justify-content: space-between; margin-bottom: 10px; } .key { color:
+      body { font-family: Arial, sans-serif; } .thin-divider {
+      border-bottom-width: 1px; } main { padding: 10mm; display: flex;
+      flex-direction: column; flex-grow: 1; } .section { margin-bottom: 20px; }
+      .section-title { font-size: 1.5em; margin-bottom: 10px; color:
+      {{styles.primaryColor}}; } .section-content { font-size: 1em; } .key-value
+      { display: flex; justify-content: space-between; margin-bottom: 10px; }
+      .key { color:
       {{styles.primaryColor}}; } .value { color:
       {{styles.secondaryColor}}; } h2 { color:
-      {{styles.primaryColor}}; } table { width: 100%; border-collapse: collapse; } th, td { border:
-      1px solid #ddd; padding: 8px; } th { background-color: #f2f2f2; color:
+      {{styles.primaryColor}}; } table { width: 100%; border-collapse: collapse;
+      } th, td { border: 1px solid #ddd; padding: 8px; } th { background-color:
+      #f2f2f2; color:
       {{styles.primaryColor}}; } td { color: black; } td.value { color:
       {{styles.primaryColor}}; }
     </style>
@@ -19,13 +22,13 @@
   <body>
     <main>
       <h2>{{header.reportName}}</h2>
-      <div class="divider thin-divider"></div>
+      <div class='divider thin-divider'></div>
       {{#each sections}}
-        <div class="section">
+        <div class='section'>
           {{#if showTitle}}
-            <div class="section-title">{{title}}</div>
+            <div class='section-title'>{{title}}</div>
           {{/if}}
-          <div class="section-content">
+          <div class='section-content'>
             {{#if isBillDetails}}
               <table>
                 <thead>
@@ -51,9 +54,9 @@
               </table>
             {{else}}
               {{#each content}}
-                <div class="key-value">
-                  <span class="key">{{@key}}</span>
-                  <span class="value">{{ this}}</span>
+                <div class='key-value'>
+                  <span class='key'>{{@key}}</span>
+                  <span class='value'>{{this}}</span>
                 </div>
               {{/each}}
             {{/if}}
