@@ -70,6 +70,10 @@ const generateHtml = (template: string, data: any): string => {
     return a >= b;
   });
 
+  Handlebars.registerHelper('eq', function (a, b) {
+    return a === b;
+  });
+
   Handlebars.registerHelper(
     'getSectionByTitle',
     function (sections, title, options) {
@@ -110,6 +114,22 @@ const generateHtml = (template: string, data: any): string => {
   Handlebars.registerHelper('toUpperCase', function (str) {
     if (typeof str !== 'string') return str;
     return str.toUpperCase();
+  });
+
+  Handlebars.registerHelper('mod', function (a, b, options) {
+    if (typeof a !== 'number' || typeof b !== 'number') {
+      return ''; // Return empty if inputs are not numbers
+    }
+
+    const isMod = a % b === 0;
+
+    // Support block-style helpers
+    if (options && typeof options.fn === 'function') {
+      return isMod ? options.fn(this) : options.inverse(this);
+    }
+
+    // Fallback for non-block usage
+    return isMod;
   });
 
   Handlebars.registerHelper(
@@ -304,6 +324,14 @@ export const main: SNSHandler = async (event, _context) => {
         continue;
       }
 
+      if (
+        data.documentType === EDocumentTypes.Investigation &&
+        data.templateType === EReportTemplateTypes.SpermDFI
+      ) {
+        await generateSpermDFIReport(data);
+        continue;
+      }
+
       let clinic = null;
       let patient = null;
 
@@ -374,7 +402,7 @@ export const main: SNSHandler = async (event, _context) => {
       // Extract and convert uploaded images to base64
       const uploadedImages = [];
       if (data.details?.files) {
-        for (const [index, fileUrl] of data.details.files.entries()) {
+        for (const [index, fileUrl] of data.details?.files.entries()) {
           const base64Image = await getBase64ImageFromUrl(fileUrl);
           uploadedImages.push({
             label: `Image ${index + 1}`,
@@ -510,6 +538,96 @@ const generateSemenAnalysisReport = async (data: IReportData) => {
       spouseName: spouseName,
     },
     semenAnalysisData: data.result?.details,
+    styles: {
+      primaryColor: '#FF5C00',
+      secondaryColor: '#10535E',
+    },
+  };
+
+  const htmlContent = generateHtml(template, templateData);
+
+  const key = `${patient._id}/${data.documentType}/generated/${data.reportId}-${data.fileName}.pdf`;
+
+  const pdfGeneratorMessage: IPDFGeneratorMessage = {
+    headerHtml,
+    footerHtml,
+    htmlContent: htmlContent,
+    bucket: data.bucket,
+    key: key,
+    patient: data.patient,
+    doctor: data.doctor,
+    category: data.documentType,
+    reportName: data.reportName,
+    source_report_id: data.reportId,
+  };
+
+  await sendMessageToQueue(pdfGeneratorMessage);
+};
+
+const generateSpermDFIReport = async (data: IReportData) => {
+  console.log('Sperm DFI Report Generation');
+
+  const logo = await getBase64ImageFromUrl(logoUrl);
+
+  const patient = await Patient.findById(data.patient).lean();
+  if (!patient) {
+    console.error('Patient not found');
+    return;
+  }
+
+  const clinic = await Clinic.findOne({ code: data.clinic }).lean();
+  if (!clinic) {
+    console.error('Clinic not found');
+    return;
+  }
+
+  const branch = await Branch.findOne({ code: data.branch }).lean();
+  if (!branch) {
+    console.error('Branch not found');
+    return;
+  }
+
+  const branchAddress = branch?.address
+    ? `${branch?.address?.street}, ${branch?.address?.city}, ${branch?.address?.state}, ${branch?.address?.zip}`
+    : 'Address not available';
+
+  const header = {
+    logo: logo,
+    clinicName: clinic?.name,
+    branchName: branch?.branchName,
+    branchAddress: branchAddress,
+    doctorName: data.doctor,
+    reportName: data.reportName,
+  };
+
+  // Process uploaded images
+
+  const uploadedImages = [];
+  if (data.result?.files) {
+    for (const [index, fileUrl] of data.result?.files.entries()) {
+      uploadedImages.push({
+        label: `Image ${index + 1}`,
+        url: fileUrl, // Keep only the URL
+      });
+    }
+  }
+
+  const template = await getHtmlTemplate(data.templateType);
+
+  const headerHtml = generateHeaderHtmlV2(header, data.documentType);
+
+  const footerHtml = generateFooterHtml();
+
+  const templateData = {
+    patientData: {
+      name: patient?.firstName + ' ' + patient?.lastName,
+      id: patient?.patientId || patient?._id,
+      age: patient?.dob ? differenceInYears(new Date(), patient?.dob) : 'N/A',
+      gender: patient?.gender,
+      admissionDate: formatDateIST(patient?.createdAt, 'dd-MM-yyyy'),
+    },
+    spermDFIData: data.result?.details, // Use specific details for Sperm DFI
+    uploadedImages, // Add uploaded images to the template data
     styles: {
       primaryColor: '#FF5C00',
       secondaryColor: '#10535E',

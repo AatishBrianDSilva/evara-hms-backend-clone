@@ -73,6 +73,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       updateData.result = body.result;
     } else if (body.testType === ETestType.SemenAnalysis) {
       updateData.result = body.result;
+    } else if (body.testType === ETestType.SpermDFI) {
+      updateData.result = body.result;
     }
 
     if (body.result?.files && body.result?.files.length > 0) {
@@ -110,10 +112,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     ]);
 
-    // console.log(
-    //   'Investigation Updated successfully',
-    //   JSON.stringify(investigation, null, 2),
-    // );
+    console.log(
+      'Investigation Updated successfully',
+      JSON.stringify(investigation, null, 2),
+    );
 
     if (!investigation) {
       throw new ErrorMessage(500, 'Something went wrong');
@@ -279,6 +281,9 @@ const handleReportGeneration = async (
   auth: any,
   body: any,
 ) => {
+  console.log('Starting report generation');
+  console.log('Investigation data:', JSON.stringify(investigation, null, 2));
+
   // Fetch patient data
   const patient = await Patient.findById(investigation.patient);
   if (!patient) {
@@ -314,6 +319,10 @@ const handleReportGeneration = async (
 
   if (investigation.investigation.test.testType === ETestType.SemenAnalysis) {
     report = processDataForSemenAnalysisReport(investigation, branch);
+  } else if (investigation.investigation.test.testType === ETestType.SpermDFI) {
+    console.log('Processing Sperm DFI Report');
+    console.log('Result:', JSON.stringify(investigation.result, null, 2));
+    report = processDataForSpermDFIReport(investigation, branch);
   } else {
     console.log('Other Report Generation');
     report = processDataForReport(
@@ -348,6 +357,59 @@ const processDataForSemenAnalysisReport = (investigation: any, branch: any) => {
     reportId: investigation._id,
     result: investigation.result,
   };
+
+  return report;
+};
+
+const processDataForSpermDFIReport = (investigation: any, branch: any) => {
+  console.log('Sperm DFI Report Generation');
+
+  console.log(
+    'Investigation Result:',
+    JSON.stringify(investigation.result, null, 2),
+  );
+
+  const report: IReportData = {
+    bucket: EBuckets.UserReports,
+    documentType: EDocumentTypes.Investigation,
+    templateType: EReportTemplateTypes.SpermDFI, // Use the correct template type
+    doctor: `${investigation.doctor?.firstName || ''} ${investigation.doctor?.lastName || ''}`,
+    patient: investigation.patient,
+    clinic: investigation.clinicId,
+    branch: branch.code,
+    sections: [],
+    reportName: 'Sperm DNA Fragmentation Index (DFI) Report',
+    fileName: 'sperm-dfi-report',
+    reportId: investigation._id,
+    result: investigation.result,
+  };
+
+  const details = investigation?.result?.details || null;
+
+  if (details && typeof details === 'object') {
+    const formattedDetails: any = {};
+    for (const key in details) {
+      if (details[key] !== null && details[key] !== '') {
+        formattedDetails[key] = details[key];
+      }
+    }
+    report.sections.push({
+      showTitle: true,
+      title: 'Sperm DFI Details',
+      content: formattedDetails,
+    });
+  } else {
+    console.warn('No details available for Sperm DFI Report.');
+  }
+
+  // Add remarks or notes if available
+  if (investigation.result?.notes) {
+    report.sections.push({
+      showTitle: true,
+      title: 'Notes',
+      content: { Notes: investigation.result.notes },
+    });
+  }
 
   return report;
 };
