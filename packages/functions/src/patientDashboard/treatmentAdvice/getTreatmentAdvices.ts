@@ -19,7 +19,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Extract query string parameters
     const params = event.queryStringParameters || {};
-    const { page = '1', limit = '10', paginate, ...filters } = params;
+    const {
+      page = '1',
+      limit = '10',
+      paginate,
+      sort: sortRaw,
+      ...filters
+    } = params;
+
+    const sort = sortRaw ? JSON.parse(sortRaw) : { tentativeDate: -1 };
 
     console.log('Page:', page); // Log pagination parameter
     console.log('Limit:', limit); // Log pagination parameter
@@ -44,6 +52,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
       lean: true,
+      sort,
     };
 
     const paginateFlag = JSON.parse(paginate || 'false');

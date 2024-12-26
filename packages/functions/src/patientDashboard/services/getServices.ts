@@ -24,7 +24,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Extract query string parameters
     const params = event.queryStringParameters || {};
     // console.log("Params", params);
-    const { startDate, endDate, page = '1', limit = '10', ...filters } = params;
+    const {
+      startDate,
+      endDate,
+      page = '1',
+      limit = '10',
+      sort: sortRaw,
+      ...filters
+    } = params;
+
+    const sort = sortRaw ? JSON.parse(sortRaw) : { date: -1 };
 
     // Construct the query object
     let query: any = {
@@ -53,6 +62,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
       lean: true,
+      sort,
     };
 
     //Add populate fields

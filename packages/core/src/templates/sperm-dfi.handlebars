@@ -1,0 +1,180 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+      .thin-divider { border-bottom-width: 1px; } main { padding: 10mm;
+      padding-top: 5px; display: flex; box-sizing: border-box; flex-direction:
+      column; flex-grow: 1; } .section { margin-bottom: 20px; } .section-title {
+      font-size: 1.5em; margin-bottom: 10px; color:
+      {{styles.primaryColor}}; } .section-content { font-size: 1em; } .key-value
+      { display: flex; justify-content: space-between; margin-bottom: 10px; }
+      .key { font-weight: bold; width: 50%; text-align: left; } .value { width:
+      70%; text-align: left; white-space: pre-wrap; } h2 { color:
+      {{styles.primaryColor}}; text-align: center; } .header { text-align:
+      center; font-size: 18px; font-weight: bold; background: #ffece4; height:
+      55px; display: flex; justify-content: center; align-items: center;
+      margin-bottom: 10px; } .column-container { display: flex; justify-content:
+      space-between; padding: 10px 0; gap: 20px; } .column { width: 48%; }
+      .column.left { padding-left: 15px; } .column.right { padding-right: 15px;
+      } .padded-section { padding-left: 15px; padding-right: 15px; }
+      .branch-address { text-align: center; padding: 20px 0; font-size: 1em;
+      color: #333; } /* CSS for uploaded images */ .image-gallery { display:
+      flex; flex-wrap: wrap; gap: 5px; justify-content: space-between; }
+      .image-container { width: 31%; box-sizing: border-box; margin-bottom:
+      10px; } .uploaded-image { width: 100%; height: auto; } .image-label {
+      text-align: center; font-weight: bold; margin-bottom: 5px; } /* Basic
+      table styling */ table { width: 100%; border-collapse: collapse;
+      margin-bottom: 15px; } table, th, td { border: 1px solid #ccc; } th, td {
+      padding: 8px; text-align: left; font-size: 0.9em; } th { background:
+      #f9f9f9; font-weight: bold; color: #333; }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <!-- Patient Details Section -->
+      <div class='header'>Patient Details</div>
+      <div class='section'>
+        <div class='column-container'>
+          <!-- First column -->
+          <div class='column left'>
+            <div class='key-value'>
+              <span class='key'>Name:</span>
+              <span class='value'>{{patientData.name}}</span>
+            </div>
+            <div class='key-value'>
+              <span class='key'>ID:</span>
+              <span class='value'>{{patientData.id}}</span>
+            </div>
+            <div class='key-value'>
+              <span class='key'>Age:</span>
+              <span class='value'>{{patientData.age}}</span>
+            </div>
+            <div class='key-value'>
+              <span class='key'>Gender:</span>
+              <span class='value'>{{patientData.gender}}</span>
+            </div>
+          </div>
+          <!-- Second column -->
+          <div class='column right'>
+            <div class='key-value'>
+              <span class='key'>Spouse Name:</span>
+              <span class='value'>{{patientData.spouseName}}</span>
+            </div>
+            <div class='key-value'>
+              <span class='key'>Admission Date:</span>
+              <span class='value'>{{patientData.admissionDate}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sperm DFI Report Section -->
+      <div class='header'>SPERM DFI REPORT</div>
+      <div class='section padded-section' style='margin-top: 10px;'>
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Abstinence Period</td>
+              <td>{{spermDFIData.abstinencePeriod}}</td>
+            </tr>
+            <tr>
+              <td>No. of Sperms Evaluated</td>
+              <td>{{spermDFIData.spermEvaluated}}</td>
+            </tr>
+            <tr>
+              <td>Sperms with Normal HALO</td>
+              <td>{{spermDFIData.normalHalo}}</td>
+            </tr>
+            <tr>
+              <td>Sperms with NO/ABNORMAL HALO</td>
+              <td>{{spermDFIData.noAbnormalHalo}}</td>
+            </tr>
+            <tr>
+              <td>DNA Fragmentation Index (DFI%)</td>
+              <td>{{spermDFIData.dfiIndex}}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        {{! Additional Information }}
+        <table>
+          <tbody>
+            <tr>
+              <th>Image Description</th>
+              <td>{{spermDFIData.imageDescription}}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Normal Reference Value/Range for DFI Index -->
+        <table>
+          <tbody>
+            <tr>
+              <td>
+                <b>Normal Reference Value/Range for DFI Index:</b>
+                <br />
+                Normal: DFI
+                <br />
+                Equivocal: DFI ≥ 15% TO ≤ 25%
+                <br />
+                Abnormal: DFI > 25%
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Uploaded Images Section -->
+      {{#if uploadedImages}}
+        <div class='header'>Uploaded Images</div>
+        <div class='section'>
+          <div
+            class='image-gallery'
+            style='display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px;'
+          >
+            {{#each uploadedImages}}
+              <div
+                class='image-container'
+                style='width: 48%; text-align: center; margin-bottom: 16px;'
+              >
+                <p
+                  class='image-label'
+                  style='font-weight: bold; margin-bottom: 8px;'
+                >{{label}}</p>
+                <img
+                  src='{{url}}'
+                  alt='{{label}}'
+                  class='uploaded-image'
+                  style='width: 100%; height: auto; border: 1px solid #ccc; border-radius: 8px;'
+                />
+              </div>
+              {{#if (eq (mod @index 2) 1)}}
+                <div style='flex-basis: 100%; height: 0;'></div>
+              {{/if}}
+            {{/each}}
+          </div>
+        </div>
+      {{/if}}
+      <!-- Prepared By and Checked By -->
+      <div class='section'>
+        <div class='column-container'>
+          <div class='column left'>
+            <p>Prepared By</p>
+          </div>
+          <div class='column right'>
+            <p style='text-align: right;'>Checked By</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

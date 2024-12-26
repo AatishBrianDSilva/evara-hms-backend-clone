@@ -30,6 +30,7 @@ export enum EReportTemplateTypes {
   POInvoice = 'POInvoice',
   POInvoiceProcessed = 'POInvoiceProcessed',
   SemenAnalysis = 'semen-analysis',
+  SpermDFI = 'sperm-dfi',
 }
 
 export interface ISection {
