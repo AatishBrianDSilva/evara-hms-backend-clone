@@ -10,6 +10,8 @@ export enum EPurchaseOrderStatus {
   Ordered = 'Ordered',
   PartiallyProcessed = 'PartiallyProcessed',
   Processed = 'Processed',
+  AdminApprovalPending = 'AdminApprovalPending',
+  RejectedByAdmin = 'RejectedByAdmin',
 }
 
 export enum EItemStatus {
@@ -153,6 +155,14 @@ const purchaseOrderSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'ClinicBranches',
       required: true,
+    },
+    payloadForAdminApproval: {
+      items: [itemSchema], // Stores the request items during admin approval
+      netAmount: { type: Number, required: false, min: 0 },
+      otherCharges: { type: Number, required: false, min: 0 },
+      subTotal: { type: Number, required: false, min: 0 },
+      tax: { type: Number, required: false, min: 0 },
+      discount: { type: Number, required: false, min: 0 }, // Discount at the PO level
     },
     status: {
       type: String,
