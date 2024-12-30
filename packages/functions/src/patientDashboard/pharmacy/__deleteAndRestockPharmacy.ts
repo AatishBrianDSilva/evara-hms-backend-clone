@@ -77,7 +77,7 @@ export const deleteAndRestockPharmacy = async (
     locationQuantity.quantity += item.quantity;
 
     // Update the total quantity in stock
-    stock.totalQuantity += item.quantity;
+    // stock.totalQuantity += item.quantity;
 
     await stock.save({ session });
   }
