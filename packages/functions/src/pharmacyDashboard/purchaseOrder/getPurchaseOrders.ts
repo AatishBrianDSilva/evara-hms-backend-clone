@@ -59,8 +59,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     query.clinicId = auth.clinicId;
 
     if (status) {
-      query.status = status;
+      const parsedStatus = Array.isArray(status) ? status : status.split(','); // Convert comma-separated string to array
+      query.status = { $in: parsedStatus };
     }
+
+    console.log('Final query for PurchaseOrder:', JSON.stringify(query));
 
     if (searchQuery) {
       query.$or = [{ poNumber: new RegExp(searchQuery, 'i') }];

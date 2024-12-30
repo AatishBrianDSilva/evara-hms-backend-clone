@@ -10,6 +10,8 @@ export enum EPurchaseOrderStatus {
   Ordered = 'Ordered',
   PartiallyProcessed = 'PartiallyProcessed',
   Processed = 'Processed',
+  WaitingForApproval = 'WaitingForApproval',
+  RejectedByAdmin = 'RejectedByAdmin',
 }
 
 export enum EItemStatus {
@@ -177,6 +179,10 @@ const purchaseOrderSchema = new Schema(
       reportName: { type: String, required: false },
       bucket: { type: String, required: false },
       key: { type: String, required: false },
+    },
+    payloadForApproval: {
+      type: Object, // Flexible field to store the payload
+      required: false,
     },
   },
   { timestamps: true },
