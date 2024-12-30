@@ -10,7 +10,7 @@ export enum EPurchaseOrderStatus {
   Ordered = 'Ordered',
   PartiallyProcessed = 'PartiallyProcessed',
   Processed = 'Processed',
-  AdminApprovalPending = 'AdminApprovalPending',
+  WaitingForApproval = 'WaitingForApproval',
   RejectedByAdmin = 'RejectedByAdmin',
 }
 
@@ -156,14 +156,6 @@ const purchaseOrderSchema = new Schema(
       ref: 'ClinicBranches',
       required: true,
     },
-    payloadForAdminApproval: {
-      items: [itemSchema], // Stores the request items during admin approval
-      netAmount: { type: Number, required: false, min: 0 },
-      otherCharges: { type: Number, required: false, min: 0 },
-      subTotal: { type: Number, required: false, min: 0 },
-      tax: { type: Number, required: false, min: 0 },
-      discount: { type: Number, required: false, min: 0 }, // Discount at the PO level
-    },
     status: {
       type: String,
       enum: Object.values(EPurchaseOrderStatus),
@@ -187,6 +179,10 @@ const purchaseOrderSchema = new Schema(
       reportName: { type: String, required: false },
       bucket: { type: String, required: false },
       key: { type: String, required: false },
+    },
+    payloadForApproval: {
+      type: Object, // Flexible field to store the payload
+      required: false,
     },
   },
   { timestamps: true },
