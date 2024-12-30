@@ -11,7 +11,9 @@ export enum EPurchaseOrderStatus {
   PartiallyProcessed = 'PartiallyProcessed',
   Processed = 'Processed',
   WaitingForApproval = 'WaitingForApproval',
+  PartialPOWaitingForApproval = 'PartialPOWaitingForApproval',
   RejectedByAdmin = 'RejectedByAdmin',
+  PartialPORejectedByAdmin = 'PartialPORejectedByAdmin',
 }
 
 export enum EItemStatus {

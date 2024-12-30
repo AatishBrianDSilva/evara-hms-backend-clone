@@ -15,11 +15,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   session.startTransaction();
 
   try {
-    const { id } = event.pathParameters || {}; // Extract `id` from pathParameters
-    const { isPartial } = JSON.parse(event.body || '{}'); // Extract `isPartial` from request body
+    if (!event.body) {
+      throw new ErrorMessage(400, 'Payload data is required');
+    }
 
-    if (!id) {
-      throw new ErrorMessage(400, 'ID is required');
+    const data = JSON.parse(event.body);
+
+    const { id, payload } = data;
+
+    if (!payload || !id) {
+      throw new ErrorMessage(
+        400,
+        'ID and payloadForApproval data are required',
+      );
     }
 
     // Fetch the existing purchase order
@@ -28,24 +36,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(404, 'Purchase Order not found');
     }
 
-    // Update the status based on `isPartial` flag
-    purchaseOrder.status = isPartial
-      ? EPurchaseOrderStatus.PartialPORejectedByAdmin
-      : EPurchaseOrderStatus.RejectedByAdmin;
+    // Update the status and payloadForApproval
+    purchaseOrder.status = EPurchaseOrderStatus.PartialPOWaitingForApproval;
+    purchaseOrder.payloadForApproval = payload;
 
     const updatedPurchaseOrder = await purchaseOrder.save();
 
-    await session.commitTransaction();
-
     return successResponse(
-      'Purchase Order rejected successfully',
+      'Partial Purchase Order saved for approval',
       updatedPurchaseOrder,
     );
   } catch (error) {
-    await session.abortTransaction();
-    console.error('Error rejecting purchase order:', error);
+    console.error('Error saving partial PO for approval:', error);
     return errorResponse(error);
-  } finally {
-    session.endSession();
   }
 };
