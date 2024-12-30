@@ -259,11 +259,25 @@ const processDataForReport = (
     hour12: true,
   });
 
+  const calculateAge = (dob: string): number => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  };
+
   const patientDetails = {
     patientName: `${patientData.patientData.firstName} ${patientData.patientData.lastName}`,
     patientNumber: patientData.patientData.patientId,
     gender: patientData.patientData.gender,
-    age: patientData.patientData.age,
+    age: calculateAge(patientData.patientData.dob), // Calculate age from dob
     billDescription: billDescription,
     billNo: billing.billingId,
     billDate: billDate,
