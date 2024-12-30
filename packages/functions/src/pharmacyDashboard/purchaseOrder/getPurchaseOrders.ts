@@ -63,8 +63,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       query.status = { $in: parsedStatus };
     }
 
-    console.log('Final query for PurchaseOrder:', JSON.stringify(query));
-
     if (searchQuery) {
       query.$or = [{ poNumber: new RegExp(searchQuery, 'i') }];
     }
