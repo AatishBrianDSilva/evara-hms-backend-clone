@@ -145,6 +145,8 @@ export const PatientJourneyStack = ({ stack }: StackContext) => {
       'packages/functions/src/patientDashboard/pharmacy/getPharmacyById.main',
     'GET /pharmacy/all':
       'packages/functions/src/patientDashboard/pharmacy/getAllPharmacy.main',
+    'DELETE /pharmacy/{id}':
+      'packages/functions/src/patientDashboard/pharmacy/deletePharmacyById.main',
 
     // Patient Notes
     'POST /notes/add': 'packages/functions/src/patientDashboard/notes/add.main',
