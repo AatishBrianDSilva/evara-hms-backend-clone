@@ -8,6 +8,10 @@ import { PharmacyInvoice } from '@evara-backend/core/models/pharmacyDashboard/Ph
 import { S3KeepPermanently, parseS3Url } from 'src/files/_KeepPermanently';
 import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 import { updateStockFromPurchaseOrder } from '../stocks/updateStockFromPurchaseOrder';
+import SNSService from '@evara-backend/core/lib/aws/sns';
+import { processPurchaseOrderProcessedReportData } from './processPurchaseOrderProcessedReportData';
+import { DrugVendor } from '@evara-backend/core/models/pharmacyDashboard/DrugVendor';
+import Branch from '@evara-backend/core/models/mastersDashboard/global/ClinicBranches';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -254,6 +258,34 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Save the updated purchase order
     const updatedData = await purchaseOrder.save({ session }); // Save using session
     console.log('Purchase order updated successfully.');
+
+    // Generate report data for the new response
+    const branch = await Branch.findOne({
+      code: new RegExp(`^${auth.branchId.trim()}\\s*$`, 'i'),
+      clinicId: auth.clinicId,
+      isActive: true,
+      $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
+    }).lean();
+
+    const vendorDetails = await DrugVendor.findById(updateData.vendor).lean();
+
+    const reportData = processPurchaseOrderProcessedReportData(
+      purchaseOrder,
+      auth.clinicId,
+      newResponse,
+      branch,
+      vendorDetails,
+    );
+
+    console.log('Generated Report Data:', reportData);
+
+    // Publish the report data to SNS
+    await SNSService.publishMessage({
+      Message: JSON.stringify(reportData),
+      TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
+    });
+
+    console.log('Report data published to SNS.');
 
     // Update stock from purchase order after saving the purchase order
     await updateStockFromPurchaseOrder(purchaseOrder._id, session);
