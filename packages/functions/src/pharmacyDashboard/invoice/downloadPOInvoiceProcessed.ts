@@ -5,8 +5,8 @@ import { PurchaseOrder } from '@evara-backend/core/models/pharmacyDashboard/Purc
 import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
 import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
 import S3Service from '@evara-backend/core/src/lib/aws/s3';
+import { ObjectId } from 'mongodb';
 
-// Handler function for downloading the purchase order invoice
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
@@ -16,48 +16,69 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(401, 'Unauthorized');
     }
 
-    if (!event.pathParameters || !event.pathParameters.id) {
-      throw new ErrorMessage(400, 'Purchase Order ID is not provided');
+    const responseId = event.pathParameters?.id;
+    const reportKey = event.queryStringParameters?.key
+      ? decodeURIComponent(event.queryStringParameters.key)
+      : null;
+
+    if (!responseId) {
+      throw new ErrorMessage(400, 'Response ID is not provided');
+    }
+    if (!reportKey) {
+      throw new ErrorMessage(400, 'Report key is not provided');
     }
 
-    const purchaseOrderId = event.pathParameters['id'];
-    console.log('Purchase Order ID at API:', purchaseOrderId);
+    console.log(`Received responseId: ${responseId}`);
+    console.log(`Received reportKey: ${reportKey}`);
 
     await connectMongoDb();
+    console.log('MongoDB connected successfully');
 
-    // Find the purchase order by ID
-    const purchaseOrder = await PurchaseOrder.findOne({ _id: purchaseOrderId });
+    // Find the purchase order by response ID
+    const purchaseOrder = await PurchaseOrder.findOne({
+      'responses._id': new ObjectId(responseId),
+    });
 
     if (!purchaseOrder) {
       throw new ErrorMessage(404, 'Purchase Order does not exist');
     }
 
-    // Extract the report field from the purchaseOrder
-    const { reportProcessed } = purchaseOrder;
-    if (!reportProcessed || !reportProcessed.bucket || !reportProcessed.key) {
-      throw new ErrorMessage(404, 'No report found for this Purchase Order');
+    console.log(`Found PurchaseOrder: ${JSON.stringify(purchaseOrder)}`);
+
+    // Find the specific response
+    const response = purchaseOrder.responses.find(
+      (r: any) => r._id.toString() === responseId,
+    );
+
+    if (!response) {
+      throw new ErrorMessage(404, 'Response does not exist in Purchase Order');
     }
 
-    const { bucket, key } = reportProcessed; // Fetch bucket and key from the report field
-    console.log(`Bucket: ${bucket}, Key: ${key}`);
+    // Validate bucket
+    const bucketName = response.report.bucket;
+    console.log(`Using Bucket: ${bucketName}`);
 
-    // Retrieve the PDF data from S3 using the bucket and key
-    const pdfData = await S3Service.getObject(bucket, key);
+    // Fetch the PDF data from S3
+    const pdfData = await S3Service.getObject(bucketName, reportKey);
+
     if (!pdfData) {
       throw new ErrorMessage(404, 'Invoice not found in S3');
     }
+
+    console.log(`Fetched PDF successfully for Key: ${reportKey}`);
 
     // Return the PDF response
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename=${purchaseOrder.poNumber}-invoice.pdf`,
+        'Content-Disposition': `attachment; filename=${purchaseOrder.poNumber}-response-${responseId}-invoice.pdf`,
       },
       body: pdfData,
       isBase64Encoded: true,
     };
   } catch (error) {
+    console.error('Error:', error);
     return errorResponse(error);
   }
 };
