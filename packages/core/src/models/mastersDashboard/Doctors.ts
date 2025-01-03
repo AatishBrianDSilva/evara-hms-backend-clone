@@ -1,9 +1,25 @@
 import mongoose, { Document, PaginateModel, Types } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
 
+export enum DoctorSpeciality {
+  General = 'General',
+  ReproductiveEndocrinologist = 'Reproductive Endocrinologist',
+  Andrologist = 'Andrologist',
+  Embryologist = 'Embryologist',
+  Urologist = 'Urologist',
+  ReproductiveSurgeon = 'Reproductive Surgeon',
+  Gynecologist = 'Gynecologist',
+  FertilityCounselor = 'Fertility Counselor',
+  GeneticCounselor = 'Genetic Counselor',
+  // NursePractitionerRegisteredNurse = 'Nurse Practitioner/Registered Nurse',
+  Sonographer = 'Sonographer',
+  Anaesthetist = 'Anaesthetist',
+}
+
 interface DoctorData extends Document {
   clinicId: string;
   branchId: string;
+  userId?: string;
   firstName: string;
   lastName: string;
   speciality: string;
@@ -28,6 +44,11 @@ export const doctorSchema = new mongoose.Schema(
   {
     clinicId: { type: String, required: true, index: true },
     branchId: { type: String, required: true, index: true },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: false,
+    },
     firstName: { type: String, required: true },
     lastName: { type: String },
     gender: { type: String, required: true },
