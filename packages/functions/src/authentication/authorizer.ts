@@ -372,6 +372,7 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
         EUserRole.Nurse,
         EUserRole.Reception,
         EUserRole.CenterManager,
+        EUserRole.Embryologist,
       ],
       PUT: [
         EUserRole.Admin,
@@ -399,6 +400,7 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
         EUserRole.PharmacyManager,
         EUserRole.Reception,
         EUserRole.CenterManager,
+        EUserRole.Embryologist,
       ],
       POST: [EUserRole.Admin, EUserRole.CenterManager],
       PATCH: [EUserRole.Admin, EUserRole.CenterManager],

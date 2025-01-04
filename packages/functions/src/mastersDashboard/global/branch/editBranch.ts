@@ -36,6 +36,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Parse the body from the event
     const data = JSON.parse(event.body);
 
+    console.log('Data', data);
+
     // Check if the branch belongs to the authorized clinic
     const existingBranch = await Branch.findById(id);
 
@@ -64,6 +66,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       manager: data.manager,
       isActive: data.isActive,
       deletedAt: data.deletedAt,
+      gstNumber: data.gstNumber,
+      drugLicenceNumber: data.drugLicenceNumber,
     };
 
     const updatedBranch = await Branch.findByIdAndUpdate(

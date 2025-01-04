@@ -25,6 +25,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Parse the body from the event
     const data = JSON.parse(event.body);
 
+    console.log('Data', data);
+
     const existingBranch = await Branch.findOne({
       clinicId: auth.clinicId,
       code: data.code,

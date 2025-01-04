@@ -16,6 +16,8 @@ const branchSchema = new Schema(
     manager: { type: String },
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date },
+    gstNumber: { type: String },
+    drugLicenceNumber: { type: String },
   },
   { timestamps: true },
 );
