@@ -3,46 +3,141 @@
     <meta charset='UTF-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-      .thin-divider { border-bottom-width: 1px; } main { padding: 10mm;
-      padding-top: 5px; display: flex; box-sizing: border-box; flex-direction:
-      column; flex-grow: 1; } .section { margin-bottom: 20px; } .section-title {
-      font-size: 1.5em; margin-bottom: 10px; color:
-      {{styles.primaryColor}}; } .section-content { font-size: 1em; } .key-value
-      { display: flex; justify-content: space-between; margin-bottom: 10px; }
-      .key { font-weight: bold; width: 50%; text-align: left; } .value { width:
-      70%; text-align: left; white-space: pre-wrap; } h2 { color:
-      {{styles.primaryColor}}; text-align: center; } .header { text-align:
-      center; font-size: 18px; font-weight: bold; background: #ffece4; height:
-      55px; display: flex; justify-content: center; align-items: center;
-      margin-bottom: 10px; } .column-container { display: flex; justify-content:
-      space-between; padding: 10px 0; gap: 20px; } .column { width: 48%; }
-      .column.left { padding-left: 15px; } .column.right { padding-right: 15px;
-      } .padded-section { padding-left: 15px; padding-right: 15px; }
-      .branch-address { text-align: center; padding: 20px 0; font-size: 1em;
-      color: #333; } /* CSS for uploaded images */ .image-gallery { display:
-      flex; flex-wrap: wrap; gap: 5px; justify-content: space-between; }
-      .image-container { width: 31%; box-sizing: border-box; margin-bottom:
-      10px; } .uploaded-image { width: 100%; height: auto; } .image-label {
-      text-align: center; font-weight: bold; margin-bottom: 5px; } /* Basic
-      table styling */ table { width: 100%; border-collapse: collapse;
-      margin-bottom: 15px; } table, th, td { border: 1px solid #ccc; } th, td {
-      padding: 8px; text-align: left; font-size: 0.9em; } th { background:
-      #f9f9f9; font-weight: bold; color: #333; }
-
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        font-size: 13px; /* Decreased font size */
+      }
+      .thin-divider {
+        border-bottom-width: 1px;
+      }
+      main {
+        padding: 10mm;
+        padding-top: 5px;
+        display: flex;
+        box-sizing: border-box;
+        flex-direction: column;
+        flex-grow: 1;
+      }
+      .section {
+        margin-bottom: 20px;
+      }
+      .section-title {
+        font-size: 1.4em; /* Reduced by 0.1em */
+        margin-bottom: 10px;
+        color: {{styles.primaryColor}};
+      }
+      .section-content {
+        font-size: 0.9em; /* Reduced by 0.1em */
+      }
+      .key-value {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      .key {
+        font-weight: bold;
+        width: 50%;
+        text-align: left;
+      }
+      .value {
+        width: 70%;
+        text-align: left;
+        white-space: pre-wrap;
+      }
+      h2 {
+        color: {{styles.primaryColor}};
+        text-align: center;
+      }
+      .header {
+        text-align: center;
+        font-size: 17px; /* Reduced by 1px */
+        font-weight: bold;
+        background: #ffece4;
+        height: 55px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .column-container {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        gap: 20px;
+      }
+      .column {
+        width: 48%;
+      }
+      .column.left {
+        padding-left: 15px;
+      }
+      .column.right {
+        padding-right: 15px;
+      }
+      .padded-section {
+        padding-left: 15px;
+        padding-right: 15px;
+      }
+      .branch-address {
+        text-align: center;
+        padding: 20px 0;
+        font-size: 0.9em; /* Reduced by 0.1em */
+        color: #333;
+      }
+      /* CSS for uploaded images */
+      .image-gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        justify-content: space-between;
+      }
+      .image-container {
+        width: 31%;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+      }
+      .uploaded-image {
+        width: 100%;
+        height: auto;
+      }
+      .image-label {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      /* Basic table styling */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+        font-size: 0.9em; /* Reduced by 0.1em */
+      }
+      table, th, td {
+        border: 1px solid #ccc;
+      }
+      th, td {
+        padding: 4px 8px; /* Reduced top/bottom padding */
+        text-align: left;
+        font-size: 0.9em; /* Reduced by 0.1em */
+      }
+      th {
+        background: #f9f9f9;
+        font-weight: bold;
+        color: #333;
+      }
     </style>
   </head>
 
   <body>
     <main>
-
       <!-- Patient Details Section -->
       <div class='header'>Patient Details</div>
       <div class='section'>
         <div class='column-container'>
           <!-- First column -->
           <div class='column left'>
-            
             <div class='key-value'>
               <span class='key'>Name:</span>
               <span class='value'>{{patientData.name}}</span>
@@ -67,11 +162,11 @@
               <span class='value'>{{patientData.spouseName}}</span>
             </div>
             <div class='key-value'></div>
-              <span class='key'>Admission Date:</span>
-              <span class='value'>{{patientData.admissionDate}}</span>
-            </div>
+            <span class='key'>Admission Date:</span>
+            <span class='value'>{{patientData.admissionDate}}</span>
           </div>
         </div>
+      </div>
       </div>
 
       <!-- Semen Analysis Report Section -->
@@ -167,7 +262,7 @@
             <tr>
               <td>Sperm Concentration (million/ml)</td>
               <td>{{semenAnalysisData.spermConcentration}}</td>
-              <td>>=10</td>
+              <td>>=16</td>
             </tr>
           </tbody>
         </table>
@@ -203,6 +298,7 @@
             <tr>
               <td>Non Progressive (%)</td>
               <td>{{semenAnalysisData.nonProgressive}}</td>
+              <td><12</td>
               <td></td>
             </tr>
             <tr>
