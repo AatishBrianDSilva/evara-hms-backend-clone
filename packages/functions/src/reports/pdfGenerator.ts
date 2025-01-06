@@ -187,19 +187,65 @@ export const main: SQSHandler = async (event, context) => {
           'Handling processed purchase order report for ID:',
           source_report_id,
         );
+
         const purchaseOrder = await PurchaseOrder.findOne({
           poNumber: source_report_id,
         });
 
         if (purchaseOrder) {
-          purchaseOrder.reportProcessed = {
+          // Ensure the `responses` array exists
+          purchaseOrder.responses = purchaseOrder.responses || [];
+
+          if (purchaseOrder.responses.length === 0) {
+            console.error(
+              `No responses found for processed purchase order with ID: ${source_report_id}`,
+            );
+            return;
+          }
+
+          // Attach the processed report to the latest response
+          const latestResponseIndex = purchaseOrder.responses.length - 1;
+
+          // Generate a unique identifier for the response
+          const responseSuffix = `-response-${latestResponseIndex}`;
+
+          // Generate a unique report name
+          const uniqueReportName = `${reportName}${responseSuffix}`;
+
+          // Update the S3 key to include the unique identifier before the file extension
+          const keyParts = key.split('.');
+          const uniqueKey =
+            keyParts.length > 1
+              ? `${keyParts.slice(0, -1).join('.')}${responseSuffix}.${
+                  keyParts[keyParts.length - 1]
+                }`
+              : `${key}${responseSuffix}`;
+
+          // Update the S3 upload parameters
+          const s3Params: S3.PutObjectRequest = {
+            Bucket:
+              process.env.STAGE === 'prod'
+                ? `${bucket}-${process.env.STAGE}`
+                : `${bucket}-devs`,
+            Key: uniqueKey,
+            Body: pdfBuffer,
+            ContentType: 'application/pdf',
+            Tagging: `Permanent=true`,
+          };
+
+          // Upload the report to S3
+          await S3Service.upload(s3Params);
+
+          purchaseOrder.responses[latestResponseIndex].report = {
             reportName: reportName,
             bucket: s3Params.Bucket,
             key: s3Params.Key,
           };
+
           await purchaseOrder.save();
+
           console.log(
-            `Processed purchase order ${source_report_id} updated with report.`,
+            `Processed purchase order ${source_report_id} updated with report in the latest response.`,
           );
         } else {
           console.error(
