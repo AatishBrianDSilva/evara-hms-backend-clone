@@ -16,24 +16,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, 'Request body is required');
     }
 
-    const { email, currentPassword, newPassword } = JSON.parse(event.body);
+    const { email, newPassword } = JSON.parse(event.body);
 
-    if (!email || !currentPassword || !newPassword) {
-      throw new ErrorMessage(
-        400,
-        'Missing parameters: email, currentPassword, or newPassword',
-      );
+    if (!email || !newPassword) {
+      throw new ErrorMessage(400, 'Missing parameters: email or newPassword');
     }
 
     const user = await User.findOne({ email });
     if (!user) {
       throw new ErrorMessage(404, 'User not found');
-    }
-
-    // Verify current password
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) {
-      throw new ErrorMessage(401, 'Current password is incorrect');
     }
 
     // Set new password
