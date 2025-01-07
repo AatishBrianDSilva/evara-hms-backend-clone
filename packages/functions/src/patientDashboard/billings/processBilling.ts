@@ -253,17 +253,39 @@ const processDataForReport = (
     month: '2-digit',
     year: 'numeric',
   });
-  const billTime = new Date(billing.createdAt).toLocaleTimeString('en-In', {
+  const billTime = new Date(billing.createdAt).toLocaleTimeString('en-IN', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
+    timeZone: 'Asia/Kolkata', // Ensure IST is used explicitly
   });
+
+  const calculateAge = (dob: string): number => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    // Adjust age if the birth month and day have not yet occurred this year
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+
+    return age;
+  };
+
+  const age = patientData.patientData.dob
+    ? calculateAge(patientData.patientData.dob)
+    : 'N/A'; // Fallback if DOB is not available
 
   const patientDetails = {
     patientName: `${patientData.patientData.firstName} ${patientData.patientData.lastName}`,
     patientNumber: patientData.patientData.patientId,
     gender: patientData.patientData.gender,
-    age: patientData.patientData.age,
+    age: age,
     billDescription: billDescription,
     billNo: billing.billingId,
     billDate: billDate,

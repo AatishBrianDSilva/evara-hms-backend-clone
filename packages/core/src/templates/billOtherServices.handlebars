@@ -1,77 +1,89 @@
-<html lang="en">
+<html lang='en'>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 12px; /* Global font
-      size */ } main { padding: 10mm; display: flex; flex-direction: column; flex-grow: 1;
-      margin-top: 5px;box-sizing: border-box; } .section { margin-bottom: 5px; } .section-title {
-      font-size: 1.2em; /* Section title font size */ margin-bottom: 10px; color:
-      {{styles.primaryColor}}; } .key-value { display: flex; justify-content: space-between;
-      margin-bottom: 10px; } .key { font-weight: bold; width: 50%; text-align: left; } .value {
-      width: 50%; text-align: right; /* Right align values */ white-space: pre-wrap; } h2 { color:
-      {{styles.primaryColor}}; text-align: center; font-size: 16px; /* Font size for h2 */ } .header
-      { text-align: center; font-size: 16px; /* Font size for header */ font-weight: bold;
-      background: #ffece4; height: 55px; display: flex; justify-content: center; align-items:
-      center; margin-bottom: 10px; } .column-container { display: flex; justify-content:
-      space-between; /* Space between columns */ gap: 15px; /* Add space between columns */ padding:
-      10px 0; } .column.left { width: 50%; /* First column width */ padding-left: 15px; }
-      .column.right { width: 25%; /* Updated second column width */ padding-right: 15px; text-align:
-      left; /* Keep keys left aligned */ } .column.right .value { text-align: right; /* Right align
-      values in the right column */ } .padded-section { padding-left: 15px; padding-right: 15px; }
-      /* Table Styling */ table { width: 100%; border-collapse: collapse; margin-bottom: 30px; } th,
-      td { padding: 6px; /* Reduced padding */ text-align: center; /* Center alignment for table
-      items */ font-size: 11px; /* Reduced font size for table */ } th { background-color: #f9f9f9;
-      color: black; } td { color: black; } td.value { color:
-      {{styles.primaryColor}}; } .no-borders { border: none; } /* Column width adjustments */
-      th:nth-child(1), td:nth-child(1) { width: 10%; /* Narrow width for # column */ }
-      th:nth-child(2), td:nth-child(2) { width: 70%; /* Wide width for Service Name column */
-      text-align: left; /* Left alignment for Service Name items */ } th:nth-child(3),
-      td:nth-child(3) { width: 20%; /* Smaller width for Price column */ text-align: right; /* Right
-      alignment for Price items */ } /* Summary Alignment */ .summary-box { width: 35%; /* Updated
-      width for summary box */ margin-left: auto; padding: 10px; box-sizing: border-box; }
-      .summary-key { font-weight: bold; text-align: left; padding-right: 10px; width: 50%;
-      font-size: 12px; /* Summary key font size */ } .summary-value { text-align: right; width: 50%;
-      font-size: 12px; /* Summary value font size */ } .summary-row { display: flex;
-      justify-content: space-between; margin-bottom: 10px; } .branch-address { text-align: center;
-      padding: 20px 0; font-size: 1em; /* Adjust as needed */ color: #333; /* Adjust text color as
-      needed */ }
-
+      body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size:
+      12px; /* Global font size */ } main { padding: 0; /* Remove padding to
+      start content at the top */ display: flex; flex-direction: column;
+      flex-grow: 1; margin: 0; /* Remove top margin */ box-sizing: border-box; }
+      .section { margin-bottom: 5px; /* Reduced vertical margin */ }
+      .section-title { font-size: 1.2em; /* Section title font size */
+      margin-bottom: 5px; /* Reduced space between title and content */ color:
+      {{styles.primaryColor}}; } .key-value { display: flex; justify-content:
+      space-between; margin-bottom: 5px; /* Reduced vertical space between rows
+      */ } .key { font-weight: bold; width: 50%; /* Maintain column width for
+      key */ text-align: left; } .value { width: 50%; /* Maintain column width
+      for value */ text-align: right; /* Right align values */ white-space:
+      pre-wrap; } h2 { color:
+      {{styles.primaryColor}}; text-align: center; font-size: 16px; /* Font size
+      for h2 */ } .header { text-align: center; font-size: 14px; /* Reduced font
+      size */ font-weight: bold; background: #ffece4; height: 40px; /* Reduced
+      height */ line-height: 40px; /* Center-align text vertically */
+      margin-bottom: 5px; /* Reduced space below the header */ }
+      .column-container { display: flex; justify-content: space-between; /*
+      Maintain horizontal spacing between columns */ gap: 15px; /* Maintain
+      horizontal spacing between columns */ padding: 0; /* Remove vertical
+      padding */ } .column.left { width: 50%; /* Maintain left column width */
+      padding-left: 15px; /* Maintain left column padding */ } .column.right {
+      width: 25%; /* Maintain right column width */ padding-right: 15px; /*
+      Maintain right column padding */ text-align: left; /* Keep keys left
+      aligned */ } .column.right .value { text-align: right; /* Right align
+      values in the right column */ } .padded-section { padding-left: 15px; /*
+      Maintain horizontal padding */ padding-right: 15px; } /* Table Styling */
+      table { width: 100%; border-collapse: collapse; margin-bottom: 20px; /*
+      Reduced vertical spacing below table */ } th, td { padding: 6px; /*
+      Maintain table row padding */ text-align: center; /* Center alignment for
+      table items */ font-size: 11px; /* Font size for table */ } th {
+      background-color: #f9f9f9; color: black; } td { color: black; } td.value {
+      color:
+      {{styles.primaryColor}}; } .no-borders { border: none; } /* Column width
+      adjustments */ th:nth-child(1), td:nth-child(1) { width: 10%; /* Maintain
+      narrow width for # column */ } th:nth-child(2), td:nth-child(2) { width:
+      70%; /* Maintain wide width for Service Name column */ text-align: left;
+      /* Left alignment for Service Name items */ } th:nth-child(3),
+      td:nth-child(3) { width: 20%; /* Maintain smaller width for Price column
+      */ text-align: right; /* Right alignment for Price items */ } /* Summary
+      Alignment */ .summary-box { width: 35%; /* Maintain summary box width */
+      margin-left: auto; padding: 5px; /* Reduced vertical padding */
+      box-sizing: border-box; } .summary-key { font-weight: bold; text-align:
+      left; padding-right: 10px; width: 50%; font-size: 12px; /* Summary key
+      font size */ } .summary-value { text-align: right; width: 50%; font-size:
+      12px; /* Summary value font size */ } .summary-row { display: flex;
+      justify-content: space-between; margin-bottom: 5px; /* Reduced space
+      between summary rows */ } .branch-address { text-align: center; padding:
+      10px 0; /* Reduced vertical padding */ font-size: 1em; /* Adjust as needed
+      */ color: #333; /* Adjust text color as needed */ }
     </style>
   </head>
   <body>
     <main>
 
-      {{#if addressData}}
-        <div class="section branch-address">
-          {{addressData.branchAddress}}
-        </div>
-      {{/if}}
       <!-- Patient Details Section -->
-      <div class="header">Patient Details</div>
-      <div class="section">
-        <div class="column-container">
+      <div class='header'>Patient Details</div>
+      <div class='section'>
+        <div class='column-container'>
           <!-- First 4 key-value pairs in the left column (50% width) -->
-          <div class="column left">
-            {{#getSectionByTitle sections "Patient Details"}}
+          <div class='column left'>
+            {{#getSectionByTitle sections 'Patient Details'}}
               {{#each content}}
                 {{#if (lt @index 4)}}
-                  <div class="key-value">
-                    <span class="key">{{properCase @key}}</span>
-                    <span class="value">{{this}}</span>
+                  <div class='key-value'>
+                    <span class='key'>{{properCase @key}}</span>
+                    <span class='value'>{{this}}</span>
                   </div>
                 {{/if}}
               {{/each}}
             {{/getSectionByTitle}}
           </div>
           <!-- Remaining key-value pairs in the right column (25% width) -->
-          <div class="column right">
-            {{#getSectionByTitle sections "Patient Details"}}
+          <div class='column right'>
+            {{#getSectionByTitle sections 'Patient Details'}}
               {{#each content}}
                 {{#if (gte @index 4)}}
-                  <div class="key-value">
-                    <span class="key">{{properCase @key}}</span>
-                    <span class="value">{{this}}</span>
+                  <div class='key-value'>
+                    <span class='key'>{{properCase @key}}</span>
+                    <span class='value'>{{this}}</span>
                   </div>
                 {{/if}}
               {{/each}}
@@ -81,8 +93,8 @@
       </div>
 
       <!-- Items Section -->
-      <div class="header">Items</div>
-      <table class="no-borders">
+      <div class='header'>Items</div>
+      <table class='no-borders'>
         <thead>
           <tr>
             <th>#</th>
@@ -91,7 +103,7 @@
           </tr>
         </thead>
         <tbody>
-          {{#getSectionByTitle sections "Items"}}
+          {{#getSectionByTitle sections 'Items'}}
             {{#each content}}
               <tr>
                 <td>{{inc @index}}</td>
@@ -104,12 +116,12 @@
       </table>
 
       <!-- Summary Section -->
-      <div class="summary-box">
-        {{#getSectionByTitle sections "Summary"}}
+      <div class='summary-box'>
+        {{#getSectionByTitle sections 'Summary'}}
           {{#each content}}
-            <div class="summary-row">
-              <div class="summary-key">{{properCase @key}}</div>
-              <div class="summary-value">{{this}}</div>
+            <div class='summary-row'>
+              <div class='summary-key'>{{properCase @key}}</div>
+              <div class='summary-value'>{{this}}</div>
             </div>
           {{/each}}
         {{/getSectionByTitle}}

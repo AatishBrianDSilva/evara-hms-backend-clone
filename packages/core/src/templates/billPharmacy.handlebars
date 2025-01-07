@@ -5,59 +5,61 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <style>
       body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size:
-      12px; /* Reduced global font size */ } main { padding: 10mm; display:
-      flex; flex-direction: column; flex-grow: 1; margin-top: 5px; box-sizing:
-      border-box; } .section { margin-bottom: 5px; } .key-value { display: flex;
-      justify-content: space-between; margin-bottom: 10px; } .key { font-weight:
-      bold; width: 50%; text-align: left; } .value { width: 50%; text-align:
-      right; /* Right align values */ white-space: pre-wrap; } h2 { color: { {
-      styles.primaryColor } } ; text-align: center; font-size: 16px; /* Reduced
-      font size for h2 */ } /* Updated Header Styling */ .header { text-align:
-      center; font-size: 16px; /* Reduced font size for header */ font-weight:
-      bold; background: #ffece4; /* Light off-white background */ height: 55px;
-      display: flex; justify-content: center; align-items: center;
-      margin-bottom: 10px; } .column-container { display: flex; justify-content:
-      space-between; /* Keep space between columns */ padding: 10px 0; gap:
-      20px; } .column.left { width: 50%; /* First column width */ padding-left:
-      15px; } .column.right { width: 25%; /* Updated second column width */
-      padding-right: 15px; text-align: left; /* Keep keys left aligned */ }
-      .column.right .value { text-align: right; /* Right align values in the
-      right column */ } /* Table Styling */ table { width: 100%;
-      border-collapse: collapse; margin-bottom: 30px; /* Added padding after
-      table */ } th, td { padding: 6px; /* Reduced padding for table items */
-      text-align: center; /* Center alignment for table items */ font-size:
-      11px; /* Reduced font size for table */ } th { background-color: #f9f9f9;
-      /* Light off-white background */ color: black; /* Black text */ } td {
-      color: black; word-wrap: break-word; word-break: break-word; white-space:
-      normal; } td.value { color: { { styles.primaryColor } } ; } .no-borders {
-      border: none; } /* Updated Column width adjustments */ th:nth-child(1),
-      td:nth-child(1) { width: 5%; /* Narrow width for # column */ }
-      th:nth-child(2), td:nth-child(2) { width: 20%; /* Wide width for Drug
-      Details column */ text-align: left; } th:nth-child(3), td:nth-child(3),
-      th:nth-child(4), td:nth-child(4), th:nth-child(5), td:nth-child(5),
-      th:nth-child(6), td:nth-child(6), th:nth-child(7), td:nth-child(7),
-      th:nth-child(8), td:nth-child(8), th:nth-child(9), td:nth-child(9) {
-      width: 11%; /* Small width for the remaining columns */ } /* Summary
-      Alignment */ .summary-box { width: 35%; /* Updated width for summary box
-      */ margin-left: auto; padding: 10px; box-sizing: border-box; }
-      .summary-key { font-weight: bold; text-align: left; padding-right: 10px;
+      12px; /* Reduced global font size */ } main { padding: 0; /* Remove
+      padding to start content at the top */ display: flex; flex-direction:
+      column; flex-grow: 1; margin: 0; /* Remove top margin */ box-sizing:
+      border-box; } .section { margin-bottom: 5px; /* Reduced vertical margin */
+      } .key-value { display: flex; justify-content: space-between;
+      margin-bottom: 5px; /* Reduced vertical space between rows */ } .key {
+      font-weight: bold; width: 50%; /* Maintain column width for key */
+      text-align: left; } .value { width: 50%; /* Maintain column width for
+      value */ text-align: right; /* Right align values */ white-space:
+      pre-wrap; } h2 { color:
+      {{styles.primaryColor}}; text-align: center; font-size: 16px; /* Font size
+      for h2 */ } /* Updated Header Styling */ .header { text-align: center;
+      font-size: 14px; /* Reduced font size */ font-weight: bold; background:
+      #ffece4; /* Light off-white background */ height: 40px; /* Reduced height
+      */ line-height: 40px; /* Center-align text vertically */ margin-bottom:
+      5px; /* Reduced space below the header */ } .column-container { display:
+      flex; justify-content: space-between; /* Maintain horizontal spacing
+      between columns */ padding: 0; /* Remove vertical padding */ gap: 20px; /*
+      Maintain horizontal spacing between columns */ } .column.left { width:
+      50%; /* Maintain left column width */ padding-left: 15px; /* Maintain
+      horizontal padding */ } .column.right { width: 25%; /* Maintain right
+      column width */ padding-right: 15px; /* Maintain horizontal padding */
+      text-align: left; /* Keep keys left aligned */ } .column.right .value {
+      text-align: right; /* Right align values in the right column */ } /* Table
+      Styling */ table { width: 100%; border-collapse: collapse; margin-bottom:
+      20px; /* Reduced vertical spacing below table */ } th, td { padding: 6px;
+      /* Maintain table row padding */ text-align: center; /* Center alignment
+      for table items */ font-size: 11px; /* Font size for table */ } th {
+      background-color: #f9f9f9; /* Light off-white background */ color: black;
+      /* Black text */ } td { color: black; word-wrap: break-word; word-break:
+      break-word; white-space: normal; } td.value { color:
+      {{styles.primaryColor}}; } .no-borders { border: none; } /* Updated Column
+      width adjustments */ th:nth-child(1), td:nth-child(1) { width: 5%; /*
+      Maintain narrow width for # column */ } th:nth-child(2), td:nth-child(2) {
+      width: 20%; /* Maintain wide width for Drug Details column */ text-align:
+      left; } th:nth-child(3), td:nth-child(3), th:nth-child(4),
+      td:nth-child(4), th:nth-child(5), td:nth-child(5), th:nth-child(6),
+      td:nth-child(6), th:nth-child(7), td:nth-child(7), th:nth-child(8),
+      td:nth-child(8), th:nth-child(9), td:nth-child(9) { width: 11%; /*
+      Maintain width for the remaining columns */ } /* Summary Alignment */
+      .summary-box { width: 35%; /* Maintain summary box width */ margin-left:
+      auto; padding: 5px; /* Reduced vertical padding */ box-sizing: border-box;
+      } .summary-key { font-weight: bold; text-align: left; padding-right: 10px;
       width: 50%; font-size: 12px; /* Adjusted summary key font size */ }
       .summary-value { text-align: right; width: 50%; font-size: 12px; /*
       Adjusted summary value font size */ } .summary-row { display: flex;
-      justify-content: space-between; margin-bottom: 10px; } .branch-address {
-      text-align: center; padding: 20px 0; font-size: 1em; /* Adjust as needed
+      justify-content: space-between; margin-bottom: 5px; /* Reduced space
+      between summary rows */ } .branch-address { text-align: center; padding:
+      10px 0; /* Reduced vertical padding */ font-size: 1em; /* Adjust as needed
       */ color: #333; /* Adjust text color as needed */ }
     </style>
   </head>
 
   <body>
     <main>
-
-      {{#if addressData}}
-        <div class='section branch-address'>
-          {{addressData.branchAddress}}
-        </div>
-      {{/if}}
 
       <div class='header'>BILL OF SUPPLY</div>
 
@@ -139,7 +141,6 @@
           {{/each}}
         {{/getSectionByTitle}}
       </div>
-
     </main>
   </body>
 
