@@ -52,6 +52,23 @@ interface DonorData extends Document {
   insurancePolicyNumber?: string;
   insurancePolicyHolderName?: string;
   insuranceAmountEligible?: string;
+  hiv?: string;
+  height?: string;
+  Build?: string;
+  Ethnicity?: string;
+  HealthLooks?: string;
+  faceColour?: string;
+  eyeColour?: string;
+  haircolour?: string;
+  RHantibody?: string;
+  skinTone?: string;
+  complexion?: string;
+  referrerName?: string;
+  congenitaldeformities?: boolean;
+  geneticAcquiredDisease?: string;
+  historyOfChronicIllness?: string;
+  seriousDisease?: string;
+  seriousDiseaserelative?: string;
   image?: mongoose.Schema.Types.Mixed;
   remarks?: string;
   status: 'active' | 'inactive';
@@ -113,6 +130,23 @@ export const patientSchema = new mongoose.Schema(
     insurancePolicyNumber: { type: String },
     insurancePolicyHolderName: { type: String },
     insuranceAmountEligible: { type: String },
+    hiv: { type: String },
+    height: { type: String },
+    Build: { type: String },
+    Ethnicity: { type: String },
+    HealthLooks: { type: String },
+    faceColour: { type: String },
+    eyeColour: { type: String },
+    haircolour: { type: String },
+    RHantibody: { type: String },
+    skinTone: { type: String },
+    complexion: { type: String },
+    referrerName: { type: String },
+    congenitaldeformities: { type: Boolean },
+    geneticAcquiredDisease: { type: String },
+    historyOfChronicIllness: { type: String },
+    seriousDisease: { type: String },
+    seriousDiseaserelative: { type: String },
     image: { type: String },
     remarks: { type: String },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },

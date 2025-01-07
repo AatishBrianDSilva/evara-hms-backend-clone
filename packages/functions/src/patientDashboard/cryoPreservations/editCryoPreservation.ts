@@ -70,10 +70,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     if (body.testType === ECryoPreservationType.Sperm) {
       updateData.details = body.details;
-      updateData.status = 'Completed';
+      // updateData.status = 'Completed';
     } else if (body.testType === ECryoPreservationType.Embryo) {
       updateData.details = body.details;
-      updateData.status = 'Completed';
+      // updateData.status = 'Completed';
     }
 
     if (body.details.files && body.details.files.length > 0) {

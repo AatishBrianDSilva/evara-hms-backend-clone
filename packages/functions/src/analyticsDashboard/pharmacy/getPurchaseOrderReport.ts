@@ -118,8 +118,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const result = await PurchaseOrder.paginate(query, options);
       const { records, pagination } = formatPaginationResult(result);
 
+      // Add allResponsesNetAmount to each record
+      const recordsWithTotalNetAmount = records.map(record => {
+          const responseNetAmount = record.responses?.reduce(
+            (sum, response) => sum + (response.netAmount || 0),
+                0
+              );
+          return {
+              ...record,
+              allResponsesNetAmount: responseNetAmount || 0,
+            };
+        });
+
       return successResponse('Success', {
-        records,
+        records: recordsWithTotalNetAmount,
         pagination,
       });
     } else {

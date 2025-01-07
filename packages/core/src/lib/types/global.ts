@@ -29,6 +29,8 @@ export enum EReportTemplateTypes {
   BillOtherServices = 'billOtherServices',
   POInvoice = 'POInvoice',
   POInvoiceProcessed = 'POInvoiceProcessed',
+  SemenAnalysis = 'semen-analysis',
+  SpermDFI = 'sperm-dfi',
 }
 
 export interface ISection {
@@ -41,6 +43,7 @@ export interface IReportData {
   doctor: string;
   patient: string;
   clinic: string;
+  branch: string;
   sections: ISection[];
   reportName: string;
   reportId: string;
@@ -48,6 +51,13 @@ export interface IReportData {
   templateType: EReportTemplateTypes;
   bucket: EBuckets.UserReports;
   documentType: EDocumentTypes;
+  reportBody?: any;
+  result?: {
+    name: string;
+    details: Record<string, string>;
+    files: string[];
+    notes: string;
+  };
 }
 
 export interface IInvoiceData {
@@ -72,6 +82,6 @@ export interface IPDFGeneratorMessage {
   category: EDocumentTypes;
   reportName: string;
   source_report_id: string;
-  patient?: PatientData;
+  patient?: string;
   clinic?: string;
 }

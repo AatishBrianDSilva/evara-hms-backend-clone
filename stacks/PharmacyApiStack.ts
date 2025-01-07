@@ -114,6 +114,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       'packages/functions/src/pharmacyDashboard/stocks/getStockById.main',
     'GET /pharmacy-dashboard/stocks/location/{id}':
       'packages/functions/src/pharmacyDashboard/stocks/getStocksByLocation.main',
+    'GET /pharmacy-dashboard/batchesForStocks':
+      'packages/functions/src/pharmacyDashboard/stocks/getBatchesForStocks.main',
 
     // Purchase Orders
     'POST /pharmacy-dashboard/purchase-order/add':
@@ -136,6 +138,12 @@ export function PharmacyApiStack({ stack }: StackContext) {
       'packages/functions/src/pharmacyDashboard/stocks/updateStockFromPurchaseOrder.main',
     'PATCH /pharmacy-dashboard/purchase-order/{id}/update-partial':
       'packages/functions/src/pharmacyDashboard/purchaseOrder/updatePartiallyProcessedPurchaseOrder.main',
+    'PUT /pharmacy-dashboard/purchase-order/{id}/move-to-admin-approval':
+      'packages/functions/src/pharmacyDashboard/purchaseOrder/movePurchaseOrderToAdminApproval.main',
+    'PUT /pharmacy-dashboard/purchase-order/{id}/rejected-by-admin':
+      'packages/functions/src/pharmacyDashboard/purchaseOrder/purchaseOrderAdminRejection.main',
+    'PUT /pharmacy-dashboard/purchase-order/{id}/move-partial-po-to-admin-approval':
+      'packages/functions/src/pharmacyDashboard/purchaseOrder/movePartialPurchaseOrderToAdminApproval.main',
 
     //Internal Orders
     'POST /pharmacy-dashboard/internal-order/create-draft':

@@ -23,7 +23,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Extract query string parameters
     const params = event.queryStringParameters || {};
-    const { ...filters } = params;
+    const { sort: sortRaw, ...filters } = params;
 
     // Construct the query object
     let query: any = {
@@ -42,10 +42,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     }
 
     // Construct the sort object
-    let sort: any = {};
-    if (params.sort) {
-      sort = JSON.parse(params.sort);
-    }
+    const sort: Record<string, 1 | -1> = sortRaw
+      ? JSON.parse(sortRaw)
+      : { date: -1 };
 
     const patient = await Patient.findOne({
       patientId: params.patientCode,

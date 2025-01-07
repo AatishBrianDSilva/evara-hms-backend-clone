@@ -108,10 +108,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         return sum + (detail.quantity || 0);
       }, 0);
 
+        // Calculate total item price (sum of mrp * quantity for all details)
+        const totalItemPrice = record.item.details.reduce((sum, detail) => {
+          const itemPrice = (detail.mrp || 0) * (detail.quantity || 0);
+          return sum + itemPrice;
+        }, 0) || null; // Set to null if no details are present
+  
+
       return {
         ...record,
         id: record._id, // Ensure unique `id` for each row
         totalQuantity, // Include the calculated totalQuantity
+        totalItemPrice, // Include the calculated totalItemPrice
+
         patientDetails: {
           fullName:
             `${patientDetails.firstName || ''} ${patientDetails.lastName || ''}`.trim(),

@@ -1,11 +1,12 @@
 import { APIGatewayProxyHandler } from 'aws-lambda';
 import bcrypt from 'bcryptjs';
 import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
-import { User } from '@evara-backend/core/src/models/User';
+import { EUserRole, User } from '@evara-backend/core/src/models/User';
 import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
 import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
 import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
 import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
+import Doctors from '@evara-backend/core/models/mastersDashboard/Doctors';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -28,13 +29,26 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, 'Id is not provided');
     }
 
-    const user = await User.findById(id).select('-password');
+    let response: any = {};
 
+    const user = await User.findById(id).select('-password').lean();
     if (!user) {
       throw new ErrorMessage(404, 'User not found');
     }
 
-    return successResponse('Success', user);
+    response = { ...user };
+
+    if (
+      user?.role === EUserRole.Doctor ||
+      user?.role === EUserRole.Embryologist
+    ) {
+      const doctor = await Doctors.findOne({ userId: id });
+      console.log('Doctor', doctor);
+      response.doctor = doctor;
+    }
+
+    console.log('response', response);
+    return successResponse('Success', response);
   } catch (error) {
     return errorResponse(error);
   }

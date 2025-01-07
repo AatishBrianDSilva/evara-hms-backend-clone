@@ -102,15 +102,23 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
       {
         $addFields: {
+          batchSellPrice: '$batches.sellPrice', // Directly map batch-level sellPrice
+
           totalQty: {
             $sum: '$batches.locations.quantity', // Calculate total quantity for each document
           },
+        },
+      },
+
+      {
+        $addFields: {
           sumTotalValue: {
             $multiply: [
-              '$sellPrice',
-              { $sum: '$batches.locations.quantity' }, // Multiply sellPrice by total quantity of all locations
+              '$batchSellPrice',
+              { $sum: '$batches.locations.quantity' }, // Multiply batchSellPrice by total quantity
             ],
           },
+          unitCost: '$batches.sellPrice', // Use batch-level sellPrice directly as unit cost
         },
       },
       {
@@ -160,7 +168,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               else: 'N/A',
             },
           },
-          unitCost: { $ifNull: ['$sellPrice', 0] },
         },
       },
       {

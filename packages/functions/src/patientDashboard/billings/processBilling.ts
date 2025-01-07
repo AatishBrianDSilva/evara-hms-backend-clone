@@ -341,8 +341,8 @@ const processDataForReport = (
       showTitle: false,
       isBillDetails: false,
       content: {
-        GSTIN: '09AAHCE9017B1ZS',
-        'Drug Licence No': 'UP78210004082, UP78210004083',
+        GSTIN: branch.gstNumber,
+        'Drug Licence No': branch.drugLicenceNumber,
       },
     },
   ];

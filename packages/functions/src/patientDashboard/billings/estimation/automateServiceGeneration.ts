@@ -124,12 +124,13 @@ const createTreatmentCycle = async (data: IData) => {
   const defaultTreatmentCycle = masterTreatmentCycle.treatmentCycle;
 
   const newTreatmentCycle = {
-    clinidId: data.clinicId,
+    clinicId: data.clinicId,
     branchId: data.branchId,
     patient: data.patientId,
     patientCode: data.patientCode,
     caseId: data.caseId,
     doctor: data.doctorId,
+    cycle: masterTreatmentCycle._id,
     cycleNo: existingTreatmentCycle + 1,
     protocols: defaultTreatmentCycle.protocols.map(protocol => ({
       name: protocol.name,

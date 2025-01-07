@@ -10,6 +10,10 @@ export enum EPurchaseOrderStatus {
   Ordered = 'Ordered',
   PartiallyProcessed = 'PartiallyProcessed',
   Processed = 'Processed',
+  WaitingForApproval = 'WaitingForApproval',
+  PartialPOWaitingForApproval = 'PartialPOWaitingForApproval',
+  RejectedByAdmin = 'RejectedByAdmin',
+  PartialPORejectedByAdmin = 'PartialPORejectedByAdmin',
 }
 
 export enum EItemStatus {
@@ -67,6 +71,11 @@ export interface IPurchaseOrderResponse {
   invoice: string[];
   invoiceNumber: string; // New field for invoice number
   status: string; // New field for status
+  report?: {
+    reportName: string;
+    bucket: string;
+    key: string;
+  };
 }
 
 export interface IPurchaseOrder extends Document {
@@ -127,6 +136,11 @@ const responseSchema = new Schema({
   invoice: [{ type: String }],
   invoiceNumber: { type: String, required: false },
   status: { type: String, enum: Object.values(EItemStatus), required: true }, // Status for the response
+  report: {
+    reportName: { type: String, required: false },
+    bucket: { type: String, required: false },
+    key: { type: String, required: false },
+  },
 });
 
 const purchaseOrderSchema = new Schema(
@@ -177,6 +191,10 @@ const purchaseOrderSchema = new Schema(
       reportName: { type: String, required: false },
       bucket: { type: String, required: false },
       key: { type: String, required: false },
+    },
+    payloadForApproval: {
+      type: Object, // Flexible field to store the payload
+      required: false,
     },
   },
   { timestamps: true },
