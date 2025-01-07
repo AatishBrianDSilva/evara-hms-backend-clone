@@ -3,32 +3,23 @@
     <meta charset='UTF-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; padding: 0px; font-size:
-      13px; /* Decreased font size */ } main { padding: 0; /* Removed
-      unnecessary padding */ display: flex; box-sizing: border-box;
-      flex-direction: column; flex-grow: 1; } .section { margin-bottom: 10px; /*
-      Reduced vertical spacing */ } .section-title { font-size: 1.4em; /* Retain
-      font size */ margin-bottom: 5px; /* Reduced spacing below title */ color:
-      {{styles.primaryColor}}; } .key-value { display: flex; justify-content:
-      space-between; margin-bottom: 5px; /* Reduced spacing between rows */ }
-      .key { font-weight: bold; width: 50%; text-align: left; } .value { width:
-      70%; text-align: left; white-space: pre-wrap; } .header { text-align:
-      center; font-size: 15px; /* Reduced font size */ font-weight: bold;
-      background: #ffece4; height: 40px; /* Reduced height */ line-height: 40px;
-      /* Vertically align text */ margin-bottom: 5px; /* Reduced spacing below
+      body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size:
+      13px; /* Decreased font size */ } main { padding: 0; display: flex;
+      box-sizing: border-box; flex-direction: column; flex-grow: 1; } .section {
+      margin-bottom: 5px; /* Reduced vertical spacing */ } .header { text-align:
+      center; font-size: 14px; /* Reduced font size */ font-weight: bold;
+      background: #ffece4; height: 18px; /* Reduced height */ line-height: 18px;
+      /* Vertically align text */ margin-bottom: 3px; /* Reduced spacing below
       header */ } .column-container { display: flex; justify-content:
-      space-between; gap: 20px; /* Retain horizontal spacing */ } .column {
-      width: 48%; } .image-gallery { display: flex; flex-wrap: wrap; gap: 5px;
-      /* Retain horizontal spacing */ justify-content: space-between; }
-      .image-container { width: 31%; box-sizing: border-box; margin-bottom: 5px;
-      /* Reduced spacing below images */ } .uploaded-image { width: 100%;
-      height: auto; } .image-label { text-align: center; font-weight: bold;
-      margin-bottom: 2px; /* Reduced spacing below labels */ } table { width:
-      100%; border-collapse: collapse; margin-bottom: 10px; /* Reduced spacing
-      below tables */ font-size: 0.9em; /* Retain font size */ } table, th, td {
-      border: 1px solid #ccc; } th, td { padding: 3px 6px; /* Reduced top/bottom
-      padding */ text-align: left; font-size: 0.9em; /* Retain font size */ } th
-      { background: #f9f9f9; font-weight: bold; color: #333; }
+      space-between; gap: 10px; /* Reduced horizontal spacing */ } .column {
+      width: 48%; } .key-value { display: flex; justify-content: space-between;
+      margin-bottom: 3px; /* Reduced spacing between rows */ } .key {
+      font-weight: bold; width: 50%; text-align: left; } .value { width: 50%;
+      text-align: left; white-space: pre-wrap; } table { width: 100%;
+      border-collapse: collapse; margin-bottom: 5px; /* Reduced spacing below
+      tables */ font-size: 0.9em; } th, td { border: 1px solid #ccc; padding:
+      3px 6px; /* Reduced top/bottom padding */ text-align: left; } th {
+      background: #f9f9f9; font-weight: bold; color: #333; }
     </style>
   </head>
 
@@ -39,7 +30,7 @@
       <div class='section'>
         <div class='column-container'>
           <!-- First column -->
-          <div class='column left'>
+          <div class='column'>
             <div class='key-value'>
               <span class='key'>Name:</span>
               <span class='value'>{{patientData.name}}</span>
@@ -58,7 +49,7 @@
             </div>
           </div>
           <!-- Second column -->
-          <div class='column right'>
+          <div class='column'>
             <div class='key-value'>
               <span class='key'>Spouse Name:</span>
               <span class='value'>{{patientData.spouseName}}</span>
@@ -72,8 +63,9 @@
       </div>
 
       <!-- Semen Analysis Report Section -->
-      <div class='header'>SEMEN ANALYSIS REPORT</div>
+      <div class='header'>Semen Analysis Report</div>
       <div class='section padded-section'>
+        <!-- Sample Details -->
         <table>
           <tbody>
             <tr>
@@ -127,26 +119,6 @@
                   'hh:mm a'
                 }}</td>
             </tr>
-            <tr>
-              <th>Viscosity</th>
-              <td>{{semenAnalysisData.viscosity}}</td>
-            </tr>
-            <tr>
-              <th>Abstinence</th>
-              <td>{{semenAnalysisData.abstinence}}</td>
-            </tr>
-            <tr>
-              <th>Volume (ml)</th>
-              <td>{{semenAnalysisData.volume}}</td>
-            </tr>
-            <tr>
-              <th>pH</th>
-              <td>{{semenAnalysisData.ph}}</td>
-            </tr>
-            <tr>
-              <th>Visual Appearance</th>
-              <td>{{semenAnalysisData.visualAppearance}}</td>
-            </tr>
           </tbody>
         </table>
 
@@ -168,7 +140,7 @@
           </tbody>
         </table>
 
-        <!-- Motility Section -->
+        <!-- Motility -->
         <table>
           <thead>
             <tr>
@@ -179,7 +151,7 @@
           </thead>
           <tbody>
             <tr>
-              <td>Sperm Motility Total (PR + NPR) (%)</td>
+              <td>Sperm Motility Total (%)</td>
               <td>{{semenAnalysisData.spermMotilityTotal}}</td>
               <td>>=42</td>
             </tr>
@@ -188,27 +160,10 @@
               <td>{{semenAnalysisData.progressivePR}}</td>
               <td>>=30</td>
             </tr>
-            <tr>
-              <td>Slow Progressive (%)</td>
-              <td>{{semenAnalysisData.slowProgressive}}</td>
-            </tr>
-            <tr>
-              <td>Rapid Progressive (%)</td>
-              <td>{{semenAnalysisData.rapidProgressive}}</td>
-            </tr>
-            <tr>
-              <td>Non Progressive (%)</td>
-              <td>{{semenAnalysisData.nonProgressive}}</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Immotile (%)</td>
-              <td>{{semenAnalysisData.immotile}}</td>
-            </tr>
           </tbody>
         </table>
 
-        <!-- Morphology Section -->
+        <!-- Morphology -->
         <table>
           <thead>
             <tr>
@@ -223,100 +178,6 @@
               <td>{{semenAnalysisData.normalForms}}</td>
               <td>>=4</td>
             </tr>
-            <tr>
-              <td>Head Defects (%)</td>
-              <td>{{semenAnalysisData.headDefects}}</td>
-            </tr>
-            <tr>
-              <td>Mid Piece Defects (%)</td>
-              <td>{{semenAnalysisData.midPieceDefects}}</td>
-            </tr>
-            <tr>
-              <td>Tail Defects (%)</td>
-              <td>{{semenAnalysisData.tailDefects}}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Total Ejaculate Section -->
-        <table>
-          <thead>
-            <tr>
-              <th>Total Ejaculate</th>
-              <th>Result</th>
-              <th>Reference Range</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Total Sperm Count (million/ejaculate)</td>
-              <td>{{semenAnalysisData.totalSpermCount}}</td>
-              <td>>=39</td>
-            </tr>
-            <tr>
-              <td>Motile Sperm (million/ejaculate)</td>
-              <td>{{semenAnalysisData.motileSperm}}</td>
-            </tr>
-            <tr>
-              <td>Morphologically Normal Sperm (million/ejaculate)</td>
-              <td>{{semenAnalysisData.morphologicallyNormalSperm}}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Additional Information Section -->
-        <table>
-          <thead>
-            <tr>
-              <th>Additional Information</th>
-              <th>Result</th>
-              <th>Reference Range</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Debris</td>
-              <td>{{semenAnalysisData.debris}}</td>
-            </tr>
-            <tr>
-              <td>Round Cells (million/ml)</td>
-              <td>{{semenAnalysisData.roundCells}}</td>
-            </tr>
-            <tr>
-              <td>Agglutination</td>
-              <td>{{semenAnalysisData.agglutination}}</td>
-            </tr>
-            <tr>
-              <td>Aggregration</td>
-              <td>{{semenAnalysisData.aggregration}}</td>
-            </tr>
-            <tr>
-              <td>Fructose</td>
-              <td>{{semenAnalysisData.fructose}}</td>
-              <td>Present</td>
-            </tr>
-            <tr>
-              <td>Peroxidase-Positive Cells Concentration (million/ml)</td>
-              <td>{{semenAnalysisData.proxidosePositiveCellConcentration}}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Impression/Remarks/Advice -->
-        <table>
-          <tbody>
-            <tr>
-              <th>Impression</th>
-              <td>{{semenAnalysisData.impression}}</td>
-            </tr>
-            <tr>
-              <th>Remarks</th>
-              <td>{{semenAnalysisData.remarks}}</td>
-            </tr>
-            <tr>
-              <th>Advice</th>
-              <td>{{semenAnalysisData.advice}}</td>
-            </tr>
           </tbody>
         </table>
       </div>
@@ -324,10 +185,10 @@
       <!-- Prepared By and Checked By -->
       <div class='section'>
         <div class='column-container'>
-          <div class='column left'>
+          <div class='column'>
             <p>Prepared By</p>
           </div>
-          <div class='column right'>
+          <div class='column'>
             <p style='text-align: right;'>Checked By</p>
           </div>
         </div>

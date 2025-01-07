@@ -3,41 +3,31 @@
     <meta charset='UTF-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; padding: 0px; font-size:
-      13px; /* Reduced font size */ } main { padding: 0; /* Remove top padding
-      to ensure content starts at the top */ display: flex; box-sizing:
-      border-box; flex-direction: column; flex-grow: 1; } .section {
-      margin-bottom: 10px; /* Reduced vertical spacing */ } .section-title {
-      font-size: 1.4em; /* Retain font size */ margin-bottom: 5px; /* Reduced
-      spacing below title */ color:
-      {{styles.primaryColor}}; } .section-content { font-size: 0.9em; /* Reduced
-      font size */ } .key-value { display: flex; justify-content: space-between;
-      margin-bottom: 5px; /* Reduced spacing between rows */ } .key {
-      font-weight: bold; width: 50%; text-align: left; } .value { width: 70%;
-      text-align: left; white-space: pre-wrap; } .header { text-align: center;
-      font-size: 15px; /* Reduced font size */ font-weight: bold; background:
-      #ffece4; height: 40px; /* Reduced height */ line-height: 40px; /*
-      Vertically align text */ margin-bottom: 5px; /* Reduced spacing below
+      body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size:
+      13px; } main { padding: 0; display: flex; box-sizing: border-box;
+      flex-direction: column; flex-grow: 1; } .section { margin-bottom: 5px; /*
+      Reduced vertical spacing */ } .header { text-align: center; font-size:
+      14px; /* Slightly smaller font size */ font-weight: bold; background:
+      #ffece4; height: 18px; /* Reduced height */ line-height: 18px; /*
+      Vertically align text */ margin-bottom: 3px; /* Reduced spacing below
       header */ } .column-container { display: flex; justify-content:
-      space-between; gap: 20px; /* Retain horizontal spacing */ padding: 0; /*
-      Remove vertical padding */ } .column { width: 48%; } .column.left {
-      padding-left: 15px; /* Maintain horizontal padding */ } .column.right {
-      padding-right: 15px; /* Maintain horizontal padding */ } .branch-address {
-      text-align: center; padding: 10px 0; /* Reduced vertical padding */
-      font-size: 0.9em; /* Reduced font size */ color: #333; } .image-gallery {
-      display: flex; flex-wrap: wrap; gap: 5px; /* Maintain horizontal spacing
-      */ justify-content: space-between; } .image-container { width: 31%;
-      box-sizing: border-box; margin-bottom: 5px; /* Reduced spacing below
-      images */ } .uploaded-image { width: 100%; height: auto; } .image-label {
-      text-align: center; font-weight: bold; margin-bottom: 2px; /* Reduced
-      spacing below labels */ } table { width: 100%; border-collapse: collapse;
-      margin-bottom: 15px; font-size: 0.9em; /* Reduced font size */ } table,
-      th, td { border: 1px solid #ccc; } th, td { padding: 4px 8px; /* Reduced
-      top/bottom padding */ text-align: left; font-size: 0.9em; /* Retain font
-      size */ } th { background: #f9f9f9; font-weight: bold; color: #333; }
+      space-between; gap: 10px; /* Reduced horizontal spacing */ padding: 0; }
+      .column { width: 48%; } .key-value { display: flex; justify-content:
+      space-between; margin-bottom: 3px; /* Reduced spacing between rows */ }
+      .key { font-weight: bold; width: 50%; text-align: left; } .value { width:
+      50%; text-align: left; white-space: pre-wrap; } table { width: 100%;
+      border-collapse: collapse; margin-bottom: 5px; /* Reduced space between
+      tables */ font-size: 0.9em; } th, td { border: 1px solid #ccc; padding:
+      3px 6px; /* Reduced padding */ text-align: left; } th { background:
+      #f9f9f9; font-weight: bold; color: #333; } .image-gallery { display: flex;
+      flex-wrap: wrap; gap: 3px; /* Reduced spacing between images */
+      justify-content: space-between; } .image-container { width: 31%;
+      box-sizing: border-box; margin-bottom: 3px; /* Reduced spacing below
+      images */ } .image-label { text-align: center; font-weight: bold;
+      margin-bottom: 2px; /* Reduced spacing below labels */ } .uploaded-image {
+      width: 100%; height: auto; }
     </style>
   </head>
-
   <body>
     <main>
       <!-- Patient Details Section -->
@@ -45,7 +35,7 @@
       <div class='section'>
         <div class='column-container'>
           <!-- First column -->
-          <div class='column left'>
+          <div class='column'>
             <div class='key-value'>
               <span class='key'>Name:</span>
               <span class='value'>{{patientData.name}}</span>
@@ -64,7 +54,7 @@
             </div>
           </div>
           <!-- Second column -->
-          <div class='column right'>
+          <div class='column'>
             <div class='key-value'>
               <span class='key'>Spouse Name:</span>
               <span class='value'>{{patientData.spouseName}}</span>
@@ -78,8 +68,8 @@
       </div>
 
       <!-- Sperm DFI Report Section -->
-      <div class='header'>SPERM DFI REPORT</div>
-      <div class='section padded-section' style='margin-top: 10px;'>
+      <div class='header'>Sperm DFI Report</div>
+      <div class='section'>
         <table>
           <thead>
             <tr>
@@ -111,7 +101,6 @@
           </tbody>
         </table>
 
-        <!-- Additional Information -->
         <table>
           <tbody>
             <tr>
@@ -121,7 +110,6 @@
           </tbody>
         </table>
 
-        <!-- Normal Reference Value/Range for DFI Index -->
         <table>
           <tbody>
             <tr>
@@ -157,10 +145,10 @@
       <!-- Prepared By and Checked By -->
       <div class='section'>
         <div class='column-container'>
-          <div class='column left'>
+          <div class='column'>
             <p>Prepared By</p>
           </div>
-          <div class='column right'>
+          <div class='column'>
             <p style='text-align: right;'>Checked By</p>
           </div>
         </div>
