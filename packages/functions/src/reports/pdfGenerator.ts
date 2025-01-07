@@ -54,16 +54,23 @@ const convertHtmlToPdf = async (
 
   // Setting pdf header size based on report type -> Journey item reports have larger header
 
-  const categoriesWith150Margin = [
+  const journeyCategories = [
     EDocumentTypes.Investigation,
     EDocumentTypes.Procedure,
     EDocumentTypes.CryoPreservation,
     EDocumentTypes.TreatmentCycle,
   ];
 
-  const topMargin = categoriesWith150Margin.includes(category)
-    ? '150px'
-    : '125px';
+  const poCategories = [
+    EDocumentTypes.PurchaseOrder,
+    EDocumentTypes.PurchaseOrderProcessed,
+  ];
+
+  const topMargin = journeyCategories.includes(category)
+    ? '135px'
+    : poCategories.includes(category)
+      ? '90px'
+      : '125px';
 
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: 'networkidle0' });
