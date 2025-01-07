@@ -210,7 +210,6 @@ const generateHeaderHtml = (
         <img src="${header.logo}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
       </div>
       <div style="flex-grow: 1; text-align: center;">
-        <h1 style="margin: 0; font-size: 14px; text-decoration: underline; background: #5C5C5C; color: white; padding: 5px;">Bill of Supply & Tax Invoice</h1>
         <p style="margin: 10px 0 0 0; font-size: 18px; font-weight: bold;">Evara Fertility & IVF Centre</p>
         <p style="margin: 0; font-size: 14px">(A Unit of Evara Health Private Limited)</p>
       </div>
