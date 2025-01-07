@@ -3,11 +3,8 @@
 import mongoose from 'mongoose';
 import { PatientPharmacy } from '@evara-backend/core/src/models/patientDashboard/PatientPharmacy';
 import { PharmacyStock } from '@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock';
-import {
-  PatientBillingEstimation,
-  EPatientBillingEstimationStatus,
-} from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBillingEstimation';
 import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
+import { PatientBilling } from '@evara-backend/core/models/patientDashboard/Billings/PatientBilling';
 
 /**
  * Deletes a patient pharmacy allocation and restocks the pharmacy items.
@@ -27,18 +24,11 @@ export const deleteAndRestockPharmacy = async (
     throw new ErrorMessage(404, 'Patient allocation not found');
   }
 
-  // // Fetch the related estimation
-  const estimation = await PatientBillingEstimation.findOne({
-    serviceId: allocation._id,
-    serviceType: 'Pharmacy',
-  }).session(session);
+  const billExists = await PatientBilling.findOne({
+    'items.serviceId': allocation._id,
+  });
 
-  if (!estimation) {
-    throw new ErrorMessage(404, 'Estimation not found for this allocation');
-  }
-
-  // Check if the estimation is inactive
-  if (estimation.status === EPatientBillingEstimationStatus.Inactive) {
+  if (billExists) {
     throw new ErrorMessage(
       400,
       'Cannot delete allocation as the bill has already been created',
