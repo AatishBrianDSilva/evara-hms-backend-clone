@@ -28,22 +28,22 @@ export const deleteAndRestockPharmacy = async (
   }
 
   // // Fetch the related estimation
-  // const estimation = await PatientBillingEstimation.findOne({
-  //   serviceId: allocation._id,
-  //   serviceType: 'Pharmacy',
-  // }).session(session);
+  const estimation = await PatientBillingEstimation.findOne({
+    serviceId: allocation._id,
+    serviceType: 'Pharmacy',
+  }).session(session);
 
-  // if (!estimation) {
-  //   throw new ErrorMessage(404, 'Estimation not found for this allocation');
-  // }
+  if (!estimation) {
+    throw new ErrorMessage(404, 'Estimation not found for this allocation');
+  }
 
-  // // Check if the estimation is inactive
-  // if (estimation.status === EPatientBillingEstimationStatus.Inactive) {
-  //   throw new ErrorMessage(
-  //     400,
-  //     'Cannot delete allocation as the bill has already been created',
-  //   );
-  // }
+  // Check if the estimation is inactive
+  if (estimation.status === EPatientBillingEstimationStatus.Inactive) {
+    throw new ErrorMessage(
+      400,
+      'Cannot delete allocation as the bill has already been created',
+    );
+  }
 
   // Proceed to restock the pharmacy items
   for (const item of allocation.item.details) {
@@ -86,5 +86,7 @@ export const deleteAndRestockPharmacy = async (
   await PatientPharmacy.findByIdAndDelete(allocationId).session(session);
 
   // // Delete the estimation
-  // await PatientBillingEstimation.findByIdAndDelete(estimation._id).session(session);
+  // await PatientBillingEstimation.findByIdAndDelete(estimation._id).session(
+  //   session,
+  // );
 };
