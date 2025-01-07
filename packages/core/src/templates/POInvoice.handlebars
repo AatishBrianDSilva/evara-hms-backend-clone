@@ -1,50 +1,56 @@
-<html lang="en">
+<html lang='en'>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; padding: 0; } .thin-divider {
-      border-bottom-width: 1px; border-bottom: 1px solid black; } main { padding: 10mm; display:
-      flex; flex-direction: column; flex-grow: 1; } .section { margin-bottom: 20px; } .items-table {
-      width: 100%; margin-top: 10px; border-collapse: collapse; } .items-table th, .items-table td {
-      padding: 8px 12px; text-align: left; font-size: 0.9em; } .items-table th { font-weight: bold;
-      background-color: #f2f2f2; } .total-box { text-align: right; margin-top: 10px; width: 300px;
-      /* Fixed width */ margin-left: auto; /* Aligns to the right */ } .total-box .key {
-      font-weight: bold; } .divider { margin-top: 20px; margin-bottom: 20px; border-bottom: 1px
-      solid black; } .company-info { margin-top: 10px; display: flex; justify-content:
-      space-between; align-items: flex-start; } .left-column { width: 60%; } .right-column { width:
-      40%; } .company-info .key { font-weight: bold; } .company-info .company-name { font-weight:
-      bold; margin-top: 5px; } .terms-conditions { margin-top: 10px; } .terms-conditions .title {
-      font-weight: bold; margin-bottom: 10px; } .terms-conditions ul { padding-left: 20px; }
-      .terms-conditions ul li { margin-bottom: 10px; } .left-column .vendor-detail { margin-bottom:
-      10px; /* Adjust the spacing between TIN and Company Name */ } .right-column .vendor-detail {
-      margin-bottom: 10px; /* Adjust the spacing between Name and Number */ } /* Address section
-      styles */ .address-section { margin-bottom: 20px; } .address-container { display: flex;
-      justify-content: space-between; } .address-column { width: 48%; } .address-title {
-      font-weight: bold; margin-bottom: 5px; } .address-content { white-space: pre-wrap; }
+      body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+      .thin-divider { border-bottom-width: 1px; border-bottom: 1px solid black;
+      } main { padding: 10mm; display: flex; flex-direction: column; flex-grow:
+      1; } .section { margin-bottom: 20px; } .items-table { width: 100%;
+      margin-top: 10px; border-collapse: collapse; } .items-table th,
+      .items-table td { padding: 8px 12px; text-align: left; font-size: 0.9em; }
+      .items-table th { font-weight: bold; background-color: #f2f2f2; }
+      .total-box { text-align: right; margin-top: 10px; width: 300px; /* Fixed
+      width */ margin-left: auto; /* Aligns to the right */ } .total-box .key {
+      font-weight: bold; } .divider { margin-top: 20px; margin-bottom: 20px;
+      border-bottom: 1px solid black; } .company-info { margin-top: 10px;
+      display: flex; justify-content: space-between; align-items: flex-start; }
+      .left-column { width: 60%; } .right-column { width: 40%; } .company-info
+      .key { font-weight: bold; } .company-info .company-name { font-weight:
+      bold; margin-top: 5px; } .terms-conditions { margin-top: 10px; }
+      .terms-conditions .title { font-weight: bold; margin-bottom: 10px; }
+      .terms-conditions ul { padding-left: 20px; } .terms-conditions ul li {
+      margin-bottom: 10px; } .left-column .vendor-detail { margin-bottom: 10px;
+      /* Adjust the spacing between TIN and Company Name */ } .right-column
+      .vendor-detail { margin-bottom: 10px; /* Adjust the spacing between Name
+      and Number */ } /* Address section styles */ .address-section {
+      margin-bottom: 20px; } .address-container { display: flex;
+      justify-content: space-between; } .address-column { width: 48%; }
+      .address-title { font-weight: bold; margin-bottom: 5px; } .address-content
+      { white-space: pre-wrap; }
     </style>
   </head>
   <body>
     <main>
       <!-- Address Section -->
-      <div class="address-section">
-        <div class="address-container">
+      <div class='address-section'>
+        <div class='address-container'>
           <!-- Vendor Address Column -->
-          <div class="address-column">
-            <div class="address-title">Vendor Address</div>
-            <div class="address-content">{{addressData.vendorAddress}}</div>
+          <div class='address-column'>
+            <div class='address-title'>Vendor Address</div>
+            <div class='address-content'>{{addressData.vendorAddress}}</div>
           </div>
           <!-- Ship To & Bill To Address Column -->
-          <div class="address-column">
-            <div class="address-title">Ship To & Bill To Address</div>
-            <div class="address-content">{{addressData.branchAddress}}</div>
+          <div class='address-column'>
+            <div class='address-title'>Ship To & Bill To Address</div>
+            <div class='address-content'>{{addressData.branchAddress}}</div>
           </div>
         </div>
       </div>
 
       <!-- Items Section -->
-      <div class="section">
-        <table class="items-table">
+      <div class='section'>
+        <table class='items-table'>
           <thead>
             <tr>
               <th>#</th>
@@ -59,7 +65,7 @@
             </tr>
           </thead>
           <tbody>
-            {{#getSectionByTitle sections "Items"}}
+            {{#getSectionByTitle sections 'Items'}}
               {{#each content}}
                 <tr>
                   <td>{{inc @index}}</td>
@@ -75,7 +81,7 @@
               {{/each}}
             {{else}}
               <tr>
-                <td colspan="9">No items available</td>
+                <td colspan='9'>No items available</td>
               </tr>
             {{/getSectionByTitle}}
           </tbody>
@@ -83,60 +89,61 @@
       </div>
 
       <!-- Total Amount Section -->
-      <div class="total-box">
-        {{#getSectionByTitle sections "Additional Details"}}
-          <div class="key-value">
-            <span class="key">Total Amount: </span>
-            <span class="value">{{getValue content "Total Amount"}}</span>
+      <div class='total-box'>
+        {{#getSectionByTitle sections 'Additional Details'}}
+          <div class='key-value'>
+            <span class='key'>Total Amount: </span>
+            <span class='value'>{{getValue content 'Total Amount'}}</span>
           </div>
         {{/getSectionByTitle}}
       </div>
 
       <!-- Divider -->
-      <div class="divider"></div>
+      <div class='divider'></div>
 
       <!-- Company Information -->
-      <div class="company-info">
+      <div class='company-info'>
         <!-- Left Column: Company TIN and Name -->
-        <div class="left-column">
-          <div class="vendor-detail">
-            <span class="key">Company TIN:</span>
+        <div class='left-column'>
+          <div class='vendor-detail'>
+            <span class='key'>Company TIN:</span>
             RCHE00911B
           </div>
-          <div class="company-name">Evara Health Pvt Ltd</div>
+          <div class='company-name'>Evara Health Pvt Ltd</div>
         </div>
 
         <!-- Right Column: Contact Information -->
-        <div class="right-column">
-          <div class="vendor-detail">
-            <span class="key">Name:</span>
+        <div class='right-column'>
+          <div class='vendor-detail'>
+            <span class='key'>Name:</span>
             Karna Bera
           </div>
-          <div class="vendor-detail">
-            <span class="key">Number:</span>
+          <div class='vendor-detail'>
+            <span class='key'>Number:</span>
             7677311644
           </div>
         </div>
       </div>
 
       <!-- Divider -->
-      <div class="divider"></div>
+      <div class='divider'></div>
 
       <!-- Terms and Conditions -->
-      <div class="terms-conditions">
-        <div class="title">Terms and Conditions:</div>
+      <div class='terms-conditions'>
+        <div class='title'>Terms and Conditions:</div>
         <ul>
           <li>
             <strong>Payment:</strong>
-            Within 45 days from the delivery date (Invoices raised and material delivered between
-            1st to 31st of the current month will be paid by 25th of next month).
+            Within 45 days from the delivery date (Invoices raised and material
+            delivered between 1st to 31st of the current month will be paid by
+            25th of next month).
           </li>
           <li><strong>Taxes:</strong> As applicable.</li>
           <li><strong>Warranty:</strong> As per the Contract.</li>
           <li>
             <strong>Penalty:</strong>
-            In case found to be sub-standard, the whole material has to be replaced without any
-            extra cost.
+            In case found to be sub-standard, the whole material has to be
+            replaced without any extra cost.
           </li>
           <li><strong>Dispatch:</strong> Immediate.</li>
         </ul>
