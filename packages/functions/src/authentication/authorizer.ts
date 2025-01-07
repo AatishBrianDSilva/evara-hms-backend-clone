@@ -146,6 +146,9 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
         EUserRole.CenterManager,
       ],
     },
+    timeline: {
+      GET: allRoles,
+    },
     investigations: {
       GET: [
         EUserRole.Admin,
