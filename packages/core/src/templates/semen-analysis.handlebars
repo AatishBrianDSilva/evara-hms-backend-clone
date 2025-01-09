@@ -4,7 +4,7 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <style>
       body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size:
-      13px; /* Decreased font size */ } main { padding: 0; display: flex;
+      13px; /* Reduced font size */ } main { padding: 0; display: flex;
       box-sizing: border-box; flex-direction: column; flex-grow: 1; } .section {
       margin-bottom: 5px; /* Reduced vertical spacing */ } .header { text-align:
       center; font-size: 14px; /* Reduced font size */ font-weight: bold;
@@ -15,11 +15,17 @@
       width: 48%; } .key-value { display: flex; justify-content: space-between;
       margin-bottom: 3px; /* Reduced spacing between rows */ } .key {
       font-weight: bold; width: 50%; text-align: left; } .value { width: 50%;
-      text-align: left; white-space: pre-wrap; } table { width: 100%;
-      border-collapse: collapse; margin-bottom: 5px; /* Reduced spacing below
-      tables */ font-size: 0.9em; } th, td { border: 1px solid #ccc; padding:
-      3px 6px; /* Reduced top/bottom padding */ text-align: left; } th {
-      background: #f9f9f9; font-weight: bold; color: #333; }
+      text-align: left; white-space: pre-wrap; }table { width: 100%;
+      border-collapse: collapse; margin-bottom: 5px; font-size: 0.9em;
+      table-layout: fixed; /* Ensures uniform column widths */ } th, td {
+      border: 1px solid #ccc; padding: 3px 6px; /* Adjust padding for compact
+      layout */ text-align: left; word-wrap: break-word; /* Handles text
+      overflow */ } th { background: #f9f9f9; font-weight: bold; color: #333; }
+      th:nth-child(1), td:nth-child(1) { width: 30%; /* Adjust column width as
+      needed */ } th:nth-child(2), td:nth-child(2) { width: 30%; /* Adjust
+      column width as needed */ } th:nth-child(3), td:nth-child(3) { width: 20%;
+      /* Adjust column width as needed */ } th:nth-child(4), td:nth-child(4) {
+      width: 20%; /* Adjust column width as needed */ }
     </style>
   </head>
 
@@ -29,7 +35,6 @@
       <div class='header'>Patient Details</div>
       <div class='section'>
         <div class='column-container'>
-          <!-- First column -->
           <div class='column'>
             <div class='key-value'>
               <span class='key'>Name:</span>
@@ -48,7 +53,6 @@
               <span class='value'>{{patientData.gender}}</span>
             </div>
           </div>
-          <!-- Second column -->
           <div class='column'>
             <div class='key-value'>
               <span class='key'>Spouse Name:</span>
@@ -63,9 +67,9 @@
       </div>
 
       <!-- Semen Analysis Report Section -->
-      <div class='header'>Semen Analysis Report</div>
-      <div class='section padded-section'>
-        <!-- Sample Details -->
+      <div class='header'>SEMEN ANALYSIS REPORT</div>
+      <div class='section padded-section' style='margin-top: 10px;'>
+
         <table>
           <tbody>
             <tr>
@@ -119,6 +123,26 @@
                   'hh:mm a'
                 }}</td>
             </tr>
+            <tr>
+              <th>Viscosity</th>
+              <td>{{semenAnalysisData.viscosity}}</td>
+            </tr>
+            <tr>
+              <th>Abstinence</th>
+              <td>{{semenAnalysisData.abstinence}}</td>
+            </tr>
+            <tr>
+              <th>Volume (ml)</th>
+              <td>{{semenAnalysisData.volume}}</td>
+            </tr>
+            <tr>
+              <th>pH</th>
+              <td>{{semenAnalysisData.ph}}</td>
+            </tr>
+            <tr>
+              <th>Visual Appearance</th>
+              <td>{{semenAnalysisData.visualAppearance}}</td>
+            </tr>
           </tbody>
         </table>
 
@@ -140,7 +164,7 @@
           </tbody>
         </table>
 
-        <!-- Motility -->
+        <!-- Motility Section -->
         <table>
           <thead>
             <tr>
@@ -151,7 +175,7 @@
           </thead>
           <tbody>
             <tr>
-              <td>Sperm Motility Total (%)</td>
+              <td>Sperm Motility Total (PR + NPR) (%)</td>
               <td>{{semenAnalysisData.spermMotilityTotal}}</td>
               <td>>=42</td>
             </tr>
@@ -160,10 +184,27 @@
               <td>{{semenAnalysisData.progressivePR}}</td>
               <td>>=30</td>
             </tr>
+            <tr>
+              <td>Slow Progressive (%)</td>
+              <td>{{semenAnalysisData.slowProgressive}}</td>
+            </tr>
+            <tr>
+              <td>Rapid Progressive (%)</td>
+              <td>{{semenAnalysisData.rapidProgressive}}</td>
+            </tr>
+            <tr>
+              <td>Non Progressive (%)</td>
+              <td>{{semenAnalysisData.nonProgressive}}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Immotile (%)</td>
+              <td>{{semenAnalysisData.immotile}}</td>
+            </tr>
           </tbody>
         </table>
 
-        <!-- Morphology -->
+        <!-- Morphology Section -->
         <table>
           <thead>
             <tr>
@@ -178,17 +219,113 @@
               <td>{{semenAnalysisData.normalForms}}</td>
               <td>>=4</td>
             </tr>
+            <tr>
+              <td>Head Defects (%)</td>
+              <td>{{semenAnalysisData.headDefects}}</td>
+            </tr>
+            <tr>
+              <td>Mid Piece Defects (%)</td>
+              <td>{{semenAnalysisData.midPieceDefects}}</td>
+            </tr>
+            <tr>
+              <td>Tail Defects (%)</td>
+              <td>{{semenAnalysisData.tailDefects}}</td>
+            </tr>
           </tbody>
         </table>
+
+        <!-- Total Ejaculate Section -->
+        <table>
+          <thead>
+            <tr>
+              <th>Total Ejaculate</th>
+              <th>Result</th>
+              <th>Reference Range</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Total Sperm Count (million/ejaculate)</td>
+              <td>{{semenAnalysisData.totalSpermCount}}</td>
+              <td>>=39</td>
+            </tr>
+            <tr>
+              <td>Motile Sperm (million/ejaculate)</td>
+              <td>{{semenAnalysisData.motileSperm}}</td>
+            </tr>
+            <tr>
+              <td>Morphologically Normal Sperm (million/ejaculate)</td>
+              <td>{{semenAnalysisData.morphologicallyNormalSperm}}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Additional Information Section -->
+        <table>
+          <thead>
+            <tr>
+              <th>Additional Information</th>
+              <th>Result</th>
+              <th>Reference Range</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Debris</td>
+              <td>{{semenAnalysisData.debris}}</td>
+            </tr>
+            <tr>
+              <td>Round Cells (million/ml)</td>
+              <td>{{semenAnalysisData.roundCells}}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Agglutination</td>
+              <td>{{semenAnalysisData.agglutination}}</td>
+            </tr>
+            <tr>
+              <td>Aggregration</td>
+              <td>{{semenAnalysisData.aggregration}}</td>
+            </tr>
+            <tr>
+              <td>Fructose</td>
+              <td>{{semenAnalysisData.fructose}}</td>
+              <td>Present</td>
+            </tr>
+            <tr>
+              <td>Peroxidase-Positive Cells Concentration (million/ml)</td>
+              <td>{{semenAnalysisData.proxidosePositiveCellConcentration}}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Impression/Remarks/Advice -->
+        <table>
+          <tbody>
+            <tr>
+              <th>Impression</th>
+              <td>{{semenAnalysisData.impression}}</td>
+            </tr>
+            <tr>
+              <th>Remarks</th>
+              <td>{{semenAnalysisData.remarks}}</td>
+            </tr>
+            <tr>
+              <th>Advice</th>
+              <td>{{semenAnalysisData.advice}}</td>
+            </tr>
+          </tbody>
+        </table>
+
       </div>
 
-      <!-- Prepared By and Checked By -->
+      {{! Prepared By and Checked By }}
       <div class='section'>
         <div class='column-container'>
-          <div class='column'>
+          <div class='column left'>
             <p>Prepared By</p>
           </div>
-          <div class='column'>
+          <div class='column right'>
             <p style='text-align: right;'>Checked By</p>
           </div>
         </div>
