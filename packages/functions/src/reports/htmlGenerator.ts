@@ -262,7 +262,6 @@ const generateHeaderHtmlV2 = (
         <div style="flex-grow: 1; text-align: center;">
           <p style="margin: 10px 0 0 0; font-size: 18px; font-weight: bold;">Evara Fertility & IVF Centre</p>
           <p style="margin: 0; font-size: 14px">(A Unit of Evara Health Private Limited)</p>
-          <p style="margin: 0; font-size: 14px">${header.branchName}</p>
           <p style="margin: 0; font-size: 14px">${header.branchAddress}</p>
         </div>
         <div style="width: 140px;"></div>
@@ -280,7 +279,6 @@ const generateHeaderHtmlV2 = (
           <h1 style="margin: 0; font-size: 14px; text-decoration: underline; background: #5C5C5C; color: white; padding: 5px;">Bill of Supply & Tax Invoice</h1>
           <p style="margin: 10px 0 0 0; font-size: 18px; font-weight: bold;">Evara Fertility & IVF Centre</p>
           <p style="margin: 0; font-size: 14px">(A Unit of Evara Health Private Limited)</p>
-          <p style="margin: 0; font-size: 14px">${header.branchName}</p>
           <p style="margin: 0; font-size: 14px">${header.branchAddress}</p>
         </div>
         <div style="width: 140px;"></div>
@@ -296,7 +294,6 @@ const generateHeaderHtmlV2 = (
           <h1 style="margin: 0; font-size: 14px; text-decoration: underline; background: #5C5C5C; color: white; padding: 5px;">Bill of Supply & Tax Invoice</h1>
           <p style="margin: 10px 0 0 0; font-size: 18px; font-weight: bold;">Evara Fertility & IVF Centre</p>
           <p style="margin: 0; font-size: 14px">(A Unit of Evara Health Private Limited)</p>
-          <p style="margin: 0; font-size: 14px">${header.branchName}</p>
           <p style="margin: 0; font-size: 14px">${header.branchAddress}</p>
         </div>
         <div style="width: 140px;"></div>
