@@ -439,7 +439,12 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
       ],
     },
     analytics: {
-      GET: [EUserRole.Admin, EUserRole.CenterManager],
+      GET: [
+        EUserRole.Admin,
+        EUserRole.CenterManager,
+        EUserRole.Billing,
+        EUserRole.Doctor,
+      ],
     },
   };
 
