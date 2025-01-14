@@ -571,10 +571,10 @@ export function MainStack({ stack }: StackContext) {
         'packages/functions/src/analyticsDashboard/treatmentsTesting/getMasterPackageReports.main',
 
       //scripts
-      'GET /scripts/sellPriceMigration': {
-        function: 'packages/functions/scripts/migrateSellPrice.main',
-        authorizer: 'none',
-      },
+      // 'GET /scripts/sellPriceMigration': {
+      //   function: 'packages/functions/scripts/migrateSellPrice.main',
+      //   authorizer: 'none',
+      // },
     },
   });
 

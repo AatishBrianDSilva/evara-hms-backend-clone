@@ -20,6 +20,7 @@ const convertHtmlToPdf = async (
   html: string,
   header: string,
   footer: string,
+  category: EDocumentTypes, // Add category as a parameter
 ): Promise<Buffer> => {
   const STAGE = process.env.STAGE;
 
@@ -51,13 +52,33 @@ const convertHtmlToPdf = async (
     console.log('Chromium browser launched for other stages');
   }
 
+  // Setting pdf header size based on report type -> Journey item reports have larger header
+
+  const journeyCategories = [
+    EDocumentTypes.Investigation,
+    EDocumentTypes.Procedure,
+    EDocumentTypes.CryoPreservation,
+    EDocumentTypes.TreatmentCycle,
+  ];
+
+  const poCategories = [
+    EDocumentTypes.PurchaseOrder,
+    EDocumentTypes.PurchaseOrderProcessed,
+  ];
+
+  const topMargin = journeyCategories.includes(category)
+    ? '135px'
+    : poCategories.includes(category)
+      ? '90px'
+      : '125px';
+
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: 'networkidle0' });
 
   const pdf = await page.pdf({
     format: 'A4',
     margin: {
-      top: '110px',
+      top: topMargin,
       bottom: '120px',
       left: '25px',
       right: '25px',
@@ -102,6 +123,7 @@ export const main: SQSHandler = async (event, context) => {
         htmlContent,
         headerHtml,
         footerHtml,
+        category,
       );
 
       // Upload PDF to S3
