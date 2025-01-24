@@ -91,6 +91,38 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     });
 
+    // Lookup Patient details to get patientName
+    pipeline.push({
+      $lookup: {
+        from: 'patients',
+        localField: 'patientCode',
+        foreignField: 'patientId',
+        as: 'patient',
+      },
+    });
+
+    // Unwind the patient details
+    pipeline.push({
+      $unwind: { path: '$patient', preserveNullAndEmptyArrays: true },
+    });
+
+    // Add patientName by combining firstName and lastName
+    pipeline.push({
+      $addFields: {
+        patientName: {
+          $trim: {
+            input: {
+              $concat: [
+                { $ifNull: ['$patient.firstName', ''] },
+                ' ',
+                { $ifNull: ['$patient.lastName', ''] },
+              ],
+            },
+          },
+        },
+      },
+    });
+
     // Apply search filter if search term is provided
     if (search) {
       pipeline.push({
@@ -142,6 +174,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               investigation: '$investigation.name',
               doctor: '$doctorFullName',
               amount: '$investigation.total', // or 'cost' if you prefer
+              patientName: 1,
               status: 1,
               files: '$result.files',
             },
