@@ -34,8 +34,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const { records } = await fetchPatientBillingsData({
       clinicId: auth.clinicId,
       branchId: auth.branchId,
-      page: pageNumber,
-      limit: limitNumber,
+      page: fetchAllData ? undefined : pageNumber, // Skip page if fetching all data
+      limit: fetchAllData ? undefined : limitNumber, // Skip limit if fetching all data
       status,
       paymentMethod,
       searchQuery,
@@ -47,6 +47,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Prepare data for CSV
     let dataForCsv = records;
+
+    // console.log('Fetch All Data:', fetchAllData);
+    console.log('Query Parameters:', {
+      page: fetchAllData ? undefined : pageNumber,
+      limit: fetchAllData ? undefined : limitNumber,
+      status,
+      paymentMethod,
+    });
 
     // If not fetching all data, calculate the starting serial number
     if (!fetchAllData) {
