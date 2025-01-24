@@ -108,6 +108,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const opts = { fields };
     const asyncParser = new AsyncParser(opts);
     const csv = await asyncParser.parse(dataForCsv).promise();
+    console.log('Generated CSV:', csv);
+
+    // Add UTF-8 BOM to the CSV
+    const csvWithBom = `\uFEFF${csv}`;
+    console.log('CSV with BOM:', csvWithBom);
+    console.log('Base64 CSV:', Buffer.from(csvWithBom).toString('base64'));
 
     // Return the CSV file as a downloadable response
     return {
@@ -118,7 +124,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         'Access-Control-Allow-Origin': '*', // Add CORS header if needed
       },
       isBase64Encoded: true,
-      body: Buffer.from(csv).toString('base64'),
+      body: Buffer.from(csvWithBom).toString('base64'), // Base64 encode the CSV for binary download
     };
   } catch (error) {
     console.error('Error in patientBillings CSV API: ', error);
