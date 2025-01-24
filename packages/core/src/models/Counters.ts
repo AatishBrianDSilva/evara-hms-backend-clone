@@ -95,8 +95,8 @@ export const autoIncrementPatientIdWithFieldPrefix = (
     try {
       // Build up the prefix: e.g. clinicId + branchId
       let prefix = '';
-      if (clinicId && branchId) {
-        prefix = `${clinicId}${branchId}`;
+      if (this[clinicId] && this[branchId]) {
+        prefix = `${this[clinicId]}${this[branchId]}`;
       }
 
       // Create a unique _id for the counters collection
