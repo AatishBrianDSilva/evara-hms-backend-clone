@@ -8,13 +8,16 @@ import ErrorMessage from '@evara-backend/core/lib/utils/ErrorMessage';
 import Patient from '@evara-backend/core/models/Patients';
 
 interface IPaginateOptions {
-  page?: number;
-  limit?: number;
+  clinicId: string;
+  branchId: string;
+  page: number;
+  limit: number;
+  searchQuery: string;
   sort?: any;
-  [key: string]: any;
 }
 
 const parseSearchQuery = (query: string) => {
+  console.log('Parsing search query:', query); // Log the incoming search query
   const queryParts = query.split(' ');
   const parsedQuery = {
     patientCode: '',
@@ -29,7 +32,120 @@ const parseSearchQuery = (query: string) => {
     }
   });
 
+  console.log('Parsed search query:', parsedQuery); // Log parsed query details
   return parsedQuery;
+};
+
+const fetchRefundsData = async ({
+  clinicId,
+  branchId,
+  page,
+  limit,
+  searchQuery,
+  sort = { createdAt: -1 },
+}: IPaginateOptions) => {
+  console.log('Fetching refunds data with params:', {
+    clinicId,
+    branchId,
+    page,
+    limit,
+    searchQuery,
+    sort,
+  });
+
+  const { patientCode, patientName } = parseSearchQuery(searchQuery);
+
+  // Build match condition
+  const matchCondition: any = { branchId };
+  if (patientCode) {
+    matchCondition.patientCode = { $regex: patientCode, $options: 'i' };
+  }
+  if (patientName) {
+    const matchingPatients = await Patient.find({
+      clinicId,
+      branchId,
+      $or: [
+        { firstName: { $regex: patientName, $options: 'i' } },
+        { lastName: { $regex: patientName, $options: 'i' } },
+      ],
+    }).select('patientId');
+
+    const matchingPatientCodes = matchingPatients.map(p => p.patientId);
+
+    matchCondition.patientCode = matchingPatientCodes.length
+      ? { $in: matchingPatientCodes }
+      : '__NO_MATCH__';
+  }
+
+  console.log('Match condition for refunds:', matchCondition);
+
+  // Total matching refunds
+  const totalDocs = await PatientRefund.countDocuments(matchCondition);
+  console.log('Total matching refunds:', totalDocs);
+
+  // Aggregation pipeline
+  const aggregationPipeline: any[] = [
+    { $match: matchCondition },
+    {
+      $lookup: {
+        from: 'patients',
+        localField: 'patientCode',
+        foreignField: 'patientId',
+        as: 'patientDetails',
+      },
+    },
+    { $unwind: '$patientDetails' },
+    {
+      $project: {
+        _id: 1,
+        refundDetails: 1,
+        patientCode: 1,
+        'patientDetails.firstName': 1,
+        'patientDetails.lastName': 1,
+        patientName: {
+          $concat: [
+            '$patientDetails.firstName',
+            ' ',
+            '$patientDetails.lastName',
+          ],
+        },
+        createdAt: 1,
+      },
+    },
+    { $sort: sort },
+  ];
+
+  // Add pagination stages only if limit is not -1
+  if (limit !== -1) {
+    const skip = (page - 1) * limit;
+    console.log('Skip value:', skip);
+
+    aggregationPipeline.push({ $skip: skip }, { $limit: limit });
+  } else {
+    console.log('Returning all records without pagination');
+  }
+
+  console.log(
+    'Aggregation pipeline:',
+    JSON.stringify(aggregationPipeline, null, 2),
+  );
+
+  // Fetch data
+  const records = await PatientRefund.aggregate(aggregationPipeline);
+
+  // If limit is -1, return all records without pagination metadata
+  return {
+    records,
+    pagination:
+      limit !== -1
+        ? {
+            totalDocs,
+            totalPages: Math.ceil(totalDocs / limit),
+            page,
+            limit,
+          }
+        : undefined,
+  };
 };
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -49,130 +165,33 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const {
       page = '1',
       limit = '25',
-      paginate = 'true', // Determines if pagination is applied
-      sort: sortRaw,
       searchQuery = '',
+      sort: sortRaw,
     } = params;
 
-    const isPaginationEnabled = paginate === 'true' || paginate === '1';
-
-    const pageNumber = isPaginationEnabled ? parseInt(page, 10) : undefined;
-    const pageSize = isPaginationEnabled ? parseInt(limit, 10) : undefined;
+    // Parse sort options
     const sortOptions = sortRaw ? JSON.parse(sortRaw) : { createdAt: -1 };
 
-    const { patientCode, patientName } = parseSearchQuery(searchQuery);
-
-    // Build the query condition to filter refunds for the current branch
-    const matchCondition: any = {
-      branchId: auth.branchId, // Filter refunds by branch
-    };
-
-    if (patientCode) {
-      matchCondition.patientCode = { $regex: patientCode, $options: 'i' };
-    }
-
-    if (patientName) {
-      // Find patient IDs that match the patientName
-      const matchingPatients = await Patient.find({
-        clinicId: auth.clinicId,
-        branchId: auth.branchId,
-        $or: [
-          { firstName: { $regex: patientName, $options: 'i' } },
-          { lastName: { $regex: patientName, $options: 'i' } },
-        ],
-      }).select('patientId');
-
-      const matchingPatientCodes = matchingPatients.map(p => p.patientId);
-
-      if (matchingPatientCodes.length === 0) {
-        // No matching patients, so no refunds will match
-        matchCondition.patientCode = '__NO_MATCH__'; // Ensures no results
-      } else {
-        if (matchCondition.patientCode) {
-          matchCondition.patientCode = {
-            $regex: patientCode,
-            $options: 'i',
-            $in: matchingPatientCodes,
-          };
-        } else {
-          matchCondition.patientCode = { $in: matchingPatientCodes };
-        }
-      }
-    }
-
-    // Use aggregation to join Patient data and send firstName, lastName, and patientName
-    const aggregationPipeline: any[] = [
-      {
-        $match: matchCondition,
-      },
-      {
-        $lookup: {
-          from: 'patients', // Match with the 'Patient' collection
-          localField: 'patientCode', // Field in PatientRefund to match
-          foreignField: 'patientId', // Field in Patient to match
-          as: 'patientDetails', // Output array of matched documents
-        },
-      },
-      {
-        $unwind: '$patientDetails', // Unwind the matched patient details
-      },
-      {
-        $project: {
-          _id: 1,
-          refundDetails: 1,
-          patientCode: 1,
-          'patientDetails.firstName': 1, // Include firstName
-          'patientDetails.lastName': 1, // Include lastName
-          patientName: {
-            $concat: [
-              '$patientDetails.firstName',
-              ' ',
-              '$patientDetails.lastName',
-            ],
-          }, // Concatenate firstName and lastName
-          createdAt: 1,
-        },
-      },
-      {
-        $sort: sortOptions, // Apply dynamic sorting
-      },
-    ];
-
-    if (isPaginationEnabled) {
-      aggregationPipeline.push(
-        {
-          $skip: (pageNumber - 1) * pageSize,
-        },
-        {
-          $limit: pageSize,
-        },
-      );
-    }
-
-    const refunds = await PatientRefund.aggregate(aggregationPipeline);
-
-    // Count total refunds for pagination
-    const totalRefunds = await PatientRefund.countDocuments(matchCondition);
-
-    // Prepare the pagination info
-    const pagination = isPaginationEnabled
-      ? {
-          totalDocs: totalRefunds,
-          totalPages: Math.ceil(totalRefunds / pageSize),
-          page: pageNumber,
-          limit: pageSize,
-        }
-      : undefined;
-
-    console.log('Refunds retrieved successfully for branch:', auth.branchId);
-
-    // Return the refund data with patient firstName, lastName, and patientName
-    return successResponse({
-      records: refunds, // Contains refund details with patient firstName, lastName, and patientName
-      pagination,
+    console.log('Query parameters received:', {
+      page,
+      limit,
+      searchQuery,
+      sortOptions,
     });
+
+    // Fetch refunds data
+    const result = await fetchRefundsData({
+      clinicId: auth.clinicId,
+      branchId: auth.branchId,
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      searchQuery,
+      sort: sortOptions,
+    });
+
+    return successResponse(result);
   } catch (error) {
-    console.error('Error occurred while fetching refunds:', error);
+    console.error('Error fetching refunds:', error);
     return errorResponse(error);
   }
 };
