@@ -153,6 +153,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     });
 
+    // Add amount field to ensure calculations are consistent
+    pipeline.push({
+      $addFields: {
+        amount: { $ifNull: ['$investigation.total', 0] },
+      },
+    });
+
     // Build the facet stage for pagination and total count
     pipeline.push({
       $facet: {
@@ -190,6 +197,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Extract results and total count
     const records = res[0]?.paginatedResults || [];
     const totalDocs = res[0]?.totalCount[0]?.count || 0;
+    const totalAmount = records.reduce(
+      (sum: any, record: { amount: any }) => sum + (record.amount || 0),
+      0,
+    );
 
     // Return the response
     const paginatedResult = {
@@ -198,6 +209,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         totalDocs,
         page: parseInt(page),
         limit: parseInt(limit),
+      },
+      summary: {
+        totalAmount,
       },
     };
 
