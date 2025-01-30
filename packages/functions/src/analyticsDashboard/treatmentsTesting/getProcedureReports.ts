@@ -88,6 +88,38 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     });
 
+    // Lookup Patient details to get patientName
+    pipeline.push({
+      $lookup: {
+        from: 'patients',
+        localField: 'patientCode',
+        foreignField: 'patientId',
+        as: 'patient',
+      },
+    });
+
+    // Unwind the patient details
+    pipeline.push({
+      $unwind: { path: '$patient', preserveNullAndEmptyArrays: true },
+    });
+
+    // Add patientName by combining firstName and lastName
+    pipeline.push({
+      $addFields: {
+        patientName: {
+          $trim: {
+            input: {
+              $concat: [
+                { $ifNull: ['$patient.firstName', ''] },
+                ' ',
+                { $ifNull: ['$patient.lastName', ''] },
+              ],
+            },
+          },
+        },
+      },
+    });
+
     // Apply search filter if search term is provided
     if (search) {
       pipeline.push({
@@ -118,6 +150,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     });
 
+    // Add amount field to ensure calculations are consistent
+    pipeline.push({
+      $addFields: {
+        amount: { $ifNull: ['$procedure.total', 0] },
+      },
+    });
+
     // Build the facet stage for pagination and total count
     pipeline.push({
       $facet: {
@@ -140,6 +179,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               doctor: '$doctorFullName',
               amount: '$procedure.total', // or 'cost' if you prefer
               status: 1,
+              patientName: 1,
               files: '$result.files',
             },
           },
@@ -154,6 +194,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Extract results and total count
     const records = res[0]?.paginatedResults || [];
     const totalDocs = res[0]?.totalCount[0]?.count || 0;
+    const totalAmount = records.reduce(
+      (sum: any, record: { amount: any }) => sum + (record.amount || 0),
+      0,
+    );
 
     // Return the response
     const paginatedResult = {
@@ -162,6 +206,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         totalDocs,
         page: parseInt(page),
         limit: parseInt(limit),
+      },
+      summary: {
+        totalAmount,
       },
     };
 

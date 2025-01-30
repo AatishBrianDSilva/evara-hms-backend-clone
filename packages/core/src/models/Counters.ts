@@ -80,3 +80,46 @@ export const autoIncrementIdWithFieldPrefix = (
     }
   };
 };
+
+export const autoIncrementPatientIdWithFieldPrefix = (
+  modelName: string,
+  idField: string,
+  clinicId: string,
+  branchId: string,
+) => {
+  return async function (this: any, next: (error?: any) => void) {
+    if (!this.isNew && this[idField]) {
+      return next(); // Skip this hook if the document is not new or the ID is already set
+    }
+
+    try {
+      // Build up the prefix: e.g. clinicId + branchId
+      let prefix = '';
+      if (this[clinicId] && this[branchId]) {
+        prefix = `${this[clinicId]}${this[branchId]}`;
+      }
+
+      // Create a unique _id for the counters collection
+      // e.g. "patients-EVKN" or "patients-EVLK"
+      const fullCounterId = prefix ? `${modelName}-${prefix}` : modelName;
+
+      // Increment the counter
+      const doc = await Counters.findOneAndUpdate(
+        { _id: fullCounterId },
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true, session: this.$session() },
+      );
+
+      if (!doc) {
+        throw new Error('Counter document not found');
+      }
+
+      const id = prefix ? `${prefix}-${doc.seq}` : `${doc.seq}`;
+      this[idField] = id;
+
+      next();
+    } catch (error) {
+      next(error); // Forward any errors to Mongoose's error handling
+    }
+  };
+};

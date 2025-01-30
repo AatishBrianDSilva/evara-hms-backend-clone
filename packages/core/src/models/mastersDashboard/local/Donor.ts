@@ -98,7 +98,6 @@ export const patientSchema = new mongoose.Schema(
     alernativeMobile: { type: String },
     email: {
       type: String,
-      required: true,
       match: [/.+\@.+\..+/, 'Invalid email format'],
     },
     dependentType: { type: String },

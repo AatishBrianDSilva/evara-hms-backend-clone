@@ -22,12 +22,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       page = '1',
       limit = '10',
       searchQuery = '',
+      sort, // New sort parameter
     } = params;
 
     // Convert pagination inputs to integers
     const pageNum = parseInt(page.toString(), 10) || 1;
     const limitNum = parseInt(limit.toString(), 10) || 10;
     const skipNum = (pageNum - 1) * limitNum;
+
+    // Parse sort parameter
+    const sortBy = sort ? JSON.parse(sort) : { createdAt: -1 }; // Default sort by patientId descending
 
     // 3) Build the first $match object for filtering patients
     const matchStage: Record<string, any> = {
@@ -120,7 +124,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
         // data sub-pipeline: sort, skip, limit
         data: [
-          { $sort: { patientId: 1 } },
+          { $sort: sortBy }, // Apply dynamic sorting
           { $skip: skipNum },
           { $limit: limitNum },
           // add a new field for the single caseId

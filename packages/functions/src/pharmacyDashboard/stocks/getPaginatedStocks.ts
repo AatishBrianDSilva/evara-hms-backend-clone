@@ -45,10 +45,20 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       searchQuery = '', // The combined search query
     } = params;
 
-    const sort = sortRaw ? JSON.parse(sortRaw) : undefined;
+    const sort = sortRaw ? JSON.parse(sortRaw) : { 'item.name': 1 };
 
     // Parse the combined search query
     const { searchTerm, locationQuery } = parseSearchQuery(searchQuery);
+
+    const query: any = {
+      clinicId: auth.clinicId,
+      branchId: auth.branchId,
+      'batches.locations.quantity': { $gt: 0 }, // Exclude items with 0 quantity
+    };
+
+    if (searchTerm) {
+      query['item.name'] = { $regex: searchTerm, $options: 'i' };
+    }
 
     const populate = [
       {
@@ -73,41 +83,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         path: 'batches.vendor',
         model: DrugVendor.modelName,
       },
-      {
-        path: 'batches.vendor.location',
-        model: DrugLocation.modelName,
-      },
     ];
-
-    const query: any = {};
-    query.branchId = auth.branchId;
-    query.clinicId = auth.clinicId;
-
-    // **New Filter: Exclude stocks with total quantity 0**
-    query['batches.locations.quantity'] = { $gt: 0 };
-
-    if (status) {
-      query.status = status;
-    }
-
-    // Handle searchTerm filtering by drug name
-    if (searchTerm) {
-      const itemIds = await DrugItem.find({
-        name: { $regex: searchTerm, $options: 'i' },
-      })
-        .select('_id')
-        .exec();
-
-      const ids = itemIds.map(item => item._id);
-      query.item = { $in: ids };
-    }
 
     let options: IPaginateOptions;
     if (parseInt(limit, 10) === -1) {
       // Fetch all records if the limit is -1
-
       log('Fetching all records without pagination.');
-
       options = {
         populate,
         sort,
@@ -115,7 +96,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
     } else {
       log(`Applying pagination with limit: ${limit}, page: ${page}`);
-
       options = {
         page: parseInt(page, 10),
         limit: parseInt(limit, 10),
@@ -151,12 +131,24 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       pagination: updatedPagination,
     });
   } catch (error) {
-    return errorResponse(error);
+    if (error instanceof ErrorMessage) {
+      return errorResponse(error);
+    }
+
+    // Log the error for debugging
+    console.error('Unexpected error occurred:', error);
+
+    // Return a detailed error response for debugging in non-production environments
+    const errorMessage =
+      process.env.NODE_ENV === 'production'
+        ? 'An unexpected error occurred. Please try again later.'
+        : error.message || 'An unknown error occurred';
+
+    return errorResponse(new ErrorMessage(500, errorMessage));
   }
 };
 
-// * Function to format records with additional fields and exclude zero-quantity batches
-
+// Function to format records with additional fields and exclude zero-quantity batches
 const formatPaginateRecords = (records: any[]) =>
   records
     .map(record => {
