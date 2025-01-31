@@ -1,7 +1,6 @@
 import mongoose, { Document, PaginateModel, Schema } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
-import { autoIncrementId } from '../../Counters';
-import { EServiceTypes } from '../services/DefaultService';
+import { autoIncrementBillingId } from '../../Counters';
 
 const round = (num: number) => Math.round(num * 100) / 100;
 
@@ -230,7 +229,7 @@ patientBillingSchema.virtual('totalDues').get(function (this: IPatientBilling) {
 
 patientBillingSchema.pre(
   'save',
-  autoIncrementId('PatientBilling', 'billingId', 'BL-'),
+  autoIncrementBillingId('PatientBilling', 'billingId', 'clinicId', 'branchId'),
 );
 
 patientBillingSchema.plugin(paginate);

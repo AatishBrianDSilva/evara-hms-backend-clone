@@ -1,6 +1,6 @@
 import mongoose, { Document, PaginateModel, Types } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
-import { autoIncrementPatientIdWithFieldPrefix } from './Counters';
+import { autoIncrementPatientId } from './Counters';
 
 export interface PatientData extends Document {
   clinicId: string;
@@ -134,12 +134,7 @@ patientSchema.index(
 
 patientSchema.pre(
   'save',
-  autoIncrementPatientIdWithFieldPrefix(
-    'patients',
-    'patientId',
-    'clinicId',
-    'branchId',
-  ),
+  autoIncrementPatientId('patients', 'patientId', 'clinicId', 'branchId'),
 );
 
 patientSchema.plugin(paginate);

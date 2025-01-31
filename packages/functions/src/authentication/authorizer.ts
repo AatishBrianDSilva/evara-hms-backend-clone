@@ -150,16 +150,7 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
       GET: allRoles,
     },
     investigations: {
-      GET: [
-        EUserRole.Admin,
-        EUserRole.Billing,
-        EUserRole.Doctor,
-        EUserRole.Nurse,
-        EUserRole.Billing,
-        EUserRole.PharmacyManager,
-        EUserRole.CenterManager,
-        EUserRole.Embryologist,
-      ],
+      GET: allRoles,
       POST: [
         EUserRole.Admin,
         EUserRole.Billing,
@@ -200,16 +191,7 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
       DELETE: [EUserRole.Admin, EUserRole.CenterManager],
     },
     procedures: {
-      GET: [
-        EUserRole.Admin,
-        EUserRole.Billing,
-        EUserRole.Doctor,
-        EUserRole.Nurse,
-        EUserRole.Billing,
-        EUserRole.PharmacyManager,
-        EUserRole.Embryologist,
-        EUserRole.CenterManager,
-      ],
+      GET: allRoles,
       POST: [
         EUserRole.Admin,
         EUserRole.Doctor,
@@ -227,16 +209,7 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
       DELETE: [EUserRole.Admin, EUserRole.CenterManager],
     },
     'cryo-preservations': {
-      GET: [
-        EUserRole.Admin,
-        EUserRole.Billing,
-        EUserRole.Doctor,
-        EUserRole.Nurse,
-        EUserRole.Billing,
-        EUserRole.PharmacyManager,
-        EUserRole.CenterManager,
-        EUserRole.Embryologist,
-      ],
+      GET: allRoles,
       POST: [
         EUserRole.Admin,
         EUserRole.Doctor,
@@ -254,16 +227,7 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
       DELETE: [EUserRole.Admin, EUserRole.CenterManager],
     },
     'treatment-cycles': {
-      GET: [
-        EUserRole.Admin,
-        EUserRole.Billing,
-        EUserRole.Doctor,
-        EUserRole.Nurse,
-        EUserRole.Billing,
-        EUserRole.PharmacyManager,
-        EUserRole.CenterManager,
-        EUserRole.Embryologist,
-      ],
+      GET: allRoles,
       POST: [
         EUserRole.Admin,
         EUserRole.Doctor,
