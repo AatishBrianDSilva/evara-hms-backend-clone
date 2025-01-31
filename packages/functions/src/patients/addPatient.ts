@@ -91,6 +91,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Generate case for the patient
     const newCase = new Case({
       patientId: patient.patientId,
+      clinicId: auth?.clinicId,
+      branchId: auth?.branchId,
     });
 
     const caseData = await newCase.save({ session });
