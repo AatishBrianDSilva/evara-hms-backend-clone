@@ -7,11 +7,10 @@ import {
   attachPermissionsToRole,
   Bucket,
 } from 'sst/constructs';
-import { PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Duration } from 'aws-cdk-lib/core';
 import { BlockPublicAccess, Bucket as S3Bucket } from 'aws-cdk-lib/aws-s3';
 import { LayerVersion, Code } from 'aws-cdk-lib/aws-lambda';
-import { SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
 
 export function MainStack({ stack }: StackContext) {
   // Create a default role for the API
@@ -24,32 +23,6 @@ export function MainStack({ stack }: StackContext) {
       },
     ],
   });
-
-  // Add policy to allow the role to create network interfaces in the VPC
-  if (stack.stage === 'prod') {
-    role.addToPolicy(
-      new PolicyStatement({
-        actions: [
-          'ec2:CreateNetworkInterface',
-          'ec2:DescribeNetworkInterfaces',
-          'ec2:DeleteNetworkInterface',
-        ],
-        resources: ['*'],
-      }),
-    );
-  }
-
-  // Reference the VPC for the prod stage
-  const vpc = Vpc.fromLookup(stack, 'VPC', {
-    vpcId: 'vpc-0c8580ebee69ea0b4',
-  });
-
-  // Reference the security group for the prod stage
-  const securityGroup = SecurityGroup.fromSecurityGroupId(
-    stack,
-    'SecurityGroup',
-    'sg-039b91f80c8359e1a',
-  );
 
   // Reference the MongoDB URI for the prod stage
   const mongodb_uri =
@@ -66,9 +39,6 @@ export function MainStack({ stack }: StackContext) {
   const s3FileDeletionQueue = new Queue(stack, 'S3FileDeletionQueue', {
     consumer: {
       function: {
-        vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-        securityGroups:
-          stack.stage === 'prod' ? [securityGroup as any] : undefined,
         handler: 'packages/functions/src/files/conditionalDelete.main',
         environment: {
           MONGO_URI: mongodb_uri as string,
@@ -91,9 +61,6 @@ export function MainStack({ stack }: StackContext) {
     {
       handler: 'packages/functions/src/files/scheduleDelete.main',
       timeout: '30 seconds',
-      vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-      securityGroups:
-        stack.stage === 'prod' ? [securityGroup as any] : undefined,
       permissions: ['sqs', 's3'],
       environment: {
         S3_SCHEDULE_DELETE_QUEUE_URL: s3FileDeletionQueue.queueUrl,
@@ -239,9 +206,6 @@ export function MainStack({ stack }: StackContext) {
   const billingEstimationQueue = new Queue(stack, 'BillingEstimationQueue', {
     consumer: {
       function: {
-        vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-        securityGroups:
-          stack.stage === 'prod' ? [securityGroup as any] : undefined,
         handler:
           'packages/functions/src/patientDashboard/billings/estimation/automateEstimation.main',
         environment: {
@@ -291,9 +255,6 @@ export function MainStack({ stack }: StackContext) {
   const serviceGenerationQueue = new Queue(stack, 'ServiceGenerationQueue', {
     consumer: {
       function: {
-        vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-        securityGroups:
-          stack.stage === 'prod' ? [securityGroup as any] : undefined,
         handler:
           'packages/functions/src/patientDashboard/billings/estimation/automateServiceGeneration.main',
         timeout: 300,
@@ -346,9 +307,6 @@ export function MainStack({ stack }: StackContext) {
     {
       consumer: {
         function: {
-          vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-          securityGroups:
-            stack.stage === 'prod' ? [securityGroup as any] : undefined,
           handler: 'packages/functions/src/reports/pdfGenerator.main',
           timeout: 15,
           runtime: 'nodejs18.x',
@@ -389,9 +347,6 @@ export function MainStack({ stack }: StackContext) {
         subscriber: {
           type: 'function',
           function: new Function(stack, 'ReportHTMLGenerationFunction', {
-            vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-            securityGroups:
-              stack.stage === 'prod' ? [securityGroup as any] : undefined,
             handler: 'packages/functions/src/reports/htmlGenerator.main',
             timeout: '30 seconds',
             permissions: ['sqs'],
@@ -426,9 +381,6 @@ export function MainStack({ stack }: StackContext) {
       myAuthorizer: {
         type: 'lambda',
         function: new Function(stack, 'AuthorizerFunction', {
-          vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-          securityGroups:
-            stack.stage === 'prod' ? [securityGroup as any] : undefined,
           handler: 'packages/functions/src/authentication/authorizer.main',
           permissions: ['secretsmanager'],
           timeout: '10 seconds',
@@ -439,9 +391,6 @@ export function MainStack({ stack }: StackContext) {
 
     defaults: {
       function: {
-        vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-        securityGroups:
-          stack.stage === 'prod' ? [securityGroup as any] : undefined,
         timeout: '29 seconds',
         role: role as any,
         environment: {
