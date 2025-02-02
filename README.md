@@ -6,16 +6,6 @@ An example serverless app created with SST.
 
 [**Read the tutorial**](https://sst.dev/examples/how-to-use-mongodb-in-your-serverless-app.html)
 
-Install the example.
-
-```bash
-$ npx create-sst@two --template=examples/rest-api-mongodb
-# Or with Yarn
-$ yarn create sst --template=examples/rest-api-mongodb
-# Or with PNPM
-$ pnpm create sst --template=examples/rest-api-mongodb
-```
-
 ## Commands
 
 ### `npm run dev`
