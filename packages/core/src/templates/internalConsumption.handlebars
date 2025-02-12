@@ -1,0 +1,56 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; padding: 40px;
+      font-size: 20px; } .section { margin-bottom: 30px; } .section-title {
+      font-size: 24px; font-weight: bold; margin-bottom: 10px; } .content {
+      font-size: 20px; } table { width: 100%; border-collapse: collapse;
+      margin-top: 20px; } th, td { border: 1px solid #333; padding: 8px;
+      text-align: left; } th { background-color: #f1f1f1; font-weight: bold; }
+    </style>
+  </head>
+  <body>
+
+    <!-- 🔹 Branch Address -->
+    <div class='section'>
+      <div class='section-title'>Branch Information</div>
+      <div class='content'>{{branchAddress}}</div>
+    </div>
+
+    <!-- 🔹 Items Table -->
+    <div class='section'>
+      <div class='section-title'>Items</div>
+      <table>
+        <thead>
+          <tr>
+            <th>S.No</th>
+            <th>Product Name</th>
+            <th>HSN Code</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
+            <th>Tax (%)</th>
+            <th>Tax Amount</th>
+            <th>Total Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each items}}
+            <tr>
+              <td>{{inc @index}}</td>
+              <td>{{capitalizeFirst this.[Product Name]}}</td>
+              <td>{{this.[HSN Code]}}</td>
+              <td>{{this.Quantity}}</td>
+              <td>{{formatCurrency this.[Unit Price]}}</td>
+              <td>{{this.[Tax (%)]}}</td>
+              <td>{{formatCurrency this.[Tax Amount]}}</td>
+              <td>{{formatCurrency this.Amount}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+
+  </body>
+</html>

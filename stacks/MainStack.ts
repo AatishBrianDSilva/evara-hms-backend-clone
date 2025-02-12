@@ -470,55 +470,6 @@ export function MainStack({ stack }: StackContext) {
       'GET /admin_dev/automate-master-services':
         'packages/functions/src/admin_dev/automateMasterServices.main',
 
-      //Analytics Dashboard
-      //Billings
-      'GET /analytics/billings/patient-billings':
-        'packages/functions/src/analyticsDashboard/billings/patientBillings/get.main',
-      'GET /analytics/billings/patient-billings/download':
-        'packages/functions/src/analyticsDashboard/billings/patientBillings/download.main',
-      'GET /analytics/refundReports':
-        'packages/functions/src/analyticsDashboard/billings/getRefundReports.main',
-      'GET /analytics/billings/revenue-breakup':
-        'packages/functions/src/analyticsDashboard/billings/getRevenueBreakup.main',
-
-      //Pharmacy
-      'GET /analytics/pharmacy/sales-by-schedule':
-        'packages/functions/src/analyticsDashboard/pharmacy/getSalesBySchedule.main',
-      'GET /analytics/pharmacy/drugs-and-vendor':
-        'packages/functions/src/analyticsDashboard/pharmacy/getDrugsAndVendor.main',
-      'GET /analytics/pharmacy/expiry-details':
-        'packages/functions/src/analyticsDashboard/pharmacy/getExpiryDetails.main',
-      'GET /analytics/pharmacy/internal-consumption':
-        'packages/functions/src/analyticsDashboard/pharmacy/getInternalConsumption.main',
-      'GET /analytics/pharmacy/stock-summary':
-        'packages/functions/src/analyticsDashboard/pharmacy/stockSummary/getStockSummary.main',
-      'GET /analytics/pharmacy/stock-summary/download':
-        'packages/functions/src/analyticsDashboard/pharmacy/stockSummary/downloadStockSummary.main',
-      'GET /analytics/pharmacy/patient-return':
-        'packages/functions/src/analyticsDashboard/pharmacy/getPatientReturn.main',
-      'GET /analytics/pharmacy/critical-stocks':
-        'packages/functions/src/analyticsDashboard/pharmacy/getCriticalStocks.main',
-      'GET /analytics/pharmacy/pharmacy-report':
-        'packages/functions/src/analyticsDashboard/pharmacy/getPharmacyReport.main',
-      'GET /analytics/pharmacy/purchase-order-report':
-        'packages/functions/src/analyticsDashboard/pharmacy/getPurchaseOrderReport.main',
-
-      // Treatments-Testing
-      'GET /analytics/treatments-testing/investigation-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getInvestigationReports.main',
-      'GET /analytics/treatments-testing/procedure-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getProcedureReports.main',
-      'GET /analytics/treatments-testing/cryo-preservation-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getCryoPreservationReports.main',
-      'GET /analytics/treatments-testing/treatment-cycle-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getTreatmentCycleReports.main',
-      'GET /analytics/treatments-testing/service-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getServiceReports.main',
-      'GET /analytics/treatments-testing/patient-package-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getPatientPackageReports.main',
-      'GET /analytics/treatments-testing/master-package-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getMasterPackageReports.main',
-
       //scripts
       // 'GET /scripts/sellPriceMigration': {
       //   function: 'packages/functions/scripts/migrateSellPrice.main',
@@ -527,9 +478,48 @@ export function MainStack({ stack }: StackContext) {
     },
   });
 
+  const api2 = new Api(stack, 'Api2', {
+    authorizers: {
+      myAuthorizer: {
+        type: 'lambda',
+        function: new Function(stack, 'AuthorizerFunction2', {
+          vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
+          securityGroups:
+            stack.stage === 'prod' ? [securityGroup as any] : undefined,
+          handler: 'packages/functions/src/authentication/authorizer.main',
+          permissions: ['secretsmanager'],
+          timeout: '10 seconds',
+          logFormat: 'JSON',
+        }),
+      },
+    },
+
+    defaults: {
+      function: {
+        vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
+        securityGroups:
+          stack.stage === 'prod' ? [securityGroup as any] : undefined,
+        timeout: '29 seconds',
+        role: role as any,
+        environment: {
+          MONGO_URI: mongodb_uri as string,
+          BILLING_ESTIMATION_TOPIC_ARN: billingEstimationTopic.topicArn,
+          SERVICE_GENERATION_TOPIC_ARN: serviceGenerationTopic.topicArn,
+          REPORT_HTML_GENERATION_TOPIC_ARN: reportHTMLGenerationTopic.topicArn,
+          STAGE: stack.stage,
+          REGION: stack.region,
+        },
+        permissions: ['sns', 'sqs', 'secretsmanager', 's3'],
+        logFormat: 'JSON',
+      },
+      authorizer: 'myAuthorizer',
+    },
+  });
+
   // Show the URLs in the output
   stack.addOutputs({
     ApiEndpoint: api.url,
+    Api2Endpoint: api2.url,
     UserProfileBucket: userProfileBucket.bucketName,
     UserReportBucket: userReportBucket.bucketName,
     PharmacyInvoicesBucket: pharmacyInvoicesBucket.bucketName,
@@ -540,5 +530,6 @@ export function MainStack({ stack }: StackContext) {
   return {
     api,
     pharmacyInvoicesBucket,
+    api2,
   };
 }

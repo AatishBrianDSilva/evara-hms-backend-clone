@@ -252,22 +252,30 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const totalPages = Math.ceil(totalDocs.length / pageSize);
 
-    // Assign serial numbers
+    // Assign serial numbers to the report data
     const reportWithSerial = report.map((row, index) => ({
       ...row,
       serialNumber: index + 1 + skip,
     }));
 
-    // Format the final result with pagination information
-    const paginatedResult = formatPaginationResult({
-      docs: reportWithSerial,
-      totalDocs: totalDocs.length,
-      totalPages,
-      currentPage: parseInt(page, 10),
-    });
+    // Manually create pagination response
+    const paginatedResult = {
+      records: reportWithSerial,
+      pagination: {
+        totalDocs: totalDocs.length,
+        totalPages,
+        currentPage: parseInt(page, 10),
+        nextPage:
+          parseInt(page, 10) < totalPages ? parseInt(page, 10) + 1 : null,
+        prevPage: parseInt(page, 10) > 1 ? parseInt(page, 10) - 1 : null,
+        limit: pageSize,
+      },
+    };
 
+    // Log the response for debugging
     console.log('Critical Stock Report with Pagination: ', paginatedResult);
 
+    // Return the response with success message and data
     return successResponse(
       'Critical Stock Report fetched successfully',
       paginatedResult,

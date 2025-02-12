@@ -110,6 +110,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       'packages/functions/src/pharmacyDashboard/stocks/getStocks.main',
     'GET /pharmacy-dashboard/stocks/paginate':
       'packages/functions/src/pharmacyDashboard/stocks/getPaginatedStocks.main',
+    'GET /pharmacy-dashboard/stocks-by-batch/paginate':
+      'packages/functions/src/pharmacyDashboard/stocks/getBatchWisePaginatedStocks.main',
     'GET /pharmacy-dashboard/stocks/{id}':
       'packages/functions/src/pharmacyDashboard/stocks/getStockById.main',
     'GET /pharmacy-dashboard/stocks/location/{id}':
@@ -166,6 +168,8 @@ export function PharmacyApiStack({ stack }: StackContext) {
       'packages/functions/src/pharmacyDashboard/internalConsumption/createInternalConsumption.main',
     'GET /pharmacy-dashboard/internal-consumption':
       'packages/functions/src/pharmacyDashboard/internalConsumption/getInternalConsumptions.main',
+    'GET /pharmacy-dashboard/internal-consumption/download/{id}':
+      'packages/functions/src/pharmacyDashboard/internalConsumption/downloadInternalConsumptionReport.main',
 
     // Pharmacy Invoice
     'GET /pharmacy-dashboard/invoice':

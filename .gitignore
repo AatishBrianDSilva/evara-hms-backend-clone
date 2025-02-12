@@ -18,3 +18,9 @@ node_modules
 # Include layers and it's contents
 !layers/**
 
+undefined/temp/chromium
+undefined/temp/libEGL.so
+undefined/temp/libvk_swiftshader.so
+undefined/temp/vk_swiftshader_icd.json
+undefined/temp/libvulkan.so.1
+undefined/temp/libGLESv2.so

@@ -302,6 +302,139 @@ const generateHeaderHtmlV2 = (
   }
 };
 
+const generateHtmlForInternalConsumption = async (data: IReportData) => {
+  try {
+    const logo = await getBase64ImageFromUrl(logoUrl);
+
+    console.log(
+      'Processing Internal Consumption Report:',
+      JSON.stringify(data, null, 2),
+    );
+
+    // ✅ Extract the Internal Consumption ID
+    const internalConsumptionDetails = data.sections.find(
+      section => section.title === 'Internal Consumption Details',
+    );
+    const debitNoteNumber =
+      internalConsumptionDetails?.content['Report Id'] || 'N/A';
+    const reportDate = internalConsumptionDetails?.content['Date'] || 'N/A';
+
+    console.log(`✅ Extracted Debit Note Number: ${debitNoteNumber}`);
+    console.log(`✅ Extracted Date: ${reportDate}`);
+
+    // ✅ Fetch clinic and branch details
+    const clinic = await Clinic.findOne({ code: data.clinic }).lean();
+    if (!clinic) {
+      console.error('❌ Clinic not found');
+      return null;
+    }
+
+    const branch = await Branch.findOne({
+      code: new RegExp(`^${data.branch.trim()}\\s*$`, 'i'),
+      clinicId: data.clinic,
+      isActive: true,
+      $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
+    }).lean();
+
+    if (!branch) {
+      console.error('❌ Branch not found:', {
+        branchCode: data.branch,
+        clinicId: data.clinic,
+      });
+      return null;
+    }
+
+    // ✅ Extract branch address
+    const addressSection = data.sections.find(
+      section => section.title === 'Address Information',
+    );
+    const branchAddress =
+      addressSection?.content['Branch Address'] ||
+      'Branch address not available';
+
+    console.log(`✅ Extracted Branch Address: ${branchAddress}`);
+
+    // ✅ Extract items
+    const itemsSection = data.sections.find(
+      section => section.title === 'Items',
+    );
+    const items = itemsSection?.content || [];
+
+    console.log(`✅ Extracted Items: ${JSON.stringify(items, null, 2)}`);
+
+    // ✅ Prepare template data
+    const templateData = {
+      branchAddress: branchAddress, // Pass Branch Address
+      items: items, // Pass Items
+      reportName: data.reportName || 'Internal Consumption Report',
+      styles: {
+        primaryColor: '#FF5C00',
+        secondaryColor: '#10535E',
+      },
+    };
+
+    console.log(
+      '🚀 Sending Data to Handlebars Template:',
+      JSON.stringify(templateData, null, 2),
+    );
+
+    // ✅ Generate header and footer HTML
+    const headerHtml = `
+      <header style="display: flex; justify-content: space-between; align-items: center; height: 120px; padding: 0 40px; border-bottom: 1px solid #333;">
+        <!-- Left: Logo -->
+        <div style="height: 100px;">
+          <img src="${logo}" alt="Logo" style="height: 100px; width: 100px; object-fit: contain;" />
+        </div>
+
+        <!-- Right: Debit Note & Date -->
+        <div style="text-align: right;">
+          <div style="font-size: 32px; color: #10535E; font-weight: bold;">Debit Note #${debitNoteNumber}</div>
+          <div style="font-size: 18px; color: black; font-style: italic;">Date: ${reportDate}</div>
+        </div>
+      </header>
+    `;
+
+    const footerHtml = generateFooterHtml();
+
+    // ✅ Fetch and compile the template with extracted data
+    const template = await getHtmlTemplate(data.templateType);
+    const htmlContent = generateHtml(template, templateData);
+
+    console.log(
+      '📌 Sections sent to template:',
+      JSON.stringify(data.sections, null, 2),
+    );
+
+    if (!htmlContent) {
+      console.error('❌ Failed to generate HTML content');
+      return null;
+    }
+
+    const fullHtml = `
+    ${headerHtml}
+    <main style="padding: 0 40px;">
+      ${htmlContent}
+    </main>
+    ${footerHtml}
+    `;
+
+    console.log('🔍 Final HTML Data:', {
+      headerHtml,
+      footerHtml,
+      htmlContent,
+    });
+
+    return {
+      headerHtml,
+      footerHtml,
+      htmlContent,
+    };
+  } catch (error) {
+    console.error('❌ Error generating HTML for Internal Consumption:', error);
+    return null;
+  }
+};
+
 export const main: SNSHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
@@ -327,6 +460,45 @@ export const main: SNSHandler = async (event, _context) => {
         data.templateType === EReportTemplateTypes.SpermDFI
       ) {
         await generateSpermDFIReport(data);
+        continue;
+      }
+
+      if (data.documentType === EDocumentTypes.InternalConsumption) {
+        console.log('Generating Internal Consumption report...');
+        const internalConsumptionHtml =
+          await generateHtmlForInternalConsumption(data);
+
+        if (!internalConsumptionHtml) {
+          console.error('Failed to generate HTML for Internal Consumption');
+          continue; // Skip processing if HTML generation failed
+        }
+
+        const internalConsumptionKey = `${data.clinic}/internal-consumption/${data.reportId}-${data.fileName}.pdf`;
+
+        console.log('Sending Internal Consumption Report to SQS:', {
+          headerHtml: internalConsumptionHtml.headerHtml,
+          footerHtml: internalConsumptionHtml.footerHtml,
+          htmlContent: internalConsumptionHtml.htmlContent,
+        });
+
+        await sendMessageToQueue({
+          headerHtml: internalConsumptionHtml.headerHtml,
+          footerHtml: internalConsumptionHtml.footerHtml,
+          htmlContent: internalConsumptionHtml.htmlContent,
+          bucket: data.bucket,
+          key: internalConsumptionKey,
+          patient: null,
+          doctor: null,
+          category: data.documentType,
+          reportName: data.reportName,
+          source_report_id: data.reportId,
+        });
+
+        // console.log(
+        //   'Sending Internal Consumption Report to SQS:',
+        //   JSON.stringify(sendMessageToQueue, null, 2),
+        // );
+
         continue;
       }
 
@@ -454,6 +626,10 @@ export const main: SNSHandler = async (event, _context) => {
       };
 
       await sendMessageToQueue(pdfGeneratorMessage);
+      console.log(
+        'Message sent to SQS:',
+        JSON.stringify(pdfGeneratorMessage, null, 2),
+      );
     }
   } catch (error) {
     console.error(error);
@@ -560,6 +736,10 @@ const generateSemenAnalysisReport = async (data: IReportData) => {
   };
 
   await sendMessageToQueue(pdfGeneratorMessage);
+  console.log(
+    'Message sent to SQS:',
+    JSON.stringify(pdfGeneratorMessage, null, 2),
+  );
 };
 
 const generateSpermDFIReport = async (data: IReportData) => {
@@ -650,4 +830,8 @@ const generateSpermDFIReport = async (data: IReportData) => {
   };
 
   await sendMessageToQueue(pdfGeneratorMessage);
+  console.log(
+    'Message sent to SQS:',
+    JSON.stringify(pdfGeneratorMessage, null, 2),
+  );
 };
