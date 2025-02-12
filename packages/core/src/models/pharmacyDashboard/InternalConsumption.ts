@@ -25,9 +25,15 @@ export interface IInternalConsumption extends Document {
     };
     batches: [IInternalConsumptionBatchDetail]; // Details about which batches quantities were deducted from
     quantity: number;
-    notes: string;
+    notes?: string; // Optional notes field for each item
+    patientId?: string;
   }[];
   createdBy: string;
+  report?: {
+    reportName: string;
+    bucket: string;
+    key: string;
+  }; // Field for storing PDF report information
 }
 
 const itemSchema = new Schema({
@@ -43,6 +49,7 @@ const itemSchema = new Schema({
     quantity: { type: Number, required: true },
   },
   notes: { type: String, required: false },
+  patientId: { type: String, ref: 'patients' },
 });
 
 const internalConsumptionSchema = new Schema(
@@ -53,6 +60,11 @@ const internalConsumptionSchema = new Schema(
     date: { type: Date, required: true },
     items: [itemSchema],
     createdBy: { type: String, required: true },
+    report: {
+      reportName: { type: String, required: false },
+      bucket: { type: String, required: false },
+      key: { type: String, required: false },
+    },
   },
   { timestamps: true },
 );

@@ -19,6 +19,7 @@ export enum EDocumentTypes {
   Refund = 'Refund',
   PurchaseOrder = 'PurchaseOrder',
   PurchaseOrderProcessed = 'PurchaseOrderProcessed',
+  InternalConsumption = 'InternalConsumption',
 }
 
 export enum EReportTemplateTypes {
@@ -31,6 +32,7 @@ export enum EReportTemplateTypes {
   POInvoiceProcessed = 'POInvoiceProcessed',
   SemenAnalysis = 'semen-analysis',
   SpermDFI = 'sperm-dfi',
+  InternalConsumptionn = 'internalConsumption',
 }
 
 export interface ISection {

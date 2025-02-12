@@ -7,11 +7,10 @@ import {
   attachPermissionsToRole,
   Bucket,
 } from 'sst/constructs';
-import { PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Duration } from 'aws-cdk-lib/core';
 import { BlockPublicAccess, Bucket as S3Bucket } from 'aws-cdk-lib/aws-s3';
 import { LayerVersion, Code } from 'aws-cdk-lib/aws-lambda';
-import { SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
 
 export function MainStack({ stack }: StackContext) {
   // Create a default role for the API
@@ -24,32 +23,6 @@ export function MainStack({ stack }: StackContext) {
       },
     ],
   });
-
-  // Add policy to allow the role to create network interfaces in the VPC
-  if (stack.stage === 'prod') {
-    role.addToPolicy(
-      new PolicyStatement({
-        actions: [
-          'ec2:CreateNetworkInterface',
-          'ec2:DescribeNetworkInterfaces',
-          'ec2:DeleteNetworkInterface',
-        ],
-        resources: ['*'],
-      }),
-    );
-  }
-
-  // Reference the VPC for the prod stage
-  const vpc = Vpc.fromLookup(stack, 'VPC', {
-    vpcId: 'vpc-0c8580ebee69ea0b4',
-  });
-
-  // Reference the security group for the prod stage
-  const securityGroup = SecurityGroup.fromSecurityGroupId(
-    stack,
-    'SecurityGroup',
-    'sg-039b91f80c8359e1a',
-  );
 
   // Reference the MongoDB URI for the prod stage
   const mongodb_uri =
@@ -66,9 +39,6 @@ export function MainStack({ stack }: StackContext) {
   const s3FileDeletionQueue = new Queue(stack, 'S3FileDeletionQueue', {
     consumer: {
       function: {
-        vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-        securityGroups:
-          stack.stage === 'prod' ? [securityGroup as any] : undefined,
         handler: 'packages/functions/src/files/conditionalDelete.main',
         environment: {
           MONGO_URI: mongodb_uri as string,
@@ -91,9 +61,6 @@ export function MainStack({ stack }: StackContext) {
     {
       handler: 'packages/functions/src/files/scheduleDelete.main',
       timeout: '30 seconds',
-      vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-      securityGroups:
-        stack.stage === 'prod' ? [securityGroup as any] : undefined,
       permissions: ['sqs', 's3'],
       environment: {
         S3_SCHEDULE_DELETE_QUEUE_URL: s3FileDeletionQueue.queueUrl,
@@ -239,9 +206,6 @@ export function MainStack({ stack }: StackContext) {
   const billingEstimationQueue = new Queue(stack, 'BillingEstimationQueue', {
     consumer: {
       function: {
-        vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-        securityGroups:
-          stack.stage === 'prod' ? [securityGroup as any] : undefined,
         handler:
           'packages/functions/src/patientDashboard/billings/estimation/automateEstimation.main',
         environment: {
@@ -291,9 +255,6 @@ export function MainStack({ stack }: StackContext) {
   const serviceGenerationQueue = new Queue(stack, 'ServiceGenerationQueue', {
     consumer: {
       function: {
-        vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-        securityGroups:
-          stack.stage === 'prod' ? [securityGroup as any] : undefined,
         handler:
           'packages/functions/src/patientDashboard/billings/estimation/automateServiceGeneration.main',
         timeout: 300,
@@ -346,9 +307,6 @@ export function MainStack({ stack }: StackContext) {
     {
       consumer: {
         function: {
-          vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-          securityGroups:
-            stack.stage === 'prod' ? [securityGroup as any] : undefined,
           handler: 'packages/functions/src/reports/pdfGenerator.main',
           timeout: 15,
           runtime: 'nodejs18.x',
@@ -389,9 +347,6 @@ export function MainStack({ stack }: StackContext) {
         subscriber: {
           type: 'function',
           function: new Function(stack, 'ReportHTMLGenerationFunction', {
-            vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-            securityGroups:
-              stack.stage === 'prod' ? [securityGroup as any] : undefined,
             handler: 'packages/functions/src/reports/htmlGenerator.main',
             timeout: '30 seconds',
             permissions: ['sqs'],
@@ -426,9 +381,6 @@ export function MainStack({ stack }: StackContext) {
       myAuthorizer: {
         type: 'lambda',
         function: new Function(stack, 'AuthorizerFunction', {
-          vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-          securityGroups:
-            stack.stage === 'prod' ? [securityGroup as any] : undefined,
           handler: 'packages/functions/src/authentication/authorizer.main',
           permissions: ['secretsmanager'],
           timeout: '10 seconds',
@@ -439,9 +391,6 @@ export function MainStack({ stack }: StackContext) {
 
     defaults: {
       function: {
-        vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-        securityGroups:
-          stack.stage === 'prod' ? [securityGroup as any] : undefined,
         timeout: '29 seconds',
         role: role as any,
         environment: {
@@ -521,55 +470,6 @@ export function MainStack({ stack }: StackContext) {
       'GET /admin_dev/automate-master-services':
         'packages/functions/src/admin_dev/automateMasterServices.main',
 
-      //Analytics Dashboard
-      //Billings
-      'GET /analytics/billings/patient-billings':
-        'packages/functions/src/analyticsDashboard/billings/patientBillings/get.main',
-      'GET /analytics/billings/patient-billings/download':
-        'packages/functions/src/analyticsDashboard/billings/patientBillings/download.main',
-      'GET /analytics/refundReports':
-        'packages/functions/src/analyticsDashboard/billings/getRefundReports.main',
-      'GET /analytics/billings/revenue-breakup':
-        'packages/functions/src/analyticsDashboard/billings/getRevenueBreakup.main',
-
-      //Pharmacy
-      'GET /analytics/pharmacy/sales-by-schedule':
-        'packages/functions/src/analyticsDashboard/pharmacy/getSalesBySchedule.main',
-      'GET /analytics/pharmacy/drugs-and-vendor':
-        'packages/functions/src/analyticsDashboard/pharmacy/getDrugsAndVendor.main',
-      'GET /analytics/pharmacy/expiry-details':
-        'packages/functions/src/analyticsDashboard/pharmacy/getExpiryDetails.main',
-      'GET /analytics/pharmacy/internal-consumption':
-        'packages/functions/src/analyticsDashboard/pharmacy/getInternalConsumption.main',
-      'GET /analytics/pharmacy/stock-summary':
-        'packages/functions/src/analyticsDashboard/pharmacy/stockSummary/getStockSummary.main',
-      'GET /analytics/pharmacy/stock-summary/download':
-        'packages/functions/src/analyticsDashboard/pharmacy/stockSummary/downloadStockSummary.main',
-      'GET /analytics/pharmacy/patient-return':
-        'packages/functions/src/analyticsDashboard/pharmacy/getPatientReturn.main',
-      'GET /analytics/pharmacy/critical-stocks':
-        'packages/functions/src/analyticsDashboard/pharmacy/getCriticalStocks.main',
-      'GET /analytics/pharmacy/pharmacy-report':
-        'packages/functions/src/analyticsDashboard/pharmacy/getPharmacyReport.main',
-      'GET /analytics/pharmacy/purchase-order-report':
-        'packages/functions/src/analyticsDashboard/pharmacy/getPurchaseOrderReport.main',
-
-      // Treatments-Testing
-      'GET /analytics/treatments-testing/investigation-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getInvestigationReports.main',
-      'GET /analytics/treatments-testing/procedure-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getProcedureReports.main',
-      'GET /analytics/treatments-testing/cryo-preservation-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getCryoPreservationReports.main',
-      'GET /analytics/treatments-testing/treatment-cycle-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getTreatmentCycleReports.main',
-      'GET /analytics/treatments-testing/service-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getServiceReports.main',
-      'GET /analytics/treatments-testing/patient-package-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getPatientPackageReports.main',
-      'GET /analytics/treatments-testing/master-package-reports':
-        'packages/functions/src/analyticsDashboard/treatmentsTesting/getMasterPackageReports.main',
-
       //scripts
       // 'GET /scripts/sellPriceMigration': {
       //   function: 'packages/functions/scripts/migrateSellPrice.main',
@@ -578,9 +478,48 @@ export function MainStack({ stack }: StackContext) {
     },
   });
 
+  const api2 = new Api(stack, 'Api2', {
+    authorizers: {
+      myAuthorizer: {
+        type: 'lambda',
+        function: new Function(stack, 'AuthorizerFunction2', {
+          vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
+          securityGroups:
+            stack.stage === 'prod' ? [securityGroup as any] : undefined,
+          handler: 'packages/functions/src/authentication/authorizer.main',
+          permissions: ['secretsmanager'],
+          timeout: '10 seconds',
+          logFormat: 'JSON',
+        }),
+      },
+    },
+
+    defaults: {
+      function: {
+        vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
+        securityGroups:
+          stack.stage === 'prod' ? [securityGroup as any] : undefined,
+        timeout: '29 seconds',
+        role: role as any,
+        environment: {
+          MONGO_URI: mongodb_uri as string,
+          BILLING_ESTIMATION_TOPIC_ARN: billingEstimationTopic.topicArn,
+          SERVICE_GENERATION_TOPIC_ARN: serviceGenerationTopic.topicArn,
+          REPORT_HTML_GENERATION_TOPIC_ARN: reportHTMLGenerationTopic.topicArn,
+          STAGE: stack.stage,
+          REGION: stack.region,
+        },
+        permissions: ['sns', 'sqs', 'secretsmanager', 's3'],
+        logFormat: 'JSON',
+      },
+      authorizer: 'myAuthorizer',
+    },
+  });
+
   // Show the URLs in the output
   stack.addOutputs({
     ApiEndpoint: api.url,
+    Api2Endpoint: api2.url,
     UserProfileBucket: userProfileBucket.bucketName,
     UserReportBucket: userReportBucket.bucketName,
     PharmacyInvoicesBucket: pharmacyInvoicesBucket.bucketName,
@@ -591,5 +530,6 @@ export function MainStack({ stack }: StackContext) {
   return {
     api,
     pharmacyInvoicesBucket,
+    api2,
   };
 }

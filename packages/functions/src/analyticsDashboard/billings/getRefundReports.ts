@@ -53,35 +53,8 @@ const fetchRefundsData = async ({
     sort,
   });
 
-  const { patientCode, patientName } = parseSearchQuery(searchQuery);
-
   // Build match condition
   const matchCondition: any = { branchId };
-  if (patientCode) {
-    matchCondition.patientCode = { $regex: patientCode, $options: 'i' };
-  }
-  if (patientName) {
-    const matchingPatients = await Patient.find({
-      clinicId,
-      branchId,
-      $or: [
-        { firstName: { $regex: patientName, $options: 'i' } },
-        { lastName: { $regex: patientName, $options: 'i' } },
-      ],
-    }).select('patientId');
-
-    const matchingPatientCodes = matchingPatients.map(p => p.patientId);
-
-    matchCondition.patientCode = matchingPatientCodes.length
-      ? { $in: matchingPatientCodes }
-      : '__NO_MATCH__';
-  }
-
-  console.log('Match condition for refunds:', matchCondition);
-
-  // Total matching refunds
-  const totalDocs = await PatientRefund.countDocuments(matchCondition);
-  console.log('Total matching refunds:', totalDocs);
 
   // Aggregation pipeline
   const aggregationPipeline: any[] = [
@@ -94,36 +67,43 @@ const fetchRefundsData = async ({
         as: 'patientDetails',
       },
     },
-    { $unwind: '$patientDetails' },
+    { $unwind: { path: '$patientDetails', preserveNullAndEmptyArrays: true } },
     {
-      $project: {
-        _id: 1,
-        refundDetails: 1,
-        patientCode: 1,
-        'patientDetails.firstName': 1,
-        'patientDetails.lastName': 1,
+      $addFields: {
         patientName: {
-          $concat: [
-            '$patientDetails.firstName',
-            ' ',
-            '$patientDetails.lastName',
-          ],
+          $trim: {
+            input: {
+              $concat: [
+                { $ifNull: ['$patientDetails.firstName', ''] },
+                ' ',
+                { $ifNull: ['$patientDetails.lastName', ''] },
+              ],
+            },
+          },
         },
-        createdAt: 1,
       },
     },
-    { $sort: sort },
   ];
 
-  // Add pagination stages only if limit is not -1
-  if (limit !== -1) {
-    const skip = (page - 1) * limit;
-    console.log('Skip value:', skip);
-
-    aggregationPipeline.push({ $skip: skip }, { $limit: limit });
-  } else {
-    console.log('Returning all records without pagination');
+  // If a search query is provided, apply regex-based filtering across multiple fields
+  if (searchQuery) {
+    const searchRegex = new RegExp(searchQuery, 'i');
+    aggregationPipeline.push({
+      $match: {
+        $or: [
+          { refundId: searchRegex },
+          { patientCode: searchRegex },
+          { patientName: searchRegex },
+        ],
+      },
+    });
   }
+
+  aggregationPipeline.push(
+    { $sort: sort },
+    // Add pagination stages only if limit is not -1
+    ...(limit !== -1 ? [{ $skip: (page - 1) * limit }, { $limit: limit }] : []),
+  );
 
   console.log(
     'Aggregation pipeline:',
@@ -132,6 +112,10 @@ const fetchRefundsData = async ({
 
   // Fetch data
   const records = await PatientRefund.aggregate(aggregationPipeline);
+
+  // Total matching refunds
+  const totalDocs = await PatientRefund.countDocuments(matchCondition);
+  console.log('Total matching refunds:', totalDocs);
 
   // If limit is -1, return all records without pagination metadata
   return {
