@@ -32,6 +32,8 @@ export const PatientJourneyStack = ({ stack }: StackContext) => {
 
     'POST /treatment-advice/add':
       'packages/functions/src/patientDashboard/treatmentAdvice/addTreatmentAdvice.main',
+    'PUT /treatment-advice/{id}':
+      'packages/functions/src/patientDashboard/treatmentAdvice/editTreatmentAdvice.main',
     'GET /treatment-advice':
       'packages/functions/src/patientDashboard/treatmentAdvice/getTreatmentAdvices.main',
     'DELETE /treatment-advice/{id}':
