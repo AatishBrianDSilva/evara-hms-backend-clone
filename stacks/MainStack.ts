@@ -373,6 +373,13 @@ export function MainStack({ stack }: StackContext) {
     },
   );
 
+  const authorizerFunction = new Function(stack, 'AuthorizerFunction', {
+    handler: 'packages/functions/src/authentication/authorizer.main',
+    permissions: ['secretsmanager'],
+    timeout: '10 seconds',
+    logFormat: 'JSON',
+  });
+
   /**
    * Represents the API configuration for the MainStack.
    */
@@ -380,12 +387,7 @@ export function MainStack({ stack }: StackContext) {
     authorizers: {
       myAuthorizer: {
         type: 'lambda',
-        function: new Function(stack, 'AuthorizerFunction', {
-          handler: 'packages/functions/src/authentication/authorizer.main',
-          permissions: ['secretsmanager'],
-          timeout: '10 seconds',
-          logFormat: 'JSON',
-        }),
+        function: authorizerFunction,
       },
     },
 
@@ -478,27 +480,16 @@ export function MainStack({ stack }: StackContext) {
     },
   });
 
-  const api2 = new Api(stack, 'Api2', {
+  const analyticsApi = new Api(stack, 'AnalyticsApi', {
     authorizers: {
       myAuthorizer: {
         type: 'lambda',
-        function: new Function(stack, 'AuthorizerFunction2', {
-          vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-          securityGroups:
-            stack.stage === 'prod' ? [securityGroup as any] : undefined,
-          handler: 'packages/functions/src/authentication/authorizer.main',
-          permissions: ['secretsmanager'],
-          timeout: '10 seconds',
-          logFormat: 'JSON',
-        }),
+        function: authorizerFunction,
       },
     },
 
     defaults: {
       function: {
-        vpc: stack.stage === 'prod' ? (vpc as any) : undefined,
-        securityGroups:
-          stack.stage === 'prod' ? [securityGroup as any] : undefined,
         timeout: '29 seconds',
         role: role as any,
         environment: {
@@ -519,7 +510,7 @@ export function MainStack({ stack }: StackContext) {
   // Show the URLs in the output
   stack.addOutputs({
     ApiEndpoint: api.url,
-    Api2Endpoint: api2.url,
+    AnalyticsApiEndpoint: analyticsApi.url,
     UserProfileBucket: userProfileBucket.bucketName,
     UserReportBucket: userReportBucket.bucketName,
     PharmacyInvoicesBucket: pharmacyInvoicesBucket.bucketName,
@@ -530,6 +521,6 @@ export function MainStack({ stack }: StackContext) {
   return {
     api,
     pharmacyInvoicesBucket,
-    api2,
+    analyticsApi,
   };
 }

@@ -2,9 +2,9 @@ import { StackContext, use } from 'sst/constructs';
 import { MainStack } from './MainStack';
 
 export const AnalyticsApiStack = ({ stack }: StackContext) => {
-  const { api2 } = use(MainStack);
+  const { analyticsApi } = use(MainStack);
 
-  api2.addRoutes(stack, {
+  analyticsApi.addRoutes(stack, {
     //Analytics Dashboard
     //Billings
     'GET /analytics/billings/patient-billings':
