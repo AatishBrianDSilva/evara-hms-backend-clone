@@ -45,7 +45,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Log all data in the collection
     const allData = await TreatmentAdvices.find().lean();
-    console.log('All Treatment Advices Data:', allData);
+    // console.log('All Treatment Advices Data:', allData);
 
     // Pagination options
     const options: IPaginateOptions = {
