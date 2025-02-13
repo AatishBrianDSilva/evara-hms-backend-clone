@@ -186,24 +186,24 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     session.endSession();
 
     // 🔹 Generate Report Data
-    console.log('🔹 Generating Report Data');
-    const reportData = processInternalConsumptionReportData(
-      internalConsumption,
-      branch,
-      stocks,
-      drugs,
-    );
+    // console.log('🔹 Generating Report Data');
+    // const reportData = processInternalConsumptionReportData(
+    //   internalConsumption,
+    //   branch,
+    //   stocks,
+    //   drugs,
+    // );
 
-    console.log('📌 Report Data:', JSON.stringify(reportData, null, 2));
+    // console.log('📌 Report Data:', JSON.stringify(reportData, null, 2));
 
     // 🔹 Send to SNS for report generation
-    console.log('🔹 Publishing Report Data to SNS');
-    await SNSService.publishMessage({
-      Message: JSON.stringify(reportData),
-      TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
-    });
+    // console.log('🔹 Publishing Report Data to SNS');
+    // await SNSService.publishMessage({
+    //   Message: JSON.stringify(reportData),
+    //   TopicArn: process.env.REPORT_HTML_GENERATION_TOPIC_ARN,
+    // });
 
-    console.log('✅ Report Published Successfully');
+    // console.log('✅ Report Published Successfully');
 
     return successResponse(
       'Internal Consumption added and Stock updated successfully',
