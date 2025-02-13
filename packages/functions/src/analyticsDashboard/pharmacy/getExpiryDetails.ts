@@ -194,27 +194,56 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       { $limit: parseInt(limit, 10) },
     ];
 
-    // Fetch paginated and aggregated pharmacy stock items
+    // Fetch total documents before pagination
+    const totalDocsPipeline = [
+      {
+        $lookup: {
+          from: 'drugitems',
+          localField: 'item',
+          foreignField: '_id',
+          as: 'drugItem',
+        },
+      },
+      { $unwind: { path: '$drugItem', preserveNullAndEmptyArrays: true } },
+      {
+        $match: matchCondition, // Apply the same filters here
+      },
+      {
+        $count: 'count', // Get total count of matching documents
+      },
+    ];
+
+    // Execute the total count aggregation
+    const totalCountResult = await PharmacyStock.aggregate(totalDocsPipeline);
+    const totalDocs =
+      totalCountResult.length > 0 ? totalCountResult[0].count : 0;
+
+    // Execute the aggregation pipeline with pagination
     const stocks = await PharmacyStock.aggregate(aggregationPipeline);
 
-    // Fetch the total document count for pagination
-    const totalDocs = await PharmacyStock.countDocuments(matchCondition);
+    // Calculate total pages
     const totalPages = Math.ceil(totalDocs / pageSize);
 
     // Assign serial numbers to the rows based on the page and limit
     const serialStart = (parseInt(page, 10) - 1) * pageSize + 1;
     const expiryReportWithSerial = stocks.map((row, index) => ({
       ...row,
-      serialNumber: serialStart + index, // Ensure serial number starts from the correct value
+      serialNumber: serialStart + index,
     }));
 
-    // Format the final result with pagination information
-    const paginatedResult = formatPaginationResult({
-      docs: expiryReportWithSerial,
-      totalDocs,
-      totalPages,
-      currentPage: parseInt(page, 10),
-    });
+    // Manually create pagination response
+    const paginatedResult = {
+      records: expiryReportWithSerial,
+      pagination: {
+        totalDocs,
+        totalPages,
+        currentPage: parseInt(page, 10),
+        nextPage:
+          parseInt(page, 10) < totalPages ? parseInt(page, 10) + 1 : null,
+        prevPage: parseInt(page, 10) > 1 ? parseInt(page, 10) - 1 : null,
+        limit: pageSize,
+      },
+    };
 
     console.log(
       'Final Expiry Details Report with Pagination: ',

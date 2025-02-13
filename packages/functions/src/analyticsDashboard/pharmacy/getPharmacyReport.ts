@@ -2,7 +2,7 @@ import { APIGatewayProxyHandler } from 'aws-lambda';
 import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
 import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
-import { log } from 'console';
+import formatPaginationResult from '@evara-backend/core/src/lib/utils/formatPaginationResult';
 import { PatientPharmacy } from '@evara-backend/core/src/models/patientDashboard/PatientPharmacy';
 import Patient from '@evara-backend/core/models/Patients';
 import Doctors from '@evara-backend/core/src/models/mastersDashboard/Doctors';
@@ -27,10 +27,22 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Connect to MongoDB
     await connectMongoDb();
 
-    // Extract query string parameters for date filtering
-    const { saleStartDate, saleEndDate } = event.queryStringParameters || {};
+    // Extract query string parameters for pagination and filtering
+    const params = event.queryStringParameters || {};
+    const {
+      page = '1',
+      limit = '25',
+      paginate = 'true',
+      saleStartDate,
+      saleEndDate,
+    } = params;
 
-    console.log('Backend params', event.queryStringParameters);
+    const isPaginationEnabled = paginate === 'true';
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    console.log('Backend params', params);
 
     // Define population paths for related models
     const populatePaths = [
@@ -71,9 +83,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
     }
 
-    // Fetch all records from PatientPharmacy with date filtering
+    // Fetch total number of records for pagination
+    const totalRecords = await PatientPharmacy.countDocuments(query);
+
+    // Fetch paginated records from PatientPharmacy
     const pharmacyData = await PatientPharmacy.find(query)
       .populate(populatePaths)
+      .skip(isPaginationEnabled ? skip : 0)
+      .limit(isPaginationEnabled ? limitNumber : 0)
       .lean();
 
     // Extract unique patient IDs
@@ -108,19 +125,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         return sum + (detail.quantity || 0);
       }, 0);
 
-        // Calculate total item price (sum of mrp * quantity for all details)
-        const totalItemPrice = record.item.details.reduce((sum, detail) => {
+      // Calculate total item price (sum of mrp * quantity for all details)
+      const totalItemPrice =
+        record.item.details.reduce((sum, detail) => {
           const itemPrice = (detail.mrp || 0) * (detail.quantity || 0);
           return sum + itemPrice;
         }, 0) || null; // Set to null if no details are present
-  
 
       return {
         ...record,
         id: record._id, // Ensure unique `id` for each row
         totalQuantity, // Include the calculated totalQuantity
         totalItemPrice, // Include the calculated totalItemPrice
-
         patientDetails: {
           fullName:
             `${patientDetails.firstName || ''} ${patientDetails.lastName || ''}`.trim(),
@@ -129,9 +145,28 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       };
     });
 
-    return successResponse('Success', {
+    // Calculate total pages
+    const totalPages = isPaginationEnabled
+      ? Math.ceil(totalRecords / limitNumber)
+      : 1;
+
+    // Format the response with pagination details
+    const pagination = {
+      totalDocs: totalRecords,
+      totalPages,
+      currentPage: pageNumber,
+      nextPage: pageNumber < totalPages ? pageNumber + 1 : null,
+      prevPage: pageNumber > 1 ? pageNumber - 1 : null,
+      limit: limitNumber,
+    };
+
+    // Combine data and pagination into the final response structure
+    const result = {
       records: combinedData,
-    });
+      pagination,
+    };
+
+    return successResponse('Success', result);
   } catch (error) {
     console.error('Error fetching data:', error);
     return errorResponse(error);

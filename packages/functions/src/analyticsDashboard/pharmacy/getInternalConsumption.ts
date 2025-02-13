@@ -19,22 +19,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await connectMongoDb();
 
     const params = event.queryStringParameters || {};
-    const {
-      page = '1',
-      limit = '25',
-      saleStartDate, // Start date for filtering
-      saleEndDate, // End date for filtering
-    } = params;
+    const { page = '1', limit = '25', saleStartDate, saleEndDate } = params;
 
-    console.log('Params', params);
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * limitNumber;
 
-    // Calculate skip and limit for pagination
-    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
-    const pageSize = parseInt(limit, 10);
-
-    // Build match condition for allocDate filtering
     const matchCondition: any = {
-      branchId: auth.branchId, // Filter by branch
+      branchId: auth.branchId,
     };
 
     if (saleStartDate || saleEndDate) {
@@ -42,22 +34,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       const endDate = saleEndDate ? new Date(saleEndDate) : null;
 
       matchCondition.date = {
-        ...(startDate && { $gte: new Date(startDate.setHours(0, 0, 0, 0)) }), // Start of the day
-        ...(endDate && { $lte: new Date(endDate.setHours(23, 59, 59, 999)) }), // End of the day
+        ...(startDate && { $gte: new Date(startDate.setHours(0, 0, 0, 0)) }),
+        ...(endDate && { $lte: new Date(endDate.setHours(23, 59, 59, 999)) }),
       };
     }
 
-    // Log the match condition for debugging
-    console.log('Match Condition for Date Filtering: ', matchCondition);
-
-    // Aggregation pipeline for internal consumption report
-    const aggregationPipeline = [
-      { $match: matchCondition }, // Apply date filter if provided
+    const pipeline: any[] = [
+      { $match: matchCondition },
       { $unwind: '$items' },
       { $unwind: '$items.batches' },
       {
         $lookup: {
-          from: 'pharmacystocks', // Collection name for PharmacyStock
+          from: 'pharmacystocks',
           localField: 'items.item',
           foreignField: '_id',
           as: 'pharmacyStock',
@@ -66,7 +54,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       { $unwind: { path: '$pharmacyStock', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
-          from: 'drugitems', // Collection name for DrugItem
+          from: 'drugitems',
           localField: 'pharmacyStock.item',
           foreignField: '_id',
           as: 'drugItem',
@@ -75,41 +63,80 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       { $unwind: { path: '$drugItem', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
-          from: 'drugcategories', // Collection name for DrugCategory
+          from: 'drugcategories',
           localField: 'drugItem.category',
           foreignField: '_id',
-          as: 'category',
+          as: 'drugCategory',
         },
       },
-      { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$drugCategory', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
-          from: 'druglocations', // Collection name for DrugLocation
+          from: 'druglocations',
           localField: 'items.transferFrom.location',
           foreignField: '_id',
           as: 'location',
         },
       },
       { $unwind: { path: '$location', preserveNullAndEmptyArrays: true } },
+
+      // Fix for cost calculation
       {
         $addFields: {
-          centre: { $concat: ['$clinicId', '$branchId'] },
+          centre: { $concat: ['$clinicId', '-', '$branchId'] },
           pharmacyDrugName: '$drugItem.name',
           pharmacyDrugCode: '$drugItem.code',
           locationName: '$location.location',
           locationCode: { $ifNull: ['$location._id', 'N/A'] },
-          category: { $ifNull: ['$category.name', 'N/A'] },
-          categoryCode: { $ifNull: ['$category._id', 'N/A'] },
+          category: { $ifNull: ['$drugCategory.name', 'N/A'] },
+          categoryCode: { $ifNull: ['$drugCategory._id', 'N/A'] },
           quantity: '$items.batches.deductedQuantity',
-          unitCost: '$pharmacyStock.sellPrice',
+
+          unitCost: {
+            $ifNull: [
+              { $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0] },
+              0,
+            ],
+          },
           totalCost: {
             $multiply: [
               '$items.batches.deductedQuantity',
-              '$pharmacyStock.sellPrice',
+              {
+                $ifNull: [
+                  { $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0] },
+                  0,
+                ],
+              },
             ],
           },
-          tax: 0, // Assuming tax is 0 for now
-          totalTax: 0, // Assuming total tax is 0 for now
+          tax: {
+            $multiply: [
+              {
+                $ifNull: [
+                  { $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0] },
+                  0,
+                ],
+              },
+              0.1, // Assuming 10% tax
+            ],
+          },
+          totalTax: {
+            $multiply: [
+              '$items.batches.deductedQuantity',
+              {
+                $multiply: [
+                  {
+                    $ifNull: [
+                      { $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0] },
+                      0,
+                    ],
+                  },
+                  0.1, // 10% tax
+                ],
+              },
+            ],
+          },
+
           allocDate: '$date',
           addedBy: '$createdBy',
           remarks: { $ifNull: ['$items.notes', 'N/A'] },
@@ -117,6 +144,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
       {
         $project: {
+          _id: 0,
           serialNumber: 1,
           centre: 1,
           pharmacyDrugName: 1,
@@ -137,24 +165,18 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
       { $sort: { allocDate: -1 } },
       { $skip: skip },
-      { $limit: pageSize },
+      { $limit: limitNumber },
     ];
 
-    // Log the aggregation pipeline for debugging
-    // console.log("Aggregation Pipeline: ", JSON.stringify(aggregationPipeline, null, 2));
-
-    // Fetch aggregated internal consumption data
+    // Run the aggregation pipeline
     const internalConsumptionReport =
-      await InternalConsumption.aggregate(aggregationPipeline);
-
-    // Log the report data for debugging
-    // console.log("Internal Consumption Report Data: ", internalConsumptionReport);
+      await InternalConsumption.aggregate(pipeline);
 
     // Fetch the total document count for pagination
-    const totalDocs = await InternalConsumption.countDocuments(matchCondition); // Apply match condition to count
-    const totalPages = Math.ceil(totalDocs / pageSize);
+    const totalDocs = await InternalConsumption.countDocuments(matchCondition);
+    const totalPages = Math.ceil(totalDocs / limitNumber);
 
-    // Add Serial Numbers to each row
+    // Add serial numbers to each row
     const reportWithSerial = internalConsumptionReport.map((row, index) => ({
       ...row,
       serialNumber: index + 1 + skip,
@@ -167,16 +189,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       totalPages,
       currentPage: parseInt(page, 10),
     });
-
-    // Log the final result for debugging
-    // console.log("Final Internal Consumption Report with Pagination: ", paginatedResult);
-
     return successResponse(
       'Internal Consumption Report fetched successfully',
       paginatedResult,
     );
   } catch (error) {
-    // Log the error details for debugging
     console.error('Error in internalConsumptionReport API: ', error);
     return errorResponse(error);
   }

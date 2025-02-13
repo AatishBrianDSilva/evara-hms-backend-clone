@@ -41,6 +41,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         { firstName: new RegExp(searchQuery, 'i') },
         { lastName: new RegExp(searchQuery, 'i') },
         { mobile: new RegExp(searchQuery, 'i') },
+        { donorId: new RegExp(searchQuery, 'i') }, // Search by donorId
       ];
     }
 

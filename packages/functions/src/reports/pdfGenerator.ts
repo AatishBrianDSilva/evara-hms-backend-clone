@@ -12,6 +12,7 @@ import {
   IPDFGeneratorMessage,
 } from '@evara-backend/core/src/lib/types/global';
 import { PurchaseOrder } from '@evara-backend/core/models/pharmacyDashboard/PurchaseOrder';
+import { InternalConsumption } from '@evara-backend/core/models/pharmacyDashboard/InternalConsumption';
 
 chromium.setHeadlessMode = true;
 chromium.setGraphicsMode = true;
@@ -32,7 +33,7 @@ const convertHtmlToPdf = async (
       headless: false,
     });
     console.log("Browser launched for stage 'ratandeeparunkumar'");
-  } else if (STAGE === 'aatishbrian') {
+  } else if (STAGE === 'Brian-D-Silva') {
     browser = await puppeteer.launch({
       executablePath:
         "C:/Users/Brian D'Silva/OneDrive/Desktop/chrome-win/chrome.exe",
@@ -119,6 +120,17 @@ export const main: SQSHandler = async (event, context) => {
         source_report_id,
       });
 
+      console.log('HTML Content Length:', htmlContent.length);
+      console.log('Category for PDF conversion:', category);
+
+      if (!htmlContent || htmlContent.trim() === '') {
+        console.error('HTML content is empty. Skipping PDF generation.');
+        continue;
+      }
+
+      console.log('Header HTML:', headerHtml);
+      console.log('Footer HTML:', footerHtml);
+
       const pdfBuffer = await convertHtmlToPdf(
         htmlContent,
         headerHtml,
@@ -163,6 +175,38 @@ export const main: SQSHandler = async (event, context) => {
           { upsert: true, new: true },
         );
         console.log('Patient report updated:', updatedPatientReport);
+      } else if (category === EDocumentTypes.InternalConsumption) {
+        console.log(
+          'Handling Internal Consumption report for ID:',
+          source_report_id,
+        );
+
+        console.log(
+          'Looking for Internal Consumption with ID:',
+          source_report_id,
+        );
+
+        // Find the Internal Consumption record by its ID
+        const internalConsumption =
+          await InternalConsumption.findById(source_report_id);
+
+        if (internalConsumption) {
+          // Update the report details in the document
+          internalConsumption.report = {
+            reportName: reportName,
+            bucket: s3Params.Bucket,
+            key: s3Params.Key,
+          };
+
+          await internalConsumption.save();
+          console.log(
+            `Internal Consumption ${source_report_id} updated with report.`,
+          );
+        } else {
+          console.error(
+            `Internal Consumption with ID ${source_report_id} not found.`,
+          );
+        }
       } else if (category === EDocumentTypes.Invoice && patient) {
         console.log('Updating PatientInvoice for report ID:', source_report_id);
         const updatedPatientInvoice = await PatientInvoice.findOneAndUpdate(
