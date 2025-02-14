@@ -416,6 +416,8 @@ export function MainStack({ stack }: StackContext) {
       'GET /patients': 'packages/functions/src/patients/getPatients.main',
       'GET /patients/{id}':
         'packages/functions/src/patients/getPatientById.main',
+      'GET /patients/all':
+        'packages/functions/src/patients/getAllPatients.main',
       'PUT /patients/{id}': 'packages/functions/src/patients/editPatient.main',
       'DELETE /patients/{id}':
         'packages/functions/src/patients/deletePatient.main',

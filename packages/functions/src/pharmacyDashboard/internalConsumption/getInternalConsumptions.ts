@@ -137,6 +137,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
                   bucket: '$report.bucket',
                   key: '$report.key',
                 },
+                createdAt: 1,
+                updatedAt: 1,
               },
             },
           ],
