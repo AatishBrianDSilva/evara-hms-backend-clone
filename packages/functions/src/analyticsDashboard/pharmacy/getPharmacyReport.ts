@@ -128,7 +128,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       // Calculate total item price (sum of mrp * quantity for all details)
       const totalItemPrice =
         record.item.details.reduce((sum, detail) => {
-          const itemPrice = (detail.mrp || 0) * (detail.quantity || 0);
+          const packSize = detail.packSize || 1; // Default to 1 if packSize is not available
+          const itemPrice = (detail.mrp / packSize) * (detail.quantity || 0);
           return sum + itemPrice;
         }, 0) || null; // Set to null if no details are present
 
