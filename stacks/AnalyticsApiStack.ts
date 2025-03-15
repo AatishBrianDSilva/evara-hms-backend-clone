@@ -11,6 +11,10 @@ export const AnalyticsApiStack = ({ stack }: StackContext) => {
       'packages/functions/src/analyticsDashboard/billings/patientBillings/get.main',
     'GET /analytics/billings/patient-billings/download':
       'packages/functions/src/analyticsDashboard/billings/patientBillings/download.main',
+    'GET /analytics/billings/patient-payments':
+      'packages/functions/src/analyticsDashboard/billings/patientPayments/get.main',
+    'GET /analytics/billings/patient-payments/download':
+      'packages/functions/src/analyticsDashboard/billings/patientPayments/download.main',
     'GET /analytics/refundReports':
       'packages/functions/src/analyticsDashboard/billings/getRefundReports.main',
     'GET /analytics/billings/refund-reports/download':

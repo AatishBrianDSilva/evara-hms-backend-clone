@@ -109,10 +109,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       console.log('Payments', payments);
 
+      const roundToTwo = (num: number) => Math.round(num * 100) / 100;
+      const roundedTotalPaid = roundToTwo(newTotalPaid);
+      const roundedGrandTotal = roundToTwo(billing.grandTotal);
+
       billing.status =
-        newTotalPaid >= billing.grandTotal
+        roundedTotalPaid >= roundedGrandTotal
           ? EPatientBillingStatus.Paid
           : EPatientBillingStatus.Pending;
+
+      // billing.status =
+      //   newTotalPaid >= billing.grandTotal
+      //     ? EPatientBillingStatus.Paid
+      //     : EPatientBillingStatus.Pending;
 
       // Log the branchId and clinicId extracted from the auth
       const branchId = auth.branchId;
@@ -134,8 +143,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       console.log('Branch found:', branch);
 
-      console.log('Billing data for report:', billing);
-      console.log('Patient data for report:', data);
+      // console.log('Billing data for report:', billing);
+      // console.log('Patient data for report:', data);
 
       // Generate Report for payment
       if (payments) {
@@ -146,7 +155,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           billing,
           branch,
         );
-        // console.log("Report Data: ", JSON.stringify(report, null, 2));
+        console.log('Report Data: ', JSON.stringify(report, null, 2));
 
         // Send to SNS
         await SNSService.publishMessage({
@@ -319,18 +328,26 @@ const processDataForReport = (
 
   // Create the summary content. Exclude CGST and SGST if it's "Pharmacy"
   let summaryContent = {
-    totalAmount: formatToIndianCurrencyFormat(totalAmount),
+    subTotal: formatToIndianCurrencyFormat(billing.amount),
+    // Include CGST and SGST only if it's not "Pharmacy" billType
+    ...(billing.billType == 'Pharmacy' && {
+      CGST: billing.tax
+        ? formatToIndianCurrencyFormat(
+            Math.round((billing.tax / 2) * 100) / 100,
+          )
+        : null,
+      SGST: billing.tax
+        ? formatToIndianCurrencyFormat(
+            Math.round((billing.tax / 2) * 100) / 100,
+          )
+        : null,
+    }),
     paidAmount: formatToIndianCurrencyFormat(billing.totalPaid),
     lessDiscount: billing.discount
       ? formatToIndianCurrencyFormat(billing.discount)
       : formatToIndianCurrencyFormat(0),
     payableAmount: formatToIndianCurrencyFormat(billing.totalDues),
     // "Sub Total": formatToIndianCurrencyFormat(billing.subTotal),
-    // Include CGST and SGST only if it's not "Pharmacy" billType
-    ...(billing.billType !== 'Pharmacy' && {
-      CGST: billing.tax ? billing.tax / 2 : null,
-      SGST: billing.tax ? billing.tax / 2 : null,
-    }),
   };
 
   const sections = [
@@ -372,7 +389,7 @@ const processDataForReport = (
   reportData.reportName = `Invoice ${billing.billingId}`;
   reportData.sections = sanitizeInvoiceData(sections);
 
-  console.log('Sanitized data', reportData.sections);
+  // console.log('Sanitized data', reportData.sections);
 
   return reportData;
 };
