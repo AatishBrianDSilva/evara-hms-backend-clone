@@ -37,11 +37,21 @@
       .summary-row { display: flex; justify-content: space-between;
       margin-bottom: 3px; /* Reduced space between summary rows */ }
       .branch-address { text-align: center; padding: 10px 0; font-size: 1em;
-      color: #333; }
+      color: #333;  }
+       h1.tax-invoice {
+        color: grey;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+        text-decoration: underline;
+        margin: 10px 0;
+      }
     </style>
   </head>
   <body>
     <main>
+      <h1 class='tax-invoice'>TAX INVOICE</h1>
+
       <div class='gst-box'>
         {{#getSectionByTitle sections 'License'}}
           {{#with content}}
