@@ -379,18 +379,12 @@ const processDataForReport = async (
 
   let summaryContent = {
     subTotal: formatToIndianCurrencyFormat(billing.amount),
-    ...(billing.billType === 'Pharmacy' && {
-      CGST: billing.tax
-        ? formatToIndianCurrencyFormat(
-            Math.round((billing.tax / 2) * 100) / 100,
-          )
-        : null,
-      SGST: billing.tax
-        ? formatToIndianCurrencyFormat(
-            Math.round((billing.tax / 2) * 100) / 100,
-          )
-        : null,
-    }),
+    CGST: billing.tax
+      ? formatToIndianCurrencyFormat(Math.round((billing.tax / 2) * 100) / 100)
+      : formatToIndianCurrencyFormat(0), // Set to 0.00 if tax is missing
+    SGST: billing.tax
+      ? formatToIndianCurrencyFormat(Math.round((billing.tax / 2) * 100) / 100)
+      : formatToIndianCurrencyFormat(0), // Set to 0.00 if tax is missing
     paidAmount: formatToIndianCurrencyFormat(billing.totalPaid),
     lessDiscount: billing.discount
       ? formatToIndianCurrencyFormat(billing.discount)
