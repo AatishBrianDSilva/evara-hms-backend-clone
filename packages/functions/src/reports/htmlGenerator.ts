@@ -194,6 +194,29 @@ const generateHeaderHtml = (
         <hr style="border: 1px solid #000; margin: 10px 0;">
       </header>
     `;
+  } else if (documentType === 'Invoice') {
+    // Extract PO number and date from "Purchase Order Details" section
+    const branchSection = sections.find(
+      (section: any) => section.title === 'Branch Details',
+    );
+    const branchAddress = branchSection
+      ? branchSection.content.Address
+      : 'Address not available';
+
+    return `
+<header style="display: flex; justify-content: space-between; align-items: flex-start; width: 94%; padding: 1px 0; box-sizing: border-box; margin-left: auto; margin-right: auto;">
+  <div style="width: 140px; height: 67px; padding-top: 10px;">
+    <img src="${header.logo}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
+  </div>
+  <div style="flex-grow: 1; text-align: center;">
+    <p style="margin: 0 0 2px 0; font-size: 16px; font-weight: bold; color: #808080 !important; text-decoration: underline;">TAX INVOICE</p>
+    <p style="margin: 0; font-size: 18px; font-weight: bold;">Evara Fertility & IVF Centre</p>
+    <p style="margin: 0; font-size: 14px">(A Unit of Evara Health Private Limited)</p>
+    <p style="margin: 0; font-size: 14px">${branchAddress}</p>
+  </div>
+  <div style="width: 140px;"></div>
+</header>
+    `;
   }
 
   // Default header for other document types

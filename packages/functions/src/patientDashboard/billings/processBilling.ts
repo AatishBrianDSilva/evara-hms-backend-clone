@@ -385,10 +385,11 @@ const processDataForReport = async (
     SGST: billing.tax
       ? formatToIndianCurrencyFormat(Math.round((billing.tax / 2) * 100) / 100)
       : formatToIndianCurrencyFormat(0), // Set to 0.00 if tax is missing
-    paidAmount: formatToIndianCurrencyFormat(billing.totalPaid),
     lessDiscount: billing.discount
       ? formatToIndianCurrencyFormat(billing.discount)
       : formatToIndianCurrencyFormat(0),
+    paidAmount: formatToIndianCurrencyFormat(billing.totalPaid),
+
     payableAmount: formatToIndianCurrencyFormat(billing.totalDues),
   };
 
