@@ -65,21 +65,23 @@ th:nth-child(11), td:nth-child(11) { width: 9%; } /* Amount */
         text-decoration: underline;
         margin: 10px 0;
       } 
+      .flex-row {
+  display: flex;
+  gap: 2px; /* Adjust spacing */
+  align-items: start;
+}
     </style>
   </head>
 
   <body>
     <main>
-      <h1 class='tax-invoice'>TAX INVOICE</h1>
-
       <div class='gst-box'>
         {{#getSectionByTitle sections 'License'}}
           {{#with content}}
             <div class='summary-row'>
-              <span class='summary-text'>GSTIN: {{Gstin}}</span>
-            </div>
-            <div class='summary-row'>
-              <span class='summary-text'>Drug License Number:
+              <span class='summary-text'>GSTIN:
+                {{Gstin}}
+                | Drug License Number:
                 {{this.[Drug Licence No]}}</span>
             </div>
           {{/with}}
