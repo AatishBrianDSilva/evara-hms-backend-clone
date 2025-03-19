@@ -23,6 +23,8 @@ import { format } from 'date-fns';
 import { formatToIndianCurrencyFormat } from '@evara-backend/core/lib/utils/formatToIndianCurrencyFormat';
 import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 import Branch from '@evara-backend/core/models/mastersDashboard/global/ClinicBranches';
+import { PatientPharmacy } from '@evara-backend/core/models/patientDashboard/PatientPharmacy';
+import mongoose from 'mongoose';
 
 interface BillingsData {
   billings: {
@@ -109,10 +111,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       console.log('Payments', payments);
 
+      const roundToTwo = (num: number) => Math.round(num * 100) / 100;
+      const roundedTotalPaid = roundToTwo(newTotalPaid);
+      const roundedGrandTotal = roundToTwo(billing.grandTotal);
+
       billing.status =
-        newTotalPaid >= billing.grandTotal
+        roundedTotalPaid >= roundedGrandTotal
           ? EPatientBillingStatus.Paid
           : EPatientBillingStatus.Pending;
+
+      // billing.status =
+      //   newTotalPaid >= billing.grandTotal
+      //     ? EPatientBillingStatus.Paid
+      //     : EPatientBillingStatus.Pending;
 
       // Log the branchId and clinicId extracted from the auth
       const branchId = auth.branchId;
@@ -134,19 +145,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
       console.log('Branch found:', branch);
 
-      console.log('Billing data for report:', billing);
-      console.log('Patient data for report:', data);
+      // console.log('Billing data for report:', billing);
+      // console.log('Patient data for report:', data);
 
       // Generate Report for payment
       if (payments) {
-        const report = processDataForReport(
+        const report = await processDataForReport(
           payments,
           billingId,
           data,
           billing,
           branch,
         );
-        // console.log("Report Data: ", JSON.stringify(report, null, 2));
+        console.log('Report Data: ', JSON.stringify(report, null, 2));
 
         // Send to SNS
         await SNSService.publishMessage({
@@ -171,7 +182,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   }
 };
 
-const processDataForReport = (
+const processDataForReport = async (
   data: any,
   id: string,
   patientData: any,
@@ -195,47 +206,107 @@ const processDataForReport = (
     reportId: id,
   };
 
-  // If billType is "Pharmacy", we include CGST, SGST, and calculate MRP
   let billItems: any;
 
   if (billing.billType === 'Pharmacy') {
-    billItems = billing.items.map((item: any) => {
-      return {
-        serviceName: item.serviceName,
-        serviceType: item.serviceType,
-        quantity: item.quantity,
-        // mrp: item.mrpPerUnit,
-        mrp: parseFloat(
-          (item.mrpPerUnit + (item.mrpPerUnit * item.taxRate) / 100).toFixed(2),
-        ),
-        value: parseFloat((item.price - item.tax).toFixed(2)),
-        gst: item.taxRate,
-        sgst: (item.tax / 2).toFixed(2),
-        cgst: (item.tax / 2).toFixed(2),
-        amount: item.total,
-      };
-    });
-  } else {
-    billItems = billing.items.map((item: any) => {
-      return {
-        serviceName: item.serviceName,
-        serviceType: item.serviceType,
-        quantity: item.quantity,
-        price: item.price,
-        amount: item.amount,
-        total: item.total,
-        // Add CGST and SGST for Pharmacy items
-        CGST: 'N/A',
-        SGST: 'N/A',
-        MRP: 'N/A', // Add MRP only for Pharmacy items
-        tax: 'N/A', // Add tax percentage field for Pharmacy
-      };
-    });
-  }
+    // Fetch batch number and expiry date for each pharmacy item
+    const pharmacyItems = await Promise.all(
+      billing.items.map(async (item: any) => {
+        try {
+          // Ensure serviceId is converted to ObjectId
+          const serviceId = new mongoose.Types.ObjectId(item.serviceId);
 
-  // Calculate totalAmount by summing up the 'amount' for each item
+          // Fetch matching PatientPharmacy document
+          const patientPharmacy = await PatientPharmacy.findOne({
+            _id: serviceId, // Matching with `_id` in PatientPharmacy
+            patient: patientData.patientData.patientId, // Matching with correct patient
+          })
+            .select('item.details')
+            .lean();
+
+          console.log(
+            'Fetched PatientPharmacy:',
+            JSON.stringify(patientPharmacy, null, 2),
+          );
+
+          let batchNumber = 'N/A';
+          let expiryDate = 'N/A';
+
+          if (patientPharmacy?.item?.details?.length > 0) {
+            const matchedDetail = patientPharmacy.item.details[0]; // Get first batch detail
+
+            batchNumber = matchedDetail.batchNumber || 'N/A';
+            expiryDate = matchedDetail.expiryDate
+              ? new Date(matchedDetail.expiryDate).toLocaleDateString('en-IN', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                })
+              : 'N/A';
+          }
+
+          console.log(
+            `Resolved batchNumber: ${batchNumber}, expiryDate: ${expiryDate}`,
+          );
+
+          return {
+            serviceName: item.serviceName,
+            serviceType: item.serviceType,
+            quantity: item.quantity,
+            mrp: parseFloat(
+              (
+                item.mrpPerUnit +
+                (item.mrpPerUnit * item.taxRate) / 100
+              ).toFixed(2),
+            ),
+            value: parseFloat((item.price - item.tax).toFixed(2)),
+            gst: item.taxRate,
+            sgst: (item.tax / 2).toFixed(2),
+            cgst: (item.tax / 2).toFixed(2),
+            amount: item.total,
+            batchNumber,
+            expiryDate,
+          };
+        } catch (error) {
+          console.error('Error fetching PatientPharmacy:', error);
+          return {
+            serviceName: item.serviceName,
+            serviceType: item.serviceType,
+            quantity: item.quantity,
+            mrp: parseFloat(
+              (
+                item.mrpPerUnit +
+                (item.mrpPerUnit * item.taxRate) / 100
+              ).toFixed(2),
+            ),
+            value: parseFloat((item.price - item.tax).toFixed(2)),
+            gst: item.taxRate,
+            sgst: (item.tax / 2).toFixed(2),
+            cgst: (item.tax / 2).toFixed(2),
+            amount: item.total,
+            batchNumber: 'N/A',
+            expiryDate: 'N/A',
+          };
+        }
+      }),
+    );
+
+    billItems = pharmacyItems;
+  } else {
+    billItems = billing.items.map((item: any) => ({
+      serviceName: item.serviceName,
+      serviceType: item.serviceType,
+      quantity: item.quantity,
+      price: item.price,
+      amount: item.amount,
+      total: item.total,
+      CGST: 'N/A',
+      SGST: 'N/A',
+      MRP: 'N/A',
+      tax: 'N/A',
+    }));
+  }
   const totalAmount = billItems.reduce((sum: number, item: any) => {
-    // Fallback to calculate amount if it's not present
     const itemAmount =
       item.amount ||
       (item.price && item.quantity ? item.price * item.quantity : 0);
@@ -248,16 +319,17 @@ const processDataForReport = (
     ? billItems[0].serviceType
     : 'Multiple Services';
 
-  const billDate = new Date(billing.createdAt).toLocaleDateString('en-In', {
+  const billDate = new Date(billing.createdAt).toLocaleDateString('en-IN', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   });
+
   const billTime = new Date(billing.createdAt).toLocaleTimeString('en-IN', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
-    timeZone: 'Asia/Kolkata', // Ensure IST is used explicitly
+    timeZone: 'Asia/Kolkata',
   });
 
   const calculateAge = (dob: string): number => {
@@ -266,7 +338,6 @@ const processDataForReport = (
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
 
-    // Adjust age if the birth month and day have not yet occurred this year
     if (
       monthDiff < 0 ||
       (monthDiff === 0 && today.getDate() < birthDate.getDate())
@@ -279,7 +350,7 @@ const processDataForReport = (
 
   const age = patientData.patientData.dob
     ? calculateAge(patientData.patientData.dob)
-    : 'N/A'; // Fallback if DOB is not available
+    : 'N/A';
 
   const patientDetails = {
     patientName: `${patientData.patientData.firstName} ${patientData.patientData.lastName}`,
@@ -292,7 +363,6 @@ const processDataForReport = (
     billTime: billTime,
   };
 
-  // Format Branch Details section with properly formatted address
   let branchAddress = 'Address not available';
   if (branch && branch.address) {
     const { street, city, state, zip } = branch.address;
@@ -307,30 +377,20 @@ const processDataForReport = (
     Email: branch.email || 'N/A',
   };
 
-  // let summaryContent = {
-  //   totalAmount: formatToIndianCurrencyFormat(billing.grandTotal), // Grand total
-  //   paidAmount: formatToIndianCurrencyFormat(billing.totalPaid), // Total paid
-  //   LessDiscount: billing.discount ? formatToIndianCurrencyFormat(billing.discount) : null, // Discount applied
-  //   payableAmount: formatToIndianCurrencyFormat(billing.totalDues), // Total dues or payable amount
-  //   CGST: billing.tax ? billing.tax / 2 : null,
-  //   SGST: billing.tax ? billing.tax / 2 : null,
-  //   "Sub Total": formatToIndianCurrencyFormat(billing.subTotal),
-  // };
-
-  // Create the summary content. Exclude CGST and SGST if it's "Pharmacy"
   let summaryContent = {
-    totalAmount: formatToIndianCurrencyFormat(totalAmount),
-    paidAmount: formatToIndianCurrencyFormat(billing.totalPaid),
+    subTotal: formatToIndianCurrencyFormat(billing.amount),
+    CGST: billing.tax
+      ? formatToIndianCurrencyFormat(Math.round((billing.tax / 2) * 100) / 100)
+      : formatToIndianCurrencyFormat(0), // Set to 0.00 if tax is missing
+    SGST: billing.tax
+      ? formatToIndianCurrencyFormat(Math.round((billing.tax / 2) * 100) / 100)
+      : formatToIndianCurrencyFormat(0), // Set to 0.00 if tax is missing
     lessDiscount: billing.discount
       ? formatToIndianCurrencyFormat(billing.discount)
       : formatToIndianCurrencyFormat(0),
+    paidAmount: formatToIndianCurrencyFormat(billing.totalPaid),
+
     payableAmount: formatToIndianCurrencyFormat(billing.totalDues),
-    // "Sub Total": formatToIndianCurrencyFormat(billing.subTotal),
-    // Include CGST and SGST only if it's not "Pharmacy" billType
-    ...(billing.billType !== 'Pharmacy' && {
-      CGST: billing.tax ? billing.tax / 2 : null,
-      SGST: billing.tax ? billing.tax / 2 : null,
-    }),
   };
 
   const sections = [
@@ -371,8 +431,6 @@ const processDataForReport = (
 
   reportData.reportName = `Invoice ${billing.billingId}`;
   reportData.sections = sanitizeInvoiceData(sections);
-
-  console.log('Sanitized data', reportData.sections);
 
   return reportData;
 };

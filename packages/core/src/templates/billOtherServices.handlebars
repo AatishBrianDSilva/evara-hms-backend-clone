@@ -2,7 +2,8 @@
   <head>
     <meta charset='UTF-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-    <style>
+    <style
+    >
       body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size:
       12px; /* Global font size */ } main { padding: 0; display: flex;
       flex-direction: column; flex-grow: 1; margin: 0; box-sizing: border-box; }
@@ -36,11 +37,33 @@
       .summary-row { display: flex; justify-content: space-between;
       margin-bottom: 3px; /* Reduced space between summary rows */ }
       .branch-address { text-align: center; padding: 10px 0; font-size: 1em;
-      color: #333; }
+      color: #333;  }
+       h1.tax-invoice {
+        color: grey;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+        text-decoration: underline;
+        margin: 10px 0;
+      }
     </style>
   </head>
   <body>
     <main>
+
+      <div class='gst-box'>
+        {{#getSectionByTitle sections 'License'}}
+          {{#with content}}
+            <div class='summary-row'>
+              <span class='summary-text'>GSTIN: {{Gstin}}</span>
+            </div>
+            {{!-- <div class='summary-row'>
+              <span class='summary-text'>Drug License Number:
+                {{this.[Drug Licence No]}}</span>
+            </div> --}}
+          {{/with}}
+        {{/getSectionByTitle}}
+      </div>
       <!-- Patient Details Section -->
       <div class='header'>Patient Details</div>
       <div class='section'>

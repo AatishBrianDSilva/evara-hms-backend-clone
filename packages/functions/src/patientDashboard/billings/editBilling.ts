@@ -67,10 +67,12 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(404, 'Billing document not found');
     }
 
+    console.log('Billing to apply discount', billing);
+
     if (discountType === 'percentage') {
       discountInPercentage = Number(discountValue);
       discountInAmount = Number(
-        (billing.subTotal * (discountInPercentage / 100)).toFixed(2),
+        (billing.amount * (discountInPercentage / 100)).toFixed(2),
       );
     } else if (discountType === 'amount') {
       discountInAmount = Number(discountValue);

@@ -2,7 +2,8 @@
   <head>
     <meta charset='UTF-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-    <style>
+    <style
+    >
       body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size:
       12px; /* Reduced global font size */ } main { padding: 0; display: flex;
       flex-direction: column; flex-grow: 1; margin: 0; box-sizing: border-box; }
@@ -35,12 +36,18 @@
       {{styles.primaryColor}}; } .no-borders { border: none; } th:nth-child(1),
       td:nth-child(1) { width: 5%; /* Maintain narrow width for # column */ }
       th:nth-child(2), td:nth-child(2) { width: 20%; /* Maintain wide width for
-      Drug Details column */ text-align: left; } th:nth-child(3),
-      td:nth-child(3), th:nth-child(4), td:nth-child(4), th:nth-child(5),
-      td:nth-child(5), th:nth-child(6), td:nth-child(6), th:nth-child(7),
-      td:nth-child(7), th:nth-child(8), td:nth-child(8), th:nth-child(9),
-      td:nth-child(9) { width: 11%; /* Maintain width for the remaining columns
-      */ } .summary-box { width: 35%; /* Maintain summary box width */
+      Drug Details column */ text-align: left; } th:nth-child(1), td:nth-child(1) { width: 4%; } /* # column */
+th:nth-child(2), td:nth-child(2) { width: 18%; text-align: left; } /* Drug Details */
+th:nth-child(3), td:nth-child(3) { width: 9%; } /* Qty */
+th:nth-child(4), td:nth-child(4) { width: 9%; } /* MRP */
+th:nth-child(5), td:nth-child(5) { width: 9%; } /* Value */
+th:nth-child(6), td:nth-child(6) { width: 9%; } /* GST% */
+th:nth-child(7), td:nth-child(7) { width: 9%; } /* SGST */
+th:nth-child(8), td:nth-child(8) { width: 9%; } /* CGST */
+th:nth-child(9), td:nth-child(9) { width: 14%; } /* BatchNo */
+th:nth-child(10), td:nth-child(10) { width: 14%; } /* Expiry */
+th:nth-child(11), td:nth-child(11) { width: 9%; } /* Amount */
+  .summary-box { width: 35%; /* Maintain summary box width */
       margin-left: auto; padding: 5px; /* Reduced vertical padding */
       margin-top: 0; /* Remove margin above the summary box */ box-sizing:
       border-box; } .summary-key { font-weight: bold; text-align: left;
@@ -49,12 +56,37 @@
       12px; /* Adjusted summary value font size */ } .summary-row { display:
       flex; justify-content: space-between; margin-bottom: 3px; /* Reduced space
       between summary rows */ } .branch-address { text-align: center; padding:
-      10px 0; /* Reduced vertical padding */ font-size: 1em; color: #333; }
+      10px 0; /* Reduced vertical padding */ font-size: 1em; color: #333;  }
+       h1.tax-invoice {
+        color: grey;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+        text-decoration: underline;
+        margin: 10px 0;
+      } 
+      .flex-row {
+  display: flex;
+  gap: 2px; /* Adjust spacing */
+  align-items: start;
+}
     </style>
   </head>
 
   <body>
     <main>
+      <div class='gst-box'>
+        {{#getSectionByTitle sections 'License'}}
+          {{#with content}}
+            <div class='summary-row'>
+              <span class='summary-text'>GSTIN:
+                {{Gstin}}
+                | Drug License Number:
+                {{this.[Drug Licence No]}}</span>
+            </div>
+          {{/with}}
+        {{/getSectionByTitle}}
+      </div>
       <!-- Patient Details Section -->
       <div class='header'>Patient Details</div>
       <div class='section'>
@@ -101,6 +133,8 @@
             <th>GST%</th>
             <th>SGST</th>
             <th>CGST</th>
+            <th>BatchNo</th>
+            <th>Expiry</th>
             <th>Amount</th>
           </tr>
         </thead>
@@ -116,7 +150,10 @@
                 <td>{{this.gst}}</td>
                 <td>{{formatCurrency this.sgst}}</td>
                 <td>{{formatCurrency this.cgst}}</td>
+                <td>{{this.batchNumber}}</td>
+                <td>{{this.expiryDate}}</td>
                 <td>{{formatCurrency this.amount}}</td>
+
               </tr>
             {{/each}}
           {{/getSectionByTitle}}
