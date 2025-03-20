@@ -202,6 +202,13 @@ export const fetchPatientBillingsData = async (
     },
   });
 
+  // Add a match stage to filter out records with no payments
+  pipeline.push({
+    $match: {
+      'payments.0': { $exists: true }, // Ensure that at least one payment exists
+    },
+  });
+
   // Unwind the payments array to output one row per payment.
   pipeline.push({
     $unwind: {
@@ -216,6 +223,11 @@ export const fetchPatientBillingsData = async (
     $addFields: {
       effectiveDate: { $ifNull: ['$payments.paymentDate', '$createdAt'] },
     },
+  });
+
+  // **Sort by Payment Date Descending**
+  pipeline.push({
+    $sort: { effectiveDate: -1 },
   });
 
   // Define IST offset in milliseconds (5 hours 30 minutes)
