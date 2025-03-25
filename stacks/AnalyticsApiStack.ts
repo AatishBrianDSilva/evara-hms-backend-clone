@@ -23,6 +23,14 @@ export const AnalyticsApiStack = ({ stack }: StackContext) => {
       'packages/functions/src/analyticsDashboard/billings/getRevenueBreakup.main',
     'GET /analytics/billings/revenue-breakup/download':
       'packages/functions/src/analyticsDashboard/billings/revenueBreakup/download.main',
+    'GET /analytics/billings/b2c-report':
+      'packages/functions/src/analyticsDashboard/billings/b2cReport/get.main',
+    'GET /analytics/billings/b2c-report/download':
+      'packages/functions/src/analyticsDashboard/billings/b2cReport/download.main',
+    'GET /analytics/billings/hsn-report':
+      'packages/functions/src/analyticsDashboard/billings/hsnReport/get.main',
+    'GET /analytics/billings/hsn-report/download':
+      'packages/functions/src/analyticsDashboard/billings/hsnReport/download.main',
 
     // Treatments-Testing
     'GET /analytics/treatments-testing/investigation-reports':
