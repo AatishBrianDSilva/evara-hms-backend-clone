@@ -25,6 +25,8 @@ import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractA
 import Branch from '@evara-backend/core/models/mastersDashboard/global/ClinicBranches';
 import { PatientPharmacy } from '@evara-backend/core/models/patientDashboard/PatientPharmacy';
 import mongoose from 'mongoose';
+import { PharmacyStock } from '@evara-backend/core/models/pharmacyDashboard/PharmacyStock';
+import { DrugItem } from '@evara-backend/core/models/pharmacyDashboard/DrugItem';
 
 interface BillingsData {
   billings: {
@@ -215,6 +217,9 @@ const processDataForReport = async (
         try {
           // Ensure serviceId is converted to ObjectId
           const serviceId = new mongoose.Types.ObjectId(item.serviceId);
+          const masterServiceId = new mongoose.Types.ObjectId(
+            item.masterServiceId,
+          );
 
           // Fetch matching PatientPharmacy document
           const patientPharmacy = await PatientPharmacy.findOne({
@@ -245,6 +250,17 @@ const processDataForReport = async (
               : 'N/A';
           }
 
+          // 🆕 Fetch HSN Code from PharmacyStock → DrugItem
+          let hsnCode = 'N/A';
+          const pharmacyStock =
+            await PharmacyStock.findById(masterServiceId).lean();
+          if (pharmacyStock?.item) {
+            const drugItem = await DrugItem.findById(pharmacyStock.item).lean();
+            if (drugItem?.hsnCode) {
+              hsnCode = drugItem.hsnCode;
+            }
+          }
+
           console.log(
             `Resolved batchNumber: ${batchNumber}, expiryDate: ${expiryDate}`,
           );
@@ -260,12 +276,14 @@ const processDataForReport = async (
               ).toFixed(2),
             ),
             value: parseFloat((item.price - item.tax).toFixed(2)),
+            discountApplied: item.discount.toFixed(2),
             gst: item.taxRate,
             sgst: (item.tax / 2).toFixed(2),
             cgst: (item.tax / 2).toFixed(2),
             amount: item.total,
             batchNumber,
             expiryDate,
+            hsnCode, // ✅ Include HSN Code in final report
           };
         } catch (error) {
           console.error('Error fetching PatientPharmacy:', error);
@@ -286,6 +304,7 @@ const processDataForReport = async (
             amount: item.total,
             batchNumber: 'N/A',
             expiryDate: 'N/A',
+            hsnCode: 'N/A',
           };
         }
       }),
@@ -377,20 +396,22 @@ const processDataForReport = async (
     Email: branch.email || 'N/A',
   };
 
-  let summaryContent = {
-    subTotal: formatToIndianCurrencyFormat(billing.amount),
-    CGST: billing.tax
-      ? formatToIndianCurrencyFormat(Math.round((billing.tax / 2) * 100) / 100)
-      : formatToIndianCurrencyFormat(0), // Set to 0.00 if tax is missing
-    SGST: billing.tax
-      ? formatToIndianCurrencyFormat(Math.round((billing.tax / 2) * 100) / 100)
-      : formatToIndianCurrencyFormat(0), // Set to 0.00 if tax is missing
-    lessDiscount: billing.discount
-      ? formatToIndianCurrencyFormat(billing.discount)
-      : formatToIndianCurrencyFormat(0),
-    paidAmount: formatToIndianCurrencyFormat(billing.totalPaid),
+  const subTotal = billing.amount || 0;
+  const discount = billing.discount || 0;
+  const tax = billing.tax || 0;
+  const cgst = Math.round((tax / 2) * 100) / 100;
+  const sgst = Math.round((tax / 2) * 100) / 100;
 
-    payableAmount: formatToIndianCurrencyFormat(billing.totalDues),
+  const grandTotal = subTotal - discount + cgst + sgst;
+
+  let summaryContent = {
+    subTotal: formatToIndianCurrencyFormat(subTotal),
+    discount: formatToIndianCurrencyFormat(discount),
+    CGST: formatToIndianCurrencyFormat(cgst),
+    SGST: formatToIndianCurrencyFormat(sgst),
+    grandTotal: formatToIndianCurrencyFormat(grandTotal),
+    paidAmount: formatToIndianCurrencyFormat(billing.totalPaid),
+    due: formatToIndianCurrencyFormat(billing.totalDues),
   };
 
   const sections = [
