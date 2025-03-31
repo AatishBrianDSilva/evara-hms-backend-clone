@@ -47,7 +47,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       unitCost: record.unitCost.toFixed(2),
       totalCost: record.totalCost.toFixed(2),
       totalTax: record.totalTax.toFixed(2),
-      allocDate: new Date(record.allocDate).toLocaleDateString('en-IN'),
+      allocDate: new Date(record.allocDate).toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+      }),
       addedBy: record.addedBy,
       remarks: record.remarks,
     }));

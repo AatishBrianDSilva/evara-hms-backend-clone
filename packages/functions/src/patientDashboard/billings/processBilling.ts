@@ -246,6 +246,7 @@ const processDataForReport = async (
                   day: '2-digit',
                   month: '2-digit',
                   year: 'numeric',
+                  timeZone: 'Asia/Kolkata',
                 })
               : 'N/A';
           }

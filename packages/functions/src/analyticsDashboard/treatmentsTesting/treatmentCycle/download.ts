@@ -43,7 +43,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const startSlNo = fetchAllData ? 1 : (pageNumber - 1) * limitNumber + 1;
     const dataForCsv = records.map((record: any, index: number) => ({
       SlNo: startSlNo + index,
-      date: new Date(record.date).toLocaleDateString('en-IN'),
+      date: new Date(record.date).toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+      }),
       patientId: record.patientId,
       patientName: record.patientName,
       treatmentCycle: record.treatmentCycle,
