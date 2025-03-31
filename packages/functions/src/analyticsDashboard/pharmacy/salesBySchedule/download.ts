@@ -39,7 +39,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Map data for CSV export
     const dataForCsv = records.map((record: any, index: number) => ({
       SlNo: index + 1,
-      saleDate: new Date(record.saleDate).toLocaleDateString('en-IN'),
+      saleDate: new Date(record.saleDate).toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+      }),
       patientName: record.patientName || 'N/A',
       doctorName: record.doctorName || 'N/A',
       pharmacyDrug: record.pharmacyDrug || 'N/A',

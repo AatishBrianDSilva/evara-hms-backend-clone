@@ -35,7 +35,9 @@ export const processPurchaseOrderReportData = (
       Vendor: vendor.name || 'N/A',
       VendorTin: vendor.tin || 'N/A',
       'Net Amount': purchaseOrder.request?.netAmount || 'N/A',
-      Date: new Date(purchaseOrder.createdAt).toLocaleDateString('en-GB'),
+      Date: new Date(purchaseOrder.createdAt).toLocaleDateString('en-GB', {
+        timeZone: 'Asia/Kolkata',
+      }),
     },
   });
 

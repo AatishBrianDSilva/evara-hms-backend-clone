@@ -63,13 +63,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         label: 'Payment Date',
         value: (row: any) =>
           row.paymentDate
-            ? new Date(row.paymentDate).toLocaleDateString('en-IN')
+            ? new Date(row.paymentDate).toLocaleDateString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+              })
             : '',
       },
       {
         label: 'Bill Creation Date',
         value: (row: any) =>
-          new Date(row.createdAt).toLocaleDateString('en-IN'),
+          new Date(row.createdAt).toLocaleDateString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+          }),
       },
       { label: 'Billing ID', value: 'billingId' },
       { label: 'Patient Code', value: 'patientCode' },

@@ -246,6 +246,7 @@ const processDataForReport = async (
                   day: '2-digit',
                   month: '2-digit',
                   year: 'numeric',
+                  timeZone: 'Asia/Kolkata',
                 })
               : 'N/A';
           }
@@ -270,10 +271,7 @@ const processDataForReport = async (
             serviceType: item.serviceType,
             quantity: item.quantity,
             unitMRP: parseFloat(item.mrpPerUnit?.toFixed(2) || '0'), // ✅ new key
-            value: parseFloat((item.price / item.quantity).toFixed(2)),
-            totalValue: parseFloat(
-              ((item.price ?? 0) * (item.quantity ?? 0)).toFixed(2),
-            ), // ✅ new key
+            value: parseFloat((item.mrpPerUnit * item.quantity).toFixed(2)),
             discountApplied: item.discount.toFixed(2),
             gst: item.taxRate,
             sgst: (item.tax / 2).toFixed(2),
@@ -391,20 +389,20 @@ const processDataForReport = async (
     Email: branch.email || 'N/A',
   };
 
-  const subTotal = billing.amount || 0;
+  const subTotal = billing.amount + billing.discount || 0;
   const discount = billing.discount || 0;
   const tax = billing.tax || 0;
   const cgst = Math.round((tax / 2) * 100) / 100;
   const sgst = Math.round((tax / 2) * 100) / 100;
 
-  const grandTotal = subTotal + cgst + sgst;
+  const grandTotal = subTotal + cgst + sgst - discount;
 
   let summaryContent = {
     subTotal: formatToIndianCurrencyFormat(subTotal),
     discount: formatToIndianCurrencyFormat(discount),
     CGST: formatToIndianCurrencyFormat(cgst),
     SGST: formatToIndianCurrencyFormat(sgst),
-    grandTotal: formatToIndianCurrencyFormat(grandTotal),
+    netPayable: formatToIndianCurrencyFormat(grandTotal),
     paidAmount: formatToIndianCurrencyFormat(billing.totalPaid),
     due: formatToIndianCurrencyFormat(billing.totalDues),
   };
