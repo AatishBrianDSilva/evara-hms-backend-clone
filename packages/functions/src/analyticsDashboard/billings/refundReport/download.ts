@@ -79,6 +79,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               )
             : '',
       },
+
       { label: 'Patient Code', value: 'patientCode' },
       { label: 'Patient Name', value: 'patientName' },
       {
