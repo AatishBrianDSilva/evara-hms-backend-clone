@@ -269,13 +269,11 @@ const processDataForReport = async (
             serviceName: item.serviceName,
             serviceType: item.serviceType,
             quantity: item.quantity,
-            mrp: parseFloat(
-              (
-                item.mrpPerUnit +
-                (item.mrpPerUnit * item.taxRate) / 100
-              ).toFixed(2),
-            ),
-            value: parseFloat((item.price - item.tax).toFixed(2)),
+            unitMRP: parseFloat(item.mrpPerUnit?.toFixed(2) || '0'), // ✅ new key
+            value: parseFloat((item.price / item.quantity).toFixed(2)),
+            totalValue: parseFloat(
+              ((item.price ?? 0) * (item.quantity ?? 0)).toFixed(2),
+            ), // ✅ new key
             discountApplied: item.discount.toFixed(2),
             gst: item.taxRate,
             sgst: (item.tax / 2).toFixed(2),
@@ -291,17 +289,14 @@ const processDataForReport = async (
             serviceName: item.serviceName,
             serviceType: item.serviceType,
             quantity: item.quantity,
-            mrp: parseFloat(
-              (
-                item.mrpPerUnit +
-                (item.mrpPerUnit * item.taxRate) / 100
-              ).toFixed(2),
+            unitMRP: parseFloat(item.mrpPerUnit?.toFixed(2) || '0'),
+            totalValue: parseFloat(
+              ((item.mrpPerUnit ?? 0) * (item.quantity ?? 0)).toFixed(2),
             ),
             value: parseFloat((item.price - item.tax).toFixed(2)),
             gst: item.taxRate,
             sgst: (item.tax / 2).toFixed(2),
             cgst: (item.tax / 2).toFixed(2),
-            amount: item.total,
             batchNumber: 'N/A',
             expiryDate: 'N/A',
             hsnCode: 'N/A',
@@ -402,7 +397,7 @@ const processDataForReport = async (
   const cgst = Math.round((tax / 2) * 100) / 100;
   const sgst = Math.round((tax / 2) * 100) / 100;
 
-  const grandTotal = subTotal - discount + cgst + sgst;
+  const grandTotal = subTotal + cgst + sgst;
 
   let summaryContent = {
     subTotal: formatToIndianCurrencyFormat(subTotal),
