@@ -162,8 +162,10 @@ const processDataForReport = (
     gender: patient.gender,
     age: patient.age,
     spouseName: spouseName, // Now using fetched spouseName
-    admissionDate: data.updatedAt
-      ? new Date(data.updatedAt).toLocaleDateString('en-GB')
+    admissionDate: patient.createdAt
+      ? new Date(patient.createdAt).toLocaleDateString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+        })
       : 'N/A',
   };
 
@@ -228,18 +230,27 @@ const processDataForReport = (
           key === 'timeOfCollection' ||
           key === 'timeOfEvaluation'
         ) {
-          const timeValue = new Date(value).toLocaleTimeString('en-US', {
+          const timeValue = new Date(value).toLocaleTimeString('en-IN', {
             hour: '2-digit',
             minute: '2-digit',
             hour12: true,
+            timeZone: 'Asia/Kolkata',
           });
           details[key] = timeValue;
         }
         // Format date to dd/mm/yyyy for any date fields
-        else if (key === 'date') {
-          const dateValue = new Date(value).toLocaleDateString('en-GB');
+        else if (
+          key === 'date' ||
+          key === 'lmpDate' ||
+          key === 'requestedDate' ||
+          key === 'dateOfScan'
+        ) {
+          const dateValue = new Date(value).toLocaleDateString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+          });
           details[key] = dateValue;
         }
+
         // Process doctor fields
         else if (
           doctorFields.includes(key) &&
@@ -247,6 +258,16 @@ const processDataForReport = (
           value.lastName
         ) {
           details[key] = `${value.firstName} ${value.lastName}`;
+        }
+        // Handle rightOvary and leftOvary objects
+        else if (key === 'rightOvary' || key === 'leftOvary') {
+          const ovaryData = value;
+          for (const subKey in ovaryData) {
+            if (ovaryData[subKey] !== '' && ovaryData[subKey] !== null) {
+              const prettyKey = _.startCase(`${key} ${subKey}`);
+              details[prettyKey] = ovaryData[subKey];
+            }
+          }
         } else {
           // Include the field as-is if it is valid
           details[key] = value;
