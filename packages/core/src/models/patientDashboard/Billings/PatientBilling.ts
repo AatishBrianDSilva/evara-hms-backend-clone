@@ -204,7 +204,7 @@ patientBillingSchema.virtual('subTotal').get(function (this: IPatientBilling) {
 patientBillingSchema.virtual('grandTotal').get(function (
   this: IPatientBilling,
 ) {
-  return round(this.subTotal - this.discount);
+  return round(this.amount + this.tax); // no discount subtraction
 });
 
 patientBillingSchema.virtual('totalPaid').get(function (this: IPatientBilling) {
@@ -224,7 +224,7 @@ patientBillingSchema.virtual('totalPaymentAttempts').get(function (
 });
 
 patientBillingSchema.virtual('totalDues').get(function (this: IPatientBilling) {
-  return round(this.grandTotal - this.totalPaid);
+  return round(this.grandTotal - this.totalPaid); // if grandTotal is fixed
 });
 
 patientBillingSchema.pre(
