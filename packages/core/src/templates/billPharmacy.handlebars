@@ -129,9 +129,8 @@ th:nth-child(11), td:nth-child(11) { width: 14%; } /* Amount */
             <th>Drug Details</th>
             <th>HSN Code</th>
             <th>Qty</th>
-            <th>Unit MRP</th>
-            <th>Dicounted Value</th>
-            <th>Total Value</th>
+            <th>Unit Value</th>
+            <th>Total</th>
             <th>Discount</th>
             <th>GST%</th>
             <th>SGST</th>
@@ -150,7 +149,6 @@ th:nth-child(11), td:nth-child(11) { width: 14%; } /* Amount */
                 <td>{{this.quantity}}</td>
                 <td>{{formatCurrency this.unitMRP}}</td>
                 <td>{{formatCurrency this.value}}</td>
-                <td>{{formatCurrency this.totalValue}}</td>
                 <td>{{formatCurrency this.discountApplied}}</td>
                 <td>{{this.gst}}</td>
                 <td>{{formatCurrency this.sgst}}</td>

@@ -34,7 +34,9 @@ export const processPurchaseOrderProcessedReportData = (
       'PO Number': purchaseOrder.poNumber,
       'Invoice Number': response.invoiceNumber || 'N/A',
       'Net Amount': response.netAmount || 'N/A',
-      Date: new Date(purchaseOrder.createdAt).toLocaleDateString('en-GB'),
+      Date: new Date(purchaseOrder.createdAt).toLocaleDateString('en-GB', {
+        timeZone: 'Asia/Kolkata',
+      }),
     },
   });
 
@@ -72,8 +74,11 @@ export const processPurchaseOrderProcessedReportData = (
       Item: item.name || 'N/A',
       'Batch No.': item.batchNo || 'N/A',
       'Expiry Date': item.expiryDate
-        ? new Date(item.expiryDate).toLocaleDateString('en-GB')
+        ? new Date(item.expiryDate).toLocaleDateString('en-GB', {
+            timeZone: 'Asia/Kolkata',
+          })
         : 'N/A',
+
       Quantity: noOfPacks,
       FreeQuantity: freeQuantity, // Include free quantity
       'Rate (Per Pack)': buyPrice.toFixed(2),

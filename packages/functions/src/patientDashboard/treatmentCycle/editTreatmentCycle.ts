@@ -148,7 +148,9 @@ async function updateCategory(
       age: patient.age,
       spouseName: spouseName,
       admissionDate: patient.createdAt
-        ? new Date(patient.createdAt).toLocaleDateString('en-GB')
+        ? new Date(patient.createdAt).toLocaleDateString('en-GB', {
+            timeZone: 'Asia/Kolkata',
+          })
         : 'N/A',
     };
 

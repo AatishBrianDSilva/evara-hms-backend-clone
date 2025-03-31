@@ -44,7 +44,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         ? index + 1
         : (pageNumber - 1) * limitNumber + 1 + index,
       branch: record.branch,
-      returnedDate: new Date(record.returnedDate).toLocaleDateString('en-IN'),
+      returnedDate: new Date(record.returnedDate).toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+      }),
       patientName: record.patientName,
       patientNumber: record.patientNumber,
       drugName: record.drugName,
