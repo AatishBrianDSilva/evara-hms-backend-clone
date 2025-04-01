@@ -76,7 +76,20 @@ export const fetchHSNReportData = async (params: FetchHSNReportParams) => {
         cgst: { $divide: ['$items.tax', 2] },
         sgst: { $divide: ['$items.tax', 2] },
         invoiceValue: '$items.total',
-        createdAt: '$createdAt', // ✅ Add this line
+        discount: '$items.discount',
+        createdAt: '$createdAt',
+      },
+    },
+    {
+      $addFields: {
+        netTaxableValue: {
+          $round: [
+            {
+              $subtract: ['$taxableValue', { $ifNull: ['$discount', 0] }],
+            },
+            2,
+          ],
+        },
       },
     },
     {
@@ -85,17 +98,17 @@ export const fetchHSNReportData = async (params: FetchHSNReportParams) => {
         hsnCode: 1,
         quantity: 1,
         taxableValue: 1,
+        netTaxableValue: 1, // ✅ included in output
         rateOfTax: 1,
         cgst: 1,
         sgst: 1,
         invoiceValue: 1,
-        createdAt: 1, // ✅ Add this line
+        createdAt: 1,
       },
     },
     { $sort: { createdAt: -1 } },
   ];
 
-  // Search filtering
   if (searchQuery) {
     basePipeline.push({
       $match: {

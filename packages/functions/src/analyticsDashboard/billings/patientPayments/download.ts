@@ -58,7 +58,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     // Define CSV fields (including payment-wise details)
     const fields = [
-      { label: 'Sl.no', value: 'SlNo' },
       {
         label: 'Payment Date',
         value: (row: any) =>
@@ -68,22 +67,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
               })
             : '',
       },
-      {
-        label: 'Bill Creation Date',
-        value: (row: any) =>
-          new Date(row.createdAt).toLocaleDateString('en-IN', {
-            timeZone: 'Asia/Kolkata',
-          }),
-      },
-      { label: 'Billing ID', value: 'billingId' },
-      { label: 'Patient Code', value: 'patientCode' },
-      { label: 'Patient Name', value: 'patientName' },
+      { label: 'Bill No.', value: 'billingId' },
       { label: 'Case ID', value: 'caseId' },
-      { label: 'Status', value: 'status' },
-      { label: 'Bill Type', value: 'billType' },
+      { label: 'Patient ID', value: 'patientCode' },
+      { label: 'Patient Name', value: 'patientName' },
+      { label: 'Service', value: 'billType' },
       {
-        label: 'Amount',
-        value: (row: any) => formatToIndianCurrencyFormat(row.amount),
+        label: 'Taxable Value',
+        value: (row: any) => formatToIndianCurrencyFormat(row.taxableValue),
       },
       {
         label: 'Tax',
@@ -94,10 +85,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         value: (row: any) => formatToIndianCurrencyFormat(row.discount),
       },
       {
-        label: 'Sub Total',
+        label: 'Subtotal',
+        value: (row: any) => formatToIndianCurrencyFormat(row.totalValue),
+      },
+      {
+        label: 'Net Payable',
         value: (row: any) => formatToIndianCurrencyFormat(row.subTotal),
       },
-      // Payment-specific fields
       {
         label: 'Payment Amount',
         value: (row: any) => formatToIndianCurrencyFormat(row.paymentAmount),

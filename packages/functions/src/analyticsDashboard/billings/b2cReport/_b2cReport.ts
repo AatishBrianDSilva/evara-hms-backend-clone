@@ -80,12 +80,24 @@ export const fetchB2CReportData = async (params: FetchB2CReportParams) => {
         date: '$createdAt',
       },
     },
+    // ➕ Add netTaxableValue after computing taxableValue and discount
+    {
+      $addFields: {
+        netTaxableValue: {
+          $round: [
+            { $subtract: ['$taxableValue', { $ifNull: ['$discount', 0] }] },
+            2,
+          ],
+        },
+      },
+    },
     {
       $project: {
         _id: 0,
         date: 1,
         invoiceNo: 1,
         taxableValue: 1,
+        netTaxableValue: 1, // Include new field in projection
         rateOfTax: 1,
         cgst: 1,
         sgst: 1,
