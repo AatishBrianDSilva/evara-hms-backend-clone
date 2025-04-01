@@ -280,6 +280,12 @@ const processDataForReport = async (
             batchNumber,
             expiryDate,
             hsnCode, // ✅ Include HSN Code in final report
+            mrp: parseFloat(
+              (
+                item.mrpPerUnit +
+                (item.mrpPerUnit * item.taxRate) / 100
+              ).toFixed(2),
+            ),
           };
         } catch (error) {
           console.error('Error fetching PatientPharmacy:', error);

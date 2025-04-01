@@ -37,32 +37,17 @@ export const fetchPatientBillingsData = async (
   const pageNumber = Number(page);
   const limitNumber = Number(limit);
 
-  console.log('params', params);
-
-  // Base match query for clinic and branch and other bill-level filters.
   const matchQuery: any = {
     clinicId,
     branchId,
   };
 
-  if (status) {
-    matchQuery.status = status;
-  }
+  if (status) matchQuery.status = status;
+  if (billType) matchQuery.billType = billType;
+  if (paymentMethod) matchQuery['payments.method'] = paymentMethod;
 
-  if (billType) {
-    matchQuery.billType = billType;
-  }
-
-  if (paymentMethod) {
-    matchQuery['payments.method'] = paymentMethod;
-  }
-
-  // (Don't add a date filter here—date filtering will be applied later on the effectiveDate)
-
-  // Build the aggregation pipeline
   let pipeline: any[] = [
     { $match: matchQuery },
-    // Lookup patient details
     {
       $lookup: {
         from: 'patients',
@@ -71,7 +56,6 @@ export const fetchPatientBillingsData = async (
         as: 'patientDetails',
       },
     },
-    // Lookup case details where patientCode matches patientId or partnerId
     {
       $lookup: {
         from: 'cases',
@@ -91,7 +75,6 @@ export const fetchPatientBillingsData = async (
         as: 'caseDetails',
       },
     },
-    // Add patientName and caseId fields
     {
       $addFields: {
         patientName: {
@@ -120,7 +103,6 @@ export const fetchPatientBillingsData = async (
     },
   ];
 
-  // Apply search query on billId, patientName, patientCode, or caseId if provided
   if (searchQuery) {
     const searchRegex = new RegExp(searchQuery, 'i');
     pipeline.push({
@@ -135,12 +117,9 @@ export const fetchPatientBillingsData = async (
     });
   }
 
-  // Sort by createdAt descending
-  pipeline.push({
-    $sort: { createdAt: -1 },
-  });
+  pipeline.push({ $sort: { createdAt: -1 } });
 
-  // Add computed fields (bill-level)
+  // Stage 1: Compute base fields including subTotal
   pipeline.push({
     $addFields: {
       subTotal: {
@@ -202,14 +181,32 @@ export const fetchPatientBillingsData = async (
     },
   });
 
-  // Add a match stage to filter out records with no payments
+  // Stage 2: Now safely use subTotal for computed values
   pipeline.push({
-    $match: {
-      'payments.0': { $exists: true }, // Ensure that at least one payment exists
+    $addFields: {
+      taxableValue: {
+        $round: [
+          {
+            $subtract: [
+              { $add: ['$subTotal', { $ifNull: ['$discount', 0] }] },
+              { $ifNull: ['$tax', 0] },
+            ],
+          },
+          2,
+        ],
+      },
+      totalValue: {
+        $round: [{ $add: ['$subTotal', { $ifNull: ['$discount', 0] }] }, 2],
+      },
     },
   });
 
-  // Unwind the payments array to output one row per payment.
+  pipeline.push({
+    $match: {
+      'payments.0': { $exists: true },
+    },
+  });
+
   pipeline.push({
     $unwind: {
       path: '$payments',
@@ -217,23 +214,16 @@ export const fetchPatientBillingsData = async (
     },
   });
 
-  // Add an effectiveDate field per row:
-  // If a paymentDate exists, use that; otherwise, use createdAt.
   pipeline.push({
     $addFields: {
       effectiveDate: { $ifNull: ['$payments.paymentDate', '$createdAt'] },
     },
   });
 
-  // **Sort by Payment Date Descending**
-  pipeline.push({
-    $sort: { effectiveDate: -1 },
-  });
+  pipeline.push({ $sort: { effectiveDate: -1 } });
 
-  // Define IST offset in milliseconds (5 hours 30 minutes)
   const IST_OFFSET = 5.5 * 60 * 60000;
 
-  // Build the date range query after adjusting the IST offset.
   if (startDate || endDate) {
     const effectiveDateQuery: any = {};
     if (startDate) {
@@ -253,7 +243,6 @@ export const fetchPatientBillingsData = async (
     });
   }
 
-  // Apply pagination or project all data if fetchAllData is true.
   if (!fetchAllData) {
     pipeline.push({
       $facet: {
@@ -277,9 +266,10 @@ export const fetchPatientBillingsData = async (
               subTotal: 1,
               totalPaid: 1,
               totalDues: 1,
+              taxableValue: 1,
+              totalValue: 1,
               createdAt: 1,
               updatedAt: 1,
-              // Payment-specific fields
               paymentAmount: '$payments.amount',
               paymentMethod: '$payments.method',
               paymentDetails: '$payments.details',
@@ -316,6 +306,8 @@ export const fetchPatientBillingsData = async (
         subTotal: 1,
         totalPaid: 1,
         totalDues: 1,
+        taxableValue: 1,
+        totalValue: 1,
         createdAt: 1,
         updatedAt: 1,
         paymentAmount: '$payments.amount',
@@ -326,7 +318,6 @@ export const fetchPatientBillingsData = async (
     });
   }
 
-  // Execute the aggregation pipeline
   const aggregateResult = await PatientBilling.aggregate(pipeline);
 
   if (!aggregateResult || !aggregateResult.length) {

@@ -129,14 +129,14 @@ th:nth-child(11), td:nth-child(11) { width: 14%; } /* Amount */
             <th>Drug Details</th>
             <th>HSN Code</th>
             <th>Qty</th>
+            <th>BatchNo</th>
+            <th>Expiry</th>
+            <th>MRP</th>
             <th>Unit Value</th>
             <th>Total</th>
             <th>Discount</th>
             <th>GST%</th>
-            <th>SGST</th>
-            <th>CGST</th>
-            <th>BatchNo</th>
-            <th>Expiry</th>
+
           </tr>
         </thead>
         <tbody>
@@ -147,14 +147,13 @@ th:nth-child(11), td:nth-child(11) { width: 14%; } /* Amount */
                 <td style='text-align: left'>{{this.serviceName}}</td>
                 <td>{{this.hsnCode}}</td>
                 <td>{{this.quantity}}</td>
+                <td>{{this.batchNumber}}</td>
+                <td>{{this.expiryDate}}</td>
+                <td>{{formatCurrency this.mrp}}</td>
                 <td>{{formatCurrency this.unitMRP}}</td>
                 <td>{{formatCurrency this.value}}</td>
                 <td>{{formatCurrency this.discountApplied}}</td>
                 <td>{{this.gst}}</td>
-                <td>{{formatCurrency this.sgst}}</td>
-                <td>{{formatCurrency this.cgst}}</td>
-                <td>{{this.batchNumber}}</td>
-                <td>{{this.expiryDate}}</td>
 
               </tr>
             {{/each}}

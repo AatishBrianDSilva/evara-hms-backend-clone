@@ -43,6 +43,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       { label: 'CGST', value: 'cgst' },
       { label: 'SGST', value: 'sgst' },
       { label: 'Discount', value: 'discount' },
+      { label: 'Net Taxable Value', value: 'netTaxableValue' },
       { label: 'Invoice Value', value: 'invoiceValue' },
       { label: 'HSN Code', value: 'hsnCode' },
     ];
