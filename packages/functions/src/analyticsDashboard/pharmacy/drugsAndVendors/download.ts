@@ -37,7 +37,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       drugCode: record.drugCode,
       hsnCode: record.hsnCode,
       qtyPerPack: record.qtyPerPack,
-      lastUpdated: new Date(record.updatedAt).toLocaleDateString('en-IN'),
+      lastUpdated: new Date(record.updatedAt).toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+      }),
     }));
 
     // Define CSV fields

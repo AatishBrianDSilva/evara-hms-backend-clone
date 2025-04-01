@@ -92,46 +92,164 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           categoryCode: { $ifNull: ['$drugCategory._id', 'N/A'] },
           quantity: '$items.batches.deductedQuantity',
 
-          unitCost: {
+          // Fetch pack size safely
+          packSize: {
+            $ifNull: [
+              { $arrayElemAt: ['$pharmacyStock.batches.packSize', 0] },
+              1,
+            ],
+          },
+
+          // Fetch sell price safely
+          sellPrice: {
             $ifNull: [
               { $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0] },
               0,
             ],
           },
-          totalCost: {
-            $multiply: [
-              '$items.batches.deductedQuantity',
-              {
-                $ifNull: [
-                  { $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0] },
+
+          // Calculate unit cost (sell price per unit)
+          unitCost: {
+            $cond: {
+              if: {
+                $gt: [
+                  {
+                    $ifNull: [
+                      { $arrayElemAt: ['$pharmacyStock.batches.packSize', 0] },
+                      1,
+                    ],
+                  },
                   0,
                 ],
               },
-            ],
-          },
-          tax: {
-            $multiply: [
-              {
-                $ifNull: [
-                  { $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0] },
-                  0,
-                ],
-              },
-              0.1, // Assuming 10% tax
-            ],
-          },
-          totalTax: {
-            $multiply: [
-              '$items.batches.deductedQuantity',
-              {
-                $multiply: [
+              then: {
+                $divide: [
                   {
                     $ifNull: [
                       { $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0] },
                       0,
                     ],
                   },
-                  0.1, // 10% tax
+                  {
+                    $ifNull: [
+                      { $arrayElemAt: ['$pharmacyStock.batches.packSize', 0] },
+                      1,
+                    ],
+                  },
+                ],
+              },
+              else: 0,
+            },
+          },
+
+          // Calculate total cost
+          totalCost: {
+            $multiply: [
+              '$items.batches.deductedQuantity',
+              {
+                $cond: {
+                  if: {
+                    $gt: [
+                      {
+                        $ifNull: [
+                          {
+                            $arrayElemAt: [
+                              '$pharmacyStock.batches.packSize',
+                              0,
+                            ],
+                          },
+                          1,
+                        ],
+                      },
+                      0,
+                    ],
+                  },
+                  then: {
+                    $divide: [
+                      {
+                        $ifNull: [
+                          {
+                            $arrayElemAt: [
+                              '$pharmacyStock.batches.sellPrice',
+                              0,
+                            ],
+                          },
+                          0,
+                        ],
+                      },
+                      {
+                        $ifNull: [
+                          {
+                            $arrayElemAt: [
+                              '$pharmacyStock.batches.packSize',
+                              0,
+                            ],
+                          },
+                          1,
+                        ],
+                      },
+                    ],
+                  },
+                  else: 0,
+                },
+              },
+            ],
+          },
+
+          // Calculate tax (assuming 10%)
+          totalTax: {
+            $multiply: [
+              '$items.batches.deductedQuantity',
+              {
+                $multiply: [
+                  {
+                    $cond: {
+                      if: {
+                        $gt: [
+                          {
+                            $ifNull: [
+                              {
+                                $arrayElemAt: [
+                                  '$pharmacyStock.batches.packSize',
+                                  0,
+                                ],
+                              },
+                              1,
+                            ],
+                          },
+                          0,
+                        ],
+                      },
+                      then: {
+                        $divide: [
+                          {
+                            $ifNull: [
+                              {
+                                $arrayElemAt: [
+                                  '$pharmacyStock.batches.sellPrice',
+                                  0,
+                                ],
+                              },
+                              0,
+                            ],
+                          },
+                          {
+                            $ifNull: [
+                              {
+                                $arrayElemAt: [
+                                  '$pharmacyStock.batches.packSize',
+                                  0,
+                                ],
+                              },
+                              1,
+                            ],
+                          },
+                        ],
+                      },
+                      else: 0,
+                    },
+                  },
+                  0.1, // 10% tax rate
                 ],
               },
             ],
@@ -142,6 +260,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           remarks: { $ifNull: ['$items.notes', 'N/A'] },
         },
       },
+      // Remove rows where quantity is 0
+      { $match: { quantity: { $gt: 0 } } },
       {
         $project: {
           _id: 0,

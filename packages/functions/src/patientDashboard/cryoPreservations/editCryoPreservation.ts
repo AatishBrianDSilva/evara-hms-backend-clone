@@ -204,8 +204,10 @@ const processDataForReport = (
     gender: patient.gender,
     age: patient.age,
     spouseName: spouseName,
-    admissionDate: data.updatedAt
-      ? new Date(data.updatedAt).toLocaleDateString('en-GB')
+    admissionDate: patient.createdAt
+      ? new Date(patient.createdAt).toLocaleDateString('en-GB', {
+          timeZone: 'Asia/Kolkata',
+        })
       : 'N/A',
   };
 

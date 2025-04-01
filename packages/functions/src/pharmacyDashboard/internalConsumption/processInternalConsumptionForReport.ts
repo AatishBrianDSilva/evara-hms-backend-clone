@@ -34,7 +34,9 @@ export const processInternalConsumptionReportData = (
     content: {
       'Consumption ID': internalConsumption._id,
       'Branch Name': branch.branchName,
-      Date: new Date(internalConsumption.date).toLocaleDateString('en-GB'),
+      Date: new Date(internalConsumption.date).toLocaleDateString('en-GB', {
+        timeZone: 'Asia/Kolkata',
+      }),
       'Created By': internalConsumption.createdBy,
       'Report Id': internalConsumption.icNumber,
     },

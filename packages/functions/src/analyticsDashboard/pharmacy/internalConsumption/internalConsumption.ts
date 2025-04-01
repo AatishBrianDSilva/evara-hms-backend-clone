@@ -88,44 +88,168 @@ export const fetchInternalConsumptionData = async (
         category: { $ifNull: ['$category.name', 'N/A'] },
         categoryId: { $ifNull: ['$category._id', 'N/A'] },
         quantity: '$items.batches.deductedQuantity',
-        unitCost: {
+
+        // Fetch pack size
+        packSize: {
+          $ifNull: [
+            { $arrayElemAt: ['$pharmacyStock.batches.packSize', 0] },
+            1,
+          ], // Default to 1 to avoid division errors
+        },
+
+        // Fetch sell price
+        sellPrice: {
           $ifNull: [
             { $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0] },
             0,
           ],
         },
-        totalCost: {
-          $multiply: [
-            '$items.batches.deductedQuantity',
-            {
-              $ifNull: [
-                { $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0] },
+
+        // Correct unit cost calculation
+        unitCost: {
+          $cond: {
+            if: {
+              $gt: [
+                {
+                  $ifNull: [
+                    { $arrayElemAt: ['$pharmacyStock.batches.packSize', 0] },
+                    1,
+                  ],
+                },
                 0,
               ],
-            },
-          ],
-        },
-        totalTax: {
-          $multiply: [
-            '$items.batches.deductedQuantity',
-            {
-              $multiply: [
+            }, // Ensure pack size is valid
+            then: {
+              $divide: [
                 {
                   $ifNull: [
                     { $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0] },
                     0,
                   ],
                 },
-                0.1, // Assuming 10% tax rate
+                {
+                  $ifNull: [
+                    { $arrayElemAt: ['$pharmacyStock.batches.packSize', 0] },
+                    1,
+                  ],
+                },
+              ],
+            },
+            else: 0,
+          },
+        },
+
+        // Correct total cost calculation
+        totalCost: {
+          $multiply: [
+            '$items.batches.deductedQuantity',
+            {
+              $cond: {
+                if: {
+                  $gt: [
+                    {
+                      $ifNull: [
+                        {
+                          $arrayElemAt: ['$pharmacyStock.batches.packSize', 0],
+                        },
+                        1,
+                      ],
+                    },
+                    0,
+                  ],
+                },
+                then: {
+                  $divide: [
+                    {
+                      $ifNull: [
+                        {
+                          $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0],
+                        },
+                        0,
+                      ],
+                    },
+                    {
+                      $ifNull: [
+                        {
+                          $arrayElemAt: ['$pharmacyStock.batches.packSize', 0],
+                        },
+                        1,
+                      ],
+                    },
+                  ],
+                },
+                else: 0,
+              },
+            },
+          ],
+        },
+
+        // Correct total tax calculation (assuming 10% tax rate)
+        totalTax: {
+          $multiply: [
+            '$items.batches.deductedQuantity',
+            {
+              $multiply: [
+                {
+                  $cond: {
+                    if: {
+                      $gt: [
+                        {
+                          $ifNull: [
+                            {
+                              $arrayElemAt: [
+                                '$pharmacyStock.batches.packSize',
+                                0,
+                              ],
+                            },
+                            1,
+                          ],
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $divide: [
+                        {
+                          $ifNull: [
+                            {
+                              $arrayElemAt: [
+                                '$pharmacyStock.batches.sellPrice',
+                                0,
+                              ],
+                            },
+                            0,
+                          ],
+                        },
+                        {
+                          $ifNull: [
+                            {
+                              $arrayElemAt: [
+                                '$pharmacyStock.batches.packSize',
+                                0,
+                              ],
+                            },
+                            1,
+                          ],
+                        },
+                      ],
+                    },
+                    else: 0,
+                  },
+                },
+                0.1, // 10% tax rate
               ],
             },
           ],
         },
+
         allocDate: '$date',
         addedBy: '$createdBy',
         remarks: { $ifNull: ['$items.notes', 'N/A'] },
       },
     },
+    // Remove rows where quantity is 0
+    { $match: { quantity: { $gt: 0 } } },
     {
       $project: {
         centre: 1,

@@ -89,6 +89,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Fetch paginated records from PatientPharmacy
     const pharmacyData = await PatientPharmacy.find(query)
       .populate(populatePaths)
+      .sort({ date: -1 }) // Ensures sorting by date descending
       .skip(isPaginationEnabled ? skip : 0)
       .limit(isPaginationEnabled ? limitNumber : 0)
       .lean();

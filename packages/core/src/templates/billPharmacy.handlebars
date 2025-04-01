@@ -5,7 +5,7 @@
     <style
     >
       body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size:
-      12px; /* Reduced global font size */ } main { padding: 0; display: flex;
+      10px; /* Reduced global font size */ } main { padding: 0; display: flex;
       flex-direction: column; flex-grow: 1; margin: 0; box-sizing: border-box; }
       .section { margin-bottom: 5px; /* Reduced vertical margin */ } .key-value
       { display: flex; justify-content: space-between; margin-bottom: 5px; /*
@@ -13,8 +13,8 @@
       50%; /* Maintain column width for key */ text-align: left; } .value {
       width: 50%; /* Maintain column width for value */ text-align: right; /*
       Right align values */ white-space: pre-wrap; } h2 { color:
-      {{styles.primaryColor}}; text-align: center; font-size: 16px; /* Font size
-      for h2 */ } .header { text-align: center; font-size: 14px; /* Header font
+      {{styles.primaryColor}}; text-align: center; font-size: 14px; /* Font size
+      for h2 */ } .header { text-align: center; font-size: 12px; /* Header font
       size */ font-weight: bold; background: #ffece4; /* Light off-white
       background */ height: 20px; /* Reduced height */ line-height: 20px; /*
       Center-align text vertically */ margin-bottom: 5px; /* Reduced space below
@@ -28,7 +28,7 @@
       /* Right align values in the right column */ } table { width: 100%;
       border-collapse: collapse; margin-bottom: 0px; /* Reduced vertical spacing
       below table */ } th, td { padding: 4px; /* Reduced padding */ text-align:
-      center; /* Center alignment for table items */ font-size: 11px; /* Font
+      center; /* Center alignment for table items */ font-size: 10px; /* Font
       size for table */ } th { background-color: #f9f9f9; /* Light off-white
       background */ color: black; /* Black text */ } td { color: black;
       word-wrap: break-word; word-break: break-word; white-space: normal; }
@@ -38,28 +38,28 @@
       th:nth-child(2), td:nth-child(2) { width: 20%; /* Maintain wide width for
       Drug Details column */ text-align: left; } th:nth-child(1), td:nth-child(1) { width: 4%; } /* # column */
 th:nth-child(2), td:nth-child(2) { width: 18%; text-align: left; } /* Drug Details */
-th:nth-child(3), td:nth-child(3) { width: 9%; } /* Qty */
+th:nth-child(3), td:nth-child(3) { width: 10%; } /* Qty */
 th:nth-child(4), td:nth-child(4) { width: 9%; } /* MRP */
 th:nth-child(5), td:nth-child(5) { width: 9%; } /* Value */
 th:nth-child(6), td:nth-child(6) { width: 9%; } /* GST% */
 th:nth-child(7), td:nth-child(7) { width: 9%; } /* SGST */
 th:nth-child(8), td:nth-child(8) { width: 9%; } /* CGST */
-th:nth-child(9), td:nth-child(9) { width: 14%; } /* BatchNo */
+th:nth-child(9), td:nth-child(9) { width: 9%; } /* BatchNo */
 th:nth-child(10), td:nth-child(10) { width: 14%; } /* Expiry */
-th:nth-child(11), td:nth-child(11) { width: 9%; } /* Amount */
+th:nth-child(11), td:nth-child(11) { width: 14%; } /* Amount */
   .summary-box { width: 35%; /* Maintain summary box width */
       margin-left: auto; padding: 5px; /* Reduced vertical padding */
       margin-top: 0; /* Remove margin above the summary box */ box-sizing:
       border-box; } .summary-key { font-weight: bold; text-align: left;
-      padding-right: 10px; width: 50%; font-size: 12px; /* Adjusted summary key
+      padding-right: 10px; width: 50%; font-size: 10px; /* Adjusted summary key
       font size */ } .summary-value { text-align: right; width: 50%; font-size:
-      12px; /* Adjusted summary value font size */ } .summary-row { display:
+      10px; /* Adjusted summary value font size */ } .summary-row { display:
       flex; justify-content: space-between; margin-bottom: 3px; /* Reduced space
       between summary rows */ } .branch-address { text-align: center; padding:
       10px 0; /* Reduced vertical padding */ font-size: 1em; color: #333;  }
        h1.tax-invoice {
         color: grey;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: bold;
         text-align: center;
         text-decoration: underline;
@@ -127,15 +127,16 @@ th:nth-child(11), td:nth-child(11) { width: 9%; } /* Amount */
           <tr>
             <th>#</th>
             <th>Drug Details</th>
+            <th>HSN Code</th>
             <th>Qty</th>
-            <th>MRP</th>
-            <th>Value</th>
-            <th>GST%</th>
-            <th>SGST</th>
-            <th>CGST</th>
             <th>BatchNo</th>
             <th>Expiry</th>
-            <th>Amount</th>
+            <th>MRP</th>
+            <th>Unit Value</th>
+            <th>Total</th>
+            <th>Discount</th>
+            <th>GST%</th>
+
           </tr>
         </thead>
         <tbody>
@@ -144,15 +145,15 @@ th:nth-child(11), td:nth-child(11) { width: 9%; } /* Amount */
               <tr>
                 <td>{{inc @index}}</td>
                 <td style='text-align: left'>{{this.serviceName}}</td>
+                <td>{{this.hsnCode}}</td>
                 <td>{{this.quantity}}</td>
-                <td>{{formatCurrency this.mrp}}</td>
-                <td>{{formatCurrency this.value}}</td>
-                <td>{{this.gst}}</td>
-                <td>{{formatCurrency this.sgst}}</td>
-                <td>{{formatCurrency this.cgst}}</td>
                 <td>{{this.batchNumber}}</td>
                 <td>{{this.expiryDate}}</td>
-                <td>{{formatCurrency this.amount}}</td>
+                <td>{{formatCurrency this.mrp}}</td>
+                <td>{{formatCurrency this.unitMRP}}</td>
+                <td>{{formatCurrency this.value}}</td>
+                <td>{{formatCurrency this.discountApplied}}</td>
+                <td>{{this.gst}}</td>
 
               </tr>
             {{/each}}
