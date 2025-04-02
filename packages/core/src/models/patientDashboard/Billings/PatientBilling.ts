@@ -207,6 +207,12 @@ patientBillingSchema.virtual('grandTotal').get(function (
   return round(this.amount + this.tax); // no discount subtraction
 });
 
+patientBillingSchema.virtual('totalBeforeDiscount').get(function (
+  this: IPatientBilling,
+) {
+  return round(this.amount + this.discount); // no discount subtraction
+});
+
 patientBillingSchema.virtual('totalPaid').get(function (this: IPatientBilling) {
   return round(
     this.payments
