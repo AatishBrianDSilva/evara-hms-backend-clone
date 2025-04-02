@@ -161,7 +161,6 @@ export const fetchPatientBillingsData = async (
     // Calculate computed fields: subTotal, totalPaid, and totalDues
     {
       $addFields: {
-        // subTotal as sum of amount and tax, rounded to two decimals
         subTotal: {
           $round: [
             {
@@ -170,7 +169,6 @@ export const fetchPatientBillingsData = async (
             2,
           ],
         },
-        // totalPaid as sum of all 'Payment' amounts
         totalPaid: {
           $round: [
             {
@@ -191,40 +189,46 @@ export const fetchPatientBillingsData = async (
             2,
           ],
         },
-        // totalDues as subTotal - totalPaid - discount, rounded to two decimals
         totalDues: {
           $round: [
             {
-              $subtract: [
-                {
+              $cond: {
+                if: { $eq: ['$status', 'Paid'] },
+                then: 0,
+                else: {
                   $subtract: [
                     {
                       $round: [
-                        {
-                          $add: ['$amount', { $ifNull: ['$tax', 0] }],
-                        },
+                        { $add: ['$amount', { $ifNull: ['$tax', 0] }] },
                         2,
                       ],
                     },
                     {
-                      $reduce: {
-                        input: {
-                          $filter: {
-                            input: '$payments',
-                            as: 'payment',
-                            cond: { $eq: ['$$payment.type', 'Payment'] },
+                      $round: [
+                        {
+                          $reduce: {
+                            input: {
+                              $filter: {
+                                input: '$payments',
+                                as: 'payment',
+                                cond: { $eq: ['$$payment.type', 'Payment'] },
+                              },
+                            },
+                            initialValue: 0,
+                            in: {
+                              $add: [
+                                '$$value',
+                                { $ifNull: ['$$this.amount', 0] },
+                              ],
+                            },
                           },
                         },
-                        initialValue: 0,
-                        in: {
-                          $add: ['$$value', { $ifNull: ['$$this.amount', 0] }],
-                        },
-                      },
+                        2,
+                      ],
                     },
                   ],
                 },
-                { $ifNull: ['$discount', 0] },
-              ],
+              },
             },
             2,
           ],
