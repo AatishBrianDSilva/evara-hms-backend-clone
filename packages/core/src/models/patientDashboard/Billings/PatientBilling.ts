@@ -207,10 +207,23 @@ patientBillingSchema.virtual('grandTotal').get(function (
   return round(this.amount + this.tax); // no discount subtraction
 });
 
+// patientBillingSchema.virtual('totalBeforeDiscount').get(function (
+//   this: IPatientBilling,
+// ) {
+//   return round(this.amount + this.discount); // no discount subtraction
+// });
+
 patientBillingSchema.virtual('totalBeforeDiscount').get(function (
   this: IPatientBilling,
 ) {
-  return round(this.amount + this.discount); // no discount subtraction
+  if (!this.items || !Array.isArray(this.items)) return 0;
+  const total = this.items.reduce((sum, item) => {
+    const itemPrice = item.total || 0;
+    const itemTax = item.tax || 0;
+    // const itemDiscount = item.discount || 0;
+    return sum + itemPrice + itemTax;
+  }, 0);
+  return round(total);
 });
 
 patientBillingSchema.virtual('totalPaid').get(function (this: IPatientBilling) {
