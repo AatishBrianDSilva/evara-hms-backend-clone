@@ -211,26 +211,24 @@ export const fetchPatientBillingsData = async (
                 input: '$items',
                 as: 'item',
                 in: {
-                  $multiply: [
-                    {
-                      $cond: {
-                        if: {
-                          $and: [
-                            { $gt: ['$$item.mrpPerUnit', 0] },
-                            { $gt: ['$$item.taxRate', 0] },
-                          ],
-                        },
-                        then: {
-                          $divide: [
-                            '$$item.mrpPerUnit',
-                            { $add: [1, { $divide: ['$$item.taxRate', 100] }] },
-                          ],
-                        },
-                        else: '$$item.mrpPerUnit',
-                      },
+                  $let: {
+                    vars: {
+                      mrp: { $ifNull: ['$$item.mrpPerUnit', 0] },
+                      qty: { $ifNull: ['$$item.quantity', 0] },
+                      rate: { $ifNull: ['$$item.taxRate', 0] },
                     },
-                    { $ifNull: ['$$item.quantity', 0] },
-                  ],
+                    in: {
+                      $add: [
+                        { $multiply: ['$$mrp', '$$qty'] },
+                        {
+                          $multiply: [
+                            { $multiply: ['$$mrp', '$$qty'] },
+                            { $divide: ['$$rate', 100] },
+                          ],
+                        },
+                      ],
+                    },
+                  },
                 },
               },
             },
