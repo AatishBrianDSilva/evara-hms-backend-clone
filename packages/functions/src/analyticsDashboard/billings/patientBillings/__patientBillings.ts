@@ -161,6 +161,7 @@ export const fetchPatientBillingsData = async (
     // Calculate computed fields: subTotal, totalPaid, and totalDues
     {
       $addFields: {
+        // 1. subTotal = amount + tax
         subTotal: {
           $round: [
             {
@@ -169,6 +170,8 @@ export const fetchPatientBillingsData = async (
             2,
           ],
         },
+
+        // 2. totalPaid = sum of all payments of type 'Payment'
         totalPaid: {
           $round: [
             {
@@ -189,6 +192,8 @@ export const fetchPatientBillingsData = async (
             2,
           ],
         },
+
+        // 3. totalDues = (amount + tax) - totalPaid (unless Paid status)
         totalDues: {
           $round: [
             {
@@ -233,6 +238,46 @@ export const fetchPatientBillingsData = async (
             2,
           ],
         },
+
+        // 4. item-wise total and discount
+        itemTotalSum: {
+          $sum: {
+            $map: {
+              input: '$items',
+              as: 'item',
+              in: { $ifNull: ['$$item.total', 0] },
+            },
+          },
+        },
+        itemDiscountSum: {
+          $sum: {
+            $map: {
+              input: '$items',
+              as: 'item',
+              in: { $ifNull: ['$$item.discount', 0] },
+            },
+          },
+        },
+      },
+    },
+    {
+      // 5. Final computed total
+      $addFields: {
+        total: {
+          $cond: {
+            if: { $gt: ['$itemDiscountSum', 0] }, // any item has discount
+            then: '$itemTotalSum', // use item total directly
+            else: {
+              $cond: {
+                if: { $gt: [{ $ifNull: ['$discount', 0] }, 0] }, // fallback to bill-level discount
+                then: {
+                  $subtract: ['$itemTotalSum', { $ifNull: ['$discount', 0] }],
+                },
+                else: '$itemTotalSum',
+              },
+            },
+          },
+        },
       },
     },
   ];
@@ -268,6 +313,7 @@ export const fetchPatientBillingsData = async (
                 totalDues: 1,
                 createdAt: 1,
                 updatedAt: 1,
+                total: 1,
               },
             },
           ],
@@ -308,6 +354,8 @@ export const fetchPatientBillingsData = async (
         amount: 1,
         subTotal: 1,
         totalPaid: 1,
+        total: 1,
+
         totalDues: 1,
         createdAt: 1,
         updatedAt: 1,
