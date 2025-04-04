@@ -156,6 +156,7 @@ export const fetchHSNReportData = async (params: FetchHSNReportParams) => {
       },
     ];
 
+    //aggregate funciton
     const result = await PatientBilling.aggregate(paginatedPipeline);
     const records = result[0]?.records || [];
     const totalDocs = result[0]?.totalCount?.[0]?.count || 0;
