@@ -69,6 +69,8 @@ export const fetchHSNReportData = async (params: FetchHSNReportParams) => {
     { $unwind: { path: '$drugData', preserveNullAndEmptyArrays: true } },
     {
       $addFields: {
+        drugId: '$drugData._id',
+        drugName: '$drugData.name',
         hsnCode: '$drugData.hsnCode',
         quantity: '$items.quantity',
         taxableValue: { $multiply: ['$items.mrpPerUnit', '$items.quantity'] },
@@ -93,16 +95,36 @@ export const fetchHSNReportData = async (params: FetchHSNReportParams) => {
       },
     },
     {
+      $group: {
+        _id: {
+          drugId: '$drugId',
+          drugName: '$drugName',
+          taxRate: '$rateOfTax',
+        },
+        hsnCode: { $first: '$hsnCode' },
+        quantity: { $sum: '$quantity' },
+        taxableValue: { $sum: '$taxableValue' },
+        netTaxableValue: { $sum: '$netTaxableValue' },
+        invoiceValue: { $sum: '$invoiceValue' },
+        cgst: { $sum: '$cgst' },
+        sgst: { $sum: '$sgst' },
+        rateOfTax: { $first: '$rateOfTax' },
+        createdAt: { $max: '$createdAt' },
+      },
+    },
+    {
       $project: {
         _id: 0,
+        drugId: '$_id.drugId',
+        drugName: '$_id.drugName',
         hsnCode: 1,
         quantity: 1,
-        taxableValue: 1,
-        netTaxableValue: 1, // ✅ included in output
         rateOfTax: 1,
-        cgst: 1,
-        sgst: 1,
-        invoiceValue: 1,
+        taxableValue: { $round: ['$taxableValue', 2] },
+        netTaxableValue: { $round: ['$netTaxableValue', 2] },
+        invoiceValue: { $round: ['$invoiceValue', 2] },
+        cgst: { $round: ['$cgst', 2] },
+        sgst: { $round: ['$sgst', 2] },
         createdAt: 1,
       },
     },
@@ -113,8 +135,8 @@ export const fetchHSNReportData = async (params: FetchHSNReportParams) => {
     basePipeline.push({
       $match: {
         $or: [
+          { drugName: { $regex: searchQuery, $options: 'i' } },
           { hsnCode: { $regex: searchQuery, $options: 'i' } },
-          { billingId: { $regex: searchQuery, $options: 'i' } },
         ],
       },
     });

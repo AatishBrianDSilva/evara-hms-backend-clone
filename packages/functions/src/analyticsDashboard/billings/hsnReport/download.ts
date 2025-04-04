@@ -29,6 +29,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const fields = [
       { label: 'Sl.No.', value: 'SlNo' },
       { label: 'HSN Code', value: 'hsnCode' },
+      { label: 'Drug Name', value: 'drugName' },
       { label: 'Quantity', value: 'quantity' },
       { label: 'Taxable Value', value: 'taxableValue' },
       { label: 'Rate of Tax', value: 'rateOfTax' },

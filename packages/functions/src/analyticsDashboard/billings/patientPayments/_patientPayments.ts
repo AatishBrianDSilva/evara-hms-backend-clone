@@ -202,6 +202,46 @@ export const fetchPatientBillingsData = async (
   });
 
   pipeline.push({
+    $addFields: {
+      billAmount: {
+        $round: [
+          {
+            $sum: {
+              $map: {
+                input: '$items',
+                as: 'item',
+                in: {
+                  $multiply: [
+                    {
+                      $cond: {
+                        if: {
+                          $and: [
+                            { $gt: ['$$item.mrpPerUnit', 0] },
+                            { $gt: ['$$item.taxRate', 0] },
+                          ],
+                        },
+                        then: {
+                          $divide: [
+                            '$$item.mrpPerUnit',
+                            { $add: [1, { $divide: ['$$item.taxRate', 100] }] },
+                          ],
+                        },
+                        else: '$$item.mrpPerUnit',
+                      },
+                    },
+                    { $ifNull: ['$$item.quantity', 0] },
+                  ],
+                },
+              },
+            },
+          },
+          2,
+        ],
+      },
+    },
+  });
+
+  pipeline.push({
     $match: {
       'payments.0': { $exists: true },
     },
@@ -268,6 +308,7 @@ export const fetchPatientBillingsData = async (
               totalDues: 1,
               taxableValue: 1,
               totalValue: 1,
+              billAmount: 1,
               createdAt: 1,
               updatedAt: 1,
               paymentAmount: '$payments.amount',
