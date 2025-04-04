@@ -736,7 +736,7 @@ const generateSemenAnalysisReport = async (data: IReportData) => {
       id: patient?.patientId || patient?._id,
       age: patient?.dob ? differenceInYears(new Date(), patient?.dob) : 'N/A',
       gender: patient?.gender,
-      admissionDate: formatDateIST(patient?.createdAt, 'dd-MM-yyyy'),
+      admissionDate: formatDateIST(data?.result?.createdAt, 'dd-MM-yyyy'),
       spouseName: spouseName,
     },
     semenAnalysisData: data.result?.details,
@@ -830,7 +830,7 @@ const generateSpermDFIReport = async (data: IReportData) => {
       id: patient?.patientId || patient?._id,
       age: patient?.dob ? differenceInYears(new Date(), patient?.dob) : 'N/A',
       gender: patient?.gender,
-      admissionDate: formatDateIST(patient?.createdAt, 'dd-MM-yyyy'),
+      admissionDate: formatDateIST(data?.result?.createdAt, 'dd-MM-yyyy'),
     },
     spermDFIData: data.result?.details, // Use specific details for Sperm DFI
     uploadedImages, // Add uploaded images to the template data
