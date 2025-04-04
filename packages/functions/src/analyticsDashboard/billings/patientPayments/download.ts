@@ -73,6 +73,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       { label: 'Patient Name', value: 'patientName' },
       { label: 'Service', value: 'billType' },
       {
+        label: 'Bill Amount',
+        value: (row: any) => formatToIndianCurrencyFormat(row.billAmount),
+      },
+      {
         label: 'Taxable Value',
         value: (row: any) => formatToIndianCurrencyFormat(row.taxableValue),
       },

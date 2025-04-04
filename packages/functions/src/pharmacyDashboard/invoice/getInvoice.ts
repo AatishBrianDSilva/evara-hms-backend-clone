@@ -10,12 +10,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     await connectMongoDb();
 
-    const invoices = await PharmacyInvoice.aggregate([
+    // Extract pagination params
+    const params = event.queryStringParameters || {};
+    const page = parseInt(params.page || '1', 10);
+    const limit = parseInt(params.limit || '10', 10);
+    const sort = params.sort ? JSON.parse(params.sort) : { createdAt: -1 };
+
+    // Common pipeline
+    const commonPipeline: any[] = [
       {
         $lookup: {
-          from: 'purchaseorders', // Name of the PurchaseOrder collection
+          from: 'purchaseorders',
           localField: 'purchaseOrderId',
-          foreignField: 'poNumber', // Match using poNumber
+          foreignField: 'poNumber',
           as: 'purchaseOrder',
         },
       },
@@ -27,7 +34,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
       {
         $lookup: {
-          from: 'drugvendors', // Name of the DrugVendor collection
+          from: 'drugvendors',
           localField: 'purchaseOrder.vendor',
           foreignField: '_id',
           as: 'vendor',
@@ -42,28 +49,52 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       {
         $addFields: {
           vendorName: '$vendor.name',
-          totalAmount: {
-            $sum: '$purchaseOrder.responses.netAmount', // Calculate total netAmount
-          },
+          totalAmount: { $sum: '$purchaseOrder.responses.netAmount' },
         },
       },
+    ];
+
+    const result = await PharmacyInvoice.aggregate([
       {
-        $project: {
-          _id: 1,
-          clinicId: 1,
-          branchId: 1,
-          purchaseOrderId: 1,
-          invoice: 1,
-          invoiceNumber: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          vendorName: 1,
-          totalAmount: 1,
+        $facet: {
+          paginatedResults: [
+            ...commonPipeline,
+            { $sort: sort },
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+            {
+              $project: {
+                _id: 1,
+                clinicId: 1,
+                branchId: 1,
+                purchaseOrderId: 1,
+                invoice: 1,
+                invoiceNumber: 1,
+                createdAt: 1,
+                updatedAt: 1,
+                vendorName: 1,
+                totalAmount: 1,
+              },
+            },
+          ],
+          totalCount: [...commonPipeline, { $count: 'totalDocs' }],
         },
       },
     ]);
 
-    return successResponse('Fetched invoices successfully', invoices);
+    const records = result[0]?.paginatedResults || [];
+    const totalDocs = result[0]?.totalCount[0]?.totalDocs || 0;
+    const totalPages = Math.ceil(totalDocs / limit);
+
+    return successResponse('Fetched invoices successfully', {
+      records,
+      pagination: {
+        page,
+        limit,
+        totalDocs,
+        totalPages,
+      },
+    });
   } catch (error) {
     console.error('Error fetching invoices:', error);
     return errorResponse(error);
