@@ -162,8 +162,8 @@ const processDataForReport = (
     gender: patient.gender,
     age: patient.age,
     spouseName: spouseName, // Now using fetched spouseName
-    admissionDate: patient.createdAt
-      ? new Date(patient.createdAt).toLocaleDateString('en-IN', {
+    createdAt: data.createdAt
+      ? new Date(data.createdAt).toLocaleDateString('en-IN', {
           timeZone: 'Asia/Kolkata',
         })
       : 'N/A',
