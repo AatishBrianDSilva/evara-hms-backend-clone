@@ -311,18 +311,28 @@ const processDataForReport = async (
 
     billItems = pharmacyItems;
   } else {
-    billItems = billing.items.map((item: any) => ({
-      serviceName: item.serviceName,
-      serviceType: item.serviceType,
-      quantity: item.quantity,
-      price: item.price,
-      amount: item.amount,
-      total: item.total,
-      CGST: 'N/A',
-      SGST: 'N/A',
-      MRP: 'N/A',
-      tax: 'N/A',
-    }));
+    billItems = billing.items.map((item: any) => {
+      const quantity = item.quantity ?? 1;
+      const discountedUnitPrice = item.price ?? 0;
+      const mrpPerUnit = item.mrpPerUnit ?? discountedUnitPrice;
+
+      const discountedTotal = discountedUnitPrice * quantity;
+      const nonDiscountedTotal = mrpPerUnit * quantity;
+
+      return {
+        serviceName: item.serviceName,
+        serviceType: item.serviceType,
+        quantity,
+        price: discountedUnitPrice,
+        amount: discountedTotal,
+        total: discountedTotal,
+        CGST: 'N/A',
+        SGST: 'N/A',
+        MRP: formatToIndianCurrencyFormat(mrpPerUnit),
+        tax: '0',
+        nonDiscountedPrice: nonDiscountedTotal,
+      };
+    });
   }
   const totalAmount = billItems.reduce((sum: number, item: any) => {
     const itemAmount =
