@@ -79,15 +79,30 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 function calculateSummary(billings: IPatientBilling[]): BillingSummary {
   return billings.reduce<BillingSummary>(
     (acc, billing) => {
-      const total = billing.subTotal;
+      // Calculate MRP-based bill amount including tax
+      const itemTotal = billing.items.reduce((sum, item) => {
+        const mrp = Number(item?.mrpPerUnit || 0);
+        const qty = Number(item?.quantity || 0);
+        const taxRate = Number(item?.taxRate || 0); // percentage
+
+        const base = mrp * qty;
+        const tax = (base * taxRate) / 100;
+
+        return sum + base + tax;
+      }, 0);
+
+      // Payments of type 'Payment'
       const totalPaid = billing.payments
         .filter(payment => payment.type === 'Payment')
         .reduce((sum, payment) => sum + payment.amount, 0);
 
-      acc.amount += total;
+      // Dues (you already have a virtual `totalDues`)
+      const totalDue = billing.totalDues ?? 0;
+
+      acc.amount += itemTotal;
       acc.payment += totalPaid;
-      acc.discount += billing.discount;
-      acc.due += total - totalPaid - billing.discount;
+      acc.discount += billing.discount ?? 0;
+      acc.due += totalDue;
 
       return acc;
     },
