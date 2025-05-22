@@ -252,11 +252,16 @@ const generateFooterHtml = (): string => {
     })
     .replace(/ /g, '-');
 
+  // return `
+  //   <footer style="width: 94%; padding: 10px 0; font-size: 16px; color: grey; text-align: center; border-top: 2px solid #288BDB; margin-left: auto; margin-right: auto;">
+  //     Bill generated on ${currentDate} - evarahealth.in
+  //   </footer>
+  // `;
   return `
-    <footer style="width: 94%; padding: 10px 0; font-size: 16px; color: grey; text-align: center; border-top: 2px solid #288BDB; margin-left: auto; margin-right: auto;">
-      Bill generated on ${currentDate} - evarahealth.in
-    </footer>
-  `;
+  <footer style="width: 94%; padding: 10px 0; font-size: 16px; color: grey; text-align: center; border-top: 2px solid #288BDB; margin-left: auto; margin-right: auto;">
+
+  </footer>
+`;
 };
 
 const generateHtmlWithContentBorders = (bodyHtml: string): string => {
@@ -731,7 +736,7 @@ const generateSemenAnalysisReport = async (data: IReportData) => {
       id: patient?.patientId || patient?._id,
       age: patient?.dob ? differenceInYears(new Date(), patient?.dob) : 'N/A',
       gender: patient?.gender,
-      admissionDate: formatDateIST(patient?.createdAt, 'dd-MM-yyyy'),
+      admissionDate: formatDateIST(data?.result?.createdAt, 'dd-MM-yyyy'),
       spouseName: spouseName,
     },
     semenAnalysisData: data.result?.details,
@@ -825,7 +830,7 @@ const generateSpermDFIReport = async (data: IReportData) => {
       id: patient?.patientId || patient?._id,
       age: patient?.dob ? differenceInYears(new Date(), patient?.dob) : 'N/A',
       gender: patient?.gender,
-      admissionDate: formatDateIST(patient?.createdAt, 'dd-MM-yyyy'),
+      admissionDate: formatDateIST(data?.result?.createdAt, 'dd-MM-yyyy'),
     },
     spermDFIData: data.result?.details, // Use specific details for Sperm DFI
     uploadedImages, // Add uploaded images to the template data
