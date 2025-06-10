@@ -618,17 +618,15 @@ const getPharmacySummary = async (
   clinicId: string,
   branchId: string,
 ) => {
-  const data = await PatientBilling.aggregate([
+  // 1. Sum up all Pharmacy billings
+  const billingAgg = await PatientBilling.aggregate([
     {
       $match: {
         clinicId,
         branchId,
-        billType: 'Pharmacy', // Only include Pharmacy bills
-        status: 'Paid', // Only include paid bills
-        createdAt: {
-          $gte: dateRange.startDate,
-          $lte: dateRange.endDate,
-        },
+        billType: 'Pharmacy',
+        status: 'Paid',
+        createdAt: { $gte: dateRange.startDate, $lte: dateRange.endDate },
       },
     },
     {
@@ -637,45 +635,64 @@ const getPharmacySummary = async (
         totalAmountSum: {
           $sum: {
             $subtract: [
-              {
-                $add: [
-                  { $ifNull: ['$amount', 0] }, // Ensure amount exists
-                  { $ifNull: ['$tax', 0] }, // Ensure tax exists
-                ],
-              },
-              { $ifNull: ['$discount', 0] }, // Ensure discount exists
+              { $add: [{ $ifNull: ['$amount', 0] }, { $ifNull: ['$tax', 0] }] },
+              { $ifNull: ['$discount', 0] },
             ],
           },
         },
-        totalRefundedSum: {
-          $sum: {
-            $cond: [
-              {
-                $and: [
-                  { $gte: ['$refundDetails.refundDate', dateRange.startDate] },
-                  { $lte: ['$refundDetails.refundDate', dateRange.endDate] },
-                ],
-              },
-              { $ifNull: ['$totalRefunded', 0] },
-              0,
-            ],
-          },
-        }, // Sum of total refund
       },
     },
   ]);
 
-  // Ensure correct rounding and handling
-  const totalAmount =
-    data.length > 0
-      ? parseFloat(
-          (data[0].totalAmountSum - data[0].totalRefundedSum).toFixed(2),
-        )
-      : 0;
+  const totalAmount = billingAgg.length
+    ? parseFloat(billingAgg[0].totalAmountSum.toFixed(2))
+    : 0;
 
-  const response = {
-    totalAmount: totalAmount, // Return the final total
+  // 2. Sum up Pharmacy refunds from PatientRefund
+  const refundAgg = await PatientRefund.aggregate([
+    {
+      $match: {
+        clinicId,
+        branchId,
+        'refundDetails.refundDate': {
+          $gte: dateRange.startDate,
+          $lte: dateRange.endDate,
+        },
+      },
+    },
+    // Join back to billing to ensure only Pharmacy bills
+    {
+      $lookup: {
+        from: 'patientbillings',
+        localField: 'billingId',
+        foreignField: '_id',
+        as: 'billingInfo',
+      },
+    },
+    { $unwind: { path: '$billingInfo', preserveNullAndEmptyArrays: false } },
+    {
+      $match: {
+        'billingInfo.billType': 'Pharmacy',
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalRefundedSum: { $sum: '$refundDetails.refundAmount' },
+      },
+    },
+  ]);
+
+  const totalRefunded = refundAgg.length
+    ? parseFloat(refundAgg[0].totalRefundedSum.toFixed(2))
+    : 0;
+
+  // 3. Compute net
+  const netAmount = parseFloat((totalAmount - totalRefunded).toFixed(2));
+
+  return {
+    totalAmount,
+    totalRefunded,
+    netAmount,
   };
-
-  return response;
 };
