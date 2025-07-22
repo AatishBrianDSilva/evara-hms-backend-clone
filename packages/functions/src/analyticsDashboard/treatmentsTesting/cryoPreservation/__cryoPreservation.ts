@@ -135,7 +135,21 @@ export const fetchCryoPreservationData = async (
   // Add sorting and pagination
   pipeline.push({ $sort: { date: -1 } });
 
-  if (!fetchAllData) {
+  if (fetchAllData) {
+    // show *all* results, but still project into exactly the same shape:
+    pipeline.push({
+      $project: {
+        date: 1,
+        patientId: 1, // already added via $addFields
+        patientName: 1,
+        cryoPreservation: 1, // from your $addFields above
+        doctor: '$doctorFullName',
+        status: 1,
+        amount: 1,
+      },
+    });
+  } else {
+    // paginated + same projection
     pipeline.push(
       { $skip: (page - 1) * limit },
       { $limit: limit },
