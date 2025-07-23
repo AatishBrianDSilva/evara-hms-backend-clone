@@ -53,6 +53,12 @@ export const MastersApiLocalStack = ({ stack }: StackContext) => {
     'DELETE /master/patient/source/{id}':
       'packages/functions/src/mastersDashboard/local/patients/source/delete.main',
 
+    //  Patient List
+    'GET /master/patient/list':
+      'packages/functions/src/mastersDashboard/local/patient-list/getPatientsList.main',
+    'GET /master/patient/download':
+      'packages/functions/src/mastersDashboard/local/patient-list/downloadPatients.main',
+
     //Patient Referral Doctor
     'POST /master/patient/referral-doctor/add':
       'packages/functions/src/mastersDashboard/local/patients/referralDoctors/add.main',

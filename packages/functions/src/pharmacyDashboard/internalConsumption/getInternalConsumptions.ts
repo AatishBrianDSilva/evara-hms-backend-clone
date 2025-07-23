@@ -165,11 +165,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
                 },
                 createdAt: 1,
                 updatedAt: 1,
-                sellPrice: {
+                cost: {
                   $multiply: ['$unitPrice', '$items.quantity'],
                 },
                 // unitMrp: 1,
-                cost: { $multiply: ['$unitMrp', '$items.quantity'] },
+                sellPrice: { $multiply: ['$unitMrp', '$items.quantity'] },
               },
             },
           ],
