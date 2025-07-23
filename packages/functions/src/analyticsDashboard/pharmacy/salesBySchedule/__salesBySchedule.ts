@@ -146,7 +146,18 @@ export const fetchSalesReportData = async (params: FetchSalesReportParams) => {
         expiryDate: '$item.details.expiryDate',
         quantity: '$item.details.quantity',
         billAmount: {
-          $multiply: ['$item.details.mrp', '$item.details.quantity'],
+          $multiply: [
+            {
+              $cond: [
+                { $gt: ['$drugItemDetails.packSize', 0] },
+                {
+                  $divide: ['$item.details.mrp', '$drugItemDetails.packSize'],
+                },
+                0,
+              ],
+            },
+            '$item.details.quantity',
+          ],
         },
       },
     },

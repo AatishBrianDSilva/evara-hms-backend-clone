@@ -120,6 +120,24 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
                     0,
                   ],
                 },
+                // grab the sellPrice & mrp from the matching batch
+                unitMrp: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $gt: ['$drugItemDetails.mrp', 0] },
+                        { $gt: ['$drugItemDetails.packSize', 0] },
+                      ],
+                    },
+                    {
+                      $divide: [
+                        '$drugItemDetails.mrp',
+                        '$drugItemDetails.packSize',
+                      ],
+                    },
+                    0,
+                  ],
+                },
               },
             },
             {
@@ -147,9 +165,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
                 },
                 createdAt: 1,
                 updatedAt: 1,
-                totalCost: {
+                sellPrice: {
                   $multiply: ['$unitPrice', '$items.quantity'],
                 },
+                // unitMrp: 1,
+                cost: { $multiply: ['$unitMrp', '$items.quantity'] },
               },
             },
           ],

@@ -132,7 +132,23 @@ export const fetchPatientProceduresData = async (
   // Sorting and pagination
   pipeline.push({ $sort: { date: -1 } });
 
-  if (!fetchAllData) {
+  // …after pipeline.push({ $sort: { date: -1 } });
+
+  if (fetchAllData) {
+    // PROJECT into the same shape as the paginated branch
+    pipeline.push({
+      $project: {
+        date: 1,
+        patientId: 1,
+        procedure: '$procedureName', // rename your computed field
+        doctor: '$doctorFullName',
+        amount: 1,
+        status: 1,
+        patientName: 1,
+      },
+    });
+  } else {
+    // existing paginated facet
     pipeline.push({
       $facet: {
         records: [
