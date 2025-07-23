@@ -573,6 +573,8 @@ const getBillingsSummary = async (
     label: method,
   }));
 
+  const finalPaid = totalPaid - totalPending - totalRefunded;
+
   // Step 6: Prepare status badges
   const statusBadges = [
     {
@@ -602,7 +604,7 @@ const getBillingsSummary = async (
     total: totalBills,
     badges: [...statusBadges, ...paymentBadges],
     totalBillings: (totalPaid - totalRefunded).toFixed(2),
-    totalPaid: (totalPaid - totalRefunded).toFixed(2),
+    totalPaid: (totalPaid - totalRefunded - totalRefunded).toFixed(2),
     totalDiscount: totalDiscount.toFixed(2),
     totalRefunded: totalRefunded.toFixed(2),
     totalPending: totalPending.toFixed(2),
