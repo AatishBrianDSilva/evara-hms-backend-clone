@@ -21,6 +21,11 @@ import Patient from '@evara-backend/core/src/models/Patients';
 import Branch from '@evara-backend/core/models/mastersDashboard/global/ClinicBranches';
 import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
+const formatToISTDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' });
+};
+
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
@@ -281,7 +286,7 @@ const processDataForReport = (
     ) {
       modifiedGeneralDetails[key] = new Date(
         modifiedGeneralDetails[key],
-      ).toLocaleDateString('en-GB');
+      ).toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' });
     }
   });
 
@@ -304,7 +309,12 @@ const processDataForReport = (
       (detail, index) => {
         const formattedDetail = {};
         Object.keys(detail).forEach(key => {
-          formattedDetail[_.startCase(key)] = detail[key];
+          const value = detail[key];
+          if (typeof value === 'string' && iso8601Regex.test(value)) {
+            formattedDetail[_.startCase(key)] = formatToISTDate(value);
+          } else {
+            formattedDetail[_.startCase(key)] = value;
+          }
         });
         return {
           title: `Embryo Biopsy ${index + 1}`,

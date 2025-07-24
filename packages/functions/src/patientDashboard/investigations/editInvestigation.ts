@@ -75,6 +75,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       updateData.result = body.result;
     } else if (body.testType === ETestType.SpermDFI) {
       updateData.result = body.result;
+    } else if (body.testType === ETestType.EarlyPregnancyScan) {
+      updateData.result = body.result;
     }
 
     if (body.result?.files && body.result?.files.length > 0) {

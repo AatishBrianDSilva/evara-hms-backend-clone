@@ -36,7 +36,7 @@ async function getBase64ImageFromUrl(imageUrl: string): Promise<string> {
 
 const getHtmlTemplate = async (templateType: string): Promise<string> => {
   const templatePath = path.join(TEMPLATE_PATH, `${templateType}.handlebars`);
-  console.log('Path', templatePath);
+  // console.log('Path', templatePath);
   return fs.promises.readFile(templatePath, 'utf8');
 };
 
@@ -334,10 +334,10 @@ const generateHtmlForInternalConsumption = async (data: IReportData) => {
   try {
     const logo = await getBase64ImageFromUrl(logoUrl);
 
-    console.log(
-      'Processing Internal Consumption Report:',
-      JSON.stringify(data, null, 2),
-    );
+    // console.log(
+    //   'Processing Internal Consumption Report:',
+    //   JSON.stringify(data, null, 2),
+    // );
 
     // ✅ Extract the Internal Consumption ID
     const internalConsumptionDetails = data.sections.find(
@@ -347,8 +347,8 @@ const generateHtmlForInternalConsumption = async (data: IReportData) => {
       internalConsumptionDetails?.content['Report Id'] || 'N/A';
     const reportDate = internalConsumptionDetails?.content['Date'] || 'N/A';
 
-    console.log(`✅ Extracted Debit Note Number: ${debitNoteNumber}`);
-    console.log(`✅ Extracted Date: ${reportDate}`);
+    // console.log(`✅ Extracted Debit Note Number: ${debitNoteNumber}`);
+    // console.log(`✅ Extracted Date: ${reportDate}`);
 
     // ✅ Fetch clinic and branch details
     const clinic = await Clinic.findOne({ code: data.clinic }).lean();
@@ -380,7 +380,7 @@ const generateHtmlForInternalConsumption = async (data: IReportData) => {
       addressSection?.content['Branch Address'] ||
       'Branch address not available';
 
-    console.log(`✅ Extracted Branch Address: ${branchAddress}`);
+    // console.log(`✅ Extracted Branch Address: ${branchAddress}`);
 
     // ✅ Extract items
     const itemsSection = data.sections.find(
@@ -388,7 +388,7 @@ const generateHtmlForInternalConsumption = async (data: IReportData) => {
     );
     const items = itemsSection?.content || [];
 
-    console.log(`✅ Extracted Items: ${JSON.stringify(items, null, 2)}`);
+    // console.log(`✅ Extracted Items: ${JSON.stringify(items, null, 2)}`);
 
     // ✅ Prepare template data
     const templateData = {
@@ -401,10 +401,10 @@ const generateHtmlForInternalConsumption = async (data: IReportData) => {
       },
     };
 
-    console.log(
-      '🚀 Sending Data to Handlebars Template:',
-      JSON.stringify(templateData, null, 2),
-    );
+    // console.log(
+    //   '🚀 Sending Data to Handlebars Template:',
+    //   JSON.stringify(templateData, null, 2),
+    // );
 
     // ✅ Generate header and footer HTML
     const headerHtml = `
@@ -428,10 +428,10 @@ const generateHtmlForInternalConsumption = async (data: IReportData) => {
     const template = await getHtmlTemplate(data.templateType);
     const htmlContent = generateHtml(template, templateData);
 
-    console.log(
-      '📌 Sections sent to template:',
-      JSON.stringify(data.sections, null, 2),
-    );
+    // console.log(
+    //   '📌 Sections sent to template:',
+    //   JSON.stringify(data.sections, null, 2),
+    // );
 
     if (!htmlContent) {
       console.error('❌ Failed to generate HTML content');
@@ -446,11 +446,11 @@ const generateHtmlForInternalConsumption = async (data: IReportData) => {
     ${footerHtml}
     `;
 
-    console.log('🔍 Final HTML Data:', {
-      headerHtml,
-      footerHtml,
-      htmlContent,
-    });
+    // console.log('🔍 Final HTML Data:', {
+    //   headerHtml,
+    //   footerHtml,
+    //   htmlContent,
+    // });
 
     return {
       headerHtml,
@@ -473,7 +473,7 @@ export const main: SNSHandler = async (event, _context) => {
 
       const data: IReportData = JSON.parse(rawData);
 
-      console.log('SNS Message', JSON.stringify(data, null, 2));
+      // console.log('SNS Message', JSON.stringify(data, null, 2));
 
       if (
         data.documentType === EDocumentTypes.Investigation &&
@@ -492,7 +492,7 @@ export const main: SNSHandler = async (event, _context) => {
       }
 
       if (data.documentType === EDocumentTypes.InternalConsumption) {
-        console.log('Generating Internal Consumption report...');
+        // console.log('Generating Internal Consumption report...');
         const internalConsumptionHtml =
           await generateHtmlForInternalConsumption(data);
 
@@ -503,11 +503,11 @@ export const main: SNSHandler = async (event, _context) => {
 
         const internalConsumptionKey = `${data.clinic}/internal-consumption/${data.reportId}-${data.fileName}.pdf`;
 
-        console.log('Sending Internal Consumption Report to SQS:', {
-          headerHtml: internalConsumptionHtml.headerHtml,
-          footerHtml: internalConsumptionHtml.footerHtml,
-          htmlContent: internalConsumptionHtml.htmlContent,
-        });
+        // console.log('Sending Internal Consumption Report to SQS:', {
+        //   headerHtml: internalConsumptionHtml.headerHtml,
+        //   footerHtml: internalConsumptionHtml.footerHtml,
+        //   htmlContent: internalConsumptionHtml.htmlContent,
+        // });
 
         await sendMessageToQueue({
           headerHtml: internalConsumptionHtml.headerHtml,
@@ -569,7 +569,7 @@ export const main: SNSHandler = async (event, _context) => {
           return;
         }
 
-        console.log('Sections Array:', JSON.stringify(data.sections, null, 2));
+        // console.log('Sections Array:', JSON.stringify(data.sections, null, 2));
 
         const branchSection = data.sections.find(
           section => section.title === 'Branch Details',
@@ -595,7 +595,7 @@ export const main: SNSHandler = async (event, _context) => {
         reportName: data.reportName,
       };
 
-      console.log('Data details', data.details);
+      // console.log('Data details', data.details);
 
       // Extract and convert uploaded images to base64
       const uploadedImages = [];
