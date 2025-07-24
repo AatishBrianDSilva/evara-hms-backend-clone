@@ -21,6 +21,21 @@ import Patient from '@evara-backend/core/models/Patients';
 import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 import Branch from '@evara-backend/core/models/mastersDashboard/global/ClinicBranches';
 
+const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+/** dd/mm/yyyy in IST */
+const formatToISTDate = (dateStr: string) =>
+  new Date(dateStr).toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' });
+
+/** hh:MM AM/PM in IST */
+const formatToISTTime = (dateStr: string) =>
+  new Date(dateStr).toLocaleTimeString('en-GB', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
@@ -267,17 +282,11 @@ async function updateCategory(
 
     // Handle date and time formatting for all other fields
     Object.keys(modifiedGeneralDetails).forEach(key => {
-      if (
-        typeof modifiedGeneralDetails[key] === 'string' &&
-        iso8601Regex.test(modifiedGeneralDetails[key])
-      ) {
-        if (timeSpecificFields.includes(key)) {
-          // For specific fields, return only the time
-          modifiedGeneralDetails[key] = formatTime(modifiedGeneralDetails[key]);
-        } else {
-          // For all other fields, return only the date
-          modifiedGeneralDetails[key] = formatDate(modifiedGeneralDetails[key]);
-        }
+      const val = modifiedGeneralDetails[key];
+      if (typeof val === 'string' && iso8601Regex.test(val)) {
+        modifiedGeneralDetails[key] = timeSpecificFields.includes(key)
+          ? formatToISTTime(val)
+          : formatToISTDate(val);
       }
     });
 
@@ -305,9 +314,7 @@ async function updateCategory(
             typeof dayDetail[key] === 'string' &&
             iso8601Regex.test(dayDetail[key])
           ) {
-            dayDetail[key] = new Date(dayDetail[key]).toLocaleDateString(
-              'en-GB',
-            );
+            dayDetail[key] = formatToISTDate(dayDetail[key]);
           }
         });
 

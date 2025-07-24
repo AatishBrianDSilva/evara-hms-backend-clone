@@ -113,23 +113,23 @@ export const main: SQSHandler = async (event, context) => {
         footerHtml,
       }: IPDFGeneratorMessage = JSON.parse(record.body);
 
-      console.log('Received data for report generation:', {
-        patient,
-        category,
-        reportName,
-        source_report_id,
-      });
+      // console.log('Received data for report generation:', {
+      //   patient,
+      //   category,
+      //   reportName,
+      //   source_report_id,
+      // });
 
-      console.log('HTML Content Length:', htmlContent.length);
-      console.log('Category for PDF conversion:', category);
+      // console.log('HTML Content Length:', htmlContent.length);
+      // console.log('Category for PDF conversion:', category);
 
       if (!htmlContent || htmlContent.trim() === '') {
         console.error('HTML content is empty. Skipping PDF generation.');
         continue;
       }
 
-      console.log('Header HTML:', headerHtml);
-      console.log('Footer HTML:', footerHtml);
+      // console.log('Header HTML:', headerHtml);
+      // console.log('Footer HTML:', footerHtml);
 
       const pdfBuffer = await convertHtmlToPdf(
         htmlContent,
@@ -223,9 +223,9 @@ export const main: SQSHandler = async (event, context) => {
           },
           { upsert: true, new: true },
         );
-        console.log('Patient invoice updated:', updatedPatientInvoice);
+        // console.log('Patient invoice updated:', updatedPatientInvoice);
       } else if (!patient && category === EDocumentTypes.PurchaseOrder) {
-        console.log('Handling purchase order report for ID:', source_report_id);
+        // console.log('Handling purchase order report for ID:', source_report_id);
         const purchaseOrder = await PurchaseOrder.findOne({
           poNumber: source_report_id,
         });
@@ -237,9 +237,9 @@ export const main: SQSHandler = async (event, context) => {
             key: s3Params.Key,
           };
           await purchaseOrder.save();
-          console.log(
-            `Purchase order ${source_report_id} updated with report.`,
-          );
+          // console.log(
+          //   `Purchase order ${source_report_id} updated with report.`,
+          // );
         } else {
           console.error(
             `Purchase order with poNumber ${source_report_id} not found.`,
@@ -310,9 +310,9 @@ export const main: SQSHandler = async (event, context) => {
 
           await purchaseOrder.save();
 
-          console.log(
-            `Processed purchase order ${source_report_id} updated with report in the latest response.`,
-          );
+          // console.log(
+          //   `Processed purchase order ${source_report_id} updated with report in the latest response.`,
+          // );
         } else {
           console.error(
             `Purchase order with poNumber ${source_report_id} not found.`,
