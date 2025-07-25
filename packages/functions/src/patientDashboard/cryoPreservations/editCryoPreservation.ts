@@ -272,7 +272,7 @@ const processDataForReport = (
   };
 
   // Define which fields require only the time part
-  const timeSpecificFields = ['time'];
+  const timeSpecificFields = ['time', 'timeOfFreezing'];
 
   // Extract all details from the result and remove the __v field
   const { __v, files, sperm_wash_items, ...generalDetails } =
