@@ -26,267 +26,176 @@ export const fetchInternalConsumptionData = async (
 
   const skip = (page - 1) * limit;
 
+  // build date filter + branch
   const matchCondition: any = { branchId };
-
   if (saleStartDate || saleEndDate) {
-    const startDate = saleStartDate ? new Date(saleStartDate) : null;
-    const endDate = saleEndDate ? new Date(saleEndDate) : null;
-
+    const start = saleStartDate ? new Date(saleStartDate) : null;
+    const end = saleEndDate ? new Date(saleEndDate) : null;
     matchCondition.date = {
-      ...(startDate && { $gte: new Date(startDate.setHours(0, 0, 0, 0)) }),
-      ...(endDate && { $lte: new Date(endDate.setHours(23, 59, 59, 999)) }),
+      ...(start && { $gte: new Date(start.setHours(0, 0, 0, 0)) }),
+      ...(end && { $lte: new Date(end.setHours(23, 59, 59, 999)) }),
     };
   }
 
+  // aggregation pipeline
   const pipeline: any[] = [
     { $match: matchCondition },
     { $unwind: '$items' },
-    { $unwind: '$items.batches' },
+
+    // stock lookup
     {
       $lookup: {
         from: 'pharmacystocks',
         localField: 'items.item',
         foreignField: '_id',
-        as: 'pharmacyStock',
+        as: 'stock',
       },
     },
-    { $unwind: { path: '$pharmacyStock', preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: '$stock', preserveNullAndEmptyArrays: true } },
+
+    // drug lookup
     {
       $lookup: {
         from: 'drugitems',
-        localField: 'pharmacyStock.item',
+        localField: 'stock.item',
         foreignField: '_id',
-        as: 'drugItem',
+        as: 'drug',
       },
     },
-    { $unwind: { path: '$drugItem', preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: '$drug', preserveNullAndEmptyArrays: true } },
+
+    // taxRate lookup
+    {
+      $lookup: {
+        from: 'taxrates',
+        let: { tr: '$drug.taxRate' },
+        pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$tr'] } } }],
+        as: 'taxRateDetails',
+      },
+    },
+    { $unwind: { path: '$taxRateDetails', preserveNullAndEmptyArrays: true } },
+
+    // category lookup
     {
       $lookup: {
         from: 'drugcategories',
-        localField: 'drugItem.category',
+        localField: 'drug.category',
         foreignField: '_id',
-        as: 'category',
+        as: 'cat',
       },
     },
-    { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: '$cat', preserveNullAndEmptyArrays: true } },
+
+    // location lookup
     {
       $lookup: {
         from: 'druglocations',
         localField: 'items.transferFrom.location',
         foreignField: '_id',
-        as: 'location',
+        as: 'loc',
       },
     },
-    { $unwind: { path: '$location', preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: '$loc', preserveNullAndEmptyArrays: true } },
+
+    // Stage 1: raw fields
     {
       $addFields: {
         centre: { $concat: ['$clinicId', '-', '$branchId'] },
-        pharmacyDrugName: '$drugItem.name',
-        pharmacyDrugCode: '$drugItem.code',
-        locationName: '$location.location',
-        locationCode: { $ifNull: ['$location._id', 'N/A'] },
-        category: { $ifNull: ['$category.name', 'N/A'] },
-        categoryId: { $ifNull: ['$category._id', 'N/A'] },
-        quantity: '$items.batches.deductedQuantity',
+        pharmacyDrugName: '$drug.name',
+        pharmacyDrugCode: '$drug.code',
+        category: { $ifNull: ['$cat.name', 'N/A'] },
+        categoryCode: { $ifNull: ['$cat._id', 'N/A'] },
+        locationName: '$loc.location',
+        locationCode: { $ifNull: ['$loc._id', 'N/A'] },
 
-        // Fetch pack size
-        packSize: {
-          $ifNull: [
-            { $arrayElemAt: ['$pharmacyStock.batches.packSize', 0] },
-            1,
-          ], // Default to 1 to avoid division errors
-        },
-
-        // Fetch sell price
-        sellPrice: {
-          $ifNull: [
-            { $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0] },
+        quantity: '$items.quantity',
+        unitPrice: {
+          $cond: [
+            {
+              $and: [
+                { $gt: ['$drug.rate', 0] },
+                { $gt: ['$drug.packSize', 0] },
+              ],
+            },
+            { $divide: ['$drug.rate', '$drug.packSize'] },
             0,
           ],
         },
-
-        // Correct unit cost calculation
-        unitCost: {
-          $cond: {
-            if: {
-              $gt: [
-                {
-                  $ifNull: [
-                    { $arrayElemAt: ['$pharmacyStock.batches.packSize', 0] },
-                    1,
-                  ],
-                },
-                0,
-              ],
-            }, // Ensure pack size is valid
-            then: {
-              $divide: [
-                {
-                  $ifNull: [
-                    { $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0] },
-                    0,
-                  ],
-                },
-                {
-                  $ifNull: [
-                    { $arrayElemAt: ['$pharmacyStock.batches.packSize', 0] },
-                    1,
-                  ],
-                },
-              ],
-            },
-            else: 0,
-          },
-        },
-
-        // Correct total cost calculation
-        totalCost: {
-          $multiply: [
-            '$items.batches.deductedQuantity',
+        unitMrp: {
+          $cond: [
             {
-              $cond: {
-                if: {
-                  $gt: [
-                    {
-                      $ifNull: [
-                        {
-                          $arrayElemAt: ['$pharmacyStock.batches.packSize', 0],
-                        },
-                        1,
-                      ],
-                    },
-                    0,
-                  ],
-                },
-                then: {
-                  $divide: [
-                    {
-                      $ifNull: [
-                        {
-                          $arrayElemAt: ['$pharmacyStock.batches.sellPrice', 0],
-                        },
-                        0,
-                      ],
-                    },
-                    {
-                      $ifNull: [
-                        {
-                          $arrayElemAt: ['$pharmacyStock.batches.packSize', 0],
-                        },
-                        1,
-                      ],
-                    },
-                  ],
-                },
-                else: 0,
-              },
+              $and: [{ $gt: ['$drug.mrp', 0] }, { $gt: ['$drug.packSize', 0] }],
             },
+            { $divide: ['$drug.mrp', '$drug.packSize'] },
+            0,
           ],
         },
+        taxRate: { $ifNull: ['$taxRateDetails.taxRate', 0] },
+      },
+    },
 
-        // Correct total tax calculation (assuming 10% tax rate)
+    // Stage 2: cost + sellPrice
+    {
+      $addFields: {
+        cost: { $multiply: ['$unitPrice', '$quantity'] },
+        sellPrice: { $multiply: ['$unitMrp', '$quantity'] },
+      },
+    },
+
+    // Stage 3: totalTax
+    {
+      $addFields: {
         totalTax: {
-          $multiply: [
-            '$items.batches.deductedQuantity',
-            {
-              $multiply: [
-                {
-                  $cond: {
-                    if: {
-                      $gt: [
-                        {
-                          $ifNull: [
-                            {
-                              $arrayElemAt: [
-                                '$pharmacyStock.batches.packSize',
-                                0,
-                              ],
-                            },
-                            1,
-                          ],
-                        },
-                        0,
-                      ],
-                    },
-                    then: {
-                      $divide: [
-                        {
-                          $ifNull: [
-                            {
-                              $arrayElemAt: [
-                                '$pharmacyStock.batches.sellPrice',
-                                0,
-                              ],
-                            },
-                            0,
-                          ],
-                        },
-                        {
-                          $ifNull: [
-                            {
-                              $arrayElemAt: [
-                                '$pharmacyStock.batches.packSize',
-                                0,
-                              ],
-                            },
-                            1,
-                          ],
-                        },
-                      ],
-                    },
-                    else: 0,
-                  },
-                },
-                0.1, // 10% tax rate
-              ],
-            },
-          ],
+          $multiply: ['$cost', { $divide: ['$taxRate', 100] }],
         },
+      },
+    },
 
+    // filter zero-quantity
+    { $match: { quantity: { $gt: 0 } } },
+
+    // project final columns
+    {
+      $project: {
+        _id: 0,
+        serialNumber: 1,
+        centre: 1,
+        pharmacyDrugName: 1,
+        pharmacyDrugCode: 1,
+        category: 1,
+        categoryCode: 1,
+        locationName: 1,
+        locationCode: 1,
+        quantity: 1,
+        cost: '$cost',
+        sellPrice: '$sellPrice',
+        taxRate: 1,
+        totalTax: '$totalTax',
         allocDate: '$date',
         addedBy: '$createdBy',
         remarks: { $ifNull: ['$items.notes', 'N/A'] },
       },
     },
-    // Remove rows where quantity is 0
-    { $match: { quantity: { $gt: 0 } } },
-    {
-      $project: {
-        centre: 1,
-        pharmacyDrugName: 1,
-        pharmacyDrugCode: 1,
-        locationName: 1,
-        locationCode: 1,
-        category: 1,
-        categoryId: 1,
-        quantity: 1,
-        unitCost: 1,
-        totalCost: 1,
-        totalTax: 1,
-        allocDate: 1,
-        addedBy: 1,
-        remarks: 1,
-      },
-    },
+
+    // sort
     { $sort: { allocDate: -1 } },
   ];
 
+  // paginate if not fetching all
   if (!fetchAllData) {
     pipeline.push({ $skip: skip }, { $limit: limit });
   }
 
+  // run aggregation
   const records = await InternalConsumption.aggregate(pipeline);
 
+  // if all data, return raw records
   if (fetchAllData) {
     return { records };
   }
 
-  const totalDocsPipeline = [...pipeline];
-  totalDocsPipeline.pop(); // Remove $skip/$limit to accurately count rows
-  totalDocsPipeline.push({ $count: 'totalDocs' });
-  const countResult = await InternalConsumption.aggregate(totalDocsPipeline);
-  const totalDocs = countResult.length ? countResult[0].totalDocs : 0;
-
+  // otherwise add pagination metadata
+  const totalDocs = await InternalConsumption.countDocuments(matchCondition);
   const totalPages = Math.ceil(totalDocs / limit);
 
   return {

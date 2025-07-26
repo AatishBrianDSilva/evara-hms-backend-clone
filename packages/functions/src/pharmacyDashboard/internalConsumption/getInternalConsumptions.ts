@@ -56,6 +56,23 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
       {
         $lookup: {
+          from: 'taxrates',
+          let: { taxRateId: '$drugItemDetails.taxRate' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$_id', '$$taxRateId'] },
+              },
+            },
+          ],
+          as: 'taxRateDetails',
+        },
+      },
+      {
+        $unwind: { path: '$taxRateDetails', preserveNullAndEmptyArrays: true },
+      },
+      {
+        $lookup: {
           from: 'druglocations',
           localField: 'items.transferFrom.location',
           foreignField: '_id',
@@ -120,7 +137,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
                     0,
                   ],
                 },
-                // grab the sellPrice & mrp from the matching batch
                 unitMrp: {
                   $cond: [
                     {
@@ -138,8 +154,53 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
                     0,
                   ],
                 },
+                cost: {
+                  $multiply: [
+                    {
+                      $cond: [
+                        {
+                          $and: [
+                            { $gt: ['$drugItemDetails.rate', 0] },
+                            { $gt: ['$drugItemDetails.packSize', 0] },
+                          ],
+                        },
+                        {
+                          $divide: [
+                            '$drugItemDetails.rate',
+                            '$drugItemDetails.packSize',
+                          ],
+                        },
+                        0,
+                      ],
+                    },
+                    '$items.quantity',
+                  ],
+                },
+                taxRate: { $ifNull: ['$taxRateDetails.taxRate', 0] },
+                taxAmount: {
+                  $multiply: [
+                    '$cost',
+                    { $divide: ['$taxRateDetails.taxRate', 100] },
+                  ],
+                },
               },
             },
+            {
+              $addFields: {
+                taxAmount: {
+                  $multiply: ['$cost', { $divide: ['$taxRate', 100] }],
+                },
+              },
+            },
+
+            {
+              $addFields: {
+                taxAmount: {
+                  $multiply: ['$cost', { $divide: ['$taxRate', 100] }],
+                },
+              },
+            },
+
             {
               $project: {
                 _id: 1,
@@ -170,6 +231,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
                 },
                 // unitMrp: 1,
                 sellPrice: { $multiply: ['$unitMrp', '$items.quantity'] },
+                taxRate: 1,
+                taxAmount: 1,
               },
             },
           ],
