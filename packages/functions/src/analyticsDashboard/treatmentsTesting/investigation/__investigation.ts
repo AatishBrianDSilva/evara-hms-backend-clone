@@ -128,7 +128,20 @@ export const fetchInvestigationReportsData = async (
 
   pipeline.push({ $sort: { date: -1 } });
 
-  if (!fetchAllData) {
+  if (fetchAllData) {
+    pipeline.push({
+      $project: {
+        date: 1,
+        patientId: '$patientCode',
+        investigation: '$investigationName',
+        doctor: '$doctorName',
+        patientName: 1,
+        status: 1,
+        amount: 1,
+        files: '$result.files',
+      },
+    });
+  } else {
     pipeline.push({
       $facet: {
         records: [

@@ -32,6 +32,7 @@ export interface IBatchDetails {
   packSize: number;
   locations: ILocationQuantity[];
   sellPrice: number;
+  mrp: number;
 }
 
 const batchDetailsSchema = new Schema<IBatchDetails>(
@@ -58,6 +59,7 @@ const batchDetailsSchema = new Schema<IBatchDetails>(
       type: Number,
       required: false,
     },
+    mrp: { type: Number, required: false },
   },
 
   {

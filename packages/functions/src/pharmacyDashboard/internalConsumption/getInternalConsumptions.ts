@@ -17,7 +17,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     await connectMongoDb();
 
-    // Extract query parameters
     const params = event.queryStringParameters || {};
     const {
       page = '1',
@@ -32,12 +31,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     console.log('Received searchQuery:', searchQuery);
 
-    // Shared pipeline for both pagination and total count
     const commonPipeline: any[] = [
       { $match: { clinicId: auth.clinicId, branchId: auth.branchId } },
       { $unwind: '$items' },
-
-      // Lookup for PharmacyStock
       {
         $lookup: {
           from: 'pharmacystocks',
@@ -47,8 +43,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         },
       },
       { $unwind: { path: '$itemDetails', preserveNullAndEmptyArrays: true } },
-
-      // Nested lookup to fetch drug name from DrugItem
       {
         $lookup: {
           from: 'drugitems',
@@ -60,8 +54,23 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       {
         $unwind: { path: '$drugItemDetails', preserveNullAndEmptyArrays: true },
       },
-
-      // Lookup for location details
+      {
+        $lookup: {
+          from: 'taxrates',
+          let: { taxRateId: '$drugItemDetails.taxRate' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$_id', '$$taxRateId'] },
+              },
+            },
+          ],
+          as: 'taxRateDetails',
+        },
+      },
+      {
+        $unwind: { path: '$taxRateDetails', preserveNullAndEmptyArrays: true },
+      },
       {
         $lookup: {
           from: 'druglocations',
@@ -73,8 +82,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       {
         $unwind: { path: '$locationDetails', preserveNullAndEmptyArrays: true },
       },
-
-      // Lookup for patient details
       {
         $lookup: {
           from: 'patients',
@@ -86,8 +93,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       {
         $unwind: { path: '$patientDetails', preserveNullAndEmptyArrays: true },
       },
-
-      // Optional search filter
       ...(searchQuery
         ? [
             {
@@ -105,7 +110,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         : []),
     ];
 
-    // Aggregation with facets to handle both pagination and total count
     const result = await InternalConsumption.aggregate([
       {
         $facet: {
@@ -115,6 +119,89 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
             { $skip: (pageNum - 1) * limitNum },
             { $limit: limitNum },
             {
+              $addFields: {
+                unitPrice: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $gt: ['$drugItemDetails.rate', 0] },
+                        { $gt: ['$drugItemDetails.packSize', 0] },
+                      ],
+                    },
+                    {
+                      $divide: [
+                        '$drugItemDetails.rate',
+                        '$drugItemDetails.packSize',
+                      ],
+                    },
+                    0,
+                  ],
+                },
+                unitMrp: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $gt: ['$drugItemDetails.mrp', 0] },
+                        { $gt: ['$drugItemDetails.packSize', 0] },
+                      ],
+                    },
+                    {
+                      $divide: [
+                        '$drugItemDetails.mrp',
+                        '$drugItemDetails.packSize',
+                      ],
+                    },
+                    0,
+                  ],
+                },
+                cost: {
+                  $multiply: [
+                    {
+                      $cond: [
+                        {
+                          $and: [
+                            { $gt: ['$drugItemDetails.rate', 0] },
+                            { $gt: ['$drugItemDetails.packSize', 0] },
+                          ],
+                        },
+                        {
+                          $divide: [
+                            '$drugItemDetails.rate',
+                            '$drugItemDetails.packSize',
+                          ],
+                        },
+                        0,
+                      ],
+                    },
+                    '$items.quantity',
+                  ],
+                },
+                taxRate: { $ifNull: ['$taxRateDetails.taxRate', 0] },
+                taxAmount: {
+                  $multiply: [
+                    '$cost',
+                    { $divide: ['$taxRateDetails.taxRate', 100] },
+                  ],
+                },
+              },
+            },
+            {
+              $addFields: {
+                taxAmount: {
+                  $multiply: ['$cost', { $divide: ['$taxRate', 100] }],
+                },
+              },
+            },
+
+            {
+              $addFields: {
+                taxAmount: {
+                  $multiply: ['$cost', { $divide: ['$taxRate', 100] }],
+                },
+              },
+            },
+
+            {
               $project: {
                 _id: 1,
                 icNumber: 1,
@@ -122,7 +209,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
                 quantity: '$items.quantity',
                 notes: '$items.notes',
                 drugLocation: '$locationDetails.location',
-                drugName: '$drugItemDetails.name', // Correctly fetching drug name here
+                drugName: '$drugItemDetails.name',
                 batchNo: { $arrayElemAt: ['$itemDetails.batches.batchNo', 0] },
                 transferredBy: '$createdBy',
                 patientName: {
@@ -139,6 +226,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
                 },
                 createdAt: 1,
                 updatedAt: 1,
+                cost: {
+                  $multiply: ['$unitPrice', '$items.quantity'],
+                },
+                // unitMrp: 1,
+                sellPrice: { $multiply: ['$unitMrp', '$items.quantity'] },
+                taxRate: 1,
+                taxAmount: 1,
               },
             },
           ],
@@ -147,12 +241,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
     ]);
 
-    // Extract data from the aggregation result
     const records = result[0]?.paginatedResults || [];
     const totalRecords = result[0]?.totalCount[0]?.totalDocs || 0;
     const totalPages = Math.ceil(totalRecords / limitNum);
 
-    // Return the response
     return successResponse('Success', {
       records,
       pagination: {

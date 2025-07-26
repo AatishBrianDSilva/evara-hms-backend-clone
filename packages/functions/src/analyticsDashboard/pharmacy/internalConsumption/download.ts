@@ -7,12 +7,9 @@ import { formatToIndianCurrencyFormat } from '@evara-backend/core/lib/utils/form
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
-
   try {
     const auth = extractAuthorizerDetails(event);
-    if (!auth) {
-      throw new Error('Unauthorized access.');
-    }
+    if (!auth) throw new Error('Unauthorized');
 
     const params = event.queryStringParameters || {};
     const {
@@ -22,9 +19,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       saleEndDate,
       allData = 'false',
     } = params;
-
     const fetchAllData = allData === 'true';
 
+    // Fetch the same records as your dashboard
     const { records } = await fetchInternalConsumptionData({
       branchId: auth.branchId,
       page: fetchAllData ? undefined : parseInt(page, 10),
@@ -34,53 +31,49 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       fetchAllData,
     });
 
-    const dataForCsv = records.map((record: any, index: number) => ({
-      SlNo: index + 1,
-      centre: record.centre,
-      pharmacyDrugName: record.pharmacyDrugName,
-      pharmacyDrugCode: record.pharmacyDrugCode,
-      locationName: record.locationName,
-      locationCode: record.locationCode,
-      category: record.category,
-      categoryId: record.categoryId,
-      quantity: record.quantity,
-      unitCost: record.unitCost.toFixed(2),
-      totalCost: record.totalCost.toFixed(2),
-      totalTax: record.totalTax.toFixed(2),
-      allocDate: new Date(record.allocDate).toLocaleDateString('en-IN', {
+    // Map into exactly your columnsConfig order & names
+    const dataForCsv = records.map((rec: any, idx: number) => ({
+      SlNo: idx + 1,
+      Centre: rec.centre,
+      'Pharmacy Drug Name': rec.pharmacyDrugName,
+      'Pharmacy Drug Code': rec.pharmacyDrugCode,
+      'Location Name': rec.locationName,
+      'Location Code': rec.locationCode,
+      Category: rec.category,
+      'Category Code': rec.categoryCode,
+      Qty: rec.quantity,
+      Cost: formatToIndianCurrencyFormat(rec.cost),
+      'Sell Price': formatToIndianCurrencyFormat(rec.sellPrice),
+      'Tax Rate': `${rec.taxRate ?? 0}%`,
+      'Total Tax': formatToIndianCurrencyFormat(rec.totalTax),
+      'Alloc Date': new Date(rec.allocDate).toLocaleDateString('en-IN', {
         timeZone: 'Asia/Kolkata',
       }),
-      addedBy: record.addedBy,
-      remarks: record.remarks,
+      'Added By': rec.addedBy,
+      Remarks: rec.remarks,
     }));
 
+    // Define your CSV columns in order
     const fields = [
-      { label: 'Sl.no', value: 'SlNo' },
-      { label: 'Centre', value: 'centre' },
-      { label: 'Drug Name', value: 'pharmacyDrugName' },
-      { label: 'Drug Code', value: 'pharmacyDrugCode' },
-      { label: 'Location', value: 'locationName' },
-      { label: 'Location Code', value: 'locationCode' },
-      { label: 'Category', value: 'category' },
-      { label: 'Category ID', value: 'categoryId' },
-      { label: 'Quantity', value: 'quantity' },
-      {
-        label: 'Unit Cost',
-        value: (row: any) => formatToIndianCurrencyFormat(row.unitCost),
-      },
-      {
-        label: 'Total Cost',
-        value: (row: any) => formatToIndianCurrencyFormat(row.totalCost),
-      },
-      {
-        label: 'Total Tax',
-        value: (row: any) => formatToIndianCurrencyFormat(row.totalTax),
-      },
-      { label: 'Allocation Date', value: 'allocDate' },
-      { label: 'Added By', value: 'addedBy' },
-      { label: 'Remarks', value: 'remarks' },
+      { label: 'S No', value: 'SlNo' },
+      { label: 'Centre', value: 'Centre' },
+      { label: 'Pharmacy Drug Name', value: 'Pharmacy Drug Name' },
+      { label: 'Pharmacy Drug Code', value: 'Pharmacy Drug Code' },
+      { label: 'Location Name', value: 'Location Name' },
+      { label: 'Location Code', value: 'Location Code' },
+      { label: 'Category', value: 'Category' },
+      { label: 'Category Code', value: 'Category Code' },
+      { label: 'Qty', value: 'Qty' },
+      { label: 'Cost', value: 'Cost' },
+      { label: 'Sell Price', value: 'Sell Price' },
+      { label: 'Tax Rate', value: 'Tax Rate' },
+      { label: 'Total Tax', value: 'Total Tax' },
+      { label: 'Alloc Date', value: 'Alloc Date' },
+      { label: 'Added By', value: 'Added By' },
+      { label: 'Remarks', value: 'Remarks' },
     ];
 
+    // Generate CSV
     const asyncParser = new AsyncParser({ fields });
     const csv = await asyncParser.parse(dataForCsv).promise();
     const csvWithBom = `\uFEFF${csv}`;
@@ -89,14 +82,15 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       statusCode: 200,
       headers: {
         'Content-Type': 'text/csv',
-        'Content-Disposition': `attachment; filename="internal_consumption_report.csv"`,
+        'Content-Disposition':
+          'attachment; filename="internal_consumption_report.csv"',
         'Access-Control-Allow-Origin': '*',
       },
       isBase64Encoded: true,
       body: Buffer.from(csvWithBom).toString('base64'),
     };
-  } catch (error) {
-    console.error('Error generating Internal Consumption CSV:', error);
-    return errorResponse(error);
+  } catch (err) {
+    console.error('Error generating CSV:', err);
+    return errorResponse(err);
   }
 };

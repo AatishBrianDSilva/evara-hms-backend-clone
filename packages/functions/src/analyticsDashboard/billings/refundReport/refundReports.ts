@@ -80,6 +80,16 @@ export const fetchRefundsData = async (params: FetchRefundsDataParams) => {
       },
     },
     {
+      $lookup: {
+        from: 'patientbillings',
+        localField: 'billingId',
+        foreignField: '_id',
+        as: 'billingDetails',
+      },
+    },
+    { $unwind: { path: '$billingDetails', preserveNullAndEmptyArrays: true } },
+
+    {
       $addFields: {
         patientName: {
           $concat: [
@@ -92,6 +102,7 @@ export const fetchRefundsData = async (params: FetchRefundsDataParams) => {
             },
           ],
         },
+        service: '$billingDetails.billType',
       },
     },
     { $sort: sort }, // ✅ Apply dynamic sorting

@@ -87,6 +87,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         value: (row: any) =>
           formatToIndianCurrencyFormat(row.refundDetails?.refundAmount || 0),
       },
+      { label: 'Service', value: 'service' },
+
       { label: 'Reason for Refund', value: 'refundDetails.reason' },
       { label: 'Payment Method', value: 'refundDetails.method' },
     ];

@@ -1,7 +1,7 @@
 import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
-import { PatientPharmacy } from '@evara-backend/core/src/models/patientDashboard/PatientPharmacy';
+import { PatientBilling } from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling';
 
-interface FetchSalesReportParams {
+export interface FetchSalesReportParams {
   branchId: string;
   page?: number;
   limit?: number;
@@ -21,109 +21,92 @@ export const fetchSalesReportData = async (params: FetchSalesReportParams) => {
     saleStartDate,
     saleEndDate,
   } = params;
-
   const skip = (page - 1) * limit;
 
-  const matchCondition: any = { branchId };
-
+  // --- build filter ---
+  const matchCondition: any = { branchId, billType: 'Pharmacy' };
   if (saleStartDate || saleEndDate) {
-    const startDate = saleStartDate ? new Date(saleStartDate) : null;
-    const endDate = saleEndDate ? new Date(saleEndDate) : null;
-
-    matchCondition.$expr = {
-      $and: [
-        ...(startDate
-          ? [
-              {
-                $gte: [
-                  {
-                    $dateFromParts: {
-                      year: { $year: '$date' },
-                      month: { $month: '$date' },
-                      day: { $dayOfMonth: '$date' },
-                    },
-                  },
-                  startDate,
-                ],
-              },
-            ]
-          : []),
-        ...(endDate
-          ? [
-              {
-                $lte: [
-                  {
-                    $dateFromParts: {
-                      year: { $year: '$date' },
-                      month: { $month: '$date' },
-                      day: { $dayOfMonth: '$date' },
-                    },
-                  },
-                  endDate,
-                ],
-              },
-            ]
-          : []),
-      ],
+    const start = saleStartDate ? new Date(saleStartDate) : null;
+    const end = saleEndDate ? new Date(saleEndDate) : null;
+    matchCondition.createdAt = {
+      ...(start && { $gte: new Date(start.setHours(0, 0, 0, 0)) }),
+      ...(end && { $lte: new Date(end.setHours(23, 59, 59, 999)) }),
     };
   }
 
   const pipeline: any[] = [
     { $match: matchCondition },
-    { $unwind: '$item.details' },
+    { $unwind: '$items' },
+    { $match: { 'items.serviceType': 'Pharmacy' } },
+
+    // 1) pharmacyStock via items.masterServiceId
     {
       $lookup: {
-        from: 'patients',
-        localField: 'patient',
-        foreignField: 'patientId',
-        as: 'patientDetails',
+        from: 'pharmacystocks',
+        localField: 'items.masterServiceId',
+        foreignField: '_id',
+        as: 'stockData',
       },
     },
-    { $unwind: { path: '$patientDetails', preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: '$stockData', preserveNullAndEmptyArrays: true } },
+
+    // 2) DrugItem via stockData.item
+    {
+      $lookup: {
+        from: 'drugitems',
+        localField: 'stockData.item',
+        foreignField: '_id',
+        as: 'drugData',
+      },
+    },
+    { $unwind: { path: '$drugData', preserveNullAndEmptyArrays: true } },
+
+    // 3) category & type from drugData
+    {
+      $lookup: {
+        from: 'drugcategories',
+        localField: 'drugData.category',
+        foreignField: '_id',
+        as: 'drugCategory',
+      },
+    },
+    { $unwind: { path: '$drugCategory', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'drugtypes',
+        localField: 'drugData.type',
+        foreignField: '_id',
+        as: 'drugType',
+      },
+    },
+    { $unwind: { path: '$drugType', preserveNullAndEmptyArrays: true } },
+
+    // 4) doctor lookup
     {
       $lookup: {
         from: 'doctors',
-        localField: 'doctor',
+        localField: 'items.doctorId',
         foreignField: '_id',
         as: 'doctorDetails',
       },
     },
     { $unwind: { path: '$doctorDetails', preserveNullAndEmptyArrays: true } },
+
+    // 5) patient lookup
     {
       $lookup: {
-        from: 'drugitems',
-        localField: 'item.details.itemId',
-        foreignField: '_id',
-        as: 'drugItemDetails',
+        from: 'patients',
+        localField: 'patientCode',
+        foreignField: 'patientId',
+        as: 'patientDetails',
       },
     },
-    { $unwind: { path: '$drugItemDetails', preserveNullAndEmptyArrays: true } },
-    {
-      $lookup: {
-        from: 'drugcategories', // Lookup for drug category
-        localField: 'drugItemDetails.category',
-        foreignField: '_id',
-        as: 'drugCategoryDetails',
-      },
-    },
-    {
-      $unwind: {
-        path: '$drugCategoryDetails',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: 'drugtypes', // Lookup for drug type
-        localField: 'drugItemDetails.type',
-        foreignField: '_id',
-        as: 'drugTypeDetails',
-      },
-    },
-    { $unwind: { path: '$drugTypeDetails', preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: '$patientDetails', preserveNullAndEmptyArrays: true } },
+
+    // 6) compute your fields (including category & type!)
     {
       $addFields: {
-        saleDate: '$date',
+        saleDate: '$createdAt',
         patientName: {
           $concat: [
             '$patientDetails.firstName',
@@ -139,17 +122,18 @@ export const fetchSalesReportData = async (params: FetchSalesReportParams) => {
             '$doctorDetails.lastName',
           ],
         },
-        pharmacyDrug: '$drugItemDetails.name',
-        drugCategory: { $ifNull: ['$drugCategoryDetails.name', 'N/A'] }, // Fetch category name
-        drugType: { $ifNull: ['$drugTypeDetails.name', 'N/A'] }, // Fetch type name
-        batchNum: '$item.details.batchNumber',
-        expiryDate: '$item.details.expiryDate',
-        quantity: '$item.details.quantity',
-        billAmount: {
-          $multiply: ['$item.details.mrp', '$item.details.quantity'],
-        },
+        pharmacyDrug: '$drugData.name',
+        drugCategory: '$drugCategory.name', // ← now populated
+        drugType: '$drugType.name', // ← now populated
+        batchNum: '$items.batchNo',
+        expiryDate: '$items.expiryDate',
+        locationName: '$items.pharmacyDetails.location',
+        quantity: '$items.quantity',
+        billAmount: '$items.total',
       },
     },
+
+    // 7) project only what you need
     {
       $project: {
         _id: 0,
@@ -161,33 +145,25 @@ export const fetchSalesReportData = async (params: FetchSalesReportParams) => {
         drugType: 1,
         batchNum: 1,
         expiryDate: 1,
+        locationName: 1,
         quantity: 1,
         billAmount: 1,
       },
     },
+
     { $sort: { saleDate: -1 } },
   ];
 
-  if (paginate) {
-    pipeline.push({ $skip: skip }, { $limit: limit });
-  }
+  // apply pagination
+  if (paginate) pipeline.push({ $skip: skip }, { $limit: limit });
 
-  const records = await PatientPharmacy.aggregate(pipeline);
+  const records = await PatientBilling.aggregate(pipeline);
 
   if (!paginate) {
     return { records };
   }
 
-  const totalDocs = await PatientPharmacy.countDocuments(matchCondition);
+  const totalDocs = await PatientBilling.countDocuments(matchCondition);
   const totalPages = Math.ceil(totalDocs / limit);
-
-  return {
-    records,
-    pagination: {
-      totalDocs,
-      totalPages,
-      page,
-      limit,
-    },
-  };
+  return { records, pagination: { totalDocs, totalPages, page, limit } };
 };

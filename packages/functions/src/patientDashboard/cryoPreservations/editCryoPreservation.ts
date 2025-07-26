@@ -28,6 +28,23 @@ import Patient from '@evara-backend/core/models/Patients';
 import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 import Branch from '@evara-backend/core/models/mastersDashboard/global/ClinicBranches';
 
+const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+const formatToISTDate = (dateStr: string) => {
+  return new Date(dateStr).toLocaleDateString('en-GB', {
+    timeZone: 'Asia/Kolkata',
+  });
+};
+
+const formatToISTTime = (dateStr: string) => {
+  return new Date(dateStr).toLocaleTimeString('en-GB', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
@@ -116,7 +133,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(404, 'Patient not found');
     }
 
-    console.log('patient data fetched', patient);
+    // console.log('patient data fetched', patient);
 
     // Fetch spouse name based on partnerId
     let spouseName = 'N/A';
@@ -130,8 +147,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     // Log the branchId and clinicId extracted from the auth
     const branchId = auth.branchId;
     const clinicId = auth.clinicId;
-    console.log('Extracted Branch ID:', branchId);
-    console.log('Extracted Clinic ID:', clinicId);
+    // console.log('Extracted Branch ID:', branchId);
+    // console.log('Extracted Clinic ID:', clinicId);
 
     // Fetch the branch using the branchId and clinicId from the auth details
     const branch = await Branch.findOne({
@@ -156,7 +173,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
         branch,
         body.actualName,
       );
-      console.log('Report Data: ', JSON.stringify(report, null, 2));
+      // console.log('Report Data: ', JSON.stringify(report, null, 2));
 
       // Send to SNS
       await SNSService.publishMessage({
@@ -204,12 +221,15 @@ const processDataForReport = (
     gender: patient.gender,
     age: patient.age,
     spouseName: spouseName,
-    createdAt: data.createdAt
-      ? new Date(data.createdAt).toLocaleDateString('en-GB', {
-          timeZone: 'Asia/Kolkata',
-        })
-      : 'N/A',
+    createdAt: data.createdAt ? formatToISTDate(data.createdAt) : 'N/A',
   };
+
+  console.log('Original UTC:', data.createdAt); // UTC
+  console.log(
+    'Formatted IST:',
+    formatToISTDate(data.createdAt),
+    formatToISTTime(data.createdAt),
+  );
 
   reportData.sections.push({
     showTitle: true,
@@ -252,7 +272,7 @@ const processDataForReport = (
   };
 
   // Define which fields require only the time part
-  const timeSpecificFields = ['time'];
+  const timeSpecificFields = ['time', 'timeOfFreezing'];
 
   // Extract all details from the result and remove the __v field
   const { __v, files, sperm_wash_items, ...generalDetails } =
@@ -320,13 +340,9 @@ const processDataForReport = (
       typeof modifiedGeneralDetails[key] === 'string' &&
       iso8601Regex.test(modifiedGeneralDetails[key])
     ) {
-      if (timeSpecificFields.includes(key)) {
-        // For specific fields, return only the time
-        modifiedGeneralDetails[key] = formatTime(modifiedGeneralDetails[key]);
-      } else {
-        // For all other fields, return only the date
-        modifiedGeneralDetails[key] = formatDate(modifiedGeneralDetails[key]);
-      }
+      modifiedGeneralDetails[key] = timeSpecificFields.includes(key)
+        ? formatToISTTime(modifiedGeneralDetails[key])
+        : formatToISTDate(modifiedGeneralDetails[key]);
     }
   });
 
@@ -348,7 +364,12 @@ const processDataForReport = (
     const formattedSpermWashItems = sperm_wash_items.map((item, index) => {
       const formattedItem = {};
       Object.keys(item).forEach(key => {
-        formattedItem[_.startCase(key)] = item[key];
+        const value = item[key];
+        if (typeof value === 'string' && iso8601Regex.test(value)) {
+          formattedItem[_.startCase(key)] = formatToISTDate(value);
+        } else {
+          formattedItem[_.startCase(key)] = value;
+        }
       });
       return {
         title: `Sperm Wash Item ${index + 1}`,

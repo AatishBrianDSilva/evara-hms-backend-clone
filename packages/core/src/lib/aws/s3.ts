@@ -144,8 +144,9 @@ class S3Service {
         Expires: expires,
       };
 
-      if (filePublic) {
-        params['ACL'] = 'public-read';
+      // ONLY add ACL when signing a PUT
+      if (operation === 'putObject' && filePublic) {
+        params.ACL = 'public-read';
       }
 
       const res = await s3.getSignedUrlPromise(operation, params);
