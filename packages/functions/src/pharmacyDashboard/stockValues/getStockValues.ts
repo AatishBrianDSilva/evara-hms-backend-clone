@@ -26,7 +26,7 @@ export const main: APIGatewayProxyHandler = async (event, _ctx) => {
 
     const pipeline: any[] = [
       // 1) restrict to this clinic/branch
-      // { $match: { clinicId: auth.clinicId, branchId: auth.branchId } },
+      { $match: { clinicId: auth.clinicId, branchId: auth.branchId } },
 
       // 2) unwind every batch & its locations
       { $unwind: '$batches' },
