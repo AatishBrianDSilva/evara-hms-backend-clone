@@ -5,6 +5,7 @@ import { PatientPharmacy } from '@evara-backend/core/src/models/patientDashboard
 import { PharmacyStock } from '@evara-backend/core/src/models/pharmacyDashboard/PharmacyStock';
 import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
 import { PatientBilling } from '@evara-backend/core/models/patientDashboard/Billings/PatientBilling';
+import { PatientBillingEstimation } from '@evara-backend/core/models/patientDashboard/Billings/PatientBillingEstimation';
 
 /**
  * Deletes a patient pharmacy allocation and restocks the pharmacy items.
@@ -75,8 +76,9 @@ export const deleteAndRestockPharmacy = async (
   // Delete the patient pharmacy allocation
   await PatientPharmacy.findByIdAndDelete(allocationId).session(session);
 
-  // // Delete the estimation
-  // await PatientBillingEstimation.findByIdAndDelete(estimation._id).session(
-  //   session,
-  // );
+  // Delete the estimation
+  // 5) **New**: delete any billing estimations for this serviceId
+  await PatientBillingEstimation.deleteMany({
+    serviceId: allocation._id,
+  }).session(session);
 };
