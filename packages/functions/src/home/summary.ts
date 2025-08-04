@@ -579,7 +579,7 @@ const getBillingsSummary = async (
   const statusBadges = [
     {
       color: statusMap.Paid.color,
-      count: (totalPaid - totalRefunded).toFixed(2),
+      count: totalPaid.toFixed(2),
       label: statusMap.Paid.label,
     },
     {
@@ -603,8 +603,9 @@ const getBillingsSummary = async (
   const response = {
     total: totalBills,
     badges: [...statusBadges, ...paymentBadges],
-    totalBillings: (totalPaid - totalRefunded).toFixed(2),
-    totalPaid: (totalPaid - totalRefunded - totalRefunded).toFixed(2),
+    totalBillings: totalPaid.toFixed(2),
+    totalPaid: (totalPaid - totalRefunded).toFixed(2),
+
     totalDiscount: totalDiscount.toFixed(2),
     totalRefunded: totalRefunded.toFixed(2),
     totalPending: totalPending.toFixed(2),
