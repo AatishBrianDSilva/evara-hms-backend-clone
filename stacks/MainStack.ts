@@ -390,7 +390,12 @@ export function MainStack({ stack }: StackContext) {
         function: authorizerFunction,
       },
     },
-
+    cors: {
+      allowCredentials: false,
+      allowHeaders: ['Content-Type', 'Authorization'],
+      allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowOrigins: ['*'],
+    },
     defaults: {
       function: {
         timeout: '29 seconds',
@@ -489,7 +494,12 @@ export function MainStack({ stack }: StackContext) {
         function: authorizerFunction,
       },
     },
-
+    cors: {
+      allowCredentials: false,
+      allowHeaders: ['Content-Type', 'Authorization'],
+      allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowOrigins: ['*'],
+    },
     defaults: {
       function: {
         timeout: '29 seconds',
