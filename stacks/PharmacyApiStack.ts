@@ -136,11 +136,11 @@ export function PharmacyApiStack({ stack }: StackContext) {
       'packages/functions/src/pharmacyDashboard/purchaseOrder/editDraftPurchaseOrder.main',
     'DELETE /pharmacy-dashboard/purchase-order/{id}':
       'packages/functions/src/pharmacyDashboard/purchaseOrder/deletePurchaseOrder.main',
-    'PATCH /pharmacy-dashboard/purchase-order/{id}/status':
-      'packages/functions/src/pharmacyDashboard/purchaseOrder/updateStatusPurchaseOrder.main',
+    'PUT /pharmacy-dashboard/purchase-order/{id}/status/{status}':
+      'packages/functions/src/pharmacyDashboard/purchaseOrder/updateStatusPurchaseOrderSimple.main',
     'PATCH /pharmacy-dashboard/purchase-order/{purchaseOrderId}/update-stock':
       'packages/functions/src/pharmacyDashboard/stocks/updateStockFromPurchaseOrder.main',
-    'PATCH /pharmacy-dashboard/purchase-order/{id}/update-partial':
+    'PUT /pharmacy-dashboard/purchase-order/{id}/update-partial':
       'packages/functions/src/pharmacyDashboard/purchaseOrder/updatePartiallyProcessedPurchaseOrder.main',
     'PUT /pharmacy-dashboard/purchase-order/{id}/move-to-admin-approval':
       'packages/functions/src/pharmacyDashboard/purchaseOrder/movePurchaseOrderToAdminApproval.main',

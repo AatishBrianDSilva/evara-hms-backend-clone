@@ -8,65 +8,55 @@ import {
   PurchaseOrder,
 } from '@evara-backend/core/src/models/pharmacyDashboard/PurchaseOrder';
 
-// Handler function for updating a single tax rate
+// Simple handler - status comes from URL, no request body needed
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
 
   try {
-    await connectMongoDb(); // Connect to MongoDB
+    await connectMongoDb();
 
-    // Extract ID from path parameters
-    if (!event.pathParameters || !event.pathParameters.id) {
-      throw new ErrorMessage(400, 'ID is required for update');
+    // Extract ID and status from path parameters
+    if (
+      !event.pathParameters ||
+      !event.pathParameters.id ||
+      !event.pathParameters.status
+    ) {
+      throw new ErrorMessage(400, 'ID and status are required');
     }
 
     const id = event.pathParameters.id;
+    const status = event.pathParameters.status;
 
-    if (!event.body) {
-      throw new ErrorMessage(400, 'Data is required');
+    console.log(`🔄 Simple status update: ${id} -> ${status}`);
+
+    if (!Object.values(EPurchaseOrderStatus).includes(status as any)) {
+      throw new ErrorMessage(400, `Invalid status: ${status}`);
     }
 
-    const owner = 'Admin'; // This should be the user ID of the user making the request
-
-    // Parse the request body to get the status
-    const { status } = JSON.parse(event.body);
-
-    if (!status) {
-      throw new ErrorMessage(400, 'Status is required for update');
-    }
-
-    if (!Object.values(EPurchaseOrderStatus).includes(status)) {
-      throw new ErrorMessage(400, 'Invalid status');
-    }
-
+    const owner = 'Admin';
     const updateData = {
       status,
       authorizedBy: owner,
     };
 
-    // Find by ID and update the tax rate
     const updatedData = await PurchaseOrder.findByIdAndUpdate(
       id,
-      {
-        $set: updateData,
-      },
-      {
-        new: true, // Return the updated document
-      },
+      { $set: updateData },
+      { new: true },
     );
 
     if (!updatedData) {
-      throw new ErrorMessage(404, 'Data not found');
+      throw new ErrorMessage(404, 'Purchase order not found');
     }
 
     console.log(
-      '🎉 Purchase Order Status Update SUCCESS - CORS & Path Parameter Fix Applied',
+      '🎉 Simple Purchase Order Status Update SUCCESS - No CORS Issues!',
     );
     return successResponse('Status updated successfully', {
       ...updatedData,
       _debug: {
-        pathParameterFixed: true,
-        corsFixed: true,
+        simpleApproach: true,
+        noCorsIssues: true,
         deployTime: new Date().toISOString(),
       },
     });
