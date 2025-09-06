@@ -15,14 +15,21 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
   try {
     await connectMongoDb(); // Connect to MongoDB
 
+    // Extract ID from path parameters
+    if (!event.pathParameters || !event.pathParameters.id) {
+      throw new ErrorMessage(400, 'ID is required for update');
+    }
+
+    const id = event.pathParameters.id;
+
     if (!event.body) {
       throw new ErrorMessage(400, 'Data is required');
     }
 
     const owner = 'Admin'; // This should be the user ID of the user making the request
 
-    // Assuming the event body will contain the ID of the tax rate to be updated and the new values
-    const { id, status } = JSON.parse(event.body);
+    // Parse the request body to get the status
+    const { status } = JSON.parse(event.body);
 
     if (!status) {
       throw new ErrorMessage(400, 'Status is required for update');
@@ -30,10 +37,6 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     if (!Object.values(EPurchaseOrderStatus).includes(status)) {
       throw new ErrorMessage(400, 'Invalid status');
-    }
-
-    if (!id) {
-      throw new ErrorMessage(400, 'ID is required for update');
     }
 
     const updateData = {
