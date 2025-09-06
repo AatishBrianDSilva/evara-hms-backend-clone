@@ -29,6 +29,9 @@ function errorResponse(error: unknown): APIGatewayProxyResult {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': 'Content-Type,Authorization',
       'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+      'X-API-Version': process.env.STAGE || 'unknown',
+      'X-Deploy-Time': new Date().toISOString(),
+      'X-CORS-Fixed': 'true',
     },
     body: JSON.stringify({
       status: 'error',

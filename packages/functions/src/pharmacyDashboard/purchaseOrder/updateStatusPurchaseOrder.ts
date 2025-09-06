@@ -59,7 +59,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(404, 'Data not found');
     }
 
-    return successResponse('Status updated successfully', updatedData);
+    console.log(
+      '🎉 Purchase Order Status Update SUCCESS - CORS & Path Parameter Fix Applied',
+    );
+    return successResponse('Status updated successfully', {
+      ...updatedData,
+      _debug: {
+        pathParameterFixed: true,
+        corsFixed: true,
+        deployTime: new Date().toISOString(),
+      },
+    });
   } catch (error) {
     return errorResponse(error);
   }

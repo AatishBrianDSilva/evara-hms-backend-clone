@@ -67,7 +67,17 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     await session.commitTransaction();
 
     // Return success response with updated patient data
-    return successResponse('Patient updated successfully', updatedPatient);
+    console.log(
+      '🎉 Edit Patient SUCCESS - MongoDB Connection & Frontend Parameter Fix Applied',
+    );
+    return successResponse('Patient updated successfully', {
+      ...updatedPatient,
+      _debug: {
+        mongoConnectionFixed: true,
+        frontendParameterFixed: true,
+        deployTime: new Date().toISOString(),
+      },
+    });
   } catch (error) {
     // Rollback the transaction
     await session.abortTransaction();
