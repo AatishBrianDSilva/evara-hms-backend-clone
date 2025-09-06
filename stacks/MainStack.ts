@@ -392,9 +392,13 @@ export function MainStack({ stack }: StackContext) {
     },
     cors: {
       allowCredentials: false,
-      allowHeaders: ['Content-Type', 'Authorization'],
+      allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
       allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowOrigins: ['*'],
+      allowOrigins: [
+        'https://dashboard.dev.evarahealth.in',
+        'https://dashboard.evarahealth.in',
+        '*',
+      ],
     },
     defaults: {
       function: {
@@ -467,6 +471,20 @@ export function MainStack({ stack }: StackContext) {
         'packages/functions/src/home/appointment.main',
       'GET /home/pharmacy-summary': 'packages/functions/src/home/pharmacy.main',
 
+      // Debug CORS
+      'GET /debug/cors': {
+        function: 'packages/functions/src/debug/corsTest.main',
+        authorizer: 'none',
+      },
+      'OPTIONS /debug/cors': {
+        function: 'packages/functions/src/debug/corsTest.main',
+        authorizer: 'none',
+      },
+      'PATCH /debug/cors': {
+        function: 'packages/functions/src/debug/corsTest.main',
+        authorizer: 'none',
+      },
+
       // Admin Dev
       'GET /admin_dev/automate-medical-investigation':
         'packages/functions/src/admin_dev/automateMedicalInvestigation.main',
@@ -496,9 +514,13 @@ export function MainStack({ stack }: StackContext) {
     },
     cors: {
       allowCredentials: false,
-      allowHeaders: ['Content-Type', 'Authorization'],
+      allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
       allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowOrigins: ['*'],
+      allowOrigins: [
+        'https://dashboard.dev.evarahealth.in',
+        'https://dashboard.evarahealth.in',
+        '*',
+      ],
     },
     defaults: {
       function: {
