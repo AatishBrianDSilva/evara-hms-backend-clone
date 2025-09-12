@@ -37,7 +37,7 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     console.log('body', body);
 
     const patientId = id; // Use the id from URL path parameter
-    const updateData = body; // The entire body contains the update data
+    const updateData = body.values || body; // Handle both { values: {...} } and {...} structures
 
     console.log({
       patientId,
