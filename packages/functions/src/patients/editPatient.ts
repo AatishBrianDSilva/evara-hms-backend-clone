@@ -36,16 +36,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     console.log('body', body);
 
-    const patientId = body.patientId;
-    const updateData = body.values;
+    const patientId = id; // Use the id from URL path parameter
+    const updateData = body; // The entire body contains the update data
 
     console.log({
       patientId,
       updateData,
     });
 
-    if (body.values?.image && body.values?.image.length > 0) {
-      const s3UrlParts = parseS3Url(body.values?.image);
+    if (updateData?.image && updateData?.image.length > 0) {
+      const s3UrlParts = parseS3Url(updateData?.image);
       if (s3UrlParts) {
         await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
       } else {
