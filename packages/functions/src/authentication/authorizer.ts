@@ -382,24 +382,28 @@ function extractRolePermissions(role: EUserRole, methodArn: string): string[] {
         EUserRole.Billing,
         EUserRole.PharmacyManager,
         EUserRole.CenterManager,
+        EUserRole.Embryologist,
       ],
       PUT: [
         EUserRole.Admin,
         EUserRole.Billing,
         EUserRole.PharmacyManager,
         EUserRole.CenterManager,
+        EUserRole.Embryologist,
       ],
       PATCH: [
         EUserRole.Admin,
         EUserRole.Billing,
         EUserRole.PharmacyManager,
         EUserRole.CenterManager,
+        EUserRole.Embryologist,
       ],
       DELETE: [
         EUserRole.Admin,
         EUserRole.Billing,
         EUserRole.PharmacyManager,
         EUserRole.CenterManager,
+        EUserRole.Embryologist,
       ],
     },
     analytics: {
