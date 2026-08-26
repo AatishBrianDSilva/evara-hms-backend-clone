@@ -1,5 +1,7 @@
 import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 import PatientProcedures from '@evara-backend/core/src/models/patientDashboard/procedure/PatientProcedure';
+import { getISTDateRangeBounds } from '@evara-backend/core/src/lib/utils/formatDateIST';
+import { billingDiscountLookupStages } from '../_billingDiscountJoin';
 
 interface FetchPatientProceduresParams {
   clinicId: string;
@@ -33,25 +35,18 @@ export const fetchPatientProceduresData = async (
   const pageNumber = Number(page);
   const limitNumber = Number(limit);
 
-  // Base match query
   const matchQuery: any = { clinicId, branchId };
 
-  // Apply date filter
-  if (startDate || endDate) {
-    const dateFilter: any = {};
-    if (startDate) dateFilter.$gte = new Date(startDate);
-    if (endDate) {
-      const endOfDay = new Date(endDate);
-      endOfDay.setHours(23, 59, 59, 999);
-      dateFilter.$lte = endOfDay;
-    }
-    matchQuery.date = dateFilter;
+  const { start, end } = getISTDateRangeBounds(startDate, endDate);
+  if (start || end) {
+    matchQuery.date = {
+      ...(start && { $gte: start }),
+      ...(end && { $lte: end }),
+    };
   }
 
-  // Apply status filter
   if (status && status !== 'All') matchQuery.status = status;
 
-  // Construct aggregation pipeline
   const pipeline: any[] = [
     { $match: matchQuery },
     {
@@ -114,7 +109,6 @@ export const fetchPatientProceduresData = async (
     },
   ];
 
-  // Apply search filter
   if (search) {
     const searchRegex = new RegExp(search, 'i');
     pipeline.push({
@@ -129,42 +123,30 @@ export const fetchPatientProceduresData = async (
     });
   }
 
-  // Sorting and pagination
+  pipeline.push(...billingDiscountLookupStages(clinicId));
   pipeline.push({ $sort: { date: -1 } });
 
-  // …after pipeline.push({ $sort: { date: -1 } });
+  const projectFields = {
+    date: 1,
+    patientId: 1,
+    procedure: '$procedureName',
+    doctor: '$doctorFullName',
+    amount: 1,
+    discount: 1,
+    netBilled: 1,
+    status: 1,
+    patientName: 1,
+  };
 
   if (fetchAllData) {
-    // PROJECT into the same shape as the paginated branch
-    pipeline.push({
-      $project: {
-        date: 1,
-        patientId: 1,
-        procedure: '$procedureName', // rename your computed field
-        doctor: '$doctorFullName',
-        amount: 1,
-        status: 1,
-        patientName: 1,
-      },
-    });
+    pipeline.push({ $project: projectFields });
   } else {
-    // existing paginated facet
     pipeline.push({
       $facet: {
         records: [
           { $skip: (pageNumber - 1) * limitNumber },
           { $limit: limitNumber },
-          {
-            $project: {
-              date: 1,
-              patientId: 1,
-              procedure: '$procedureName',
-              doctor: '$doctorFullName',
-              amount: 1,
-              status: 1,
-              patientName: 1,
-            },
-          },
+          { $project: projectFields },
         ],
         totalCount: [{ $count: 'count' }],
       },

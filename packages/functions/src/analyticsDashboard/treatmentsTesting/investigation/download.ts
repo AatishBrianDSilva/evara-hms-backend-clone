@@ -49,6 +49,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       investigation: record.investigation,
       amount: formatToIndianCurrencyFormat(record.amount),
       status: record.status,
+      discount:
+        record.discount == null
+          ? ''
+          : formatToIndianCurrencyFormat(record.discount),
+      netBilled:
+        record.netBilled == null
+          ? ''
+          : formatToIndianCurrencyFormat(record.netBilled),
     }));
 
     const fields = [
@@ -58,8 +66,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       { label: 'Patient Name', value: 'patientName' },
       { label: 'Doctor Name', value: 'doctor' },
       { label: 'Investigation', value: 'investigation' },
-      { label: 'Amount', value: 'amount' },
+      { label: 'Amount (list)', value: 'amount' },
       { label: 'Status', value: 'status' },
+      { label: 'Discount', value: 'discount' },
+      { label: 'Net Billed', value: 'netBilled' },
     ];
 
     const asyncParser = new AsyncParser({ fields });

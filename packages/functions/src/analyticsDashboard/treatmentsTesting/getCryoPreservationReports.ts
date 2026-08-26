@@ -4,6 +4,7 @@ import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
 import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
 import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 import PatientCryoPreservation from '@evara-backend/core/src/models/patientDashboard/cryoPreservation/PatientCryoPreservation';
+import { getISTDateRangeBounds } from '@evara-backend/core/src/lib/utils/formatDateIST';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -26,20 +27,16 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     console.log('params', params);
 
-    const startDateObj = startDate ? new Date(startDate) : null;
-    const endDateObj = endDate ? new Date(endDate) : null;
-
-    // Construct the match filter dynamically
     const matchFilter: any = {
       clinicId: auth.clinicId,
       branchId: auth.branchId,
     };
 
-    // Add date range filter if both start and end dates are provided
-    if (startDateObj && endDateObj) {
+    const { start, end } = getISTDateRangeBounds(startDate, endDate);
+    if (start || end) {
       matchFilter.date = {
-        $gte: startDateObj,
-        $lte: endDateObj,
+        ...(start && { $gte: start }),
+        ...(end && { $lte: end }),
       };
     }
 
@@ -174,13 +171,19 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
           {
             $project: {
               date: 1,
+              expiryDate: '$details.details.dateOfExpiry',
               patientId: '$patientCode',
-              cryoPreservation: '$cryoPreservation.name',
+              cryoPreservation: {
+                $ifNull: [
+                  '$cryoPreservation.name',
+                  '$details.cryoPreservationName',
+                ],
+              },
               doctor: '$doctorFullName',
-              amount: '$cryoPreservation.total', // or 'cost' if you prefer
+              amount: '$cryoPreservation.total',
               status: 1,
               patientName: 1,
-              files: '$result.files',
+              files: '$details.files',
             },
           },
         ],

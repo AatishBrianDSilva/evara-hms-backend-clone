@@ -4,6 +4,8 @@ import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
 import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
 import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 import PatientProcedures from '@evara-backend/core/src/models/patientDashboard/procedure/PatientProcedure';
+import { getISTDateRangeBounds } from '@evara-backend/core/src/lib/utils/formatDateIST';
+import { billingDiscountLookupStages } from './_billingDiscountJoin';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -21,186 +23,160 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       limit = '10',
       status,
       search,
-      paginate = 'true', // Default to 'true' if not provided
+      paginate = 'true',
     } = params;
 
-    console.log('params', params);
-
-    const startDateObj = startDate ? new Date(startDate) : null;
-    const endDateObj = endDate ? new Date(endDate) : null;
-
-    // Construct the match filter dynamically
     const matchFilter: any = {
       clinicId: auth.clinicId,
       branchId: auth.branchId,
     };
 
-    // Add date range filter if both start and end dates are provided
-    if (startDateObj && endDateObj) {
+    const { start, end } = getISTDateRangeBounds(startDate, endDate);
+    if (start || end) {
       matchFilter.date = {
-        $gte: startDateObj,
-        $lte: endDateObj,
+        ...(start && { $gte: start }),
+        ...(end && { $lte: end }),
       };
     }
 
-    // Add status filter if provided
     if (status && status !== 'All') {
       matchFilter.status = status;
     }
 
-    // Do not include search conditions here; we will apply them after adding 'doctorFullName'
-
-    // Build the aggregation pipeline
-    const pipeline: any[] = [];
-
-    // Initial match stage
-    pipeline.push({ $match: matchFilter });
-
-    // Lookup Doctor details
-    pipeline.push({
-      $lookup: {
-        from: 'doctors',
-        localField: 'doctor',
-        foreignField: '_id',
-        as: 'doctor',
+    const pipeline: any[] = [
+      { $match: matchFilter },
+      {
+        $lookup: {
+          from: 'doctors',
+          localField: 'doctor',
+          foreignField: '_id',
+          as: 'doctor',
+        },
       },
-    });
-
-    // Unwind the arrays from lookup
-    pipeline.push({
-      $unwind: { path: '$doctor', preserveNullAndEmptyArrays: true },
-    });
-
-    // Add a field for doctor's full name
-    pipeline.push({
-      $addFields: {
-        doctorFullName: {
-          $trim: {
-            input: {
-              $concat: [
-                { $ifNull: ['$doctor.firstName', ''] },
-                ' ',
-                { $ifNull: ['$doctor.lastName', ''] },
-              ],
+      { $unwind: { path: '$doctor', preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          doctorFullName: {
+            $trim: {
+              input: {
+                $concat: [
+                  { $ifNull: ['$doctor.firstName', ''] },
+                  ' ',
+                  { $ifNull: ['$doctor.lastName', ''] },
+                ],
+              },
             },
           },
         },
       },
-    });
-
-    // Lookup Patient details to get patientName
-    pipeline.push({
-      $lookup: {
-        from: 'patients',
-        localField: 'patientCode',
-        foreignField: 'patientId',
-        as: 'patient',
+      {
+        $lookup: {
+          from: 'patients',
+          localField: 'patientCode',
+          foreignField: 'patientId',
+          as: 'patient',
+        },
       },
-    });
-
-    // Unwind the patient details
-    pipeline.push({
-      $unwind: { path: '$patient', preserveNullAndEmptyArrays: true },
-    });
-
-    // Add patientName by combining firstName and lastName
-    pipeline.push({
-      $addFields: {
-        patientName: {
-          $trim: {
-            input: {
-              $concat: [
-                { $ifNull: ['$patient.firstName', ''] },
-                ' ',
-                { $ifNull: ['$patient.lastName', ''] },
-              ],
+      { $unwind: { path: '$patient', preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          patientName: {
+            $trim: {
+              input: {
+                $concat: [
+                  { $ifNull: ['$patient.firstName', ''] },
+                  ' ',
+                  { $ifNull: ['$patient.lastName', ''] },
+                ],
+              },
             },
           },
         },
       },
-    });
+    ];
 
-    // Apply search filter if search term is provided
     if (search) {
       pipeline.push({
         $match: {
           $or: [
             { patientCode: { $regex: search, $options: 'i' } },
             { doctorFullName: { $regex: search, $options: 'i' } },
+            { patientName: { $regex: search, $options: 'i' } },
           ],
         },
       });
     }
 
-    // Lookup procedure details
-    pipeline.push({
-      $lookup: {
-        from: 'masterprocedures',
-        localField: 'procedure',
-        foreignField: '_id',
-        as: 'procedure',
+    pipeline.push(
+      {
+        $lookup: {
+          from: 'masterprocedures',
+          localField: 'procedure',
+          foreignField: '_id',
+          as: 'procedure',
+        },
       },
-    });
-
-    // Unwind the procedure
-    pipeline.push({
-      $unwind: {
-        path: '$procedure',
-        preserveNullAndEmptyArrays: true,
+      {
+        $unwind: {
+          path: '$procedure',
+          preserveNullAndEmptyArrays: true,
+        },
       },
-    });
-
-    // Add amount field to ensure calculations are consistent
-    pipeline.push({
-      $addFields: {
-        amount: { $ifNull: ['$procedure.total', 0] },
+      {
+        $addFields: {
+          amount: { $ifNull: ['$procedure.total', 0] },
+        },
       },
-    });
-
-    // Build the facet stage for pagination and total count
-    pipeline.push({
-      $facet: {
-        paginatedResults: [
-          // Sort by date descending
-          { $sort: { date: -1 } },
-          // Apply pagination if enabled
-          ...(paginate === 'true'
-            ? [
-                { $skip: (parseInt(page) - 1) * parseInt(limit) },
-                { $limit: parseInt(limit) },
-              ]
-            : []),
-          // Project the required fields
-          {
-            $project: {
-              date: 1,
-              patientId: '$patientCode',
-              procedure: '$procedure.name',
-              doctor: '$doctorFullName',
-              amount: '$procedure.total', // or 'cost' if you prefer
-              status: 1,
-              patientName: 1,
-              files: '$result.files',
+      ...billingDiscountLookupStages(auth.clinicId),
+      {
+        $facet: {
+          paginatedResults: [
+            { $sort: { date: -1 } },
+            ...(paginate === 'true'
+              ? [
+                  { $skip: (parseInt(page) - 1) * parseInt(limit) },
+                  { $limit: parseInt(limit) },
+                ]
+              : []),
+            {
+              $project: {
+                date: 1,
+                patientId: '$patientCode',
+                procedure: '$procedure.name',
+                doctor: '$doctorFullName',
+                amount: 1,
+                discount: 1,
+                netBilled: 1,
+                status: 1,
+                patientName: 1,
+                files: '$result.files',
+              },
             },
-          },
-        ],
-        totalCount: [{ $count: 'count' }],
+          ],
+          totalCount: [{ $count: 'count' }],
+        },
       },
-    });
+    );
 
-    // Execute aggregation
     const res = await PatientProcedures.aggregate(pipeline);
-
-    // Extract results and total count
     const records = res[0]?.paginatedResults || [];
     const totalDocs = res[0]?.totalCount[0]?.count || 0;
     const totalAmount = records.reduce(
-      (sum: any, record: { amount: any }) => sum + (record.amount || 0),
+      (sum: number, record: { amount: number }) => sum + (record.amount || 0),
+      0,
+    );
+    const totalDiscount = records.reduce(
+      (sum: number, record: { discount: number | null }) =>
+        sum + (record.discount || 0),
+      0,
+    );
+    const totalNetBilled = records.reduce(
+      (sum: number, record: { netBilled: number | null }) =>
+        sum + (record.netBilled || 0),
       0,
     );
 
-    // Return the response
-    const paginatedResult = {
+    return successResponse('Procedures Reports fetched successfully', {
       records,
       pagination: {
         totalDocs,
@@ -209,13 +185,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       },
       summary: {
         totalAmount,
+        totalDiscount,
+        totalNetBilled,
       },
-    };
-
-    return successResponse(
-      'Procedures Reports fetched successfully',
-      paginatedResult,
-    );
+    });
   } catch (error) {
     return errorResponse(error);
   }

@@ -69,6 +69,11 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
     const body = JSON.parse(event.body);
 
+    if (body.files?.length) {
+      body.details = body.details || {};
+      body.details.files = body.files;
+    }
+
     if (conditions.editType === 'update') {
       body.status = 'Completed';
     } else if (conditions.editType === 'reset') {
@@ -139,7 +144,13 @@ async function updateCategory(
     patient: any,
     spouseName: string,
     branch: any,
+    reportItem?: { name?: string; reportType?: string },
   ) => {
+    const reportLabel =
+      reportItem?.name || reportItem?.reportType || 'Treatment Cycle Report';
+    const reportFileKey =
+      reportItem?.reportType || reportItem?.name || 'report';
+
     const reportData: IReportData = {
       bucket: EBuckets.UserReports,
       documentType: EDocumentTypes.TreatmentCycle,
@@ -148,12 +159,10 @@ async function updateCategory(
       patient: result.patient,
       clinic: result.clinicId,
       sections: [],
-      reportName: '',
-      fileName: _.kebabCase(`${category}`),
+      reportName: reportLabel,
+      fileName: _.kebabCase(reportFileKey),
       reportId: data.documentId,
     };
-
-    reportData.reportName = `${category} Report`;
 
     // Adding Patient Details section
     const patientDetails = {
@@ -348,8 +357,15 @@ async function updateCategory(
 
   if (!result) {
     console.error('No document found or updated for category:', category);
-  } else {
+  } else if (
+    category === ETreatmentCycleCategoryKey.reports &&
+    body.status === 'Completed'
+  ) {
     console.log(`Update successful for category: ${category}`, result);
+
+    const reportItem = (result.reports as any[])?.find(
+      (item: any) => item._id?.toString() === body.documentId,
+    );
 
     // Fetch patient data
     const patient = await Patient.findById(result.patient);
@@ -394,6 +410,7 @@ async function updateCategory(
       patient,
       spouseName,
       branch,
+      reportItem,
     );
     console.log('Report Data: ', JSON.stringify(report, null, 2));
 

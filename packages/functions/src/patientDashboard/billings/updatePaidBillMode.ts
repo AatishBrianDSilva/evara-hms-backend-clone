@@ -7,7 +7,6 @@ import {
   PatientBilling,
   IPatientBilling,
 } from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling';
-import { S3KeepPermanently, parseS3Url } from 'src/files/_KeepPermanently';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;

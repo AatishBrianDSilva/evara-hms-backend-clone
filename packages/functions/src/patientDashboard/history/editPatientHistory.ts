@@ -5,6 +5,7 @@ import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
 import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 import Patient from '@evara-backend/core/src/models/Patients';
 import { PatientHistory } from '@evara-backend/core/models/patientDashboard/PatientHistory';
+import { keepUrlsPermanently } from 'src/files/_KeepPermanently';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -44,6 +45,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     });
     if (!patientHistory) {
       throw new ErrorMessage(404, 'Patient history not found');
+    }
+
+    if (data.files) {
+      await keepUrlsPermanently(data.files);
     }
 
     // Update the patient history with new data

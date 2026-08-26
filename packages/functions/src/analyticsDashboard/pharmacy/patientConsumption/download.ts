@@ -2,7 +2,7 @@ import { APIGatewayProxyHandler } from 'aws-lambda';
 import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
 import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 import { AsyncParser } from '@json2csv/node';
-import { fetchCryoPreservationData } from './__cryoPreservation';
+import { fetchPatientConsumptionData } from './__patientConsumption';
 import { formatToIndianCurrencyFormat } from '@evara-backend/core/src/lib/utils/formatToIndianCurrencyFormat';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -10,15 +10,13 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
 
   try {
     const auth = extractAuthorizerDetails(event);
-
     const params = event.queryStringParameters || {};
     const {
-      startDate,
-      endDate,
       page = '1',
-      limit = '10',
-      status,
-      search,
+      limit = '25',
+      saleStartDate,
+      saleEndDate,
+      search = '',
       allData = 'false',
     } = params;
 
@@ -26,58 +24,44 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
 
-    // Fetch cryo preservation data
-    const records = await fetchCryoPreservationData({
+    const records = await fetchPatientConsumptionData({
       clinicId: auth.clinicId,
       branchId: auth.branchId,
       page: fetchAllData ? undefined : pageNumber,
       limit: fetchAllData ? undefined : limitNumber,
-      status,
+      saleStartDate,
+      saleEndDate,
       search,
-      startDate,
-      endDate,
       fetchAllData,
     });
 
-    // Prepare CSV data
     const startSlNo = fetchAllData ? 1 : (pageNumber - 1) * limitNumber + 1;
-    const formatDate = (value?: string | Date | null) =>
-      value
-        ? new Date(value).toLocaleDateString('en-IN', {
-            timeZone: 'Asia/Kolkata',
-          })
-        : '—';
-
     const dataForCsv = records.map((record: any, index: number) => ({
       SlNo: startSlNo + index,
-      preservationDate: formatDate(record.date),
-      expiryDate: formatDate(record.expiryDate),
-      patientId: record.patientId,
-      patientName: record.patientName,
-      cryoPreservation: record.cryoPreservation,
-      doctor: record.doctor,
-      status: record.status,
-      amount: formatToIndianCurrencyFormat(record.amount),
+      patientId: record.patientId || '—',
+      patientName: record.patientName || '—',
+      totalQuantity: record.totalQuantity ?? 0,
+      totalValue: formatToIndianCurrencyFormat(record.totalValue || 0),
+      allocationCount: record.allocationCount ?? 0,
+      lastDate: record.lastDate
+        ? new Date(record.lastDate).toLocaleDateString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+          })
+        : '—',
     }));
 
-    // Define CSV fields
     const fields = [
       { label: 'Sl.no', value: 'SlNo' },
       { label: 'Patient ID', value: 'patientId' },
       { label: 'Patient Name', value: 'patientName' },
-      { label: 'Cryo Preservation', value: 'cryoPreservation' },
-      { label: 'Doctor', value: 'doctor' },
-      { label: 'Status', value: 'status' },
-      { label: 'Amount', value: 'amount' },
-      { label: 'Preservation Date', value: 'preservationDate' },
-      { label: 'Expiry Date', value: 'expiryDate' },
+      { label: 'Total Quantity', value: 'totalQuantity' },
+      { label: 'Total Value', value: 'totalValue' },
+      { label: 'Allocations', value: 'allocationCount' },
+      { label: 'Last Dispense Date', value: 'lastDate' },
     ];
 
-    // Generate CSV
     const asyncParser = new AsyncParser({ fields });
     const csv = await asyncParser.parse(dataForCsv).promise();
-
-    // Add UTF-8 BOM
     const csvWithBom = `\uFEFF${csv}`;
 
     return {
@@ -85,14 +69,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       headers: {
         'Content-Type': 'text/csv',
         'Content-Disposition':
-          'attachment; filename="cryo_preservation_report.csv"',
+          'attachment; filename="patient_consumption_report.csv"',
         'Access-Control-Allow-Origin': '*',
       },
       isBase64Encoded: true,
       body: Buffer.from(csvWithBom).toString('base64'),
     };
   } catch (error) {
-    console.error('Error generating cryo preservation CSV:', error);
+    console.error('Error generating patient consumption CSV:', error);
     return errorResponse(error);
   }
 };

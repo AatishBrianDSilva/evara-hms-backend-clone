@@ -52,6 +52,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       doctor: record.doctor,
       status: record.status,
       amount: formatToIndianCurrencyFormat(record.amount),
+      discount:
+        record.discount == null
+          ? ''
+          : formatToIndianCurrencyFormat(record.discount),
+      netBilled:
+        record.netBilled == null
+          ? ''
+          : formatToIndianCurrencyFormat(record.netBilled),
     }));
 
     // Define CSV fields
@@ -63,7 +71,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       { label: 'Treatment Cycle', value: 'treatmentCycle' },
       { label: 'Doctor', value: 'doctor' },
       { label: 'Status', value: 'status' },
-      { label: 'Amount', value: 'amount' },
+      { label: 'Amount (list)', value: 'amount' },
+      { label: 'Discount', value: 'discount' },
+      { label: 'Net Billed', value: 'netBilled' },
     ];
 
     // Generate CSV

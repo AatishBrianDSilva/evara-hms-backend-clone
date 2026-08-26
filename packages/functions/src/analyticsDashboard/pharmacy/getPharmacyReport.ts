@@ -14,6 +14,7 @@ import { DrugType } from '@evara-backend/core/src/models/pharmacyDashboard/DrugT
 import { DrugVendor } from '@evara-backend/core/src/models/pharmacyDashboard/DrugVendor';
 import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 import ErrorMessage from '@evara-backend/core/lib/utils/ErrorMessage';
+import { getISTDateRangeBounds } from '@evara-backend/core/src/lib/utils/formatDateIST';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -74,12 +75,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
     };
 
     if (saleStartDate || saleEndDate) {
-      const startDate = saleStartDate ? new Date(saleStartDate) : null;
-      const endDate = saleEndDate ? new Date(saleEndDate) : null;
-
+      const { start, end } = getISTDateRangeBounds(saleStartDate, saleEndDate);
       query.createdAt = {
-        ...(startDate && { $gte: new Date(startDate.setHours(0, 0, 0, 0)) }), // Start of the day
-        ...(endDate && { $lte: new Date(endDate.setHours(23, 59, 59, 999)) }), // End of the day
+        ...(start && { $gte: start }),
+        ...(end && { $lte: end }),
       };
     }
 

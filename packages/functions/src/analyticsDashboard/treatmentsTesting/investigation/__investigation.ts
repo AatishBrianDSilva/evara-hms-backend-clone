@@ -1,5 +1,7 @@
 import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 import PatientInvestigation from '@evara-backend/core/src/models/patientDashboard/investigation/PatientInvestigation';
+import { getISTDateRangeBounds } from '@evara-backend/core/src/lib/utils/formatDateIST';
+import { billingDiscountLookupStages } from '../_billingDiscountJoin';
 
 interface FetchInvestigationReportsParams {
   clinicId: string;
@@ -37,15 +39,12 @@ export const fetchInvestigationReportsData = async (
 
   if (status && status !== 'All') matchQuery.status = status;
 
-  if (startDate || endDate) {
-    const dateQuery: any = {};
-    if (startDate) dateQuery.$gte = new Date(startDate);
-    if (endDate) {
-      const endOfDay = new Date(endDate);
-      endOfDay.setHours(23, 59, 59, 999);
-      dateQuery.$lte = endOfDay;
-    }
-    matchQuery.date = dateQuery;
+  const { start, end } = getISTDateRangeBounds(startDate, endDate);
+  if (start || end) {
+    matchQuery.date = {
+      ...(start && { $gte: start }),
+      ...(end && { $lte: end }),
+    };
   }
 
   const pipeline: any[] = [
@@ -126,6 +125,7 @@ export const fetchInvestigationReportsData = async (
     });
   }
 
+  pipeline.push(...billingDiscountLookupStages(clinicId));
   pipeline.push({ $sort: { date: -1 } });
 
   if (fetchAllData) {
@@ -138,6 +138,8 @@ export const fetchInvestigationReportsData = async (
         patientName: 1,
         status: 1,
         amount: 1,
+        discount: 1,
+        netBilled: 1,
         files: '$result.files',
       },
     });
@@ -156,6 +158,8 @@ export const fetchInvestigationReportsData = async (
               patientName: 1,
               status: 1,
               amount: 1,
+              discount: 1,
+              netBilled: 1,
               files: '$result.files',
             },
           },

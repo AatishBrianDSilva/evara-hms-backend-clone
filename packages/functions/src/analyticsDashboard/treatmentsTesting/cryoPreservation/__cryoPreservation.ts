@@ -1,5 +1,6 @@
 import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 import PatientCryoPreservation from '@evara-backend/core/src/models/patientDashboard/cryoPreservation/PatientCryoPreservation';
+import { getISTDateRangeBounds } from '@evara-backend/core/src/lib/utils/formatDateIST';
 
 interface FetchCryoPreservationDataParams {
   clinicId: string;
@@ -32,11 +33,11 @@ export const fetchCryoPreservationData = async (
 
   const matchFilter: any = { clinicId, branchId };
 
-  // Apply date range filter
-  if (startDate || endDate) {
+  const { start, end } = getISTDateRangeBounds(startDate, endDate);
+  if (start || end) {
     matchFilter.date = {
-      ...(startDate && { $gte: new Date(startDate) }),
-      ...(endDate && { $lte: new Date(endDate) }),
+      ...(start && { $gte: start }),
+      ...(end && { $lte: end }),
     };
   }
 
@@ -111,8 +112,14 @@ export const fetchCryoPreservationData = async (
     },
     {
       $addFields: {
-        cryoPreservation: '$cryoPreservationDetails.cryoPreservationName',
+        cryoPreservation: {
+          $ifNull: [
+            '$cryoPreservationDetails.name',
+            '$details.cryoPreservationName',
+          ],
+        },
         amount: { $ifNull: ['$cryoPreservationDetails.total', 0] },
+        expiryDate: '$details.details.dateOfExpiry',
       },
     },
   ];
@@ -140,12 +147,14 @@ export const fetchCryoPreservationData = async (
     pipeline.push({
       $project: {
         date: 1,
-        patientId: 1, // already added via $addFields
+        expiryDate: 1,
+        patientId: 1,
         patientName: 1,
-        cryoPreservation: 1, // from your $addFields above
+        cryoPreservation: 1,
         doctor: '$doctorFullName',
         status: 1,
         amount: 1,
+        files: '$details.files',
       },
     });
   } else {
@@ -156,12 +165,14 @@ export const fetchCryoPreservationData = async (
       {
         $project: {
           date: 1,
+          expiryDate: 1,
           patientId: 1,
           patientName: 1,
           cryoPreservation: 1,
           doctor: '$doctorFullName',
           status: 1,
           amount: 1,
+          files: '$details.files',
         },
       },
     );

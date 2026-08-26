@@ -7,8 +7,7 @@ import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 import MasterCryoPreservations from '@evara-backend/core/src/models/patientDashboard/cryoPreservation/MasterCryoPreservations';
 import { EPatientBillingServiceType } from '@evara-backend/core/src/models/patientDashboard/Billings/PatientBilling';
 import { publishBillingServiceToSNS } from '@evara-backend/core/src/lib/utils/publishBillingServiceToSNS';
-import { S3KeepPermanently, parseS3Url } from 'src/files/_KeepPermanently';
-import { extractAuthorizerDetails } from '@evara-backend/core/src/lib/utils/extractAuthorizerDetails';
+import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 import { ObjectId } from 'mongoose';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {

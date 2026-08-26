@@ -1,5 +1,7 @@
 import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 import PatientTreatmentCycle from '@evara-backend/core/src/models/patientDashboard/treatmentCycle/PatientTreatmentCycle';
+import { getISTDateRangeBounds } from '@evara-backend/core/src/lib/utils/formatDateIST';
+import { billingDiscountLookupStages } from '../_billingDiscountJoin';
 
 interface FetchTreatmentCyclesParams {
   clinicId: string;
@@ -35,16 +37,12 @@ export const fetchPatientTreatmentCyclesData = async (
 
   const matchQuery: any = { clinicId, branchId };
 
-  // Date range filter
-  if (startDate || endDate) {
-    const dateFilter: any = {};
-    if (startDate) dateFilter.$gte = new Date(startDate);
-    if (endDate) {
-      const endOfDay = new Date(endDate);
-      endOfDay.setHours(23, 59, 59, 999);
-      dateFilter.$lte = endOfDay;
-    }
-    matchQuery.date = dateFilter;
+  const { start, end } = getISTDateRangeBounds(startDate, endDate);
+  if (start || end) {
+    matchQuery.date = {
+      ...(start && { $gte: start }),
+      ...(end && { $lte: end }),
+    };
   }
 
   // Status filter
@@ -131,6 +129,7 @@ export const fetchPatientTreatmentCyclesData = async (
   }
 
   // Add sorting and pagination
+  pipeline.push(...billingDiscountLookupStages(clinicId));
   pipeline.push({ $sort: { date: -1 } });
 
   if (fetchAllData) {
@@ -142,6 +141,8 @@ export const fetchPatientTreatmentCyclesData = async (
         treatmentCycle: 1,
         doctor: '$doctorFullName',
         amount: 1,
+        discount: 1,
+        netBilled: 1,
         status: 1,
         patientName: 1,
       },
@@ -159,6 +160,8 @@ export const fetchPatientTreatmentCyclesData = async (
               treatmentCycle: 1,
               doctor: '$doctorFullName',
               amount: 1,
+              discount: 1,
+              netBilled: 1,
               status: 1,
               patientName: 1,
             },

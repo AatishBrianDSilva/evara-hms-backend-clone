@@ -18,6 +18,7 @@ import {
 } from '@evara-backend/core/lib/types/global';
 import _ from 'lodash';
 import Branch from '@evara-backend/core/models/mastersDashboard/global/ClinicBranches';
+import { keepUrlsPermanently } from 'src/files/_KeepPermanently';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
   _context.callbackWaitsForEmptyEventLoop = false;
@@ -112,6 +113,10 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       branchId: billing.branchId,
       clinicId: billing.clinicId,
     });
+
+    if (files && Array.isArray(files) && files.length > 0) {
+      await keepUrlsPermanently(files);
+    }
 
     await refundEntry.save({ session });
     console.log('PatientRefund entry saved successfully.');

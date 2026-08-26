@@ -5,7 +5,7 @@ import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
 import { connectMongoDb } from '@evara-backend/core/src/lib/db/mongodb';
 import Patient from '@evara-backend/core/src/models/Patients';
 import { PatientHistory } from '@evara-backend/core/models/patientDashboard/PatientHistory';
-import { S3KeepPermanently, parseS3Url } from 'src/files/_KeepPermanently';
+import { keepUrlsPermanently } from 'src/files/_KeepPermanently';
 import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 export const main: APIGatewayProxyHandler = async (event, _context) => {
@@ -29,13 +29,9 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       throw new ErrorMessage(400, 'Missing required patient history fields');
     }
 
-    if (data.image) {
-      const s3UrlParts = parseS3Url(data.image);
-      if (s3UrlParts) {
-        await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
-      } else {
-        throw new ErrorMessage(400, 'Invalid image URL');
-      }
+    // History stores attachments on `files`, not `image`
+    if (data.files) {
+      await keepUrlsPermanently(data.files);
     }
 
     const patient = await Patient.findOne({

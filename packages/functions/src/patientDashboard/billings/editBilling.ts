@@ -183,6 +183,8 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       if (s3UrlParts) {
         await S3KeepPermanently(s3UrlParts.bucketName, s3UrlParts.key);
         console.log('📦 Discount file marked for permanent S3 storage');
+      } else {
+        throw new ErrorMessage(400, 'Invalid discount file URL');
       }
     }
 

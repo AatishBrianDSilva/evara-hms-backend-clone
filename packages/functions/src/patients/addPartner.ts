@@ -6,7 +6,11 @@ import errorResponse from '@evara-backend/core/src/lib/utils/errorResponse';
 import successResponse from '@evara-backend/core/src/lib/utils/successResponse';
 import ErrorMessage from '@evara-backend/core/src/lib/utils/ErrorMessage';
 import Cases from '@evara-backend/core/models/Cases';
-import { S3KeepPermanently, parseS3Url } from 'src/files/_KeepPermanently';
+import {
+  S3KeepPermanently,
+  parseS3Url,
+  keepUrlsPermanently,
+} from 'src/files/_KeepPermanently';
 import { extractAuthorizerDetails } from '@evara-backend/core/lib/utils/extractAuthorizerDetails';
 
 // Handler function
@@ -57,6 +61,14 @@ export const main: APIGatewayProxyHandler = async (event, _context) => {
       } else {
         throw new ErrorMessage(400, 'Invalid image URL');
       }
+    }
+
+    if (
+      data.identifications &&
+      Array.isArray(data.identifications) &&
+      data.identifications.length > 0
+    ) {
+      await keepUrlsPermanently(data.identifications);
     }
 
     // Save the patient to the database

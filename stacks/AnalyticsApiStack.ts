@@ -62,6 +62,12 @@ export const AnalyticsApiStack = ({ stack }: StackContext) => {
     'GET /analytics/treatments-testing/master-package-reports/download':
       'packages/functions/src/analyticsDashboard/treatmentsTesting/masterPackage/download.main',
 
+    // Procedure-wise monthly stats + OPU / FET (Embryo Transfer)
+    'GET /analytics/treatments-testing/procedure-monthly-stats':
+      'packages/functions/src/analyticsDashboard/treatmentsTesting/getProcedureMonthlyStats.main',
+    'GET /analytics/treatments-testing/opu-fet-reports':
+      'packages/functions/src/analyticsDashboard/treatmentsTesting/getOpuFetReports.main',
+
     //Pharmacy
     'GET /analytics/pharmacy/sales-by-schedule':
       'packages/functions/src/analyticsDashboard/pharmacy/getSalesBySchedule.main',
@@ -93,7 +99,19 @@ export const AnalyticsApiStack = ({ stack }: StackContext) => {
       'packages/functions/src/analyticsDashboard/pharmacy/criticalStocks/download.main',
     'GET /analytics/pharmacy/pharmacy-report':
       'packages/functions/src/analyticsDashboard/pharmacy/getPharmacyReport.main',
+    'GET /analytics/pharmacy/pharmacy-report/download':
+      'packages/functions/src/analyticsDashboard/pharmacy/pharmacyReport/download.main',
     'GET /analytics/pharmacy/purchase-order-report':
       'packages/functions/src/analyticsDashboard/pharmacy/getPurchaseOrderReport.main',
+    'GET /analytics/pharmacy/purchase-order-report/download':
+      'packages/functions/src/analyticsDashboard/pharmacy/purchaseOrder/download.main',
+    'GET /analytics/pharmacy/patient-consumption':
+      'packages/functions/src/analyticsDashboard/pharmacy/getPatientConsumption.main',
+    'GET /analytics/pharmacy/patient-consumption/download':
+      'packages/functions/src/analyticsDashboard/pharmacy/patientConsumption/download.main',
+    'GET /analytics/pharmacy/item-stock-values':
+      'packages/functions/src/analyticsDashboard/pharmacy/getItemStockValues.main',
+    'GET /analytics/pharmacy/item-stock-values/download':
+      'packages/functions/src/analyticsDashboard/pharmacy/itemStockValues/download.main',
   });
 };
